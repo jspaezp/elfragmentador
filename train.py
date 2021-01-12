@@ -6,6 +6,8 @@ from transprosit import model
 from transprosit import datamodules
 from transprosit import train
 
+pl.seed_everything(2020)
+
 parser = ArgumentParser()
 
 # add PROGRAM level args
