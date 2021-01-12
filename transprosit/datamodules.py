@@ -22,6 +22,9 @@ class PeptideDataset(torch.utils.data.Dataset):
         self.spectra_encodings = [
             torch.Tensor(eval(x)).long().T for x in self.df["SpectraEncoding"]
         ]
+        self.spectra_encodings = [
+            torch.where(x > 0., x, torch.Tensor([-1.])) for x in self.spectra_encodings
+        ]
 
         # Pretty sure this last 2 can be optimized vectorizing them
         self.norm_irts = [torch.Tensor([x / 100]).float() for x in self.df["mIRT"]]
