@@ -149,7 +149,7 @@ class PepTransformerModel(pl.LightningModule):
 
 
     def configure_optimizers(self):
-        opt = torch.optim.Adam(self.transformer.parameters(), lr=self.lr)
+        opt = torch.optim.Adam(self.parameters(), lr=self.lr)
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             opt, mode="min", factor=0.5, patience=5, verbose=True
