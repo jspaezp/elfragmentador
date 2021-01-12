@@ -20,7 +20,7 @@ class PeptideDataset(torch.utils.data.Dataset):
             torch.Tensor(eval(x)).long().T for x in self.df["SequenceEncoding"]
         ]
         self.spectra_encodings = [
-            torch.Tensor(eval(x)).long().T for x in self.df["SpectraEncoding"]
+            torch.Tensor(eval(x)).float().T for x in self.df["SpectraEncoding"]
         ]
         self.spectra_encodings = [
             torch.where(x > 0., x, torch.Tensor([-1.])) for x in self.spectra_encodings
