@@ -29,7 +29,7 @@ model = model.PepTransformerModel(args)
 datamodule = datamodules.PeptideDataModule(args)
 datamodule.setup()
 
-callbacks = train.get_callbacks()
+callbacks = train.get_callbacks("prosit_transformer")
 trainer = pl.Trainer.from_argparse_args(
     args,
     max_epochs=100,
