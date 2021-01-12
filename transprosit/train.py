@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
 
-def get_callbacks(run_name, termination_patience = 20, wandb_project = "rttransformer"):
+def get_callbacks(run_name, termination_patience=20, wandb_project="rttransformer"):
     wandb_logger = WandbLogger(run_name, project=wandb_project)
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="epoch")
     checkpointer = pl.callbacks.ModelCheckpoint(
@@ -19,10 +19,14 @@ def get_callbacks(run_name, termination_patience = 20, wandb_project = "rttransf
     )
 
     terminator = pl.callbacks.early_stopping.EarlyStopping(
-        monitor="val_loss", min_delta=0.00, patience=termination_patience, verbose=False, mode="min"
+        monitor="val_loss",
+        min_delta=0.00,
+        patience=termination_patience,
+        verbose=False,
+        mode="min",
     )
 
-    return {'logger': wandb_logger, 'callbacks': [lr_monitor, checkpointer, terminator]}
+    return {"logger": wandb_logger, "callbacks": [lr_monitor, checkpointer, terminator]}
 
 
 def rt_main(*args, **kwargs):
@@ -44,14 +48,14 @@ def rt_main(*args, **kwargs):
         precision=16,
         gpus=1,
         profiler="simple",
-        logger=callbacks['logger'],
-        callbacks=callbacks['callbacks'],
+        logger=callbacks["logger"],
+        callbacks=callbacks["callbacks"],
         progress_bar_refresh_rate=50,
     )
 
     trainer.fit(model, dm)
-    callbacks['logger'].finalize("ok")
-    callbacks['logger'].experiment.finish(exit_code=0)
+    callbacks["logger"].finalize("ok")
+    callbacks["logger"].experiment.finish(exit_code=0)
 
 
 if __name__ == "__main__":

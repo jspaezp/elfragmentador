@@ -16,8 +16,12 @@ class PeptideDataset(torch.utils.data.Dataset):
         super().__init__()
         self.df = df
 
-        self.sequence_encodings = [torch.Tensor(eval(x)).long().T for x in self.df["SequenceEncoding"]]
-        self.spectra_encodings = [torch.Tensor(eval(x)).long().T for x in self.df["SpectraEncoding"]]
+        self.sequence_encodings = [
+            torch.Tensor(eval(x)).long().T for x in self.df["SequenceEncoding"]
+        ]
+        self.spectra_encodings = [
+            torch.Tensor(eval(x)).long().T for x in self.df["SpectraEncoding"]
+        ]
 
         # Pretty sure this last 2 can be optimized vectorizing them
         self.norm_irts = [torch.Tensor([x / 100]).float() for x in self.df["mIRT"]]
@@ -37,7 +41,7 @@ class PeptideDataset(torch.utils.data.Dataset):
 
 
 class PeptideDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size=64, base_dir = "."):
+    def __init__(self, batch_size=64, base_dir="."):
         super().__init__()
         self.batch_size = batch_size
         base_dir = Path(base_dir)
@@ -55,9 +59,13 @@ class PeptideDataModule(pl.LightningDataModule):
         print(val_df)
         print(list(val_df))
 
-        print(f"Removing Large sequences, currently Train: {len(train_df)} Val: {len(val_df)}")
+        print(
+            f"Removing Large sequences, currently Train: {len(train_df)} Val: {len(val_df)}"
+        )
 
-        train_df = train_df[[len(eval(x)) == 25 for x in train_df["SequenceEncoding"]]].copy()
+        train_df = train_df[
+            [len(eval(x)) == 25 for x in train_df["SequenceEncoding"]]
+        ].copy()
         val_df = val_df[[len(eval(x)) == 25 for x in val_df["SequenceEncoding"]]].copy()
 
         print(f"Left Train: {len(train_df)} Val: {len(val_df)}")
@@ -68,8 +76,8 @@ class PeptideDataModule(pl.LightningDataModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--batch_size', type=int, default=64)
-        parser.add_argument('--data_dir', type=str, default='.')
+        parser.add_argument("--batch_size", type=int, default=64)
+        parser.add_argument("--data_dir", type=str, default=".")
         return parser
 
     def setup(self):

@@ -11,7 +11,7 @@ pl.seed_everything(2020)
 parser = ArgumentParser()
 
 # add PROGRAM level args
-parser.add_argument('--wandb_project', type=str, default='some_name')
+parser.add_argument("--wandb_project", type=str, default="some_name")
 
 # add model specific args
 parser = model.PepTransformerModel.add_model_specific_args(parser)
@@ -28,7 +28,9 @@ args = parser.parse_args()
 dict_args = vars(args)
 model = model.PepTransformerModel(**dict_args)
 print(model)
-datamodule = datamodules.PeptideDataModule(batch_size=args.batch_size, base_dir=args.data_dir)
+datamodule = datamodules.PeptideDataModule(
+    batch_size=args.batch_size, base_dir=args.data_dir
+)
 datamodule.setup()
 
 callbacks = train.get_callbacks("prosit_transformer")
@@ -38,8 +40,8 @@ trainer = pl.Trainer.from_argparse_args(
     precision=16,
     gpus=1,
     profiler="simple",
-    logger=callbacks['logger'],
-    callbacks=callbacks['callbacks'],
+    logger=callbacks["logger"],
+    callbacks=callbacks["callbacks"],
     progress_bar_refresh_rate=50,
 )
 

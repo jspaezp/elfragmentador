@@ -7,6 +7,7 @@ from transprosit import annotate
 import pandas as pd
 from tqdm.auto import tqdm
 
+
 class Spectrum:
     def __init__(
         self,
@@ -71,34 +72,27 @@ class Spectrum:
 
         annots = {}
         for mz, inten in zip(self.mzs, self.intensities):
-            matching = {k:inten for k, v in self._theoretical_peaks.items() if in_tol(v, mz)}
+            matching = {
+                k: inten for k, v in self._theoretical_peaks.items() if in_tol(v, mz)
+            }
             annots.update(matching)
 
-        max_int = max([v for v in annots.values()]+[0])
-        annots = {k:v/max_int for k, v in annots.items()}
+        max_int = max([v for v in annots.values()] + [0])
+        annots = {k: v / max_int for k, v in annots.items()}
         self._annotated_peaks = annots
 
-    def encode_annotations(self, max_charge=3, ions="yb", max_length = 25, dry = False):
-        if self._annotated_peaks is None:
+    def encode_annotations(self, max_charge=3, ions="yb", max_length=25, dry=False):
+        if self._annotated_peaks is None and not dry:
             self.annotate_peaks()
 
-        ions = "".join(sorted(ions))
-        charges = list(range(1, max_charge + 1))
-        positions = list(range(1, max_length + 1))
+        if dry:
+            peak_annot = None
+        else:
+            peak_annot = self._annotated_peaks
 
-        encoding = []
-        # TODO implement neutral losses ...  if needed
-        for pos in positions:
-            for charge in charges:
-                for ion in ions:
-                    key = f"z{charge}{ion}{pos}"
-                    if dry:
-                        encoding.append(key)
-                    else:
-                        encoding.append(self._annotated_peaks.get(key, 0))
-
-        return encoding
-
+        return get_fragment_encoding_labels(
+            max_charge=max_charge, ions=ions, max_length=max_length
+        )
 
     @property
     def annotated_peaks(self):
@@ -122,6 +116,42 @@ class Spectrum:
         return out
 
 
+def decode_tensor(sequence, tensor, max_charge, ions, max_length):
+    key_list = get_fragment_encoding_labels(
+        max_charge=max_charge, ions=ions, max_lenght=max_length, dry=True
+    )
+    fragment_ions = annotate.get_peptide_ions(
+        sequence, list(1, max_charge), ion_types=ions
+    )
+    masses = [fragment_ions[k] for k in key_list]
+    intensities = [float(x) for x in tensor]
+
+    return pd.DataFrame(
+        {"Fragment": fragment_ions, "Mass": masses, "Intensity": intensities}
+    )
+
+
+def get_fragment_encoding_labels(
+    max_charge=3, ions="yb", max_length=25, annotated_peaks=None
+):
+    ions = "".join(sorted(ions))
+    charges = list(range(1, max_charge + 1))
+    positions = list(range(1, max_length + 1))
+
+    encoding = []
+    # TODO implement neutral losses ...  if needed
+    for pos in positions:
+        for charge in charges:
+            for ion in ions:
+                key = f"z{charge}{ion}{pos}"
+                if annotated_peaks is None:
+                    encoding.append(key)
+                else:
+                    encoding.append(annotated_peaks.get(key, 0))
+
+    return encoding
+
+
 def encode_sptxt(filepath, *args, **kwargs):
     iter = read_sptxt(filepath, *args, **kwargs)
 
@@ -133,11 +163,13 @@ def encode_sptxt(filepath, *args, **kwargs):
         charges.append(spec.charge)
         sequences.append(spec.sequence)
 
-    ret = pd.DataFrame({
-        "Sequences": sequences,
-        "Encodings": encodings,
-        "Charges": charges,
-    })
+    ret = pd.DataFrame(
+        {
+            "Sequences": sequences,
+            "Encodings": encodings,
+            "Charges": charges,
+        }
+    )
 
     return ret
 

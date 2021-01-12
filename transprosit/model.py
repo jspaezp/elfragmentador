@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 
 from argparse import ArgumentParser
 
+
 class PositionalEncoding(torch.nn.Module):
     r"""Inject some information about the relative or absolute position of the tokens
         in the sequence. The positional encodings have the same dimension as
@@ -127,28 +128,64 @@ class PepTransformerModel(pl.LightningModule):
         self.loss = torch.nn.MSELoss()
         self.lr = lr
 
-
     def init_weights(self):
         initrange = 0.1
         torch.nn.init.uniform_(self.encoder.weight, -initrange, initrange)
 
-
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--max_charge", default = 6, type = int, help="Maximum precursor charge to be expected")
-        parser.add_argument("--num_queries", default = 150, type = int, help="Expected encoding length of the spectra")
-        parser.add_argument("--num_decoder_layers", default = 6, type = int, help="Number of sub-encoder-layers in the encoder")
-        parser.add_argument("--num_encoder_layers", default = 6, type = int, help="Number of sub-encoder-layers in the decoder")
-        parser.add_argument("--ntoken", default = 26, type = int, help="number of distinc aminoacid entries")
-        parser.add_argument("--nhid", default = 1024, type = int, help="Dimension of the feedforward networks")
-        parser.add_argument("--max_len", default = 50, type = int, help="Maximum number of positions in the positional encoder")
-        parser.add_argument("--ninp", default = 516, type = int, help="number of input/output features in the transformer layers")
-        parser.add_argument("--nhead", default = 12, type = int, help="Number of attention heads")
-        parser.add_argument("--dropout", default = 0.1, type = int)
-        parser.add_argument("--lr", default = 1e-4, type = int)
+        parser.add_argument(
+            "--max_charge",
+            default=6,
+            type=int,
+            help="Maximum precursor charge to be expected",
+        )
+        parser.add_argument(
+            "--num_queries",
+            default=150,
+            type=int,
+            help="Expected encoding length of the spectra",
+        )
+        parser.add_argument(
+            "--num_decoder_layers",
+            default=6,
+            type=int,
+            help="Number of sub-encoder-layers in the encoder",
+        )
+        parser.add_argument(
+            "--num_encoder_layers",
+            default=6,
+            type=int,
+            help="Number of sub-encoder-layers in the decoder",
+        )
+        parser.add_argument(
+            "--ntoken", default=26, type=int, help="number of distinc aminoacid entries"
+        )
+        parser.add_argument(
+            "--nhid",
+            default=1024,
+            type=int,
+            help="Dimension of the feedforward networks",
+        )
+        parser.add_argument(
+            "--max_len",
+            default=50,
+            type=int,
+            help="Maximum number of positions in the positional encoder",
+        )
+        parser.add_argument(
+            "--ninp",
+            default=516,
+            type=int,
+            help="number of input/output features in the transformer layers",
+        )
+        parser.add_argument(
+            "--nhead", default=12, type=int, help="Number of attention heads"
+        )
+        parser.add_argument("--dropout", default=0.1, type=int)
+        parser.add_argument("--lr", default=1e-4, type=int)
         return parser
-
 
     def configure_optimizers(self):
         opt = torch.optim.Adam(self.parameters(), lr=self.lr)
@@ -166,7 +203,6 @@ class PepTransformerModel(pl.LightningModule):
         """
 
         return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
-
 
     def forward(self, src, charge, debug=False):
         """
@@ -218,7 +254,7 @@ class PepTransformerModel(pl.LightningModule):
         trans_decoder_tgt = trans_decoder_tgt * (charge.unsqueeze(0) / self.max_charge)
         if debug:
             print(f"Shape of query embedding {trans_decoder_tgt.shape}")
-        
+
         # tgt has to be of shape (num_ions, batch, embedding)
         spectra_output = self.trans_decoder(
             memory=trans_encoder_output,
@@ -227,7 +263,7 @@ class PepTransformerModel(pl.LightningModule):
         if debug:
             print(f"Shape of the output spectra {spectra_output.shape}")
 
-        spectra_output = spectra_output.mean(axis = 2).permute(1,0)
+        spectra_output = spectra_output.mean(axis=2).permute(1, 0)
         if debug:
             print(f"Shape of the output spectra {spectra_output.shape}")
 
@@ -235,7 +271,7 @@ class PepTransformerModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx=None):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
-        yhat_irt, yhat_spectra  = self(encoded_sequence, charge)
+        yhat_irt, yhat_spectra = self(encoded_sequence, charge)
 
         assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
         assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
@@ -243,13 +279,16 @@ class PepTransformerModel(pl.LightningModule):
         loss_irt = self.loss(yhat_irt.float(), norm_irt.float())
         loss_spectra = self.loss(yhat_spectra.float(), encoded_spectra.float())
 
-        total_loss = loss_irt + loss_spectra
+        total_loss = loss_irt + (10 * loss_spectra)
 
-        self.log_dict({
-            "train_loss": total_loss,
-            "train_irt_loss": loss_irt,
-            "train_spec_loss": loss_spectra},
-            prog_bar=True)
+        self.log_dict(
+            {
+                "train_loss": total_loss,
+                "train_irt_loss": loss_irt,
+                "train_spec_loss": loss_spectra,
+            },
+            prog_bar=True,
+        )
 
         assert not torch.isnan(total_loss), print(
             f"Fail at Loss: {total_loss},\n"
@@ -262,17 +301,20 @@ class PepTransformerModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx=None):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
-        yhat_irt, yhat_spectra  = self(encoded_sequence, charge)
+        yhat_irt, yhat_spectra = self(encoded_sequence, charge)
 
         loss_irt = self.loss(yhat_irt, norm_irt)
         loss_spectra = self.loss(yhat_spectra, encoded_spectra)
-        total_loss = loss_irt + loss_spectra
+        total_loss = loss_irt + (10 * loss_spectra)
 
-        self.log_dict({
-            "val_loss": total_loss,
-            "val_irt_loss": loss_irt,
-            "val_spec_loss": loss_spectra},
-            prog_bar=True)
+        self.log_dict(
+            {
+                "val_loss": total_loss,
+                "val_irt_loss": loss_irt,
+                "val_spec_loss": loss_spectra,
+            },
+            prog_bar=True,
+        )
 
 
 class TransformerModel(torch.nn.Module):
