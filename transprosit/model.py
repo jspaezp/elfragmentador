@@ -61,7 +61,7 @@ class PositionalEncoding(torch.nn.Module):
         return self.dropout(x)
 
 
-class PepTransformerModel(torch.nn.Module):
+class PepTransformerModel(pl.LightningModule):
     def __init__(
         self,
         max_charge=6,
@@ -74,6 +74,7 @@ class PepTransformerModel(torch.nn.Module):
         ninp=512,
         nhead=8,
         dropout=0.2,
+        lr=1e-4
     ):
         """
         Parameters:
@@ -116,6 +117,19 @@ class PepTransformerModel(torch.nn.Module):
         self.trans_decoder_embedding = torch.nn.Embedding(num_queries, ninp)
         self.max_charge = max_charge
 
+        # Weight Initialization
+        self.init_weights()
+
+        # Training related things
+        self.loss = torch.nn.MSELoss()
+        self.lr = lr
+        self.save_hyperparameters()
+
+
+    def init_weights(self):
+        initrange = 0.1
+        torch.nn.init.uniform_(self.encoder.weight, -initrange, initrange)
+
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -130,19 +144,47 @@ class PepTransformerModel(torch.nn.Module):
         parser.add_argument("--ninp", default = 512, type = int, help="number of input/output features in the transformer layers")
         parser.add_argument("--nhead", default = 12, type = int, help="Number of attention heads")
         parser.add_argument("--dropout", default = 0.1, type = int)
+        parser.add_argument("--lr", default = 1e-4, type = int)
         return parser
+
+
+    def configure_optimizers(self):
+        opt = torch.optim.Adam(self.transformer.parameters(), lr=self.lr)
+
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            opt, mode="min", factor=0.5, patience=5, verbose=True
+        )
+
+        """
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            opt, T_0=1, T_mult=2, eta_min=self.lr/50,
+            last_epoch=-1,
+            verbose=False)
+
+        """
+
+        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
+
 
     def forward(self, src, charge, debug=False):
         """
         Parameters:
-            src: Encoded pepide sequence (view details)
-            charge: Integer with the charge of the precursor
+            src: Encoded pepide sequence [B, L] (view details)
+            charge: Tensor with the charges [B, 1]
 
         Details:
             src:
                 The peptide is enconded as integers for the aminoacid.
                 "AAA" enconded for a max length of 5 would be
                 torch.Tensor([ 1,  1,  1,  0,  0]).long()
+            charge:
+                A tensor corresponding to the charges of each of the
+                peptide precursors (long)
+
+        Returns:
+            iRT prediction [B, 1]
+            Spectra prediction [B, self.num_queries]
+
         """
         trans_encoder_mask = ~src.bool()
         if debug:
@@ -187,27 +229,47 @@ class PepTransformerModel(torch.nn.Module):
         if debug:
             print(f"Shape of the output spectra {spectra_output.shape}")
 
-        """
-        Parameters:
-            tgt: Tensor,
-            memory: Tensor,
-            tgt_mask: Optional[Tensor] = None,
-            memory_mask: Optional[Tensor] = None,
-            tgt_key_padding_mask: Optional[Tensor] = None, 
-            memory_key_padding_mask: Optional[Tensor] = None
-
-        Shapes:
-            - tgt: :math:`(T, N, E)`.
-            - tgt_mask: :math:`(T, T)`.
-            - memory_mask: :math:`(T, S)`.
-            - tgt_key_padding_mask: :math:`(N, T)`.
-            - memory_key_padding_mask: :math:`(N, S)`.
-
-        Output:
-            `(T, N, E)`
-        """
-
         return rt_output, spectra_output
+
+    def training_step(self, batch, batch_idx=None):
+        encoded_sequence, charge, encoded_spectra, norm_irt = batch
+        yhat_irt, yhat_spectra  = self(encoded_sequence, charge)
+
+        assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
+        assert not all(torch.isnan(yhat_spectra)), print(yhat_spectra.mean())
+
+        loss_irt = self.loss(yhat_irt, norm_irt)
+        loss_spectra = self.loss(yhat_spectra, encoded_spectra)
+        total_loss = loss_irt + loss_spectra
+
+        self.log_dict({
+            "train_loss": total_loss,
+            "train_irt_loss": loss_irt,
+            "train_spec_loss": loss_spectra},
+            prog_bar=True)
+
+        assert not torch.isnan(total_loss), print(
+            f"Fail at Loss: {total_loss},\n"
+            f" yhat: {total_loss},\n"
+            f" y_spec: {encoded_spectra}\n"
+            f" y_irt: {norm_irt}"
+        )
+
+        return {"loss": total_loss}
+
+    def validation_step(self, batch, batch_idx=None):
+        encoded_sequence, charge, encoded_spectra, norm_irt = batch
+        yhat_irt, yhat_spectra  = self(encoded_sequence, charge)
+
+        loss_irt = self.loss(yhat_irt, norm_irt)
+        loss_spectra = self.loss(yhat_spectra, encoded_spectra)
+        total_loss = loss_irt + loss_spectra
+
+        self.log_dict({
+            "val_loss": total_loss,
+            "val_irt_loss": loss_irt,
+            "val_spec_loss": loss_spectra},
+            prog_bar=True)
 
 
 class TransformerModel(torch.nn.Module):
