@@ -71,7 +71,7 @@ class PepTransformerModel(pl.LightningModule):
         ntoken=26,
         nhid=1024,
         max_len=50,
-        ninp=512,
+        ninp=516,
         nhead=8,
         dropout=0.2,
         lr=1e-4,
@@ -143,7 +143,7 @@ class PepTransformerModel(pl.LightningModule):
         parser.add_argument("--ntoken", default = 26, type = int, help="number of distinc aminoacid entries")
         parser.add_argument("--nhid", default = 1024, type = int, help="Dimension of the feedforward networks")
         parser.add_argument("--max_len", default = 50, type = int, help="Maximum number of positions in the positional encoder")
-        parser.add_argument("--ninp", default = 512, type = int, help="number of input/output features in the transformer layers")
+        parser.add_argument("--ninp", default = 516, type = int, help="number of input/output features in the transformer layers")
         parser.add_argument("--nhead", default = 12, type = int, help="Number of attention heads")
         parser.add_argument("--dropout", default = 0.1, type = int)
         parser.add_argument("--lr", default = 1e-4, type = int)
@@ -238,10 +238,11 @@ class PepTransformerModel(pl.LightningModule):
         yhat_irt, yhat_spectra  = self(encoded_sequence, charge)
 
         assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
-        assert not all(torch.isnan(yhat_spectra)), print(yhat_spectra.mean())
+        assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
 
-        loss_irt = self.loss(yhat_irt, norm_irt)
-        loss_spectra = self.loss(yhat_spectra, encoded_spectra)
+        loss_irt = self.loss(yhat_irt.float(), norm_irt.float())
+        loss_spectra = self.loss(yhat_spectra.float(), encoded_spectra.float())
+
         total_loss = loss_irt + loss_spectra
 
         self.log_dict({
