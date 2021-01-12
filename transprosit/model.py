@@ -74,7 +74,9 @@ class PepTransformerModel(pl.LightningModule):
         ninp=512,
         nhead=8,
         dropout=0.2,
-        lr=1e-4
+        lr=1e-4,
+        *args,
+        **kwargs,
     ):
         """
         Parameters:
@@ -84,6 +86,7 @@ class PepTransformerModel(pl.LightningModule):
         """
 
         super().__init__()
+        self.save_hyperparameters()
 
         # Positional encoding section
         self.ninp = ninp
@@ -123,7 +126,6 @@ class PepTransformerModel(pl.LightningModule):
         # Training related things
         self.loss = torch.nn.MSELoss()
         self.lr = lr
-        self.save_hyperparameters()
 
 
     def init_weights(self):

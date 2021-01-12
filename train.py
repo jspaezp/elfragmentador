@@ -25,7 +25,9 @@ parser = pl.Trainer.add_argparse_args(parser)
 
 args = parser.parse_args()
 
-model = model.PepTransformerModel(args)
+dict_args = vars(args)
+model = model.PepTransformerModel(**dict_args)
+print(model)
 datamodule = datamodules.PeptideDataModule(batch_size=args.batch_size, base_dir=args.data_dir)
 datamodule.setup()
 
