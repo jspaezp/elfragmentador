@@ -26,7 +26,7 @@ parser = pl.Trainer.add_argparse_args(parser)
 args = parser.parse_args()
 
 model = model.PepTransformerModel(args)
-datamodule = datamodules.PeptideDataModule(batch_size=args.batch_size, base_dir=args.base_dir)
+datamodule = datamodules.PeptideDataModule(batch_size=args.batch_size, base_dir=args.data_dir)
 datamodule.setup()
 
 callbacks = train.get_callbacks("prosit_transformer")
