@@ -7,6 +7,29 @@ import pytorch_lightning as pl
 from argparse import ArgumentParser
 
 
+class MLP(nn.Module):
+    """Very simple multi-layer perceptron (also called FFN)
+    From: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
+    """
+
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
+        super().__init__()
+        self.num_layers = num_layers
+        h = [hidden_dim] * (num_layers - 1)
+        self.layers = nn.ModuleList(
+            nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
+        )
+
+    def forward(self, x):
+        for i, layer in enumerate(self.layers):
+            x = (
+                torch.nn.functional.relu(layer(x))
+                if i < self.num_layers - 1
+                else layer(x)
+            )
+        return x
+
+
 class PositionalEncoding(torch.nn.Module):
     r"""Inject some information about the relative or absolute position of the tokens
         in the sequence. The positional encodings have the same dimension as
@@ -102,12 +125,16 @@ class PepTransformerModel(pl.LightningModule):
             encoder_layers, num_encoder_layers
         )
 
-        # On this implementation, the rt predictor is simply a linear layer
+        # On this implementation, the rt predictor is simply a set of linear layers
         # that combines the features from the transformer encoder
         # TODO check if this 2 layer approach is actually better than a single linear layer
+        # or wethern an MLP would be better
+        self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
+        """
         self.rt_decoder = torch.nn.Sequential(
             *[torch.nn.Linear(ninp, ninp // 2), torch.nn.Linear(ninp // 2, 1)]
         )
+        """
 
         # Transformer decoder section
         decoder_layer = nn.TransformerDecoderLayer(d_model=ninp, nhead=nhead)
@@ -115,6 +142,7 @@ class PepTransformerModel(pl.LightningModule):
             decoder_layer, num_layers=num_decoder_layers
         )
         self.trans_decoder = transformer_decoder
+        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
 
         # Input to the decoder layer (input and output is the same size in tranformers)
         # TODO change name because it does not really encode stuff
@@ -263,9 +291,14 @@ class PepTransformerModel(pl.LightningModule):
         if debug:
             print(f"Shape of the output spectra {spectra_output.shape}")
 
-        spectra_output = spectra_output.mean(axis=2).permute(1, 0)
+        spectra_output = self.peak_decoder(spectra_output)
+        # spectra_output = spectra_output.mean(axis=2).permute(1, 0)
         if debug:
-            print(f"Shape of the output spectra {spectra_output.shape}")
+            print(f"Shape of the MLP spectra {spectra_output.shape}")
+
+        spectra_output = spectra_output.squeeze().permute(1, 0)
+        if debug:
+            print(f"Shape of the permuted spectra {spectra_output.shape}")
 
         return rt_output, spectra_output
 

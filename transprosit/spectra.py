@@ -91,7 +91,10 @@ class Spectrum:
             peak_annot = self._annotated_peaks
 
         return get_fragment_encoding_labels(
-            max_charge=max_charge, ions=ions, max_length=max_length
+            max_charge=max_charge,
+            ions=ions,
+            max_length=max_length,
+            annotated_peaks=peak_annot,
         )
 
     @property
@@ -117,23 +120,54 @@ class Spectrum:
 
 
 def decode_tensor(sequence, tensor, max_charge, ions, max_length):
+    """
+    Returns a data frame with annotations from sequence
+    and a tensor encoding a spectra
+
+    Example
+    =======
+    >>> foo = decode_tensor("AAACK", torch.rand((150)), 3, "by", 25)
+    >>> >>> foo.head()
+      Fragment        Mass  Intensity
+    0     z1b1   72.044390   0.887933
+    1     z1y1  147.112804   0.765287
+    2     z2b1   36.525833   0.420042
+    3     z2y1   74.060040   0.428646
+    4     z3b1   24.686314   0.212731
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
+    >>> # plt.show()
+    """
     key_list = get_fragment_encoding_labels(
-        max_charge=max_charge, ions=ions, max_lenght=max_length, dry=True
+        max_charge=max_charge, ions=ions, max_length=max_length, annotated_peaks=None
     )
     fragment_ions = annotate.get_peptide_ions(
-        sequence, list(1, max_charge), ion_types=ions
+        sequence, list(range(1, max_charge + 1)), ion_types=ions
     )
-    masses = [fragment_ions[k] for k in key_list]
+    masses = [fragment_ions.get(k, 0) for k in key_list]
     intensities = [float(x) for x in tensor]
 
-    return pd.DataFrame(
-        {"Fragment": fragment_ions, "Mass": masses, "Intensity": intensities}
-    )
+    out_dict = {"Fragment": key_list, "Mass": masses, "Intensity": intensities}
+    out_df = pd.DataFrame(out_dict)
+    out_df = out_df[out_df["Mass"] != 0].copy()
+
+    return out_df
 
 
 def get_fragment_encoding_labels(
     max_charge=3, ions="yb", max_length=25, annotated_peaks=None
 ):
+    """
+    Gets either the laels or an sequence that encodes a spectra
+
+    Examples
+    ========
+    >>> get_fragment_encoding_labels(2, 'yb', 2)
+    ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z1b2', 'z1y2', 'z2b2', 'z2y2']
+
+    >>> get_fragment_encoding_labels(2, 'yb', 2, {'z1y2': 100, 'z2y2': 52})
+    [0, 0, 0, 0, 0, 100, 0, 52]
+    """
     ions = "".join(sorted(ions))
     charges = list(range(1, max_charge + 1))
     positions = list(range(1, max_length + 1))

@@ -23,7 +23,8 @@ class PeptideDataset(torch.utils.data.Dataset):
             torch.Tensor(eval(x)).float().T for x in self.df["SpectraEncoding"]
         ]
         self.spectra_encodings = [
-            torch.where(x > 0., x, torch.Tensor([-1.])) for x in self.spectra_encodings
+            torch.where(x > 0.0, x, torch.Tensor([-1.0]))
+            for x in self.spectra_encodings
         ]
 
         # Pretty sure this last 2 can be optimized vectorizing them

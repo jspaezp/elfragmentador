@@ -1,16 +1,24 @@
 from transprosit import model
 from transprosit import datamodules
 
-model = model.PepTransformerModel()
-datamodule = datamodules.PeptideDataModule(
-    batch_size=2, base_dir="/home/jspaezp/git/ppptr/tests/data"
-)
-datamodule.setup()
 
-for x in datamodule.val_dataloader():
-    break
+def mod_forward_base(datadir):
+    mod = model.PepTransformerModel(nhead=4, ninp=32)
+    datamodule = datamodules.PeptideDataModule(batch_size=2, base_dir=datadir)
+    datamodule.setup()
 
-print([y.shape for y in x])
+    for x in datamodule.val_dataloader():
+        break
 
-out = model(x[0], x[1], debug=True)
-print([y.shape for y in out])
+    print([y.shape for y in x])
+
+    out = mod(x[0], x[1], debug=True)
+    print([y.shape for y in out])
+
+
+def test_model_forward(shared_datadir):
+    mod_forward_base(shared_datadir)
+
+
+if __name__ == "__main__":
+    mod_forward_base("./tests/data/")

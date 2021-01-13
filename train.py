@@ -23,26 +23,28 @@ parser = datamodules.PeptideDataModule.add_model_specific_args(parser)
 # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
 parser = pl.Trainer.add_argparse_args(parser)
 
-args = parser.parse_args()
+if __name__ == "__main__":
 
-dict_args = vars(args)
-model = model.PepTransformerModel(**dict_args)
-print(model)
-datamodule = datamodules.PeptideDataModule(
-    batch_size=args.batch_size, base_dir=args.data_dir
-)
-datamodule.setup()
+    args = parser.parse_args()
 
-callbacks = train.get_callbacks("prosit_transformer")
-trainer = pl.Trainer.from_argparse_args(
-    args,
-    max_epochs=100,
-    precision=16,
-    gpus=1,
-    profiler="simple",
-    logger=callbacks["logger"],
-    callbacks=callbacks["callbacks"],
-    progress_bar_refresh_rate=50,
-)
+    dict_args = vars(args)
+    model = model.PepTransformerModel(**dict_args)
+    print(model)
+    datamodule = datamodules.PeptideDataModule(
+        batch_size=args.batch_size, base_dir=args.data_dir
+    )
+    datamodule.setup()
 
-trainer.fit(model, datamodule)
+    callbacks = train.get_callbacks("prosit_transformer")
+    trainer = pl.Trainer.from_argparse_args(
+        args,
+        max_epochs=100,
+        precision=16,
+        gpus=1,
+        profiler="simple",
+        logger=callbacks["logger"],
+        callbacks=callbacks["callbacks"],
+        progress_bar_refresh_rate=50,
+    )
+
+    trainer.fit(model, datamodule)
