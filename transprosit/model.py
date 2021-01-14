@@ -5,7 +5,7 @@ from torch import nn
 import pytorch_lightning as pl
 
 from argparse import ArgumentParser
-
+from transprosit import constants
 
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)
@@ -85,20 +85,101 @@ class PositionalEncoding(torch.nn.Module):
         return self.dropout(x)
 
 
+class PeptideTransformerEncoder(torch.nn.Module):
+    def __init__(self, ninp, dropout, nhead, nhid, layers):
+        super().__init__()
+
+        # Positional encoding section
+        self.ninp = ninp
+        self.pos_encoder = PositionalEncoding(ninp, dropout, max_len=constants.MAX_SEQUENCE * 2)
+
+        # Aminoacid encoding layer
+        self.aa_encoder = torch.nn.Embedding(len(constants.AMINO_ACID_SET) + 1, ninp, padding_idx=0)
+        self.mod_encoder = torch.nn.Embedding(len(constants.MODIFICATION) + 1, ninp, padding_idx=0)
+
+        # Transformer encoder sections
+        encoder_layers = torch.nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout)
+        self.transformer_encoder = torch.nn.TransformerEncoder(encoder_layers, layers)
+
+        # Weight Initialization
+        self.init_weights()
+        
+    def init_weights(self):
+        initrange = 0.1
+        torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
+        torch.nn.init.uniform_(self.mod_encoder.weight, -initrange * 0.1, initrange * 0.1)
+
+    def forward(self, src, debug=False):
+        trans_encoder_mask = ~src.bool()
+        if debug:
+            print(f"Shape of mask {trans_encoder_mask.size()}")
+
+        src = src.permute(1, 0)
+        src = self.aa_encoder(src) * math.sqrt(self.ninp)
+        if debug:
+            print(f"Shape after encoder {src.shape}")
+        src = self.pos_encoder(src)
+        if debug:
+            print(f"Shape after pos encoder {src.shape}")
+
+        trans_encoder_output = self.transformer_encoder(
+            src, src_key_padding_mask=trans_encoder_mask
+        )
+        if debug:
+            print(f"Shape after trans encoder {trans_encoder_output.shape}")
+        
+        return trans_encoder_output
+
+
+class PeptideTransformerDecoder(torch.nn.Module):
+    def __init__(self, ninp, nhead, layers):
+        super().__init__()
+
+        print(f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}")
+        decoder_layer = nn.TransformerDecoderLayer(d_model=ninp, nhead=nhead)
+        self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
+        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
+
+        print(f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}")
+        self.trans_decoder_embedding = torch.nn.Embedding(constants.NUM_FRAG_EMBEDINGS, ninp)
+        self.max_charge = constants.DEFAULT_MAX_CHARGE
+
+    def init_weights(self):
+        initrange = 0.1
+        torch.nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
+
+    def forward(self, src, charge, debug = False):
+        trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
+        trans_decoder_tgt = trans_decoder_tgt * (charge.unsqueeze(0) / self.max_charge)
+        if debug:
+            print(f"Shape of query embedding {trans_decoder_tgt.shape}")
+
+        spectra_output = self.trans_decoder(memory=src, tgt=trans_decoder_tgt)
+        if debug:
+            print(f"Shape of the output spectra {spectra_output.shape}")
+
+        spectra_output = self.peak_decoder(spectra_output)
+        if debug:
+            print(f"Shape of the MLP spectra {spectra_output.shape}")
+
+        spectra_output = spectra_output.squeeze().permute(1, 0)
+        if debug:
+            print(f"Shape of the permuted spectra {spectra_output.shape}")
+        
+        return spectra_output
+
+
 class PepTransformerModel(pl.LightningModule):
     def __init__(
         self,
-        max_charge=6,
-        num_queries=150,
         num_decoder_layers=6,
         num_encoder_layers=6,
-        ntoken=26,
         nhid=1024,
-        max_len=50,
         ninp=516,
         nhead=8,
         dropout=0.2,
         lr=1e-4,
+        scheduler="plateau",
         *args,
         **kwargs,
     ):
@@ -112,125 +193,22 @@ class PepTransformerModel(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        # Positional encoding section
-        self.ninp = ninp
-        self.pos_encoder = PositionalEncoding(ninp, dropout, max_len=max_len)
+        # Peptide encoder
+        self.encoder = PeptideTransformerEncoder(ninp=ninp, dropout=dropout, nhead=nhead, nhid=nhid, layers=num_encoder_layers)
 
-        # Aminoacid encoding layer
-        self.encoder = torch.nn.Embedding(ntoken + 1, ninp, padding_idx=0)
+        # Peptide decoder
+        self.decoder = PeptideTransformerDecoder(ninp=ninp, nhead=nhead, layers=num_decoder_layers)
 
-        # Transformer encoder sections
-        encoder_layers = torch.nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout)
-        self.transformer_encoder = torch.nn.TransformerEncoder(
-            encoder_layers, num_encoder_layers
-        )
-
-        # On this implementation, the rt predictor is simply a set of linear layers
+        # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
-        # TODO check if this 2 layer approach is actually better than a single linear layer
-        # or wethern an MLP would be better
         self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
-        """
-        self.rt_decoder = torch.nn.Sequential(
-            *[torch.nn.Linear(ninp, ninp // 2), torch.nn.Linear(ninp // 2, 1)]
-        )
-        """
-
-        # Transformer decoder section
-        decoder_layer = nn.TransformerDecoderLayer(d_model=ninp, nhead=nhead)
-        transformer_decoder = nn.TransformerDecoder(
-            decoder_layer, num_layers=num_decoder_layers
-        )
-        self.trans_decoder = transformer_decoder
-        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
-
-        # Input to the decoder layer (input and output is the same size in tranformers)
-        # TODO change name because it does not really encode stuff
-        self.trans_decoder_embedding = torch.nn.Embedding(num_queries, ninp)
-        self.max_charge = max_charge
-
-        # Weight Initialization
-        self.init_weights()
 
         # Training related things
         self.loss = torch.nn.MSELoss()
         self.lr = lr
+        assert scheduler in ["plateau", "cosine"]
+        self.scheduler = scheduler
 
-    def init_weights(self):
-        initrange = 0.1
-        torch.nn.init.uniform_(self.encoder.weight, -initrange, initrange)
-
-    @staticmethod
-    def add_model_specific_args(parent_parser):
-        parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument(
-            "--max_charge",
-            default=6,
-            type=int,
-            help="Maximum precursor charge to be expected",
-        )
-        parser.add_argument(
-            "--num_queries",
-            default=150,
-            type=int,
-            help="Expected encoding length of the spectra",
-        )
-        parser.add_argument(
-            "--num_decoder_layers",
-            default=6,
-            type=int,
-            help="Number of sub-encoder-layers in the encoder",
-        )
-        parser.add_argument(
-            "--num_encoder_layers",
-            default=6,
-            type=int,
-            help="Number of sub-encoder-layers in the decoder",
-        )
-        parser.add_argument(
-            "--ntoken", default=26, type=int, help="number of distinc aminoacid entries"
-        )
-        parser.add_argument(
-            "--nhid",
-            default=1024,
-            type=int,
-            help="Dimension of the feedforward networks",
-        )
-        parser.add_argument(
-            "--max_len",
-            default=50,
-            type=int,
-            help="Maximum number of positions in the positional encoder",
-        )
-        parser.add_argument(
-            "--ninp",
-            default=516,
-            type=int,
-            help="number of input/output features in the transformer layers",
-        )
-        parser.add_argument(
-            "--nhead", default=12, type=int, help="Number of attention heads"
-        )
-        parser.add_argument("--dropout", default=0.1, type=int)
-        parser.add_argument("--lr", default=1e-4, type=int)
-        return parser
-
-    def configure_optimizers(self):
-        opt = torch.optim.Adam(self.parameters(), lr=self.lr)
-
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            opt, mode="min", factor=0.5, patience=5, verbose=True
-        )
-
-        """
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-            opt, T_0=1, T_mult=2, eta_min=self.lr/50,
-            last_epoch=-1,
-            verbose=False)
-
-        """
-
-        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
     def forward(self, src, charge, debug=False):
         """
@@ -252,55 +230,73 @@ class PepTransformerModel(pl.LightningModule):
             Spectra prediction [B, self.num_queries]
 
         """
-        trans_encoder_mask = ~src.bool()
-        if debug:
-            print(f"Shape of mask {trans_encoder_mask.size()}")
-
-        src = src.permute(1, 0)
-        src = self.encoder(src) * math.sqrt(self.ninp)
-        if debug:
-            print(f"Shape after encoder {src.shape}")
-        src = self.pos_encoder(src)
-        if debug:
-            print(f"Shape after pos encoder {src.shape}")
-
-        trans_encoder_output = self.transformer_encoder(
-            src, src_key_padding_mask=trans_encoder_mask
-        )
-        if debug:
-            print(f"Shape after trans encoder {trans_encoder_output.shape}")
-
+        trans_encoder_output = self.encoder(src, debug=debug)
         rt_output = self.rt_decoder(trans_encoder_output)
         if debug:
-            print(f"Shape after decoder {rt_output.shape}")
+            print(f"Shape after RT decoder {rt_output.shape}")
 
         rt_output = rt_output.mean(dim=0)
         if debug:
             print(f"Shape of RT output {rt_output.shape}")
 
-        trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        trans_decoder_tgt = trans_decoder_tgt * (charge.unsqueeze(0) / self.max_charge)
-        if debug:
-            print(f"Shape of query embedding {trans_decoder_tgt.shape}")
-
-        # tgt has to be of shape (num_ions, batch, embedding)
-        spectra_output = self.trans_decoder(
-            memory=trans_encoder_output,
-            tgt=trans_decoder_tgt,
-        )
-        if debug:
-            print(f"Shape of the output spectra {spectra_output.shape}")
-
-        spectra_output = self.peak_decoder(spectra_output)
-        # spectra_output = spectra_output.mean(axis=2).permute(1, 0)
-        if debug:
-            print(f"Shape of the MLP spectra {spectra_output.shape}")
-
-        spectra_output = spectra_output.squeeze().permute(1, 0)
-        if debug:
-            print(f"Shape of the permuted spectra {spectra_output.shape}")
+        spectra_output = self.decoder(trans_encoder_output, charge, debug=debug)
 
         return rt_output, spectra_output
+
+
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+        parser.add_argument(
+            "--num_queries",
+            default=150,
+            type=int,
+            help="Expected encoding length of the spectra",
+        )
+        parser.add_argument(
+            "--num_decoder_layers",
+            default=6,
+            type=int,
+            help="Number of sub-encoder-layers in the encoder",
+        )
+        parser.add_argument(
+            "--num_encoder_layers",
+            default=6,
+            type=int,
+            help="Number of sub-encoder-layers in the decoder",
+        )
+        parser.add_argument(
+            "--nhid",
+            default=1024,
+            type=int,
+            help="Dimension of the feedforward networks",
+        )
+        parser.add_argument(
+            "--nhead", default=12, type=int, help="Number of attention heads"
+        )
+        parser.add_argument("--dropout", default=0.1, type=int)
+        parser.add_argument("--lr", default=1e-4, type=int)
+        parser.add_argument("--scheduler", default="plateau", type=str)
+        return parser
+
+
+    def configure_optimizers(self):
+        opt = torch.optim.Adam(self.parameters(), lr=self.lr)
+
+        if self.scheduler == "plateau":
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                opt, mode="min", factor=0.5, patience=5, verbose=True
+            )
+        elif self.scheduler == "cosine":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                opt, T_0=1, T_mult=2, eta_min=self.lr/50,
+                last_epoch=-1,
+                verbose=False)
+        else:
+            raise ValueError("Scheduler should be one of 'plateau' or 'cosine', passed: ", self.scheduler)
+
+        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
+
 
     def training_step(self, batch, batch_idx=None):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
@@ -331,6 +327,7 @@ class PepTransformerModel(pl.LightningModule):
         )
 
         return {"loss": total_loss}
+
 
     def validation_step(self, batch, batch_idx=None):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch

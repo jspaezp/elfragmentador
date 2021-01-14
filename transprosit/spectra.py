@@ -48,7 +48,7 @@ class Spectrum:
         self.tolerance_unit = tolerance_unit
 
         self._theoretical_peaks = annotate.get_peptide_ions(
-            self.sequence, charges=range(1, self.charge), ion_types="by"
+            self.sequence, charges=range(1, self.charge), ion_types=self.ion_types
         )
 
         self._annotated_peaks = None
@@ -81,7 +81,7 @@ class Spectrum:
         annots = {k: v / max_int for k, v in annots.items()}
         self._annotated_peaks = annots
 
-    def encode_annotations(self, max_charge=3, ions="yb", max_length=25, dry=False):
+    def encode_annotations(self, max_charge=3, dry=False):
         if self._annotated_peaks is None and not dry:
             self.annotate_peaks()
 
@@ -91,9 +91,7 @@ class Spectrum:
             peak_annot = self._annotated_peaks
 
         return get_fragment_encoding_labels(
-            max_charge=max_charge,
-            ions=ions,
-            max_length=max_length,
+            ions=self.ion_types,
             annotated_peaks=peak_annot,
         )
 
@@ -155,22 +153,22 @@ def decode_tensor(sequence, tensor, max_charge, ions, max_length):
 
 
 def get_fragment_encoding_labels(
-    max_charge=3, ions="yb", max_length=25, annotated_peaks=None
+    ions="by", annotated_peaks=None
 ):
     """
     Gets either the laels or an sequence that encodes a spectra
 
     Examples
     ========
-    >>> get_fragment_encoding_labels(2, 'yb', 2)
+    >>> get_fragment_encoding_labels('yb')
     ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z1b2', 'z1y2', 'z2b2', 'z2y2']
 
-    >>> get_fragment_encoding_labels(2, 'yb', 2, {'z1y2': 100, 'z2y2': 52})
+    >>> get_fragment_encoding_labels('yb', {'z1y2': 100, 'z2y2': 52})
     [0, 0, 0, 0, 0, 100, 0, 52]
     """
     ions = "".join(sorted(ions))
-    charges = list(range(1, max_charge + 1))
-    positions = list(range(1, max_length + 1))
+    charges = list(range(1, constants.MAX_FRAG_CHARGE + 1))
+    positions = list(range(1, constants.MAX_SEQUENCE + 1))
 
     encoding = []
     # TODO implement neutral losses ...  if needed

@@ -45,20 +45,27 @@ ALPHABET = {
 ALPHABET_S = {integer: char for char, integer in ALPHABET.items()}
 
 CHARGES = [1, 2, 3, 4, 5, 6]
-DEFAULT_MAX_CHARGE = len(CHARGES)
+DEFAULT_MAX_CHARGE = max(CHARGES)
 MAX_FRAG_CHARGE = 3
 MAX_SEQUENCE = 30
 MAX_ION = MAX_SEQUENCE - 1
 ION_TYPES = ["y", "b"]
+sorted(ION_TYPES)
 NLOSSES = ["", "H2O", "NH3"]
 
 FORWARD = {"a", "b", "c"}
 BACKWARD = {"x", "y", "z"}
 
 # Amino acids
+
+# Modifications use high caps PSI-MS name	
+
 MODIFICATION = {
-    "CAM": 57.0214637236,  # Carbamidomethylation (CAM)
-    "OX": 15.99491,  # Oxidation
+    "CARBAMIDOMETHYL": 57.0214637236,  # Carbamidomethylation (CAM)
+    "OXIDATION": 15.99491,  # Oxidation
+    "PHOSPHO": 79.966331,  # Phosphorylation
+    "METHYL": 14.015650, # Methylation
+    "DIMETHYL": 28.031300, # Dimethylation
 }
 
 AMINO_ACID = {
@@ -74,7 +81,7 @@ AMINO_ACID = {
     "N": 114.042927,
     "Y": 163.063329,
     "E": 129.042593,
-    "C": 103.009185 + MODIFICATION["CAM"],
+    "C": 103.009185 + MODIFICATION["CARBAMIDOMETHYL"],
     "F": 147.068414,
     "I": 113.084064,
     "A": 71.037114,
@@ -85,7 +92,6 @@ AMINO_ACID = {
     "K": 128.094963,
 }
 
-AMINO_ACID["M(ox)"] = AMINO_ACID["M"] + MODIFICATION["OX"]
 AMINO_ACID_SET = set(AMINO_ACID)
 
 # Atomic elements
@@ -115,3 +121,17 @@ ION_OFFSET = {
     "y": C_TERMINUS + H,
     "z": C_TERMINUS - NH2,
 }
+
+NUM_FRAG_EMBEDINGS = MAX_FRAG_CHARGE * MAX_SEQUENCE * len(ION_TYPES)
+
+ions = "".join(sorted(ION_TYPES))
+charges = list(range(1, MAX_FRAG_CHARGE + 1))
+positions = list(range(1, MAX_SEQUENCE + 1))
+
+FRAG_EMBEDING_LABELS = []
+# TODO implement neutral losses ...  if needed
+for pos in positions:
+    for charge in charges:
+        for ion in ions:
+            key = f"z{charge}{ion}{pos}"
+            FRAG_EMBEDING_LABELS.append(key)

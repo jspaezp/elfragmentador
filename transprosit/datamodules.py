@@ -10,22 +10,34 @@ from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
+from transprosit import constants
+
 
 class PeptideDataset(torch.utils.data.Dataset):
     def __init__(self, df):
         super().__init__()
+        print("\n\n>>> Initalizing Dataset")
         self.df = df
 
-        self.sequence_encodings = [
-            torch.Tensor(eval(x)).long().T for x in self.df["SequenceEncoding"]
-        ]
-        self.spectra_encodings = [
-            torch.Tensor(eval(x)).float().T for x in self.df["SpectraEncoding"]
-        ]
+        sequence_encodings = [ eval(x) for x in self.df["SequenceEncoding"] ]
+        sequence_encodings = [x + ([0]*(constants.MAX_SEQUENCE - len(x))) for x in sequence_encodings]
+        self.sequence_encodings = [torch.Tensor(x).long().T for x in sequence_encodings]
+
+        spectra_encodings = [ eval(x) for x in self.df["SpectraEncoding"] ]
+        spectra_encodings = [ x + ([0]*(constants.NUM_FRAG_EMBEDINGS - len(x))) for x in spectra_encodings]
+        spectra_encodings = [torch.Tensor(x).float().T for x in spectra_encodings]
+
         self.spectra_encodings = [
             torch.where(x > 0.0, x, torch.Tensor([-1.0]))
-            for x in self.spectra_encodings
+            for x in spectra_encodings
         ]
+
+        spectra_lengths = set([len(x) for x in self.spectra_encodings])
+        sequence_lengths = set([len(x) for x in self.sequence_encodings])
+        print((
+            f"Dataset Initialized with {len(df)} entries."
+            f" Spectra length: {spectra_lengths}"
+            f" Sequence length: {sequence_lengths}"))
 
         # Pretty sure this last 2 can be optimized vectorizing them
         self.norm_irts = [torch.Tensor([x / 100]).float() for x in self.df["mIRT"]]
@@ -68,9 +80,9 @@ class PeptideDataModule(pl.LightningDataModule):
         )
 
         train_df = train_df[
-            [len(eval(x)) == 25 for x in train_df["SequenceEncoding"]]
+            [len(eval(x)) <= constants.MAX_SEQUENCE for x in train_df["SequenceEncoding"]]
         ].copy()
-        val_df = val_df[[len(eval(x)) == 25 for x in val_df["SequenceEncoding"]]].copy()
+        val_df = val_df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in val_df["SequenceEncoding"]]].copy()
 
         print(f"Left Train: {len(train_df)} Val: {len(val_df)}")
 
