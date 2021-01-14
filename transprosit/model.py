@@ -109,13 +109,17 @@ class PeptideTransformerEncoder(torch.nn.Module):
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
         torch.nn.init.uniform_(self.mod_encoder.weight, -initrange * 0.1, initrange * 0.1)
 
-    def forward(self, src, debug=False):
+    def forward(self, src, mods = None, debug=False):
         trans_encoder_mask = ~src.bool()
         if debug:
             print(f"Shape of mask {trans_encoder_mask.size()}")
 
-        src = src.permute(1, 0)
-        src = self.aa_encoder(src) * math.sqrt(self.ninp)
+        src = self.aa_encoder(src.permute(1, 0)) 
+        if mods is not None:
+            mods = self.mod_encoder(mods.permute(1, 0))
+            src = src + mods
+
+        src = src * math.sqrt(self.ninp)
         if debug:
             print(f"Shape after encoder {src.shape}")
         src = self.pos_encoder(src)
@@ -210,7 +214,7 @@ class PepTransformerModel(pl.LightningModule):
         self.scheduler = scheduler
 
 
-    def forward(self, src, charge, debug=False):
+    def forward(self, src, charge, mods=None, debug=False):
         """
         Parameters:
             src: Encoded pepide sequence [B, L] (view details)
@@ -230,7 +234,7 @@ class PepTransformerModel(pl.LightningModule):
             Spectra prediction [B, self.num_queries]
 
         """
-        trans_encoder_output = self.encoder(src, debug=debug)
+        trans_encoder_output = self.encoder(src, mods=mods, debug=debug)
         rt_output = self.rt_decoder(trans_encoder_output)
         if debug:
             print(f"Shape after RT decoder {rt_output.shape}")
