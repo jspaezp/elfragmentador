@@ -89,8 +89,8 @@ def decode_fragment_tensor(
     >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
     >>> # plt.show()
     """
-    max_charge=constants.MAX_FRAG_CHARGE
-    ions="".join(sorted(constants.ION_TYPES))
+    max_charge = constants.MAX_FRAG_CHARGE
+    ions = "".join(sorted(constants.ION_TYPES))
 
     key_list = get_fragment_encoding_labels(annotated_peaks=None)
     fragment_ions = annotate.get_peptide_ions(
@@ -99,7 +99,9 @@ def decode_fragment_tensor(
     masses = [fragment_ions.get(k, 0) for k in key_list]
     intensities = [float(x) for x in tensor]
 
-    assert len(intensities) == len(masses), print(f"Int {len(intensities)}: \n{intensities}\n\nmasses {len(masses)}: \n{masses}")
+    assert len(intensities) == len(masses), print(
+        f"Int {len(intensities)}: \n{intensities}\n\nmasses {len(masses)}: \n{masses}"
+    )
 
     out_dict = {"Fragment": key_list, "Mass": masses, "Intensity": intensities}
     out_df = pd.DataFrame(out_dict)
