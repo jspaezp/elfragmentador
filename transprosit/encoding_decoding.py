@@ -34,24 +34,22 @@ def encode_mod_seq(seq):
 # TODO add PTM parsing
 
 
-def get_fragment_encoding_labels(ions="by", annotated_peaks=None):
+def get_fragment_encoding_labels(annotated_peaks=None):
     """
     Gets either the laels or an sequence that encodes a spectra
 
     Examples
     ========
-    >>> get_fragment_encoding_labels('yb')
+    >>> get_fragment_encoding_labels()
     ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z1b2', 'z1y2', 'z2b2', 'z2y2']
 
-    >>> get_fragment_encoding_labels('yb', {'z1y2': 100, 'z2y2': 52})
+    >>> get_fragment_encoding_labels({'z1y2': 100, 'z2y2': 52})
     [0, 0, 0, 0, 0, 100, 0, 52]
     """
-    charges = list(range(1, constants.MAX_FRAG_CHARGE + 1))
-    positions = list(range(1, constants.MAX_SEQUENCE + 1))
 
     encoding = []
     ion_encoding_iterables = {
-        "ION_TYPE": "".join(sorted(ions)),
+        "ION_TYPE": "".join(sorted(constants.ION_TYPES)),
         "CHARGE": [f"z{z}" for z in range(1, constants.MAX_FRAG_CHARGE + 1)],
         "POSITION": list(range(1, constants.MAX_ION + 1)),
     }
@@ -72,9 +70,6 @@ def get_fragment_encoding_labels(ions="by", annotated_peaks=None):
 def decode_fragment_tensor(
     sequence,
     tensor,
-    max_charge=constants.MAX_FRAG_CHARGE,
-    ions=constants.ION_TYPES,
-    max_length=constants.MAX_ION,
 ):
     """
     Returns a data frame with annotations from sequence
@@ -94,14 +89,17 @@ def decode_fragment_tensor(
     >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
     >>> # plt.show()
     """
-    key_list = get_fragment_encoding_labels(
-        max_charge=max_charge, ions=ions, max_length=max_length, annotated_peaks=None
-    )
+    max_charge=constants.MAX_FRAG_CHARGE
+    ions="".join(sorted(constants.ION_TYPES))
+
+    key_list = get_fragment_encoding_labels(annotated_peaks=None)
     fragment_ions = annotate.get_peptide_ions(
         sequence, list(range(1, max_charge + 1)), ion_types=ions
     )
     masses = [fragment_ions.get(k, 0) for k in key_list]
     intensities = [float(x) for x in tensor]
+
+    assert len(intensities) == len(masses), print(f"Int {len(intensities)}: \n{intensities}\n\nmasses {len(masses)}: \n{masses}")
 
     out_dict = {"Fragment": key_list, "Mass": masses, "Intensity": intensities}
     out_df = pd.DataFrame(out_dict)

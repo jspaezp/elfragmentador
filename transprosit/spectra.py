@@ -91,10 +91,7 @@ class Spectrum:
         else:
             peak_annot = self._annotated_peaks
 
-        return get_fragment_encoding_labels(
-            ions=self.ion_types,
-            annotated_peaks=peak_annot,
-        )
+        return get_fragment_encoding_labels(annotated_peaks=peak_annot)
 
     @property
     def annotated_peaks(self):
