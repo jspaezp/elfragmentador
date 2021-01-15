@@ -3,10 +3,7 @@ from pathlib import Path
 
 from transprosit import constants
 from transprosit import annotate
-from transprosit.encoding_decoding import (
-    get_fragment_encoding_labels,
-    decode_fragment_tensor,
-)
+from transprosit.encoding_decoding import get_fragment_encoding_labels
 
 import pandas as pd
 from tqdm.auto import tqdm
