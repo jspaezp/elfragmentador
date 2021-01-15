@@ -16,7 +16,7 @@ def get_callbacks(run_name, termination_patience=20, wandb_project="rttransforme
         dirpath=".",
         save_last=True,
         mode="min",
-        filename='{val_loss:.6f}_{epoc:02d}',
+        filename="{val_loss:.6f}_{epoc:02d}",
     )
 
     terminator = pl.callbacks.early_stopping.EarlyStopping(

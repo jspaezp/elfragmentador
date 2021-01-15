@@ -3,6 +3,10 @@ from pathlib import Path
 
 from transprosit import constants
 from transprosit import annotate
+from transprosit.encoding_decoding import (
+    get_fragment_encoding_labels,
+    decode_fragment_tensor,
+)
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -115,73 +119,6 @@ class Spectrum:
             out += f"\tAnnotations: {self._annotated_peaks}\n"
 
         return out
-
-
-def decode_tensor(sequence, tensor, max_charge, ions, max_length):
-    """
-    Returns a data frame with annotations from sequence
-    and a tensor encoding a spectra
-
-    Example
-    =======
-    >>> foo = decode_tensor("AAACK", torch.rand((150)), 3, "by", 25)
-    >>> >>> foo.head()
-      Fragment        Mass  Intensity
-    0     z1b1   72.044390   0.887933
-    1     z1y1  147.112804   0.765287
-    2     z2b1   36.525833   0.420042
-    3     z2y1   74.060040   0.428646
-    4     z3b1   24.686314   0.212731
-    >>> # import matplotlib.pyplot as plt
-    >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
-    >>> # plt.show()
-    """
-    key_list = get_fragment_encoding_labels(
-        max_charge=max_charge, ions=ions, max_length=max_length, annotated_peaks=None
-    )
-    fragment_ions = annotate.get_peptide_ions(
-        sequence, list(range(1, max_charge + 1)), ion_types=ions
-    )
-    masses = [fragment_ions.get(k, 0) for k in key_list]
-    intensities = [float(x) for x in tensor]
-
-    out_dict = {"Fragment": key_list, "Mass": masses, "Intensity": intensities}
-    out_df = pd.DataFrame(out_dict)
-    out_df = out_df[out_df["Mass"] != 0].copy()
-
-    return out_df
-
-
-def get_fragment_encoding_labels(
-    ions="by", annotated_peaks=None
-):
-    """
-    Gets either the laels or an sequence that encodes a spectra
-
-    Examples
-    ========
-    >>> get_fragment_encoding_labels('yb')
-    ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z1b2', 'z1y2', 'z2b2', 'z2y2']
-
-    >>> get_fragment_encoding_labels('yb', {'z1y2': 100, 'z2y2': 52})
-    [0, 0, 0, 0, 0, 100, 0, 52]
-    """
-    ions = "".join(sorted(ions))
-    charges = list(range(1, constants.MAX_FRAG_CHARGE + 1))
-    positions = list(range(1, constants.MAX_SEQUENCE + 1))
-
-    encoding = []
-    # TODO implement neutral losses ...  if needed
-    for pos in positions:
-        for charge in charges:
-            for ion in ions:
-                key = f"z{charge}{ion}{pos}"
-                if annotated_peaks is None:
-                    encoding.append(key)
-                else:
-                    encoding.append(annotated_peaks.get(key, 0))
-
-    return encoding
 
 
 def encode_sptxt(filepath, *args, **kwargs):

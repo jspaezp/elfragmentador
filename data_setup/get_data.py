@@ -19,7 +19,7 @@ import urllib.request as request
 import pandas as pd
 import numpy as np
 
-from transprosit import constants
+from transprosit.encoding_decoding import encode_mod_seq
 
 
 def get_irt_calculator(unmod_df):
@@ -57,30 +57,6 @@ def get_irt_calculator(unmod_df):
         return irt
 
     return irt_calculator
-
-
-def encode_mod_seq(seq):
-    """
-    Encodes a peptide sequence to a numeric vector
-
-    Example
-    =======
-    >>> samp_seq = "_AAIFVVAR_"
-    >>> str(encode(samp_seq))
-    '[1, 1, 8, 5, 18, 18, 1, 15]'
-    """
-    max_len=constants.MAX_SEQUENCE
-    AAS = "".join(constants.AMINO_ACID)
-    seq = seq.replace("_", "")
-    out = [0] * max_len
-
-    try:
-        out_i = [AAS.index(x) + 1 for x in seq]
-        out[: len(out_i)] = out_i
-    except ValueError:
-        print(seq)
-        raise ValueError
-    return out
 
 
 def process_dir(in_dir: Path, out_dir: Path = Path("."), prefix: str = ""):

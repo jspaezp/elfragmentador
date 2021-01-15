@@ -22,13 +22,23 @@ def peptide_parser(p: str):
     ['A', 'A', 'A', 'M(ox)', 'C', 'C']
     """
 
-    if p[0] == "(":
-        raise ValueError("sequence starts with '('")
+    ANNOTATIONS = "[](){}"
+
+    if p[0] in ANNOTATIONS:
+        raise ValueError(f"sequence starts with '{p[0]}'")
     n = len(p)
     i = 0
     while i < n:
-        if i < n - 3 and p[i + 1] == "(":
-            j = p[i + 2 :].index(")")
+        if p[i] == "_":
+            i += 1
+            continue
+        elif i + 1 < n and p[i + 1] in ANNOTATIONS:
+            p_ = p[i + 2 :]
+            annots = [x for x in ANNOTATIONS if x in p_]
+            nexts = []
+            for an in annots:
+                nexts.append(p_.index(an))
+            j = min(nexts)
             offset = i + j + 3
             yield p[i:offset]
             i = offset
@@ -42,6 +52,7 @@ def get_precursor_mz(peptide: str, charge: int):
     Calcultes the theoretical mass of a precursor peptide
     (assumes positive mode)
     """
+    pass
 
 
 def get_forward_backward(peptide: str):

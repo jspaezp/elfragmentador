@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 from argparse import ArgumentParser
 from transprosit import constants
 
+
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)
     From: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
@@ -91,11 +92,15 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
         # Positional encoding section
         self.ninp = ninp
-        self.pos_encoder = PositionalEncoding(ninp, dropout, max_len=constants.MAX_SEQUENCE * 2)
+        self.pos_encoder = PositionalEncoding(
+            ninp, dropout, max_len=constants.MAX_SEQUENCE * 2
+        )
 
         # Aminoacid encoding layer
-        self.aa_encoder = torch.nn.Embedding(len(constants.AMINO_ACID_SET) + 1, ninp, padding_idx=0)
-        self.mod_encoder = torch.nn.Embedding(len(constants.MODIFICATION) + 1, ninp, padding_idx=0)
+        self.aa_encoder = torch.nn.Embedding(constants.AAS_NUM + 1, ninp, padding_idx=0)
+        self.mod_encoder = torch.nn.Embedding(
+            len(constants.MODIFICATION) + 1, ninp, padding_idx=0
+        )
 
         # Transformer encoder sections
         encoder_layers = torch.nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout)
@@ -103,18 +108,20 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
         # Weight Initialization
         self.init_weights()
-        
+
     def init_weights(self):
         initrange = 0.1
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
-        torch.nn.init.uniform_(self.mod_encoder.weight, -initrange * 0.1, initrange * 0.1)
+        torch.nn.init.uniform_(
+            self.mod_encoder.weight, -initrange * 0.1, initrange * 0.1
+        )
 
-    def forward(self, src, mods = None, debug=False):
+    def forward(self, src, mods=None, debug=False):
         trans_encoder_mask = ~src.bool()
         if debug:
             print(f"Shape of mask {trans_encoder_mask.size()}")
 
-        src = self.aa_encoder(src.permute(1, 0)) 
+        src = self.aa_encoder(src.permute(1, 0))
         if mods is not None:
             mods = self.mod_encoder(mods.permute(1, 0))
             src = src + mods
@@ -131,7 +138,7 @@ class PeptideTransformerEncoder(torch.nn.Module):
         )
         if debug:
             print(f"Shape after trans encoder {trans_encoder_output.shape}")
-        
+
         return trans_encoder_output
 
 
@@ -144,15 +151,21 @@ class PeptideTransformerDecoder(torch.nn.Module):
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
         self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
 
-        print(f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}")
-        self.trans_decoder_embedding = torch.nn.Embedding(constants.NUM_FRAG_EMBEDINGS, ninp)
+        print(
+            f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
+        )
+        self.trans_decoder_embedding = torch.nn.Embedding(
+            constants.NUM_FRAG_EMBEDINGS, ninp
+        )
         self.max_charge = constants.DEFAULT_MAX_CHARGE
 
     def init_weights(self):
         initrange = 0.1
-        torch.nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
+        torch.nn.init.uniform_(
+            self.trans_decoder_embedding.weight, -initrange, initrange
+        )
 
-    def forward(self, src, charge, debug = False):
+    def forward(self, src, charge, debug=False):
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
         trans_decoder_tgt = trans_decoder_tgt * (charge.unsqueeze(0) / self.max_charge)
         if debug:
@@ -169,7 +182,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
         spectra_output = spectra_output.squeeze().permute(1, 0)
         if debug:
             print(f"Shape of the permuted spectra {spectra_output.shape}")
-        
+
         return spectra_output
 
 
@@ -198,10 +211,18 @@ class PepTransformerModel(pl.LightningModule):
         self.save_hyperparameters()
 
         # Peptide encoder
-        self.encoder = PeptideTransformerEncoder(ninp=ninp, dropout=dropout, nhead=nhead, nhid=nhid, layers=num_encoder_layers)
+        self.encoder = PeptideTransformerEncoder(
+            ninp=ninp,
+            dropout=dropout,
+            nhead=nhead,
+            nhid=nhid,
+            layers=num_encoder_layers,
+        )
 
         # Peptide decoder
-        self.decoder = PeptideTransformerDecoder(ninp=ninp, nhead=nhead, layers=num_decoder_layers)
+        self.decoder = PeptideTransformerDecoder(
+            ninp=ninp, nhead=nhead, layers=num_decoder_layers
+        )
 
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
@@ -212,7 +233,6 @@ class PepTransformerModel(pl.LightningModule):
         self.lr = lr
         assert scheduler in ["plateau", "cosine"]
         self.scheduler = scheduler
-
 
     def forward(self, src, charge, mods=None, debug=False):
         """
@@ -228,6 +248,8 @@ class PepTransformerModel(pl.LightningModule):
             charge:
                 A tensor corresponding to the charges of each of the
                 peptide precursors (long)
+            mods:
+                Modifications encoded as integers
 
         Returns:
             iRT prediction [B, 1]
@@ -246,7 +268,6 @@ class PepTransformerModel(pl.LightningModule):
         spectra_output = self.decoder(trans_encoder_output, charge, debug=debug)
 
         return rt_output, spectra_output
-
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -283,7 +304,6 @@ class PepTransformerModel(pl.LightningModule):
         parser.add_argument("--scheduler", default="plateau", type=str)
         return parser
 
-
     def configure_optimizers(self):
         opt = torch.optim.Adam(self.parameters(), lr=self.lr)
 
@@ -293,14 +313,15 @@ class PepTransformerModel(pl.LightningModule):
             )
         elif self.scheduler == "cosine":
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                opt, T_0=1, T_mult=2, eta_min=self.lr/50,
-                last_epoch=-1,
-                verbose=False)
+                opt, T_0=1, T_mult=2, eta_min=self.lr / 50, last_epoch=-1, verbose=False
+            )
         else:
-            raise ValueError("Scheduler should be one of 'plateau' or 'cosine', passed: ", self.scheduler)
+            raise ValueError(
+                "Scheduler should be one of 'plateau' or 'cosine', passed: ",
+                self.scheduler,
+            )
 
         return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
-
 
     def training_step(self, batch, batch_idx=None):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
@@ -331,7 +352,6 @@ class PepTransformerModel(pl.LightningModule):
         )
 
         return {"loss": total_loss}
-
 
     def validation_step(self, batch, batch_idx=None):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch

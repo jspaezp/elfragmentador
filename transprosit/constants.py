@@ -7,12 +7,6 @@ And released under an Apache 2.0 license
 
 VAL_SPLIT = 0.8
 
-TRAIN_EPOCHS = 500
-TRAIN_BATCH_SIZE = 1024
-PRED_BATCH_SIZE = 1024
-PRED_BAYES = False
-PRED_N = 100
-
 TOLERANCE_FTMS = 25
 TOLERANCE_ITMS = 0.35
 TOLERANCE_TRIPLETOF = 0.5
@@ -40,9 +34,9 @@ ALPHABET = {
     "V": 18,
     "W": 19,
     "Y": 20,
-    "M(ox)": 21,
 }
 ALPHABET_S = {integer: char for char, integer in ALPHABET.items()}
+AAS_NUM = len(ALPHABET)
 
 CHARGES = [1, 2, 3, 4, 5, 6]
 DEFAULT_MAX_CHARGE = max(CHARGES)
@@ -58,14 +52,14 @@ BACKWARD = {"x", "y", "z"}
 
 # Amino acids
 
-# Modifications use high caps PSI-MS name	
+# Modifications use high caps PSI-MS name
 
 MODIFICATION = {
     "CARBAMIDOMETHYL": 57.0214637236,  # Carbamidomethylation (CAM)
     "OXIDATION": 15.99491,  # Oxidation
     "PHOSPHO": 79.966331,  # Phosphorylation
-    "METHYL": 14.015650, # Methylation
-    "DIMETHYL": 28.031300, # Dimethylation
+    "METHYL": 14.015650,  # Methylation
+    "DIMETHYL": 28.031300,  # Dimethylation
 }
 
 AMINO_ACID = {
@@ -124,14 +118,28 @@ ION_OFFSET = {
 
 NUM_FRAG_EMBEDINGS = MAX_FRAG_CHARGE * MAX_SEQUENCE * len(ION_TYPES)
 
-ions = "".join(sorted(ION_TYPES))
-charges = list(range(1, MAX_FRAG_CHARGE + 1))
-positions = list(range(1, MAX_SEQUENCE + 1))
 
+ION_ENCODING_NESTING = ["CHARGE", "POSITION", "ION_TYPE"]
+ION_ENCODING_ITERABLES = {
+    "ION_TYPE": "".join(sorted(ION_TYPES)),
+    "CHARGE": [f"z{z}" for z in range(1, MAX_FRAG_CHARGE + 1)],
+    "POSITION": list(range(1, MAX_ION + 1)),
+}
 FRAG_EMBEDING_LABELS = []
+
 # TODO implement neutral losses ...  if needed
-for pos in positions:
-    for charge in charges:
-        for ion in ions:
-            key = f"z{charge}{ion}{pos}"
+for charge in ION_ENCODING_ITERABLES[ION_ENCODING_NESTING[0]]:
+    for pos in ION_ENCODING_ITERABLES[ION_ENCODING_NESTING[1]]:
+        for ion in ION_ENCODING_ITERABLES[ION_ENCODING_NESTING[2]]:
+            key = f"{charge}{ion}{pos}"
             FRAG_EMBEDING_LABELS.append(key)
+
+del charge
+del pos
+del ion
+del key
+
+if __name__ == "__main__":
+    my_vars = {k: v for k, v in globals().items() if not k.startswith("_")}
+    for k, v in my_vars.items():
+        print(f"\n>>> {k} {type(v)} = {v}")
