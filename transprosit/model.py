@@ -119,7 +119,7 @@ class PeptideTransformerEncoder(torch.nn.Module):
     def forward(self, src, mods=None, debug=False):
         trans_encoder_mask = ~src.bool()
         if debug:
-            print(f"Shape of mask {trans_encoder_mask.size()}")
+            print(f"TE: Shape of mask {trans_encoder_mask.size()}")
 
         src = self.aa_encoder(src.permute(1, 0))
         if mods is not None:
@@ -128,16 +128,16 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
         src = src * math.sqrt(self.ninp)
         if debug:
-            print(f"Shape after encoder {src.shape}")
+            print(f"TE: Shape after encoder {src.shape}")
         src = self.pos_encoder(src)
         if debug:
-            print(f"Shape after pos encoder {src.shape}")
+            print(f"TE: Shape after pos encoder {src.shape}")
 
         trans_encoder_output = self.transformer_encoder(
             src, src_key_padding_mask=trans_encoder_mask
         )
         if debug:
-            print(f"Shape after trans encoder {trans_encoder_output.shape}")
+            print(f"TE: Shape after trans encoder {trans_encoder_output.shape}")
 
         return trans_encoder_output
 
@@ -169,19 +169,19 @@ class PeptideTransformerDecoder(torch.nn.Module):
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
         trans_decoder_tgt = trans_decoder_tgt * (charge.unsqueeze(0) / self.max_charge)
         if debug:
-            print(f"Shape of query embedding {trans_decoder_tgt.shape}")
+            print(f"TD: Shape of query embedding {trans_decoder_tgt.shape}")
 
         spectra_output = self.trans_decoder(memory=src, tgt=trans_decoder_tgt)
         if debug:
-            print(f"Shape of the output spectra {spectra_output.shape}")
+            print(f"TD: Shape of the output spectra {spectra_output.shape}")
 
         spectra_output = self.peak_decoder(spectra_output)
         if debug:
-            print(f"Shape of the MLP spectra {spectra_output.shape}")
+            print(f"TD: Shape of the MLP spectra {spectra_output.shape}")
 
         spectra_output = spectra_output.squeeze().permute(1, 0)
         if debug:
-            print(f"Shape of the permuted spectra {spectra_output.shape}")
+            print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
         return spectra_output
 
@@ -259,11 +259,11 @@ class PepTransformerModel(pl.LightningModule):
         trans_encoder_output = self.encoder(src, mods=mods, debug=debug)
         rt_output = self.rt_decoder(trans_encoder_output)
         if debug:
-            print(f"Shape after RT decoder {rt_output.shape}")
+            print(f"PT: Shape after RT decoder {rt_output.shape}")
 
         rt_output = rt_output.mean(dim=0)
         if debug:
-            print(f"Shape of RT output {rt_output.shape}")
+            print(f"PT: Shape of RT output {rt_output.shape}")
 
         spectra_output = self.decoder(trans_encoder_output, charge, debug=debug)
 

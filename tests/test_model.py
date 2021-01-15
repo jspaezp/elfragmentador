@@ -10,10 +10,10 @@ def mod_forward_base(datadir):
     for x in datamodule.val_dataloader():
         break
 
-    print([y.shape for y in x])
+    print(f">> Shape of inputs {[y.shape for y in x]}")
 
     out = mod(x[0], x[1], debug=True)
-    print([y.shape for y in out])
+    print(f">> Shape of outputs {[y.shape for y in out]}")
 
 
 def test_model_forward(shared_datadir):

@@ -16,7 +16,7 @@ from transprosit import constants
 class PeptideDataset(torch.utils.data.Dataset):
     def __init__(self, df):
         super().__init__()
-        print("\n\n>>> Initalizing Dataset")
+        print("\n>>> Initalizing Dataset")
         self.df = df
 
         sequence_encodings = [eval(x) for x in self.df["SequenceEncoding"]]
@@ -49,6 +49,8 @@ class PeptideDataset(torch.utils.data.Dataset):
         # Pretty sure this last 2 can be optimized vectorizing them
         self.norm_irts = [torch.Tensor([x / 100]).float() for x in self.df["mIRT"]]
         self.charges = [torch.Tensor([x]).long() for x in self.df["Charges"]]
+
+        print(">>> Done Initializing dataset\n")
 
     def __len__(self):
         return len(self.df)
