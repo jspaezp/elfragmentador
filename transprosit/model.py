@@ -5,6 +5,8 @@ from torch import nn
 import pytorch_lightning as pl
 
 from argparse import ArgumentParser
+
+from torch.nn.modules import dropout
 from transprosit import constants
 
 
@@ -143,11 +145,13 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
 
 class PeptideTransformerDecoder(torch.nn.Module):
-    def __init__(self, ninp, nhead, layers):
+    def __init__(self, ninp, nhead, layers, dropout):
         super().__init__()
 
         print(f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}")
-        decoder_layer = nn.TransformerDecoderLayer(d_model=ninp, nhead=nhead)
+        decoder_layer = nn.TransformerDecoderLayer(
+            d_model=ninp, nhead=nhead, dropout=dropout
+        )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
         self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
 
@@ -221,7 +225,7 @@ class PepTransformerModel(pl.LightningModule):
 
         # Peptide decoder
         self.decoder = PeptideTransformerDecoder(
-            ninp=ninp, nhead=nhead, layers=num_decoder_layers
+            ninp=ninp, nhead=nhead, layers=num_decoder_layers, dropout=dropout
         )
 
         # On this implementation, the rt predictor is a simple MLP
@@ -297,10 +301,16 @@ class PepTransformerModel(pl.LightningModule):
             help="Dimension of the feedforward networks",
         )
         parser.add_argument(
+            "--ninp",
+            default=516,
+            type=int,
+            help="Number of input features to the transformer encoder",
+        )
+        parser.add_argument(
             "--nhead", default=12, type=int, help="Number of attention heads"
         )
-        parser.add_argument("--dropout", default=0.1, type=int)
-        parser.add_argument("--lr", default=1e-4, type=int)
+        parser.add_argument("--dropout", default=0.1, type=float)
+        parser.add_argument("--lr", default=1e-4, type=float)
         parser.add_argument("--scheduler", default="plateau", type=str)
         return parser
 

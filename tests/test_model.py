@@ -4,6 +4,7 @@ from transprosit import datamodules
 
 def mod_forward_base(datadir):
     mod = model.PepTransformerModel(nhead=4, ninp=32)
+    print(mod)
     datamodule = datamodules.PeptideDataModule(batch_size=2, base_dir=datadir)
     datamodule.setup()
 
