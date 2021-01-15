@@ -11,7 +11,24 @@ pl.seed_everything(2020)
 parser = ArgumentParser()
 
 # add PROGRAM level args
-parser.add_argument("--wandb_project", type=str, default="some_name")
+parser.add_argument(
+    "--run_name",
+    type=str,
+    default="prosit_transformer",
+    help="Name to be given to the run (logging)",
+)
+parser.add_argument(
+    "--wandb_project",
+    type=str,
+    default="rttransformer",
+    help="Wandb project to log to, check out wandb... please",
+)
+parser.add_argument(
+    "--terminator_patience",
+    type=int,
+    default="5",
+    help="Patience for early termination",
+)
 
 # add model specific args
 parser = model.PepTransformerModel.add_model_specific_args(parser)
@@ -26,8 +43,9 @@ parser = pl.Trainer.add_argparse_args(parser)
 if __name__ == "__main__":
 
     args = parser.parse_args()
-
     dict_args = vars(args)
+    print(dict_args)
+
     model = model.PepTransformerModel(**dict_args)
     print(model)
     datamodule = datamodules.PeptideDataModule(
@@ -35,7 +53,11 @@ if __name__ == "__main__":
     )
     datamodule.setup()
 
-    callbacks = train.get_callbacks("prosit_transformer")
+    callbacks = train.get_callbacks(
+        run_name=args.run_name,
+        termination_patience=args.terminator_patience,
+        wandb_project=args.wandb_project,
+    )
     trainer = pl.Trainer.from_argparse_args(
         args,
         max_epochs=100,
