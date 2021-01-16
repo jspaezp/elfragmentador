@@ -1652,7 +1652,7 @@ if __name__ == "__main__":
                 else:
                     zip_file = tmpdirname + f"/{zp}"
 
-                if not Path(zip_file).exits():
+                if not Path(zip_file).exists():
                     with closing(request.urlopen("ftp://" + BASE_FTP + zp)) as r:
                         with open(zip_file, "wb") as f:
                             shutil.copyfileobj(r, f)
