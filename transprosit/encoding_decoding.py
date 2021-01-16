@@ -31,6 +31,18 @@ def encode_mod_seq(seq):
     return out
 
 
+def decode_mod_seq(encoding):
+    out = []
+
+    for i in encoding:
+        if i == 0:
+            break
+
+        out.append(constants.ALPHABET_S[i])
+
+    return "".join(out)
+
+
 # TODO add PTM parsing
 
 

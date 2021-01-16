@@ -6,9 +6,8 @@ import pytorch_lightning as pl
 
 from argparse import ArgumentParser
 
-from torch.nn.modules import dropout
 from transprosit import constants
-
+from transprosit import encoding_decoding
 
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)
@@ -183,7 +182,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
         if debug:
             print(f"TD: Shape of the MLP spectra {spectra_output.shape}")
 
-        spectra_output = spectra_output.squeeze().permute(1, 0)
+        spectra_output = spectra_output.squeeze(-1).permute(1, 0)
         if debug:
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
@@ -191,6 +190,8 @@ class PeptideTransformerDecoder(torch.nn.Module):
 
 
 class PepTransformerModel(pl.LightningModule):
+    accepted_schedulers = ["plateau", "cosine"]
+
     def __init__(
         self,
         num_decoder_layers=6,
@@ -235,7 +236,10 @@ class PepTransformerModel(pl.LightningModule):
         # Training related things
         self.loss = torch.nn.MSELoss()
         self.lr = lr
-        assert scheduler in ["plateau", "cosine"]
+
+        assert (
+            scheduler in self.accepted_schedulers
+        ), f"Passed scheduler '{scheduler} is not one of {self.accepted_schedulers}"
         self.scheduler = scheduler
 
     def forward(self, src, charge, mods=None, debug=False):
@@ -272,6 +276,20 @@ class PepTransformerModel(pl.LightningModule):
         spectra_output = self.decoder(trans_encoder_output, charge, debug=debug)
 
         return rt_output, spectra_output
+
+    def predict_from_seq(self, seq: str, charge: int, mods=None, debug: bool = False):
+        src = torch.Tensor(encoding_decoding.encode_mod_seq(seq)).unsqueeze(0).long()
+        in_charge = torch.Tensor([charge]).unsqueeze(0).long()
+
+        if debug:
+            print(f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}")
+
+        if mods is not None:
+            raise NotImplementedError(
+                "Sorry, have not implemented PTMS on this imput ... yet"
+            )
+
+        return self(src, in_charge, mods=mods, debug=debug)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -311,7 +329,15 @@ class PepTransformerModel(pl.LightningModule):
         )
         parser.add_argument("--dropout", default=0.1, type=float)
         parser.add_argument("--lr", default=1e-4, type=float)
-        parser.add_argument("--scheduler", default="plateau", type=str)
+        parser.add_argument(
+            "--scheduler",
+            default="plateau",
+            type=str,
+            help=(
+                "Scheduler to use during training, "
+                f"either of {PepTransformerModel.accepted_schedulers}"
+            ),
+        )
         return parser
 
     def configure_optimizers(self):
@@ -379,127 +405,3 @@ class PepTransformerModel(pl.LightningModule):
             },
             prog_bar=True,
         )
-
-
-class TransformerModel(torch.nn.Module):
-    """Container module with an encoder, a recurrent or transformer module, and a decoder."""
-
-    def __init__(
-        self,
-        ntoken=26,
-        nout=1,
-        ninp=512,
-        nhead=8,
-        nhid=1024,
-        nlayers=4,
-        dropout=0.2,
-        max_len=50,
-    ):
-        """
-        Args:
-            ntoken: the number of tokens in the dict
-            nout: number of output features
-            ninp: the number of expected features in the input of the transformer encoder.
-            nhead: the number of heads in the multiheadattention models.
-            nhid: the dimension of the feedforward network model (1024).
-            num_layers: the number of sub-encoder-layers in the encoder
-            dropout: the dropout value (default=0.1).
-            nout: the number of out predictions
-            max_len: maximum length of the sequences
-
-
-        """
-        super().__init__()
-        self.model_type = "Transformer"
-
-        self.pos_encoder = PositionalEncoding(ninp, dropout, max_len=max_len)
-        encoder_layers = torch.nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout)
-        self.transformer_encoder = torch.nn.TransformerEncoder(encoder_layers, nlayers)
-        self.encoder = torch.nn.Embedding(ntoken + 1, ninp, padding_idx=0)
-        self.ninp = ninp
-        self.decoder = torch.nn.Linear(ninp, nout)
-
-        self.init_weights()
-
-    def init_weights(self):
-        initrange = 0.1
-        torch.nn.init.uniform_(self.encoder.weight, -initrange, initrange)
-        # torch.nn.init.zeros_(self.decoder.weight)
-        # torch.nn.init.uniform_(self.decoder.weight, -initrange, initrange)
-
-    def forward(self, src, debug=False):
-        mask = ~src.bool()
-        if debug:
-            print(f"Shape of mask {mask.size()}")
-
-        src = src.permute(1, 0)
-        src = self.encoder(src) * math.sqrt(self.ninp)
-        if debug:
-            print(f"Shape after encoder {src.shape}")
-        src = self.pos_encoder(src)
-        if debug:
-            print(f"Shape after pos encoder {src.shape}")
-
-        output = self.transformer_encoder(src, src_key_padding_mask=mask)
-        if debug:
-            print(f"Shape after trans encoder {output.shape}")
-
-        output = self.decoder(output)
-        if debug:
-            print(f"Shape after decoder {output.shape}")
-
-        output = output.mean(dim=0)
-
-        return output
-
-
-class LitTransformer(pl.LightningModule):
-    def __init__(self, lr=0.0001, *args, **kwargs):
-        super().__init__()
-        self.transformer = TransformerModel(ntoken=26, nout=1, *args, **kwargs)
-        self.loss = torch.nn.MSELoss()
-        self.lr = lr
-        self.save_hyperparameters()
-
-    def configure_optimizers(self):
-        opt = torch.optim.Adam(self.transformer.parameters(), lr=self.lr)
-
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            opt, mode="min", factor=0.5, patience=5, verbose=True
-        )
-        """
-        
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-            opt, T_0=1, T_mult=2, eta_min=self.lr/50,
-            last_epoch=-1,
-            verbose=False)
-
-        """
-
-        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
-
-    def forward(self, x, debug=False):
-        return self.transformer(x, debug=debug)
-
-    def training_step(self, batch, batch_idx=None):
-        x, y = batch
-        yhat = self(x)
-
-        assert not all(torch.isnan(yhat)), print(yhat.mean())
-
-        loss = self.loss(yhat, y)
-
-        self.log_dict({"train_loss": loss}, prog_bar=True)
-
-        assert not torch.isnan(loss), print(
-            f"Fail at Loss: {loss},\n yhat: {yhat},\n y: {y}"
-        )
-
-        return {"loss": loss}
-
-    def validation_step(self, batch, batch_idx=None):
-        x, y = batch
-        yhat = self(x)
-
-        loss = self.loss(yhat, y)
-        self.log_dict({"val_loss": loss}, prog_bar=True)
