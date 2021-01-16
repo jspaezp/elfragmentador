@@ -82,7 +82,7 @@ class Spectrum:
         annots = {k: v / max_int for k, v in annots.items()}
         self._annotated_peaks = annots
 
-    def encode_annotations(self, max_charge=3, dry=False):
+    def encode_annotations(self, dry=False):
         if self._annotated_peaks is None and not dry:
             self.annotate_peaks()
 

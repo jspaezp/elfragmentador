@@ -10,6 +10,7 @@ import transprosit
 from transprosit import constants
 from transprosit import encoding_decoding
 
+
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)
     From: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
@@ -268,10 +269,9 @@ class PepTransformerModel(pl.LightningModule):
         """
 
         if type(src) == dict and charge is None and mods is None:
-            charge = src['charge']
+            charge = src["charge"]
             mods = src.get("mods", None)
-            src = src['src']
-
+            src = src["src"]
 
         trans_encoder_output = self.encoder(src, mods=mods, debug=debug)
         rt_output = self.rt_decoder(trans_encoder_output)
@@ -291,7 +291,9 @@ class PepTransformerModel(pl.LightningModule):
         in_charge = torch.Tensor([charge]).unsqueeze(0).long()
 
         if debug:
-            print(f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}")
+            print(
+                f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}"
+            )
 
         if mods is not None:
             raise NotImplementedError(

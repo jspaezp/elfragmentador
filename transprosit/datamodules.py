@@ -20,12 +20,34 @@ class PeptideDataset(torch.utils.data.Dataset):
         self.df = df
 
         sequence_encodings = [eval(x) for x in self.df["SequenceEncoding"]]
+        lengths = [len(x) for x in sequence_encodings]
+        unique_lengths = set(lengths)
+        match_max = [1 for x in lengths if x == constants.MAX_SEQUENCE]
+        print(
+            (
+                f"{len(match_max)}/{len(sequence_encodings)} "
+                f"Sequences actually match the max sequence length, {constants.MAX_SEQUENCE}"
+                f"found {unique_lengths}"
+            )
+        )
+
         sequence_encodings = [
             x + ([0] * (constants.MAX_SEQUENCE - len(x))) for x in sequence_encodings
         ]
         self.sequence_encodings = [torch.Tensor(x).long().T for x in sequence_encodings]
 
         spectra_encodings = [eval(x) for x in self.df["SpectraEncoding"]]
+        lengths = [len(x) for x in spectra_encodings]
+        unique_lengths = set(lengths)
+        match_max = [1 for x in lengths if x == constants.NUM_FRAG_EMBEDINGS]
+        print(
+            (
+                f"{len(match_max)}/{len(spectra_encodings)} "
+                f"Spectra actually match the max spectra length {constants.NUM_FRAG_EMBEDINGS}, "
+                f"found {unique_lengths}"
+            )
+        )
+
         spectra_encodings = [
             x + ([0] * (constants.NUM_FRAG_EMBEDINGS - len(x)))
             for x in spectra_encodings

@@ -59,6 +59,7 @@ def get_fragment_encoding_labels(annotated_peaks=None):
     [0, 0, 0, 0, 0, 100, 0, 52]
     """
 
+    # TODO just redefine this to use the constant keys for fragments ...
     encoding = []
     ion_encoding_iterables = {
         "ION_TYPE": "".join(sorted(constants.ION_TYPES)),

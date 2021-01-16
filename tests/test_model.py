@@ -47,22 +47,30 @@ def model_exports_base(datadir, keep=False):
 
         print("Exporting to onnx")
         # https://github.com/pytorch/pytorch/issues/22488#issuecomment-630140460
-        dummy_input = {
-            "src": input_sample[0],
-            "charge": input_sample[1]}
+        dummy_input = {"src": input_sample[0], "charge": input_sample[1]}
         print(dummy_input)
 
-        input_names = [ "src", "charge" ]
-        output_names = [ "irt", "spectrum"]
+        input_names = ["src", "charge"]
+        output_names = ["irt", "spectrum"]
 
-        mod.to_onnx(tmpdirname / "mod.onnx",  dummy_input, export_params=True, input_names=input_names, output_names=output_names)
+        mod.to_onnx(
+            tmpdirname / "mod.onnx",
+            dummy_input,
+            export_params=True,
+            input_names=input_names,
+            output_names=output_names,
+        )
 
         print("Exporting to TorchScript")
-        mod.to_torchscript(tmpdirname / "mod.ts", example_inputs=dummy_input, method='trace')
+        mod.to_torchscript(
+            tmpdirname / "mod.ts", example_inputs=dummy_input, method="trace"
+        )
+
 
 # Disabled for now
 def _test_model_export(shared_datadir):
     model_exports_base(shared_datadir, keep=False)
+
 
 def test_model_forward(shared_datadir):
     mod_forward_base(shared_datadir)
