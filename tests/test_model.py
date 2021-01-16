@@ -5,6 +5,7 @@ import torch
 
 from transprosit import model
 from transprosit import datamodules
+from transprosit import constants
 
 
 def mod_forward_base(datadir):
@@ -31,7 +32,7 @@ def test_model_forward_seq():
     print(f">> Shape of outputs {[y.shape for y in out]}")
 
 
-def model_exports_base(datadir, keep=False):
+def _test_export_onnx(datadir, keep=False):
     mod = model.PepTransformerModel(nhead=4, ninp=32)
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
     datamodule.setup()
@@ -61,10 +62,34 @@ def model_exports_base(datadir, keep=False):
             output_names=output_names,
         )
 
-        print("Exporting to TorchScript")
-        mod.to_torchscript(
-            tmpdirname / "mod.ts", example_inputs=dummy_input, method="trace"
-        )
+
+def test_export_torchscript(datadir, keep=False):
+    mod = model.PepTransformerModel(nhead=4, ninp=32)
+    mod.encoder.pos_encoder.static_size = constants.MAX_SEQUENCE
+
+    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
+    datamodule.setup()
+
+    for input_sample in datamodule.val_dataloader():
+        break
+
+    dummy_input = tuple([input_sample[0], input_sample[1]])
+
+    print("Exporting to TorchScript")
+    script = mod.to_torchscript(example_inputs=dummy_input, method="trace")
+    with torch.no_grad():
+        script_out = script(*dummy_input)
+        out = mod(*dummy_input)
+
+    print(f">> Shape of base output {[y.shape for y in out]}")
+    print(f">> Shape of torchscript output {[y.shape for y in script_out]}")
+    print(f">> Head of base out \n{[y.flatten()[:5] for y in out]}")
+    print(f">> Head of torchscript out \n{[y.flatten()[:5] for y in script_out]}")
+
+
+def model_exports_base(datadir, keep=False):
+    test_export_onnx(datadir, keep)
+    test_export_torchscript(datadir, keep)
 
 
 # Disabled for now
@@ -81,4 +106,4 @@ if __name__ == "__main__":
     mod_forward_base(str(parent_dir) + "/data/")
     test_model_forward_seq()
     # unable to export right now ...
-    # model_exports_base(str(parent_dir) + "/data/")
+    test_export_torchscript(str(parent_dir) + "/data/")
