@@ -18,6 +18,7 @@ import urllib.request as request
 
 import pandas as pd
 import numpy as np
+from tqdm.auto import tqdm
 
 from transprosit.encoding_decoding import encode_mod_seq
 
@@ -1623,12 +1624,11 @@ search_zips = [
 
 if __name__ == "__main__":
 
-    for i, zp in enumerate(search_zips):
-        print(i)
+    failed_files = []
+    for i, zp in enumerate(tqdm(search_zips)):
         try:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 zip_stem = Path(zp).stem
-                print(zip_stem)
                 zip_file = tmpdirname + f"/{zip_stem}"
 
                 with closing(request.urlopen("ftp://" + BASE_FTP + zp)) as r:
@@ -1639,11 +1639,16 @@ if __name__ == "__main__":
                     zip_ref.extractall(tmpdirname)
 
                 process_dir(Path(tmpdirname), Path("."), zip_stem)
-                time.sleep(1)
 
         except KeyboardInterrupt:
             print("Interrupted")
             exit()
         except:
+            failed_files.append(zp)
             print(f"{zp} Failed")
+            time.sleep(1)
             None
+    
+    print("Failed Files:")
+    print(failed_files)
+    print("Done !!!")
