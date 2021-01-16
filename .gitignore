@@ -1,3 +1,7 @@
 
+poetry.lock
 *.csv
 *.ckpt
+**.pyc
+**.config_ipynb
+dist/**

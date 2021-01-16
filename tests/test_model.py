@@ -28,7 +28,7 @@ def test_model_forward_seq():
     mod = model.PepTransformerModel(nhead=4, ninp=32)
     with torch.no_grad():
         out = mod.predict_from_seq("AAAACDMK", 3, debug=True)
-    print(out)
+    print(f">> Shape of outputs {[y.shape for y in out]}")
 
 
 def model_exports_base(datadir, keep=False):

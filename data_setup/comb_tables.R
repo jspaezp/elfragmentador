@@ -1,7 +1,7 @@
 
 library(tidyverse)
 
-specs <- readr::read_csv("/home/jspaezp/git/ppptr/encoded_spectra.csv")
+specs <- readr::read_csv("encoded_spectra.csv")
 irts  <- readr::read_csv("/home/jspaezp/Downloads/summarized_irt_times.csv")
 
 specs

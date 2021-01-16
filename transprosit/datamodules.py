@@ -26,8 +26,9 @@ class PeptideDataset(torch.utils.data.Dataset):
         print(
             (
                 f"{len(match_max)}/{len(sequence_encodings)} "
-                f"Sequences actually match the max sequence length, {constants.MAX_SEQUENCE}"
-                f"found {unique_lengths}"
+                f"Sequences actually match the max sequence length of"
+                f" {constants.MAX_SEQUENCE},"
+                f" found {unique_lengths}"
             )
         )
 
@@ -43,7 +44,8 @@ class PeptideDataset(torch.utils.data.Dataset):
         print(
             (
                 f"{len(match_max)}/{len(spectra_encodings)} "
-                f"Spectra actually match the max spectra length {constants.NUM_FRAG_EMBEDINGS}, "
+                f"Spectra actually match the max spectra length of "
+                f"{constants.NUM_FRAG_EMBEDINGS}, "
                 f"found {unique_lengths}"
             )
         )

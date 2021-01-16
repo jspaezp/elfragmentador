@@ -115,13 +115,15 @@ class Spectrum:
         return out
 
 
-def encode_sptxt(filepath, *args, **kwargs):
+def encode_sptxt(filepath, max_spec=1e9, *args, **kwargs):
     iter = read_sptxt(filepath, *args, **kwargs)
 
     encodings = []
     sequences = []
     charges = []
-    for spec in tqdm(iter):
+    for i, spec in enumerate(tqdm(iter)):
+        if i >= max_spec:
+            break
         encodings.append(str(spec.encode_annotations()))
         charges.append(spec.charge)
         sequences.append(spec.sequence)
