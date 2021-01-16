@@ -56,10 +56,15 @@ BACKWARD = {"x", "y", "z"}
 
 MODIFICATION = {
     "CARBAMIDOMETHYL": 57.0214637236,  # Carbamidomethylation (CAM)
+    "ACETYL": 42.010565,  # Acetylation
+    "DEAMIDATED": 0.984016,  # Deamidation
     "OXIDATION": 15.99491,  # Oxidation
     "PHOSPHO": 79.966331,  # Phosphorylation
     "METHYL": 14.015650,  # Methylation
     "DIMETHYL": 28.031300,  # Dimethylation
+    "TRIMETHYL": 42.046950,  # Trimethylation
+    "GG": 114.042927,  # GlyGly ubiquitinylation residue
+    "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
 }
 
 AMINO_ACID = {

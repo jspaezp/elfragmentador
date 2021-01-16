@@ -91,7 +91,7 @@ class PositionalEncoding(torch.nn.Module):
         else:
             end_position = x.size(0)
 
-        x = x + self.pe[: end_position, :]
+        x = x + self.pe[:end_position, :]
         return self.dropout(x)
 
 
@@ -107,6 +107,7 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
         # Aminoacid encoding layer
         self.aa_encoder = torch.nn.Embedding(constants.AAS_NUM + 1, ninp, padding_idx=0)
+        # PTM encoder
         self.mod_encoder = torch.nn.Embedding(
             len(constants.MODIFICATION) + 1, ninp, padding_idx=0
         )
@@ -120,10 +121,9 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
     def init_weights(self):
         initrange = 0.1
+        ptm_initrange = initrange * 0.1
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
-        torch.nn.init.uniform_(
-            self.mod_encoder.weight, -initrange * 0.1, initrange * 0.1
-        )
+        torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
 
     def forward(self, src, mods=None, debug=False):
         trans_encoder_mask = ~src.bool()

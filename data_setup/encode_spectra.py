@@ -1,4 +1,3 @@
-
 from argparse import ArgumentParser
 from transprosit import spectra
 
