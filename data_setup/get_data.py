@@ -22,6 +22,18 @@ from tqdm.auto import tqdm
 
 from transprosit.encoding_decoding import encode_mod_seq
 
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+
+# add PROGRAM level args
+parser.add_argument(
+    "--keep",
+    type=bool,
+    default=False,
+    help="Wether to keep the zip files after the download",
+)
+
 
 def get_irt_calculator(unmod_df):
     """
@@ -1623,13 +1635,22 @@ search_zips = [
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
+    dict_args = vars(args)
+    KEEP = args.keep
+
+    print(f"Starting the processing, keep is set to '{KEEP}'")
 
     failed_files = []
     for i, zp in enumerate(tqdm(search_zips)):
         try:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 zip_stem = Path(zp).stem
-                zip_file = tmpdirname + f"/{zip_stem}"
+
+                if KEEP:
+                    zip_file = f"./{zp}"
+                else:
+                    zip_file = tmpdirname + f"/{zp}"
 
                 with closing(request.urlopen("ftp://" + BASE_FTP + zp)) as r:
                     with open(zip_file, "wb") as f:
