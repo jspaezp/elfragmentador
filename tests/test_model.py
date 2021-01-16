@@ -63,7 +63,7 @@ def _test_export_onnx(datadir, keep=False):
         )
 
 
-def test_export_torchscript(datadir, keep=False):
+def base_export_torchscript(datadir, keep=False):
     mod = model.PepTransformerModel(nhead=4, ninp=32)
     mod.encoder.pos_encoder.static_size = constants.MAX_SEQUENCE
 
@@ -88,12 +88,12 @@ def test_export_torchscript(datadir, keep=False):
 
 
 def model_exports_base(datadir, keep=False):
-    test_export_onnx(datadir, keep)
-    test_export_torchscript(datadir, keep)
+    # test_export_onnx(datadir, keep)
+    base_export_torchscript(datadir, keep)
 
 
 # Disabled for now
-def _test_model_export(shared_datadir):
+def test_model_export(shared_datadir):
     model_exports_base(shared_datadir, keep=False)
 
 
@@ -106,4 +106,4 @@ if __name__ == "__main__":
     mod_forward_base(str(parent_dir) + "/data/")
     test_model_forward_seq()
     # unable to export right now ...
-    test_export_torchscript(str(parent_dir) + "/data/")
+    base_export_torchscript(str(parent_dir) + "/data/")
