@@ -1652,9 +1652,10 @@ if __name__ == "__main__":
                 else:
                     zip_file = tmpdirname + f"/{zp}"
 
-                with closing(request.urlopen("ftp://" + BASE_FTP + zp)) as r:
-                    with open(zip_file, "wb") as f:
-                        shutil.copyfileobj(r, f)
+                if not Path(zip_file).exits():
+                    with closing(request.urlopen("ftp://" + BASE_FTP + zp)) as r:
+                        with open(zip_file, "wb") as f:
+                            shutil.copyfileobj(r, f)
 
                 with zipfile.ZipFile(zip_file, "r") as zip_ref:
                     zip_ref.extractall(tmpdirname)
