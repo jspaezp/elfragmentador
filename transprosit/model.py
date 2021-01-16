@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 
 from argparse import ArgumentParser
 
+import transprosit
 from transprosit import constants
 from transprosit import encoding_decoding
 
@@ -191,6 +192,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
 
 class PepTransformerModel(pl.LightningModule):
     accepted_schedulers = ["plateau", "cosine"]
+    __version__ = transprosit.__version__
 
     def __init__(
         self,
@@ -242,7 +244,7 @@ class PepTransformerModel(pl.LightningModule):
         ), f"Passed scheduler '{scheduler} is not one of {self.accepted_schedulers}"
         self.scheduler = scheduler
 
-    def forward(self, src, charge, mods=None, debug=False):
+    def forward(self, src: torch.long, charge=None, mods=None, debug=False):
         """
         Parameters:
             src: Encoded pepide sequence [B, L] (view details)
@@ -264,6 +266,13 @@ class PepTransformerModel(pl.LightningModule):
             Spectra prediction [B, self.num_queries]
 
         """
+
+        if type(src) == dict and charge is None and mods is None:
+            charge = src['charge']
+            mods = src.get("mods", None)
+            src = src['src']
+
+
         trans_encoder_output = self.encoder(src, mods=mods, debug=debug)
         rt_output = self.rt_decoder(trans_encoder_output)
         if debug:
