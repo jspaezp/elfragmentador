@@ -1667,7 +1667,7 @@ if __name__ == "__main__":
             exit()
         except:
             failed_files.append(zp)
-            print(f"{zp} Failed")
+            print(f"{zp} Failed {len(failed_files)}/{i} Failed so far")
             time.sleep(1)
             None
     
