@@ -1,3 +1,5 @@
+from typing import Union, Literal
+import warnings
 import math
 
 import torch
@@ -32,6 +34,93 @@ class MLP(nn.Module):
                 else layer(x)
             )
         return x
+
+
+class ConcatenationEncoder(torch.nn.Module):
+    """
+    ConcatenationEncoder concatenates information into the embedding
+
+    Adds information on continuous variables into an embedding by concatenating an n number
+    of dimensions to it
+
+    Parameters
+    ----------
+    dims_add : int
+        Number of dimensions to add as an encoding
+    dropout : float, optional
+        dropout, by default 0.1
+    max_val : float, optional
+        maximum expected value of the variable that will be encoded, by default 200.0
+    static_size : Union[Literal[False], float], optional
+        Optional ingeter to pass in order to make the size deterministic.
+        This is only required if you want to export your model to torchscript, by default False
+
+    Examples
+    --------
+    >>> x = torch.zeros((5, 2, 20))
+    >>> encoder = ConcatenationEncoder(10, 0.1, 10)
+    >>> output = encoder(torch.zeros((4, 1, 20)), 7)
+    >>> output = encoder(x, torch.tensor([[7], [4]]))
+    """
+
+    def __init__(
+        self,
+        dims_add: int,
+        dropout: float = 0.1,
+        max_val: float = 200.0,
+        static_size: Union[Literal[False], float] = False,
+    ):
+        super().__init__()
+        self.dropout = torch.nn.Dropout(p=dropout)
+
+        # pos would be a variable ...
+        self.div_term = torch.exp(
+            torch.arange(0, dims_add, 2).float()
+            * (-math.log(float(2 * max_val)) / dims_add)
+        )
+        self.base_encode = torch.zeros(1, dims_add)
+        self.register_buffer("base_encoding", self.base_encode)
+        self.static_size = static_size
+
+    def forward(self, x, val, debug=False):
+        r"""Inputs of forward function
+        Args:
+            x: the sequence fed to the encoder model (required).
+            val: value to be encoded into the sequence (required).
+        Shape:
+            x: [sequence length, batch size, embed dim]
+            val: [batch size, 1]
+            output: [sequence length, batch size, embed_dim + added_dims]
+        Examples:
+            >>> x = torch.zeros((5, 2, 20))
+            >>> encoder = ConcatenationEncoder(10, 0.1, 10)
+            >>> output = encoder(torch.zeros((4, 1, 20)), 7)
+            >>> output = encoder(x, torch.tensor([[7], [4]]))
+        """
+        if debug:
+            print(f"CE: Shape of inputs val={val.shape} x={x.shape}")
+
+        if self.static_size:
+            assert self.static_size == x.size(0), (
+                f"Size of the first dimension ({x.size(0)}) "
+                f"does not match the expected value ({self.static_size})"
+            )
+            end_position = self.static_size
+        else:
+            end_position = x.size(0)
+
+        e = self.base_encode.clone()
+        e = torch.cat(
+            [torch.sin(val * self.div_term), torch.cos(val * self.div_term)], axis=-1
+        )
+        e = torch.cat([e.unsqueeze(0)] * end_position)
+        if debug:
+            print(f"CE: Shape before concat e={e.shape} x={x.shape}")
+
+        x = torch.cat((x, e), axis=-1)
+        if debug:
+            print(f"CE: Shape after concat x={x.shape}")
+        return self.dropout(x)
 
 
 class PositionalEncoding(torch.nn.Module):
@@ -152,10 +241,13 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
 
 class PeptideTransformerDecoder(torch.nn.Module):
-    def __init__(self, ninp, nhead, layers, dropout):
+    def __init__(self, ninp, nhead, layers, dropout, charge_dims=20, nce_dims=20):
         super().__init__()
-
         print(f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}")
+        n_embeds = ninp - (charge_dims)
+
+        warnings.warn("NCE has not been implemented yet ...  sorry")
+        # ninp = ninp - (charge_dims + nce_dims)
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=ninp, nhead=nhead, dropout=dropout
         )
@@ -166,7 +258,13 @@ class PeptideTransformerDecoder(torch.nn.Module):
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
         )
         self.trans_decoder_embedding = torch.nn.Embedding(
-            constants.NUM_FRAG_EMBEDINGS, ninp
+            constants.NUM_FRAG_EMBEDINGS, n_embeds
+        )
+        self.charge_encoder = ConcatenationEncoder(
+            dims_add=charge_dims, dropout=dropout, max_val=10.0
+        )
+        self.nce_encoder = ConcatenationEncoder(
+            dims_add=nce_dims, dropout=dropout, max_val=100.0
         )
         self.max_charge = constants.DEFAULT_MAX_CHARGE
 
@@ -176,9 +274,16 @@ class PeptideTransformerDecoder(torch.nn.Module):
             self.trans_decoder_embedding.weight, -initrange, initrange
         )
 
-    def forward(self, src, charge, debug=False):
+    def forward(self, src, charge, nce=None, debug=False):
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        trans_decoder_tgt = trans_decoder_tgt * (charge.unsqueeze(0) / self.max_charge)
+        trans_decoder_tgt = trans_decoder_tgt.repeat(1, charge.size(0), 1)
+        trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
+        if nce is not None:
+            raise NotImplementedError(
+                "Sorry, I have not implemented NCE"
+                " (mainly due to the dataset, all the code is ready for it ...)"
+            )
+            trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
         if debug:
             print(f"TD: Shape of query embedding {trans_decoder_tgt.shape}")
 
@@ -306,7 +411,7 @@ class PepTransformerModel(pl.LightningModule):
                 "Sorry, have not implemented PTMS on this imput ... yet"
             )
 
-        out = self(src, in_charge, mods=mods, debug=debug)
+        out = self(src=src, charge=in_charge, mods=mods, debug=debug)
         out = tuple([x.squeeze(0) for x in out])
 
         return out

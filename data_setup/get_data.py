@@ -1670,7 +1670,7 @@ if __name__ == "__main__":
             print(f"{zp} Failed {len(failed_files)}/{i} Failed so far")
             time.sleep(1)
             None
-    
+
     print("Failed Files:")
     print(failed_files)
     print("Done !!!")

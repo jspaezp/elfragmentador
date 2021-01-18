@@ -8,8 +8,18 @@ from transprosit import datamodules
 from transprosit import constants
 
 
+def test_concat_encoder():
+    x = torch.zeros((5, 2, 20))
+    encoder = model.ConcatenationEncoder(10, 0.1, 10)
+    output = encoder(x, torch.tensor([[7], [4]]))
+    assert output.shape == torch.Size([5, 2, 30]), output.shape
+    output = encoder(torch.zeros((5, 1, 20)), torch.tensor([[7]]))
+    assert output.shape == torch.Size([5, 1, 30]), output.shape
+    print(output)
+
+
 def mod_forward_base(datadir):
-    mod = model.PepTransformerModel(nhead=4, ninp=32)
+    mod = model.PepTransformerModel(nhead=4, ninp=64)
     print(mod)
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
     datamodule.setup()
@@ -26,14 +36,14 @@ def mod_forward_base(datadir):
 
 
 def test_model_forward_seq():
-    mod = model.PepTransformerModel(nhead=4, ninp=32)
+    mod = model.PepTransformerModel(nhead=4, ninp=64)
     with torch.no_grad():
         out = mod.predict_from_seq("AAAACDMK", 3, debug=True)
     print(f">> Shape of outputs {[y.shape for y in out]}")
 
 
 def _test_export_onnx(datadir, keep=False):
-    mod = model.PepTransformerModel(nhead=4, ninp=32)
+    mod = model.PepTransformerModel(nhead=4, ninp=64)
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
     datamodule.setup()
 
@@ -64,8 +74,10 @@ def _test_export_onnx(datadir, keep=False):
 
 
 def base_export_torchscript(datadir, keep=False):
-    mod = model.PepTransformerModel(nhead=4, ninp=32)
+    mod = model.PepTransformerModel(nhead=4, ninp=64)
     mod.encoder.pos_encoder.static_size = constants.MAX_SEQUENCE
+    mod.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
+    mod.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
 
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
     datamodule.setup()

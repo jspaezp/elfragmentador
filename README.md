@@ -29,6 +29,7 @@ On the transformer side of things I must admit that many of the elements of this
 
 **Urgent**
 - Find a better name for the project
+- Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
 
 **Posible**
