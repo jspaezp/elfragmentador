@@ -8,9 +8,12 @@ And released under an Apache 2.0 license
 import numpy
 import collections
 from transprosit import constants
+from collections import OrderedDict
+from numpy import bool_, float64, ndarray
+from typing import Iterator
 
 
-def peptide_parser(p: str):
+def peptide_parser(p: str) -> Iterator[str]:
     """
     Parses maxquant formatted peptide strings
 
@@ -73,7 +76,7 @@ def get_forward_backward(peptide: str):
     return forward, backward
 
 
-def get_mz(sum_, ion_offset, charge):
+def get_mz(sum_: float64, ion_offset: float, charge: int) -> float64:
     return (sum_ + ion_offset + charge * constants.PROTON) / charge
 
 
@@ -81,7 +84,9 @@ def get_mzs(cumsum, ion_type, z):
     return [get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-1]]
 
 
-def get_annotation(forward, backward, charge: int, ion_types: str):
+def get_annotation(
+    forward: ndarray, backward: ndarray, charge: int, ion_types: str
+) -> OrderedDict:
     """
     Calculates the ion annotations based on the forward
     and backward cumulative masses
@@ -152,7 +157,9 @@ def get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
     return out
 
 
-def get_tolerance(theoretical, tolerance=25, unit="ppm"):
+def get_tolerance(
+    theoretical: float64, tolerance: int = 25, unit: str = "ppm"
+) -> float64:
     if unit == "ppm":
         return theoretical * float(tolerance) / 10 ** 6
     elif unit == "da":
@@ -161,7 +168,9 @@ def get_tolerance(theoretical, tolerance=25, unit="ppm"):
         raise ValueError("unit {} not implemented".format(unit))
 
 
-def is_in_tolerance(theoretical, observed, tolerance=25, unit="ppm"):
+def is_in_tolerance(
+    theoretical: float64, observed: float, tolerance: int = 25, unit: str = "ppm"
+) -> bool_:
     mz_tolerance = get_tolerance(theoretical, tolerance, unit)
     lower = observed - mz_tolerance
     upper = observed + mz_tolerance

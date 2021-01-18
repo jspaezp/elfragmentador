@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transprosit"
-version = "0.4.2"
+version = "0.5.0"
 description = "Prosit but using transformers"
 authors = ["Your Name <you@example.com>"]
 license = "Apache 2.0"
@@ -27,6 +27,7 @@ scikit-learn = "^0.24.0"
 seaborn = "^0.11.0"
 matplotlib = "^3.3.0"
 python-igraph = "^0.8.3"
+MonkeyType = "^20.5.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

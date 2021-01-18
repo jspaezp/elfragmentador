@@ -1,19 +1,18 @@
-from typing import NewType
-
-
 try:
-    from typing import Union, Literal
+    from typing import Optional, Union, Literal
+
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
     from typing import Union, NewType
+
     LiteralFalse = NewType("LiteralFalse", bool)
 
 import warnings
 import math
 
 import torch
-from torch import nn
+from torch import Tensor, nn
 import pytorch_lightning as pl
 
 from argparse import ArgumentParser
@@ -28,7 +27,9 @@ class MLP(nn.Module):
     From: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
     """
 
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
+    def __init__(
+        self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int
+    ) -> None:
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
@@ -36,7 +37,7 @@ class MLP(nn.Module):
             nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
         )
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         for i, layer in enumerate(self.layers):
             x = (
                 torch.nn.functional.relu(layer(x))
@@ -78,8 +79,8 @@ class ConcatenationEncoder(torch.nn.Module):
         dims_add: int,
         dropout: float = 0.1,
         max_val: float = 200.0,
-        static_size: Union[LiteralFalse, float] = False,
-    ):
+        static_size: bool = False,
+    ) -> None:
         super().__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
 
@@ -91,7 +92,7 @@ class ConcatenationEncoder(torch.nn.Module):
         self.register_buffer("div_term", div_term)
         self.static_size = static_size
 
-    def forward(self, x, val, debug=False):
+    def forward(self, x: Tensor, val: Tensor, debug: bool = False) -> Tensor:
         r"""Inputs of forward function
         Args:
             x: the sequence fed to the encoder model (required).
@@ -158,7 +159,13 @@ class PositionalEncoding(torch.nn.Module):
     Therfore encoding are (seq_length, batch, encodings)
     """
 
-    def __init__(self, d_model, dropout=0.1, max_len=5000, static_size=False):
+    def __init__(
+        self,
+        d_model: int,
+        dropout: float = 0.1,
+        max_len: int = 5000,
+        static_size: bool = False,
+    ) -> None:
         super(PositionalEncoding, self).__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
 
@@ -173,7 +180,7 @@ class PositionalEncoding(torch.nn.Module):
         self.register_buffer("pe", pe)
         self.static_size = static_size
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         r"""Inputs of forward function
         Args:
             x: the sequence fed to the positional encoder model (required).
@@ -194,7 +201,9 @@ class PositionalEncoding(torch.nn.Module):
 
 
 class PeptideTransformerEncoder(torch.nn.Module):
-    def __init__(self, ninp, dropout, nhead, nhid, layers):
+    def __init__(
+        self, ninp: int, dropout: float, nhead: int, nhid: int, layers: int
+    ) -> None:
         super().__init__()
 
         # Positional encoding section
@@ -217,13 +226,13 @@ class PeptideTransformerEncoder(torch.nn.Module):
         # Weight Initialization
         self.init_weights()
 
-    def init_weights(self):
+    def init_weights(self) -> None:
         initrange = 0.1
         ptm_initrange = initrange * 0.1
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
         torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
 
-    def forward(self, src, mods=None, debug=False):
+    def forward(self, src: Tensor, mods: None = None, debug: bool = False) -> Tensor:
         trans_encoder_mask = ~src.bool()
         if debug:
             print(f"TE: Shape of mask {trans_encoder_mask.size()}")
@@ -250,9 +259,19 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
 
 class PeptideTransformerDecoder(torch.nn.Module):
-    def __init__(self, ninp, nhead, layers, dropout, charge_dims=20, nce_dims=20):
+    def __init__(
+        self,
+        ninp: int,
+        nhead: int,
+        layers: int,
+        dropout: float,
+        charge_dims_pct: float = 0.05,
+        nce_dims_pct: float = 0.05,
+    ) -> None:
         super().__init__()
         print(f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}")
+        charge_dims = math.ceil(ninp * charge_dims_pct)
+        nce_dims = math.ceil(ninp * nce_dims_pct)
         n_embeds = ninp - (charge_dims)
 
         warnings.warn("NCE has not been implemented yet ...  sorry")
@@ -283,7 +302,9 @@ class PeptideTransformerDecoder(torch.nn.Module):
             self.trans_decoder_embedding.weight, -initrange, initrange
         )
 
-    def forward(self, src, charge, nce=None, debug=False):
+    def forward(
+        self, src: Tensor, charge: Tensor, nce: None = None, debug: bool = False
+    ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
         trans_decoder_tgt = trans_decoder_tgt.repeat(1, charge.size(0), 1)
         trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
@@ -317,17 +338,17 @@ class PepTransformerModel(pl.LightningModule):
 
     def __init__(
         self,
-        num_decoder_layers=6,
-        num_encoder_layers=6,
-        nhid=1024,
-        ninp=516,
-        nhead=8,
-        dropout=0.2,
-        lr=1e-4,
-        scheduler="plateau",
+        num_decoder_layers: int = 6,
+        num_encoder_layers: int = 6,
+        nhid: int = 1024,
+        ninp: int = 516,
+        nhead: int = 8,
+        dropout: float = 0.2,
+        lr: float = 1e-4,
+        scheduler: str = "plateau",
         *args,
         **kwargs,
-    ):
+    ) -> None:
         """
         Parameters:
             num_queries:

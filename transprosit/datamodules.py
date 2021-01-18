@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from pathlib import Path
+from pathlib import PosixPath, Path
 
 import pandas as pd
 from pandas.core.indexes import base
@@ -11,10 +11,13 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
 from transprosit import constants
+from pandas.core.frame import DataFrame
+from torch.utils.data.dataloader import DataLoader
+from typing import Union
 
 
 class PeptideDataset(torch.utils.data.Dataset):
-    def __init__(self, df):
+    def __init__(self, df: DataFrame) -> None:
         super().__init__()
         print("\n>>> Initalizing Dataset")
         self.df = df
@@ -76,7 +79,7 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         print(">>> Done Initializing dataset\n")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.df)
 
     def __getitem__(self, index):
@@ -90,7 +93,9 @@ class PeptideDataset(torch.utils.data.Dataset):
 
 
 class PeptideDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size=64, base_dir="."):
+    def __init__(
+        self, batch_size: int = 64, base_dir: Union[PosixPath, str] = "."
+    ) -> None:
         super().__init__()
         self.batch_size = batch_size
         base_dir = Path(base_dir)
@@ -134,7 +139,7 @@ class PeptideDataModule(pl.LightningDataModule):
         parser.add_argument("--data_dir", type=str, default=".")
         return parser
 
-    def setup(self):
+    def setup(self) -> None:
         self.train_dataset = PeptideDataset(self.train_df)
         self.val_dataset = PeptideDataset(self.val_df)
 
@@ -143,5 +148,5 @@ class PeptideDataModule(pl.LightningDataModule):
             self.train_dataset, num_workers=0, batch_size=self.batch_size, shuffle=True
         )
 
-    def val_dataloader(self):
+    def val_dataloader(self) -> DataLoader:
         return DataLoader(self.val_dataset, batch_size=self.batch_size)

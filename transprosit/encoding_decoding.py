@@ -1,5 +1,7 @@
 import pandas as pd
 from transprosit import constants, annotate
+from pandas.core.frame import DataFrame
+from torch import Tensor
 
 
 def encode_mod_seq(seq):
@@ -81,9 +83,9 @@ def get_fragment_encoding_labels(annotated_peaks=None):
 
 
 def decode_fragment_tensor(
-    sequence,
-    tensor,
-):
+    sequence: str,
+    tensor: Tensor,
+) -> DataFrame:
     """
     Returns a data frame with annotations from sequence
     and a tensor encoding a spectra

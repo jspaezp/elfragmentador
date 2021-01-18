@@ -64,7 +64,7 @@ class Spectrum:
                 "Not a know error type, select either of 'ppm' or 'da'"
             )
 
-    def annotate_peaks(self):
+    def annotate_peaks(self) -> None:
         def in_tol(tmz, omz):
             out = annotate.is_in_tolerance(
                 tmz, omz, tolerance=self.tolerance, unit=self.tolerance_unit
@@ -100,7 +100,7 @@ class Spectrum:
 
         return self.annotate_peaks()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         out = (
             "Spectrum:\n"
             f"\tSequence: {self.sequence} len:{len(self.sequence)}\n"
