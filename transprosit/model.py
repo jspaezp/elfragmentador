@@ -361,11 +361,11 @@ class PepTransformerModel(pl.LightningModule):
         return parser
 
     def configure_optimizers(self):
-        opt = torch.optim.Adam(self.parameters(), lr=self.lr)
+        opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
 
         if self.scheduler == "plateau":
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                opt, mode="min", factor=0.5, patience=5, verbose=True
+                opt, mode="min", factor=0.5, patience=2, verbose=True
             )
         elif self.scheduler == "cosine":
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
