@@ -1,4 +1,14 @@
-from typing import Union, Literal
+from typing import NewType
+
+
+try:
+    from typing import Union, Literal
+    LiteralFalse = Literal[False]
+except ImportError:
+    # Python pre-3.8 compatibility
+    from typing import Union, NewType
+    LiteralFalse = NewType("LiteralFalse", bool)
+
 import warnings
 import math
 
@@ -68,7 +78,7 @@ class ConcatenationEncoder(torch.nn.Module):
         dims_add: int,
         dropout: float = 0.1,
         max_val: float = 200.0,
-        static_size: Union[Literal[False], float] = False,
+        static_size: Union[LiteralFalse, float] = False,
     ):
         super().__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
