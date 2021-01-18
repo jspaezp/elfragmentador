@@ -84,12 +84,11 @@ class ConcatenationEncoder(torch.nn.Module):
         self.dropout = torch.nn.Dropout(p=dropout)
 
         # pos would be a variable ...
-        self.div_term = torch.exp(
+        div_term = torch.exp(
             torch.arange(0, dims_add, 2).float()
             * (-math.log(float(2 * max_val)) / dims_add)
         )
-        self.base_encode = torch.zeros(1, dims_add)
-        self.register_buffer("div_term", self.div_term)
+        self.register_buffer("div_term", div_term)
         self.static_size = static_size
 
     def forward(self, x, val, debug=False):
