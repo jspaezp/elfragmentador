@@ -2,9 +2,10 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 
+import transprosit
 from transprosit import model
 from transprosit import datamodules
-from transprosit import train
+from transprosit.train import main_train
 
 pl.seed_everything(2020)
 
@@ -14,7 +15,7 @@ parser = ArgumentParser()
 parser.add_argument(
     "--run_name",
     type=str,
-    default="prosit_transformer",
+    default=f"prosit_transformer_{transprosit.__version__}",
     help="Name to be given to the run (logging)",
 )
 parser.add_argument(
@@ -47,26 +48,4 @@ if __name__ == "__main__":
     print(dict_args)
 
     model = model.PepTransformerModel(**dict_args)
-    print(model)
-    datamodule = datamodules.PeptideDataModule(
-        batch_size=args.batch_size, base_dir=args.data_dir
-    )
-    datamodule.setup()
-
-    callbacks = train.get_callbacks(
-        run_name=args.run_name,
-        termination_patience=args.terminator_patience,
-        wandb_project=args.wandb_project,
-    )
-    trainer = pl.Trainer.from_argparse_args(
-        args,
-        max_epochs=100,
-        precision=16,
-        gpus=1,
-        profiler="simple",
-        logger=callbacks["logger"],
-        callbacks=callbacks["callbacks"],
-        progress_bar_refresh_rate=50,
-    )
-
-    trainer.fit(model, datamodule)
+    main_train(model, args)
