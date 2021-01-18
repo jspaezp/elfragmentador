@@ -89,7 +89,7 @@ class ConcatenationEncoder(torch.nn.Module):
             * (-math.log(float(2 * max_val)) / dims_add)
         )
         self.base_encode = torch.zeros(1, dims_add)
-        self.register_buffer("base_encoding", self.base_encode)
+        self.register_buffer("div_term", self.div_term)
         self.static_size = static_size
 
     def forward(self, x, val, debug=False):
@@ -119,11 +119,11 @@ class ConcatenationEncoder(torch.nn.Module):
         else:
             end_position = x.size(0)
 
-        e = self.base_encode.clone()
-        e = torch.cat(
-            [torch.sin(val * self.div_term), torch.cos(val * self.div_term)], axis=-1
-        )
+        e_sin = torch.sin(val * self.div_term)
+        e_cos = torch.cos(torch.cos(val * self.div_term))
+        e = torch.cat([e_sin, e_cos], axis=-1)
         e = torch.cat([e.unsqueeze(0)] * end_position)
+
         if debug:
             print(f"CE: Shape before concat e={e.shape} x={x.shape}")
 
