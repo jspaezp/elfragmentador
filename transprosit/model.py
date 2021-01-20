@@ -522,15 +522,15 @@ class PepTransformerModel(pl.LightningModule):
         assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
 
         loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
-        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra).mean()
+        loss_spectra = 1 - self.angle_loss(yhat_spectra, encoded_spectra).mean()
 
-        total_loss = (loss_irt + loss_spectra * 9)/10
+        total_loss = (loss_irt + loss_spectra * 9) / 10
 
         out = {
-                "l": total_loss,
-                "irt_l": loss_irt,
-                "spec_l": loss_spectra,
-            }
+            "l": total_loss,
+            "irt_l": loss_irt,
+            "spec_l": loss_spectra,
+        }
 
         assert not torch.isnan(total_loss), print(
             f"Fail at Loss: {total_loss},\n"
@@ -543,18 +543,18 @@ class PepTransformerModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx=None):
         step_out = self._step(batch, batch_idx=batch_idx)
-        log_dict = {"t_"+k:v for k,v in step_out.items()}
+        log_dict = {"t_" + k: v for k, v in step_out.items()}
 
         self.log_dict(
             log_dict,
             prog_bar=True,
         )
 
-        return {"loss": step_out['l']}
+        return {"loss": step_out["l"]}
 
     def validation_step(self, batch, batch_idx=None):
         step_out = self._step(batch, batch_idx=batch_idx)
-        log_dict = {"v_"+k:v for k,v in step_out.items()}
+        log_dict = {"v_" + k: v for k, v in step_out.items()}
 
         self.log_dict(
             log_dict,
