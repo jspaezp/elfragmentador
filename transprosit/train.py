@@ -9,18 +9,18 @@ def get_callbacks(run_name, termination_patience=20, wandb_project="rttransforme
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="epoch")
     checkpointer = pl.callbacks.ModelCheckpoint(
         prefix=run_name,
-        monitor="val_loss",
+        monitor="v_l",
         verbose=True,
         save_top_k=2,
         save_weights_only=True,
         dirpath=".",
         save_last=True,
         mode="min",
-        filename="{val_loss:.6f}_{epoch:03d}",
+        filename="{v_l:.6f}_{epoch:03d}",
     )
 
     terminator = pl.callbacks.early_stopping.EarlyStopping(
-        monitor="val_loss",
+        monitor="v_l",
         min_delta=0.00,
         patience=termination_patience,
         verbose=False,
