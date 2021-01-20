@@ -548,8 +548,8 @@ class PepTransformerModel(pl.LightningModule):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
         yhat_irt, yhat_spectra = self(encoded_sequence, charge)
 
-        loss_irt = self.loss(yhat_irt, norm_irt)
-        loss_spectra = self.loss(yhat_spectra, encoded_spectra)
+        loss_irt = self.mse_loss(yhat_irt, norm_irt)
+        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra)
         total_loss = loss_irt + (10 * loss_spectra)
 
         self.log_dict(
