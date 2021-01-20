@@ -15,7 +15,7 @@ def mod_train_base(datadir):
     trainer = pl.Trainer(fast_dev_run=True)
     trainer.fit(mod, datamodule)
 
-    trainer = pl.Trainer(max_epochs=10)
+    trainer = pl.Trainer(max_epochs=2)
     trainer.fit(mod, datamodule)
 
 

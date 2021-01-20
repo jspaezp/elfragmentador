@@ -13,7 +13,7 @@ def encode_mod_seq(seq):
     >>> samp_seq = "_AAIFVVAR_"
     >>> print(constants.MAX_SEQUENCE)
     30
-    >>> out = encode(samp_seq)
+    >>> out = encode_mod_seq(samp_seq)
     >>> out
     [1, 1, 8, 5, 18, 18, 1, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     >>> len(out)
@@ -55,10 +55,9 @@ def get_fragment_encoding_labels(annotated_peaks=None):
     Examples
     ========
     >>> get_fragment_encoding_labels()
-    ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z1b2', 'z1y2', 'z2b2', 'z2y2']
-
+    ['z1b1', 'z1y1',  ..., 'z3b29', 'z3y29']
     >>> get_fragment_encoding_labels({'z1y2': 100, 'z2y2': 52})
-    [0, 0, 0, 0, 0, 100, 0, 52]
+    [0, 0, 0, 100, ..., 0, 52, ...]
     """
 
     # TODO just redefine this to use the constant keys for fragments ...
@@ -92,14 +91,15 @@ def decode_fragment_tensor(
 
     Example
     =======
-    >>> foo = decode_tensor("AAACK", torch.rand((150)), 3, "by", 25)
-    >>> >>> foo.head()
+    >>> import torch
+    >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (constants.NUM_FRAG_EMBEDINGS)))
+    >>> foo.head()
       Fragment        Mass  Intensity
-    0     z1b1   72.044390   0.887933
-    1     z1y1  147.112804   0.765287
-    2     z2b1   36.525833   0.420042
-    3     z2y1   74.060040   0.428646
-    4     z3b1   24.686314   0.212731
+    0     z1b1   72.044390        0.0
+    1     z1y1  147.112804        1.0
+    2     z1b2  143.081504        2.0
+    3     z1y2  307.143453        3.0
+    4     z1b3  214.118618        4.0
     >>> # import matplotlib.pyplot as plt
     >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
     >>> # plt.show()

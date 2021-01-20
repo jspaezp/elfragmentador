@@ -68,10 +68,11 @@ class ConcatenationEncoder(torch.nn.Module):
 
     Examples
     --------
-    >>> x = torch.zeros((5, 2, 20))
+    >>> x1 = torch.zeros((5, 1, 20))
+    >>> x2 = torch.zeros((5, 2, 20))
     >>> encoder = ConcatenationEncoder(10, 0.1, 10)
-    >>> output = encoder(torch.zeros((4, 1, 20)), 7)
-    >>> output = encoder(x, torch.tensor([[7], [4]]))
+    >>> output = encoder(x1, torch.tensor([[7]]))
+    >>> output = encoder(x2, torch.tensor([[7], [4]]))
     """
 
     def __init__(
@@ -102,10 +103,13 @@ class ConcatenationEncoder(torch.nn.Module):
             val: [batch size, 1]
             output: [sequence length, batch size, embed_dim + added_dims]
         Examples:
-            >>> x = torch.zeros((5, 2, 20))
+            >>> x1 = torch.zeros((5, 1, 20))
+            >>> x2 = torch.zeros((5, 2, 20))
             >>> encoder = ConcatenationEncoder(10, 0.1, 10)
-            >>> output = encoder(torch.zeros((4, 1, 20)), 7)
-            >>> output = encoder(x, torch.tensor([[7], [4]]))
+            >>> output = encoder(x1, torch.tensor([[7]]))
+            >>> output.shape
+            torch.Size([5, 1, 30])
+            >>> output = encoder(x2, torch.tensor([[7], [4]]))
         """
         if debug:
             print(f"CE: Shape of inputs val={val.shape} x={x.shape}")
@@ -148,13 +152,11 @@ class PositionalEncoding(torch.nn.Module):
         max_len: the max. length of the incoming sequence (default=5000).
     Examples:
         >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
-        >>> print(posencoder(torch.ones((2,1,20)).float())[..., 0:3])
-        tensor([[[1.1111, 2.2222, 1.1111]],
-                [[2.0461, 1.7114, 1.5419]]])
-
-        >>> print(posencoder(torch.ones((1,2,20)).float())[..., 0:3])
-        tensor([[[1.1111, 2.2222, 1.1111],
-                 [1.1111, 2.2222, 1.1111]]])
+        >>> x = torch.ones((2,1,20)).float()
+        >>> x.shape
+        torch.Size([2, 1, 20])
+        >>> posencoder(x).shape
+        torch.Size([2, 1, 20])
 
     Therfore encoding are (seq_length, batch, encodings)
     """
@@ -188,6 +190,8 @@ class PositionalEncoding(torch.nn.Module):
             x: [sequence length, batch size, embed dim]
             output: [sequence length, batch size, embed dim]
         Examples:
+            >>> x = torch.ones((1,2,20)).float()
+            >>> pos_encoder = PositionalEncoding(20, 0.1, max_len=20)
             >>> output = pos_encoder(x)
         """
 

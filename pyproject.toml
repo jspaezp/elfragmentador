@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transprosit"
-version = "0.6.2"
+version = "0.6.3"
 description = "Prosit but using transformers"
 authors = ["Your Name <you@example.com>"]
 license = "Apache 2.0"
@@ -35,8 +35,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--disable-warnings -v"
+addopts = "--doctest-modules --disable-warnings -v"
+doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE NUMBER"
 testpaths = [
     "tests",
+    "transprosit",
     "train.py",
 ]
