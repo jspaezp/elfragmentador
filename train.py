@@ -15,7 +15,7 @@ parser = ArgumentParser()
 parser.add_argument(
     "--run_name",
     type=str,
-    default=f"prosit_transformer_{transprosit.__version__}",
+    default=f"prosit_transformer",
     help="Name to be given to the run (logging)",
 )
 parser.add_argument(
@@ -40,6 +40,11 @@ parser = datamodules.PeptideDataModule.add_model_specific_args(parser)
 # add all the available trainer options to argparse
 # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
 parser = pl.Trainer.add_argparse_args(parser)
+
+# add all the available trainer options to argparse
+# ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
+parser = pl.Trainer.add_argparse_args(parser)
+parser.set_defaults(precision=16, gpus=1)
 
 if __name__ == "__main__":
 
