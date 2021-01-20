@@ -514,7 +514,7 @@ class PepTransformerModel(pl.LightningModule):
 
         return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
-    def training_step(self, batch, batch_idx=None):
+    def _step(self, batch, batch_idx):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
         yhat_irt, yhat_spectra = self(encoded_sequence, charge)
 
@@ -522,18 +522,15 @@ class PepTransformerModel(pl.LightningModule):
         assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
 
         loss_irt = self.mse_loss(yhat_irt.float(), norm_irt.float())
-        loss_spectra = self.angle_loss(yhat_spectra.float(), encoded_spectra.float())
+        loss_spectra = self.angle_loss(yhat_spectra.float(), encoded_spectra.float()).mean()
 
-        total_loss = loss_irt + (10 * loss_spectra)
+        total_loss = loss_irt + (5 * loss_spectra)
 
-        self.log_dict(
-            {
-                "train_loss": total_loss,
-                "train_irt_loss": loss_irt,
-                "train_spec_loss": loss_spectra,
-            },
-            prog_bar=True,
-        )
+        out = {
+                "loss": total_loss,
+                "irt_loss": loss_irt,
+                "spec_loss": loss_spectra,
+            }
 
         assert not torch.isnan(total_loss), print(
             f"Fail at Loss: {total_loss},\n"
@@ -542,21 +539,24 @@ class PepTransformerModel(pl.LightningModule):
             f" y_irt: {norm_irt}"
         )
 
-        return {"loss": total_loss}
+        return out
 
-    def validation_step(self, batch, batch_idx=None):
-        encoded_sequence, charge, encoded_spectra, norm_irt = batch
-        yhat_irt, yhat_spectra = self(encoded_sequence, charge)
-
-        loss_irt = self.mse_loss(yhat_irt, norm_irt)
-        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra)
-        total_loss = loss_irt + (10 * loss_spectra)
+    def training_step(self, batch, batch_idx=None):
+        step_out = self._step(batch, batch_idx=batch_idx)
+        log_dict = {"t_"+k:v for k,v in step_out.items()}
 
         self.log_dict(
-            {
-                "val_loss": total_loss,
-                "val_irt_loss": loss_irt,
-                "val_spec_loss": loss_spectra,
-            },
+            log_dict,
+            prog_bar=True,
+        )
+
+        return {"loss": step_out['loss']}
+
+    def validation_step(self, batch, batch_idx=None):
+        step_out = self._step(batch, batch_idx=batch_idx)
+        log_dict = {"v_"+k:v for k,v in step_out.items()}
+
+        self.log_dict(
+            log_dict,
             prog_bar=True,
         )
