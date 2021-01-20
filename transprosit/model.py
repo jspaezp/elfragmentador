@@ -40,7 +40,7 @@ class MLP(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         for i, layer in enumerate(self.layers):
             x = (
-                torch.nn.functional.relu(layer(x))
+                torch.nn.functional.gelu(layer(x))
                 if i < self.num_layers - 1
                 else layer(x)
             )
@@ -328,7 +328,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
         if debug:
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
-        return torch.nn.functional.relu(spectra_output)
+        return torch.nn.functional.gelu(spectra_output)
 
 
 class PepTransformerModel(pl.LightningModule):
@@ -512,7 +512,7 @@ class PepTransformerModel(pl.LightningModule):
                 self.scheduler,
             )
 
-        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "val_loss"}
+        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "v_l"}
 
     def _step(self, batch, batch_idx):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
@@ -521,15 +521,15 @@ class PepTransformerModel(pl.LightningModule):
         assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
         assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
 
-        loss_irt = self.mse_loss(yhat_irt.float(), norm_irt.float())
-        loss_spectra = self.angle_loss(yhat_spectra.float(), encoded_spectra.float()).mean()
+        loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
+        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra).mean()
 
-        total_loss = loss_irt + (5 * loss_spectra)
+        total_loss = (loss_irt + loss_spectra * 9)/10
 
         out = {
-                "loss": total_loss,
-                "irt_loss": loss_irt,
-                "spec_loss": loss_spectra,
+                "l": total_loss,
+                "irt_l": loss_irt,
+                "spec_l": loss_spectra,
             }
 
         assert not torch.isnan(total_loss), print(
@@ -550,7 +550,7 @@ class PepTransformerModel(pl.LightningModule):
             prog_bar=True,
         )
 
-        return {"loss": step_out['loss']}
+        return {"loss": step_out['l']}
 
     def validation_step(self, batch, batch_idx=None):
         step_out = self._step(batch, batch_idx=batch_idx)

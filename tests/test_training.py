@@ -15,6 +15,9 @@ def mod_train_base(datadir):
     trainer = pl.Trainer(fast_dev_run=True)
     trainer.fit(mod, datamodule)
 
+    trainer = pl.Trainer(max_epochs=10)
+    trainer.fit(mod, datamodule)
+
 
 def test_model_train(shared_datadir):
     mod_train_base(shared_datadir)
