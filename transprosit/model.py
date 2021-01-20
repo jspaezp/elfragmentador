@@ -294,7 +294,6 @@ class PeptideTransformerDecoder(torch.nn.Module):
         self.nce_encoder = ConcatenationEncoder(
             dims_add=nce_dims, dropout=dropout, max_val=100.0
         )
-        self.max_charge = constants.DEFAULT_MAX_CHARGE
 
     def init_weights(self):
         initrange = 0.1
@@ -329,7 +328,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
         if debug:
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
-        return spectra_output
+        return torch.nn.functional.relu(spectra_output)
 
 
 class PepTransformerModel(pl.LightningModule):
@@ -378,7 +377,8 @@ class PepTransformerModel(pl.LightningModule):
         self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
 
         # Training related things
-        self.loss = torch.nn.MSELoss()
+        self.mse_loss = torch.nn.MSELoss()
+        self.angle_loss = torch.nn.CosineSimilarity(dim=1, eps=1e-4)
         self.lr = lr
 
         assert (
@@ -521,8 +521,8 @@ class PepTransformerModel(pl.LightningModule):
         assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
         assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
 
-        loss_irt = self.loss(yhat_irt.float(), norm_irt.float())
-        loss_spectra = self.loss(yhat_spectra.float(), encoded_spectra.float())
+        loss_irt = self.mse_loss(yhat_irt.float(), norm_irt.float())
+        loss_spectra = self.angle_loss(yhat_spectra.float(), encoded_spectra.float())
 
         total_loss = loss_irt + (10 * loss_spectra)
 
