@@ -508,7 +508,7 @@ class PepTransformerModel(pl.LightningModule):
             )
         elif self.scheduler == "cosine":
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                opt, T_0=1, T_mult=2, eta_min=self.lr / 50, last_epoch=-1, verbose=False
+                opt, T_0=1, T_mult=2, eta_min=self.lr / 100, last_epoch=-1, verbose=False
             )
         else:
             raise ValueError(
