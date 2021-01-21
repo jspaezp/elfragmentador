@@ -10,7 +10,7 @@ import transprosit as tp
 def get_callbacks(run_name, termination_patience=20, wandb_project="rttransformer"):
     complete_run_name = f"{tp.__version__}_{run_name}"
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
-    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="epoch")
+    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="step")
     checkpointer = pl.callbacks.ModelCheckpoint(
         prefix=complete_run_name,
         monitor="v_l",
