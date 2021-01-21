@@ -41,6 +41,8 @@ def main_train(model, args):
     )
     datamodule.setup()
     steps_per_epoch = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)
+    print(f"Setting steps_per_epoch to {steps_per_epoch}"
+          f" = {len(datamodule.train_dataset)} / {datamodule.batch_size}")
     model.steps_per_epoch = steps_per_epoch
 
     callbacks = get_callbacks(

@@ -615,6 +615,7 @@ class PepTransformerModel(pl.LightningModule):
     def training_step(self, batch, batch_idx=None):
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"t_" + k: v for k, v in step_out.items()}
+        log_dict.update({"lr": self.trainer.optimizers[0].param_groups[0]['lr']})
 
         self.log_dict(
             log_dict,
