@@ -51,9 +51,6 @@ def main_train(model, args):
     )
     trainer = pl.Trainer.from_argparse_args(
         args,
-        max_epochs=100,
-        precision=16,
-        gpus=1,
         profiler="simple",
         logger=callbacks["logger"],
         callbacks=callbacks["callbacks"],
