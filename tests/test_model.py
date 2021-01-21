@@ -30,9 +30,12 @@ def mod_forward_base(datadir):
     print(f">> Shape of inputs {[y.shape for y in x]}")
 
     with torch.no_grad():
-        out = mod(x[0], x[1], debug=True)
+        yhat_irt, yhat_spectra = mod(x[0], x[1], debug=True)
 
-    print(f">> Shape of outputs {[y.shape for y in out]}")
+    assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
+    assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
+
+    print(f">> Shape of outputs {yhat_irt.shape}, {yhat_spectra.shape}")
 
 
 def test_model_forward_seq():

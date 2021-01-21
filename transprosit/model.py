@@ -158,7 +158,7 @@ class PositionalEncoding(torch.nn.Module):
         >>> posencoder(x).shape
         torch.Size([2, 1, 20])
 
-    Therfore encoding are (seq_length, batch, encodings)
+    Therefore encoding are (seq_length, batch, encodings)
     """
 
     def __init__(
@@ -202,6 +202,16 @@ class PositionalEncoding(torch.nn.Module):
 
         x = x + self.pe[:end_position, :]
         return self.dropout(x)
+
+
+class CosineLoss(torch.nn.CosineSimilarity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def forward(self, truth, prediction):
+        out = super().forward(truth, prediction)
+        out = 1 - out
+        return out
 
 
 class PeptideTransformerEncoder(torch.nn.Module):
@@ -332,7 +342,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
         if debug:
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
-        return torch.nn.functional.gelu(spectra_output)
+        return torch.nn.functional.leaky_relu(spectra_output)
 
 
 class PepTransformerModel(pl.LightningModule):
@@ -382,7 +392,7 @@ class PepTransformerModel(pl.LightningModule):
 
         # Training related things
         self.mse_loss = torch.nn.MSELoss()
-        self.angle_loss = torch.nn.CosineSimilarity(dim=1, eps=1e-4)
+        self.angle_loss = CosineLoss(dim=1, eps=1e-4)
         self.lr = lr
 
         assert (
@@ -398,8 +408,8 @@ class PepTransformerModel(pl.LightningModule):
 
         Details:
             src:
-                The peptide is enconded as integers for the aminoacid.
-                "AAA" enconded for a max length of 5 would be
+                The peptide is encoded as integers for the aminoacid.
+                "AAA" encoded for a max length of 5 would be
                 torch.Tensor([ 1,  1,  1,  0,  0]).long()
             charge:
                 A tensor corresponding to the charges of each of the
@@ -442,7 +452,7 @@ class PepTransformerModel(pl.LightningModule):
 
         if mods is not None:
             raise NotImplementedError(
-                "Sorry, have not implemented PTMS on this imput ... yet"
+                "Sorry, have not implemented PTMS on this input ... yet"
             )
 
         out = self(src=src, charge=in_charge, mods=mods, debug=debug)
@@ -521,14 +531,17 @@ class PepTransformerModel(pl.LightningModule):
     def _step(self, batch, batch_idx):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
         yhat_irt, yhat_spectra = self(encoded_sequence, charge)
-
-        assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
-        assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
+        yhat_irt = yhat_irt[~norm_irt.isnan()]
+        norm_irt = norm_irt[~norm_irt.isnan()]
 
         loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
-        loss_spectra = 1 - self.angle_loss(yhat_spectra, encoded_spectra).mean()
+        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra).mean()
 
-        total_loss = (loss_irt + loss_spectra * 9) / 10
+        if len(norm_irt.data) == 0:
+            total_loss = loss_spectra
+        else:
+            total_loss = (loss_irt + loss_spectra * 9) / 10
+
 
         out = {
             "l": total_loss,
@@ -537,10 +550,12 @@ class PepTransformerModel(pl.LightningModule):
         }
 
         assert not torch.isnan(total_loss), print(
-            f"Fail at Loss: {total_loss},\n"
-            f" yhat: {total_loss},\n"
-            f" y_spec: {encoded_spectra}\n"
-            f" y_irt: {norm_irt}"
+            f"Fail at... \n Loss: {total_loss},\n"
+            f"\n loss_irt: {loss_irt}\n"
+            f"\n loss_spectra: {loss_spectra}\n"
+            f"\n yhat_spec: {yhat_spectra},\n"
+            f"\n y_spec: {encoded_spectra}\n"
+            f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
         )
 
         return out

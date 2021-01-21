@@ -29,8 +29,11 @@ On the transformer side of things I must admit that many of the elements of this
 
 **Urgent**
 - Find a better name for the project
+  - Ideas:
+    - elFragmentador
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
+- Allow training with missing values
 
 **Posible**
 - Add neutral losses specific to some PTMs
