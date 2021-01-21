@@ -10,6 +10,7 @@ except ImportError:
 
 import warnings
 import math
+import time
 
 import torch
 from torch import Tensor, nn
@@ -346,7 +347,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
 
 
 class PepTransformerModel(pl.LightningModule):
-    accepted_schedulers = ["plateau", "cosine"]
+    accepted_schedulers = ["plateau", "cosine", "onecycle"]
     __version__ = transprosit.__version__
 
     def __init__(
@@ -359,6 +360,8 @@ class PepTransformerModel(pl.LightningModule):
         dropout: float = 0.2,
         lr: float = 1e-4,
         scheduler: str = "plateau",
+        lr_ratio: float = 200,
+        steps_per_epoch=None,
         *args,
         **kwargs,
     ) -> None:
@@ -399,6 +402,8 @@ class PepTransformerModel(pl.LightningModule):
             scheduler in self.accepted_schedulers
         ), f"Passed scheduler '{scheduler} is not one of {self.accepted_schedulers}"
         self.scheduler = scheduler
+        self.lr_ratio = lr_ratio
+        self.steps_per_epoch = steps_per_epoch
 
     def forward(self, src: torch.long, charge=None, mods=None, debug=False):
         """
@@ -507,26 +512,74 @@ class PepTransformerModel(pl.LightningModule):
                 f"either of {PepTransformerModel.accepted_schedulers}"
             ),
         )
+        parser.add_argument(
+            "--lr_ratio",
+            default=200.0,
+            type=float,
+            help=(
+                "For cosine annealing: "
+                "Ratio of the initial learning rate to use with cosine annealing"
+                " for instance a lr or 1 and a ratio of 10 would have a minimum"
+                " learning rate of 0.1\n"
+                "For onecycle: "
+                "Ratio of the initial lr and and maximum one, "
+                "for instance if lr is 0.1 and ratio is 10, the max learn rate"
+                "would be 1.0"
+            ),
+        )
         return parser
 
     def configure_optimizers(self):
         opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
 
         if self.scheduler == "plateau":
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                opt, mode="min", factor=0.5, patience=2, verbose=True
-            )
+            scheduler_dict = {
+                "lr_scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    opt, mode="min", factor=0.5, patience=2, verbose=True
+                )
+            }
         elif self.scheduler == "cosine":
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                opt, T_0=1, T_mult=2, eta_min=self.lr / 50, last_epoch=-1, verbose=False
-            )
+            assert self.lr_ratio > 1
+            scheduler_dict = {
+                "lr_scheduler": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                    opt,
+                    T_0=1,
+                    T_mult=2,
+                    eta_min=self.lr / self.lr_ratio,
+                    last_epoch=-1,
+                    verbose=False,
+                )
+            }
+        elif self.scheduler == "onecycle":
+            assert self.steps_per_epoch is not None, "Please set steps_per_epoch"
+            if self.trainer.max_epochs == 1000:
+                warnings.warn("Max epochs was 1000, make sure you want this")
+            if self.lr_ratio > 20:
+                warnings.warn(
+                    f"Provided LR ratio '{self.lr_ratio}' seems a lil high,"
+                    " make sure you want that for the OneCycleLR scheduler"
+                )
+                time.sleep(3)  # just so the user has time to see the message...
+            scheduler_dict = {
+                "lr_scheduler": torch.optim.lr_scheduler.OneCycleLR(
+                    opt,
+                    self.lr * self.lr_ratio,
+                    epochs=self.trainer.max_epochs,
+                    steps_per_epoch=self.steps_per_epoch,
+                ),
+                "interval": "step",
+            }
+
         else:
             raise ValueError(
                 "Scheduler should be one of 'plateau' or 'cosine', passed: ",
                 self.scheduler,
             )
 
-        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "v_l"}
+        out_dict = {"optimizer": opt, "monitor": "v_l"}
+        out_dict.update(scheduler_dict)
+
+        return out_dict
 
     def _step(self, batch, batch_idx):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch

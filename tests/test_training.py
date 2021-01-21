@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from pytorch_lightning.core import datamodule
 
 from torch.utils.data import DataLoader
 
@@ -8,17 +9,35 @@ import pytorch_lightning as pl
 from transprosit import datamodules, model
 
 
-def mod_train_base(datadir):
-    mod = model.PepTransformerModel(nhead=4, ninp=64)
-    print(mod)
+def get_datamodule(datadir):
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
     datamodule.setup()
+    return datamodule
+
+
+def mod_train_base(datadir):
+    datamodule = get_datamodule(datadir)
+    mod = model.PepTransformerModel(nhead=4, ninp=64)
 
     trainer = pl.Trainer(fast_dev_run=True)
     trainer.fit(mod, datamodule)
 
     trainer = pl.Trainer(max_epochs=2)
     trainer.fit(mod, datamodule)
+
+
+def base_train_works_on_schdulers(datadir):
+    datamodule = get_datamodule(datadir)
+    trainer = pl.Trainer(fast_dev_run=True, max_epochs=50)
+
+    for sch in model.PepTransformerModel.accepted_schedulers:
+        mod = model.PepTransformerModel(nhead=4, ninp=64, scheduler=sch)
+        mod.steps_per_epoch = len(datamodule.train_dataset)
+        trainer.fit(mod, datamodule)
+
+
+def test_train_works_on_schedulers(shared_datadir):
+    base_train_works_on_schdulers(shared_datadir)
 
 
 def mod_train_with_missing(datadir):
@@ -40,5 +59,7 @@ def test_model_train(shared_datadir):
 
 if __name__ == "__main__":
     parent_dir = Path(__file__).parent
-    mod_train_base(str(parent_dir) + "/data/")
-    mod_train_with_missing(str(parent_dir) + "/data/")
+    datadir = str(parent_dir) + "/data/"
+    mod_train_base(datadir)
+    mod_train_with_missing(datadir)
+    base_train_works_on_schdulers(datadir)

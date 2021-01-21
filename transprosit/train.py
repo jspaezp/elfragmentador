@@ -1,3 +1,5 @@
+import math
+
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
@@ -38,6 +40,8 @@ def main_train(model, args):
         batch_size=args.batch_size, base_dir=args.data_dir
     )
     datamodule.setup()
+    steps_per_epoch = math.floor(len(datamodule.train_dataset) / datamodule.batch_size)
+    model.steps_per_epoch = steps_per_epoch
 
     callbacks = get_callbacks(
         run_name=args.run_name,

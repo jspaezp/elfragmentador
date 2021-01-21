@@ -6,3 +6,4 @@ poetry.lock
 **.config_ipynb
 dist/**
 lightning_logs/**
+settings.json
