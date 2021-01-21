@@ -10,7 +10,7 @@ import transprosit as tp
 def get_callbacks(run_name, termination_patience=20, wandb_project="rttransformer"):
     complete_run_name = f"{tp.__version__}_{run_name}"
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
-    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="step")
+    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()
     checkpointer = pl.callbacks.ModelCheckpoint(
         prefix=complete_run_name,
         monitor="v_l",
@@ -40,10 +40,6 @@ def main_train(model, args):
         batch_size=args.batch_size, base_dir=args.data_dir
     )
     datamodule.setup()
-    steps_per_epoch = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)
-    print(f"Setting steps_per_epoch to {steps_per_epoch}"
-          f" = {len(datamodule.train_dataset)} / {datamodule.batch_size}")
-    model.steps_per_epoch = steps_per_epoch
 
     callbacks = get_callbacks(
         run_name=args.run_name,

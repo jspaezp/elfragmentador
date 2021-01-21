@@ -534,21 +534,24 @@ class PepTransformerModel(pl.LightningModule):
 
         if self.scheduler == "plateau":
             scheduler_dict = {
-                "lr_scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+                "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
                     opt, mode="min", factor=0.5, patience=2, verbose=True
-                )
+                ),
+                "interval": "epoch",
+                "monitor": "v_l",
             }
         elif self.scheduler == "cosine":
             assert self.lr_ratio > 1
             scheduler_dict = {
-                "lr_scheduler": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                "scheduler": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
                     opt,
                     T_0=1,
                     T_mult=2,
                     eta_min=self.lr / self.lr_ratio,
                     last_epoch=-1,
                     verbose=False,
-                )
+                ),
+                "interval": "step",
             }
         elif self.scheduler == "onecycle":
             assert self.steps_per_epoch is not None, "Please set steps_per_epoch"
@@ -560,10 +563,16 @@ class PepTransformerModel(pl.LightningModule):
                     " make sure you want that for the OneCycleLR scheduler"
                 )
                 time.sleep(3)  # just so the user has time to see the message...
+            max_lr = self.lr * self.lr_ratio
+            print(
+                f">> Scheduler setup: max_lr {max_lr}, "
+                f"Max Epochs: {self.trainer.max_epochs}, "
+                f"Steps per epoch: {self.steps_per_epoch}"
+            )
             scheduler_dict = {
-                "lr_scheduler": torch.optim.lr_scheduler.OneCycleLR(
+                "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                     opt,
-                    self.lr * self.lr_ratio,
+                    max_lr,
                     epochs=self.trainer.max_epochs,
                     steps_per_epoch=self.steps_per_epoch,
                 ),
@@ -576,10 +585,9 @@ class PepTransformerModel(pl.LightningModule):
                 self.scheduler,
             )
 
-        out_dict = {"optimizer": opt, "monitor": "v_l"}
-        out_dict.update(scheduler_dict)
+        print(f"\n\n>>> Setting up schedulers:\n\n{scheduler_dict}")
 
-        return out_dict
+        return [opt], [scheduler_dict]
 
     def _step(self, batch, batch_idx):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
@@ -615,7 +623,7 @@ class PepTransformerModel(pl.LightningModule):
     def training_step(self, batch, batch_idx=None):
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"t_" + k: v for k, v in step_out.items()}
-        log_dict.update({"lr": self.trainer.optimizers[0].param_groups[0]['lr']})
+        log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
 
         self.log_dict(
             log_dict,

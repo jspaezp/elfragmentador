@@ -1,10 +1,9 @@
+import math
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
-from pytorch_lightning.core import datamodule
 
-from torch.utils.data import DataLoader
-
-from pathlib import Path
 import pytorch_lightning as pl
 from transprosit import datamodules, model
 
@@ -28,11 +27,19 @@ def mod_train_base(datadir):
 
 def base_train_works_on_schdulers(datadir):
     datamodule = get_datamodule(datadir)
-    trainer = pl.Trainer(fast_dev_run=True, max_epochs=50)
 
-    for sch in model.PepTransformerModel.accepted_schedulers:
+    for sch in model.PepTransformerModel.accepted_schedulers[::-1]:
+        print(f"\n\n\n>>>>>>>>>>>>>>>>> {sch} \n\n\n")
+        lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(
+            logging_interval="step"
+        )
+        trainer = pl.Trainer(
+            max_epochs=20, callbacks=[lr_monitor], limit_train_batches=1
+        )
         mod = model.PepTransformerModel(nhead=4, ninp=64, scheduler=sch)
-        mod.steps_per_epoch = len(datamodule.train_dataset)
+        mod.steps_per_epoch = math.ceil(
+            len(datamodule.train_dataset) / datamodule.batch_size
+        )
         trainer.fit(mod, datamodule)
 
 
