@@ -16,7 +16,10 @@ from pandas.core.frame import DataFrame
 from torch.utils.data.dataloader import DataLoader
 from typing import Union
 
-train_batch = namedtuple("TrainBatch", "encoded_sequence, charge, encoded_spectra, norm_irt")
+train_batch = namedtuple(
+    "TrainBatch", "encoded_sequence, charge, encoded_spectra, norm_irt"
+)
+
 
 class PeptideDataset(torch.utils.data.Dataset):
     def __init__(self, df: DataFrame) -> None:
@@ -92,22 +95,23 @@ class PeptideDataset(torch.utils.data.Dataset):
         norm_irt = self.norm_irts[index]
         charge = self.charges[index]
 
-        out = train_batch(encoded_sequence, charge, encoded_spectra, norm_irt
-)
+        out = train_batch(encoded_sequence, charge, encoded_spectra, norm_irt)
         return out
 
-def filter_df_on_sequences(df, name = ""):
+
+def filter_df_on_sequences(df, name=""):
     print(df)
     print(list(df))
-    print(
-        f"Removing Large sequences, currently {name}: {len(df)}"
+    print(f"Removing Large sequences, currently {name}: {len(df)}")
+    df = (
+        df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in df["SequenceEncoding"]]]
+        .copy()
+        .reset_index(drop=True)
     )
-    df = df[
-        [len(eval(x)) <= constants.MAX_SEQUENCE for x in df["SequenceEncoding"]]
-    ].copy().reset_index(drop=True)
 
     print(f"Left {name}: {len(df)}")
     return df
+
 
 class PeptideDataModule(pl.LightningDataModule):
     def __init__(

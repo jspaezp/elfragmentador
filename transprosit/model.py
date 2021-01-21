@@ -542,7 +542,6 @@ class PepTransformerModel(pl.LightningModule):
         else:
             total_loss = (loss_irt + loss_spectra * 9) / 10
 
-
         out = {
             "l": total_loss,
             "irt_l": loss_irt,

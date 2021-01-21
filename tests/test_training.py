@@ -24,8 +24,10 @@ def mod_train_base(datadir):
 def mod_train_with_missing(datadir):
     mod = model.PepTransformerModel(nhead=4, ninp=64)
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
-    datamodule.train_df.loc[[x for x in range(len(datamodule.train_df))],"mIRT"] = np.nan
-    datamodule.val_df.loc[[x for x in range(len(datamodule.val_df))],"mIRT"] = np.nan
+    datamodule.train_df.loc[
+        [x for x in range(len(datamodule.train_df))], "mIRT"
+    ] = np.nan
+    datamodule.val_df.loc[[x for x in range(len(datamodule.val_df))], "mIRT"] = np.nan
     datamodule.setup()
 
     trainer = pl.Trainer(max_epochs=2)
