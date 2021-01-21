@@ -40,6 +40,9 @@ def main_train(model, args):
         batch_size=args.batch_size, base_dir=args.data_dir
     )
     datamodule.setup()
+    spe = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)
+    print(f">>> TRAIN: Setting steps per epoch to {spe}")
+    model.steps_per_epoch = spe
 
     callbacks = get_callbacks(
         run_name=args.run_name,
