@@ -34,7 +34,7 @@ def base_train_works_on_schdulers(datadir):
             logging_interval="step"
         )
         trainer = pl.Trainer(
-            max_epochs=20, callbacks=[lr_monitor], limit_train_batches=1
+            max_epochs=10, callbacks=[lr_monitor], limit_train_batches=1
         )
         mod = model.PepTransformerModel(nhead=4, ninp=64, scheduler=sch)
         mod.steps_per_epoch = math.ceil(
