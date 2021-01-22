@@ -1,6 +1,7 @@
 import math
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
+import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
@@ -56,7 +57,10 @@ def build_parser():
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
     t_parser = ArgumentParser(add_help=False)
     t_parser = pl.Trainer.add_argparse_args(t_parser)
-    t_parser.set_defaults(gpus=-1)
+
+    if torch.cuda.is_available():
+        t_parser.set_defaults(gpus=-1)
+        t_parser.set_defaults(precision=16)
 
     parser = ArgumentParser(
         parents=[t_parser, parser], formatter_class=ArgumentDefaultsHelpFormatter
@@ -122,7 +126,9 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
     dict_args = vars(args)
-    print(dict_args)
+    print("\n====== Passed command line args/params =====\n")
+    for k, v in dict_args.items():
+        print(f">> {k}: {v}")
 
     mod = model.PepTransformerModel(**dict_args)
     main_train(mod, args)

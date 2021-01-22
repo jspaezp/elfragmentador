@@ -28,6 +28,7 @@ seaborn = "^0.11.0"
 matplotlib = "^3.3.0"
 python-igraph = "^0.8.3"
 MonkeyType = "^20.5.0"
+pytest-cov = "^2.11.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -35,7 +36,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--doctest-modules --disable-warnings -v"
+addopts = "--doctest-modules --disable-warnings -v --cov=transprosit"
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE NUMBER"
 testpaths = [
     "tests",

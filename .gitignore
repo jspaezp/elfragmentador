@@ -7,3 +7,4 @@ poetry.lock
 dist/**
 lightning_logs/**
 settings.json
+.coverage
