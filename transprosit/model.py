@@ -566,14 +566,16 @@ class PepTransformerModel(pl.LightningModule):
             print(
                 f">> Scheduler setup: max_lr {max_lr}, "
                 f"Max Epochs: {self.trainer.max_epochs}, "
-                f"Steps per epoch: {self.steps_per_epoch}"
+                f"Steps per epoch: {self.steps_per_epoch}, "
+                f"Accumulate Batches {self.trainer.accumulate_grad_batches}"
             )
+            spe = self.steps_per_epoch // self.trainer.accumulate_grad_batches
             scheduler_dict = {
                 "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                     opt,
                     max_lr,
                     epochs=self.trainer.max_epochs,
-                    steps_per_epoch=self.steps_per_epoch,
+                    steps_per_epoch=spe,
                 ),
                 "interval": "step",
             }
