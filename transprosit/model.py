@@ -466,8 +466,7 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def add_model_specific_args(parent_parser):
-        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+    def add_model_specific_args(parser):
         parser.add_argument(
             "--num_queries",
             default=150,
