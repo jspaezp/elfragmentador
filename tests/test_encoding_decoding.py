@@ -4,11 +4,24 @@ from transprosit import constants
 
 
 def test_aa_encoding():
-    out = encoding_decoding.encode_mod_seq("_AACD_")
+    out, _ = encoding_decoding.encode_mod_seq("_AACD_")
     assert out[:10] == [1, 1, 2, 3, 0, 0, 0, 0, 0, 0]
     assert len(out) == constants.MAX_SEQUENCE
     decoded = encoding_decoding.decode_mod_seq(out)
     assert decoded == "AACD"
+
+
+def test_mod_aa_encoding():
+    test_seqs = [
+        "AAAC[160]DDDK",  
+        "M[147]AAAK",  
+        "AAACSS[167]",  
+        "KAKT[181]AA",  
+        "KAKY[243]FG", ]
+
+    for s in test_seqs:
+        out = encoding_decoding.encode_mod_seq(s)
+        assert len(out[0])
 
 
 def test_fragment_encoding_decoding():

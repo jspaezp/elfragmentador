@@ -1,8 +1,10 @@
+from collections import namedtuple
 import pandas as pd
 from transprosit import constants, annotate
 from pandas.core.frame import DataFrame
 from torch import Tensor
 
+sequence_pair = namedtuple("SequencePair", "aas, mods")
 
 def encode_mod_seq(seq):
     """
@@ -19,28 +21,36 @@ def encode_mod_seq(seq):
     >>> len(out)
     30
     """
-    max_len = constants.MAX_SEQUENCE
-    AAS = "".join(constants.ALPHABET)
-    seq = seq.replace("_", "")
-    out = [0] * max_len
+    seq_out = [0] * constants.MAX_SEQUENCE
+    mod_out = [0] * constants.MAX_SEQUENCE
 
     try:
-        out_i = [AAS.index(x) + 1 for x in seq]
-        out[: len(out_i)] = out_i
+        split_seq = list(annotate.peptide_parser(seq))
+        seq_out_i = [constants.ALPHABET[x[:1]] for x in split_seq]
+        mod_out_i = [constants.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq]
+        mod_out_i = [constants.MOD_INDICES.get(x, 0) for x in mod_out_i ]
+        seq_out[: len(seq_out_i)] = seq_out_i
+        mod_out[: len(mod_out_i)] = mod_out_i
     except ValueError:
         print(seq)
         raise ValueError
-    return out
+
+    return sequence_pair(seq_out, mod_out)
 
 
-def decode_mod_seq(encoding):
+def decode_mod_seq(seq_encoding, mod_encoding = None):
     out = []
 
-    for i in encoding:
-        if i == 0:
+    if mod_encoding is None:
+        mod_encoding = [0]*len(seq_encoding)
+
+    for i, s in enumerate(seq_encoding):
+        if s == 0:
             break
 
-        out.append(constants.ALPHABET_S[i])
+        out.append(constants.ALPHABET_S[s])
+        if mod_encoding[i] != 0:
+            out.append(f"[{constants.MOD_INDICES_S[mod_encoding[i]]}]")
 
     return "".join(out)
 

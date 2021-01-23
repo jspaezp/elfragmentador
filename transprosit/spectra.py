@@ -21,6 +21,10 @@ class Spectrum:
         ion_types="by",
         tolerance=25,
         tolerance_unit="ppm",
+        nce = None,
+        instrument = None,
+        analyzer = None,
+        fragmentation = None,
     ):
 
         # Makes sure all elements in the sequence are aminoacids
@@ -53,6 +57,10 @@ class Spectrum:
         )
 
         self._annotated_peaks = None
+        self.nce = nce
+        self.instrument = instrument
+        self.analyzer = analyzer
+        self.fragmentation = fragmentation
 
     def precursor_error(self, error_type="ppm"):
         if error_type == "ppm":
@@ -107,6 +115,10 @@ class Spectrum:
             f"\tCharge: {self.charge}\n"
             f"\tMZs: {self.mzs[:3]}...{len(self.mzs)}\n"
             f"\tInts: {self.intensities[:3]}...{len(self.intensities)}\n"
+            f"\tInstrument: {self.fragmentation}\n"
+            f"\tInstrument: {self.instrument}\n"
+            f"\tAnalyzer: {self.analyzer}\n"
+            f"\tNCE: {self.nce}\n"
         )
 
         if self._annotated_peaks is not None:
@@ -173,36 +185,50 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
             yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
 
 
-def _parse_spectra_sptxt(x, *args, **kwargs):
+def _parse_spectra_sptxt(x, instrument=None, analyzer=None, *args, **kwargs):
     """
     Parses a single spectra into an object
 
     Meant for internal use
     """
-    assert x[0].startswith("Name"), print(x)
-    assert x[1].startswith("Comment"), print(x)
-    assert x[2].startswith("Num peaks"), print(x)
+    digits = [str(v) for v in range(10)]
 
-    name_sec = x[0][x[0].index(":") + 2 :]
-    comment_sec = x[1][x[1].index(":") :]
-    peaks_sec = x[3:]
+    # Header Handling
+    named_params = [v for v in x if ":" in v]
+    named_params_dict = {}
+    for v in named_params:
+        tmp = v.split(":")
+        named_params_dict[tmp[0].strip()] = tmp[1]
 
-    comment_sec = comment_sec.split(" ")
-    comment_dict = {e.split("=")[0]: e.split("=")[1] for e in comment_sec if "=" in e}
-    sequence, charge = name_sec.split("/")
-    sequence = sequence.strip()
+    fragmentation = named_params_dict.get("FullName", None)
+    if fragmentation is not None:
+        fragmentation = fragmentation[fragmentation.index('(')+1:-1]
 
-    peaks_sec = [l.split() for l in peaks_sec if "." in l]
+    comment_sec = [v.split("=") for v in named_params_dict["Comment"].strip().split()]
+    comment_dict = {v[0]: v[1] for v in comment_sec}
+    sequence, charge = named_params_dict["Name"].split("/")
+
+    nce = comment_dict.get("CollisionEnergy", None)
+    if nce is not None:
+        nce = float(nce)
+
+    # Peaks Handling
+    peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]
+    peaks_sec = [l.strip().split() for l in peaks_sec if "." in l]
     mz = [float(l[0]) for l in peaks_sec]
     intensity = [float(l[1]) for l in peaks_sec]
 
     out_spec = Spectrum(
-        sequence=sequence,
+        sequence=sequence.strip(),
         charge=int(charge),
         parent_mz=float(comment_dict["Parent"]),
         intensities=intensity,
         mzs=mz,
         modifications=comment_dict["Mods"],
+        fragmentation=fragmentation,
+        analyzer=analyzer,
+        instrument=instrument,
+        nce=nce,
         *args,
         **kwargs,
     )

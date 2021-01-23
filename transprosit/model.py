@@ -446,18 +446,16 @@ class PepTransformerModel(pl.LightningModule):
 
         return rt_output, spectra_output
 
-    def predict_from_seq(self, seq: str, charge: int, mods=None, debug: bool = False):
-        src = torch.Tensor(encoding_decoding.encode_mod_seq(seq)).unsqueeze(0).long()
+    def predict_from_seq(self, seq: str, charge: int, debug: bool = False):
+        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
+
+        src = torch.Tensor(encoded_seq).unsqueeze(0).long()
+        mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
         in_charge = torch.Tensor([charge]).unsqueeze(0).long()
 
         if debug:
             print(
                 f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}"
-            )
-
-        if mods is not None:
-            raise NotImplementedError(
-                "Sorry, have not implemented PTMS on this input ... yet"
             )
 
         out = self(src=src, charge=in_charge, mods=mods, debug=debug)
