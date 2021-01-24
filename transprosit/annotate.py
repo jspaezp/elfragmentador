@@ -23,6 +23,8 @@ def peptide_parser(p: str) -> Iterator[str]:
     ['A', 'A', 'A', 'C', 'C']
     >>> list(peptide_parser("AAAM(ox)CC"))
     ['A', 'A', 'A', 'M(ox)', 'C', 'C']
+    >>> list(peptide_parser("AAAM[+16]CC"))
+    ['A', 'A', 'A', 'M[+16]', 'C', 'C']
     """
 
     ANNOTATIONS = "[](){}"
@@ -55,7 +57,7 @@ def get_precursor_mz(peptide: str, charge: int):
     Calcultes the theoretical mass of a precursor peptide
     (assumes positive mode)
     """
-    pass
+    raise NotImplementedError
 
 
 def get_forward_backward(peptide: str):
@@ -67,9 +69,13 @@ def get_forward_backward(peptide: str):
     ========
     >>> get_forward_backward("AMC")
     (array([ 71.037114  , 202.077599  , 362.10824772]), array([160.03064872, 291.07113372, 362.10824772]))
+    >>> get_forward_backward("AM[147]C")
+    (array([ 71.037114  , 218.072509  , 378.10315772]), array([160.03064872, 307.06604372, 378.10315772]))
+    >>> get_forward_backward("AMC")
+    (array([ 71.037114  , 202.077599  , 362.10824772]), array([160.03064872, 291.07113372, 362.10824772]))
     """
     amino_acids = peptide_parser(peptide)
-    masses = [constants.AMINO_ACID[a] for a in amino_acids]
+    masses = [constants.MOD_AA_MASSES[a] for a in amino_acids]
     forward = numpy.cumsum(masses)
     backward = numpy.cumsum(list(reversed(masses)))
     return forward, backward

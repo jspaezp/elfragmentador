@@ -5,3 +5,6 @@ poetry.lock
 **.pyc
 **.config_ipynb
 dist/**
+lightning_logs/**
+settings.json
+.coverage

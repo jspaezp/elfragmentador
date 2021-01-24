@@ -1,3 +1,4 @@
+from collections import namedtuple
 from argparse import ArgumentParser
 from pathlib import PosixPath, Path
 
@@ -14,6 +15,10 @@ from transprosit import constants
 from pandas.core.frame import DataFrame
 from torch.utils.data.dataloader import DataLoader
 from typing import Union
+
+train_batch = namedtuple(
+    "TrainBatch", "encoded_sequence, charge, encoded_spectra, norm_irt"
+)
 
 
 class PeptideDataset(torch.utils.data.Dataset):
@@ -89,7 +94,23 @@ class PeptideDataset(torch.utils.data.Dataset):
         encoded_spectra = self.spectra_encodings[index]
         norm_irt = self.norm_irts[index]
         charge = self.charges[index]
-        return encoded_sequence, charge, encoded_spectra, norm_irt
+
+        out = train_batch(encoded_sequence, charge, encoded_spectra, norm_irt)
+        return out
+
+
+def filter_df_on_sequences(df, name=""):
+    print(df)
+    print(list(df))
+    print(f"Removing Large sequences, currently {name}: {len(df)}")
+    df = (
+        df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in df["SequenceEncoding"]]]
+        .copy()
+        .reset_index(drop=True)
+    )
+
+    print(f"Left {name}: {len(df)}")
+    return df
 
 
 class PeptideDataModule(pl.LightningDataModule):
@@ -107,34 +128,15 @@ class PeptideDataModule(pl.LightningDataModule):
         assert val_path.exists(), f"File '{val_path}' not found"
 
         train_df = pd.read_csv(str(train_path))
-        print(train_df)
-        print(list(train_df))
+        train_df = filter_df_on_sequences(train_df)
         val_df = pd.read_csv(str(val_path))
-        print(val_df)
-        print(list(val_df))
-
-        print(
-            f"Removing Large sequences, currently Train: {len(train_df)} Val: {len(val_df)}"
-        )
-
-        train_df = train_df[
-            [
-                len(eval(x)) <= constants.MAX_SEQUENCE
-                for x in train_df["SequenceEncoding"]
-            ]
-        ].copy()
-        val_df = val_df[
-            [len(eval(x)) <= constants.MAX_SEQUENCE for x in val_df["SequenceEncoding"]]
-        ].copy()
-
-        print(f"Left Train: {len(train_df)} Val: {len(val_df)}")
+        val_df = filter_df_on_sequences(val_df)
 
         self.train_df = train_df
         self.val_df = val_df
 
     @staticmethod
-    def add_model_specific_args(parent_parser):
-        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+    def add_model_specific_args(parser):
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
         return parser

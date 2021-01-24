@@ -13,38 +13,14 @@ TOLERANCE_TRIPLETOF = 0.5
 
 TOLERANCE = {"FTMS": (25, "ppm"), "ITMS": (0.35, "da"), "TripleTOF": (50, "ppm")}
 
-ALPHABET = {
-    "A": 1,
-    "C": 2,
-    "D": 3,
-    "E": 4,
-    "F": 5,
-    "G": 6,
-    "H": 7,
-    "I": 8,
-    "K": 9,
-    "L": 10,
-    "M": 11,
-    "N": 12,
-    "P": 13,
-    "Q": 14,
-    "R": 15,
-    "S": 16,
-    "T": 17,
-    "V": 18,
-    "W": 19,
-    "Y": 20,
-}
-ALPHABET_S = {integer: char for char, integer in ALPHABET.items()}
-AAS_NUM = len(ALPHABET)
-
 CHARGES = [1, 2, 3, 4, 5, 6]
 DEFAULT_MAX_CHARGE = max(CHARGES)
 MAX_FRAG_CHARGE = 3
 MAX_SEQUENCE = 30
 MAX_ION = MAX_SEQUENCE - 1
 ION_TYPES = ["y", "b"]
-sorted(ION_TYPES)
+ION_TYPES = sorted(ION_TYPES)
+
 NLOSSES = ["", "H2O", "NH3"]
 
 FORWARD = {"a", "b", "c"}
@@ -66,6 +42,12 @@ MODIFICATION = {
     "GG": 114.042927,  # GlyGly ubiquitinylation residue
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
 }
+
+MOD_INDICES = {v: i + 1 for i, v in enumerate(MODIFICATION)}
+# {'': 0, 'CARBAMIDOMETHYL': 1, 'ACETYL': 2, 'DEAMIDATED': 3, ...
+
+MOD_INDICES_S = {integer: char for char, integer in MOD_INDICES.items()}
+# {0: '', 1: 'CARBAMIDOMETHYL', 2: 'ACETYL',
 
 AMINO_ACID = {
     "G": 57.021464,
@@ -92,6 +74,30 @@ AMINO_ACID = {
 }
 
 AMINO_ACID_SET = set(AMINO_ACID)
+ALPHABET = {v: i + 1 for i, v in enumerate(sorted(AMINO_ACID))}
+# {'A': 1, 'C': 2, ... 'W': 20, 'Y': 21}
+
+ALPHABET_S = {integer: char for char, integer in ALPHABET.items()}
+# {1: 'A', 2: 'C', ..., 20: 'W', 21: 'Y'}
+
+AAS_NUM = len(ALPHABET)
+
+MOD_PEPTIDE_ALIASES = {
+    "C[160]": "",  # This makes it so it assumes it is always modified
+    "M[147]": "OXIDATION",
+    "M(ox)": "OXIDATION",
+    "S[167]": "PHOSPHO",
+    "T[181]": "PHOSPHO",
+    "Y[243]": "PHOSPHO",
+}
+
+MOD_AA_MASSES = AMINO_ACID.copy()
+MOD_AA_MASSES.update(
+    {
+        k: AMINO_ACID[k[0]] + MODIFICATION.get(v, 0)
+        for k, v in MOD_PEPTIDE_ALIASES.items()
+    }
+)
 
 # Atomic elements
 PROTON = 1.007276467

@@ -10,6 +10,7 @@ except ImportError:
 
 import warnings
 import math
+import time
 
 import torch
 from torch import Tensor, nn
@@ -158,7 +159,7 @@ class PositionalEncoding(torch.nn.Module):
         >>> posencoder(x).shape
         torch.Size([2, 1, 20])
 
-    Therfore encoding are (seq_length, batch, encodings)
+    Therefore encoding are (seq_length, batch, encodings)
     """
 
     def __init__(
@@ -202,6 +203,16 @@ class PositionalEncoding(torch.nn.Module):
 
         x = x + self.pe[:end_position, :]
         return self.dropout(x)
+
+
+class CosineLoss(torch.nn.CosineSimilarity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def forward(self, truth, prediction):
+        out = super().forward(truth, prediction)
+        out = 1 - out
+        return out
 
 
 class PeptideTransformerEncoder(torch.nn.Module):
@@ -332,11 +343,11 @@ class PeptideTransformerDecoder(torch.nn.Module):
         if debug:
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
-        return torch.nn.functional.gelu(spectra_output)
+        return torch.nn.functional.leaky_relu(spectra_output)
 
 
 class PepTransformerModel(pl.LightningModule):
-    accepted_schedulers = ["plateau", "cosine"]
+    accepted_schedulers = ["plateau", "cosine", "onecycle"]
     __version__ = transprosit.__version__
 
     def __init__(
@@ -349,6 +360,8 @@ class PepTransformerModel(pl.LightningModule):
         dropout: float = 0.2,
         lr: float = 1e-4,
         scheduler: str = "plateau",
+        lr_ratio: float = 200,
+        steps_per_epoch=None,
         *args,
         **kwargs,
     ) -> None:
@@ -382,13 +395,15 @@ class PepTransformerModel(pl.LightningModule):
 
         # Training related things
         self.mse_loss = torch.nn.MSELoss()
-        self.angle_loss = torch.nn.CosineSimilarity(dim=1, eps=1e-4)
+        self.angle_loss = CosineLoss(dim=1, eps=1e-4)
         self.lr = lr
 
         assert (
             scheduler in self.accepted_schedulers
         ), f"Passed scheduler '{scheduler} is not one of {self.accepted_schedulers}"
         self.scheduler = scheduler
+        self.lr_ratio = lr_ratio
+        self.steps_per_epoch = steps_per_epoch
 
     def forward(self, src: torch.long, charge=None, mods=None, debug=False):
         """
@@ -398,8 +413,8 @@ class PepTransformerModel(pl.LightningModule):
 
         Details:
             src:
-                The peptide is enconded as integers for the aminoacid.
-                "AAA" enconded for a max length of 5 would be
+                The peptide is encoded as integers for the aminoacid.
+                "AAA" encoded for a max length of 5 would be
                 torch.Tensor([ 1,  1,  1,  0,  0]).long()
             charge:
                 A tensor corresponding to the charges of each of the
@@ -431,18 +446,16 @@ class PepTransformerModel(pl.LightningModule):
 
         return rt_output, spectra_output
 
-    def predict_from_seq(self, seq: str, charge: int, mods=None, debug: bool = False):
-        src = torch.Tensor(encoding_decoding.encode_mod_seq(seq)).unsqueeze(0).long()
+    def predict_from_seq(self, seq: str, charge: int, debug: bool = False):
+        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
+
+        src = torch.Tensor(encoded_seq).unsqueeze(0).long()
+        mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
         in_charge = torch.Tensor([charge]).unsqueeze(0).long()
 
         if debug:
             print(
                 f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}"
-            )
-
-        if mods is not None:
-            raise NotImplementedError(
-                "Sorry, have not implemented PTMS on this imput ... yet"
             )
 
         out = self(src=src, charge=in_charge, mods=mods, debug=debug)
@@ -451,8 +464,7 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def add_model_specific_args(parent_parser):
-        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+    def add_model_specific_args(parser):
         parser.add_argument(
             "--num_queries",
             default=150,
@@ -497,38 +509,98 @@ class PepTransformerModel(pl.LightningModule):
                 f"either of {PepTransformerModel.accepted_schedulers}"
             ),
         )
+        parser.add_argument(
+            "--lr_ratio",
+            default=200.0,
+            type=float,
+            help=(
+                "For cosine annealing: "
+                "Ratio of the initial learning rate to use with cosine annealing"
+                " for instance a lr or 1 and a ratio of 10 would have a minimum"
+                " learning rate of 0.1\n"
+                "For onecycle: "
+                "Ratio of the initial lr and and maximum one, "
+                "for instance if lr is 0.1 and ratio is 10, the max learn rate"
+                "would be 1.0"
+            ),
+        )
         return parser
 
     def configure_optimizers(self):
         opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
 
         if self.scheduler == "plateau":
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                opt, mode="min", factor=0.5, patience=2, verbose=True
-            )
+            scheduler_dict = {
+                "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    opt, mode="min", factor=0.5, patience=2, verbose=True
+                ),
+                "interval": "epoch",
+                "monitor": "v_l",
+            }
         elif self.scheduler == "cosine":
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                opt, T_0=1, T_mult=2, eta_min=self.lr / 100, last_epoch=-1, verbose=False
+            assert self.lr_ratio > 1
+            scheduler_dict = {
+                "scheduler": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                    opt,
+                    T_0=1,
+                    T_mult=2,
+                    eta_min=self.lr / self.lr_ratio,
+                    last_epoch=-1,
+                    verbose=False,
+                ),
+                "interval": "step",
+            }
+        elif self.scheduler == "onecycle":
+            assert self.steps_per_epoch is not None, "Please set steps_per_epoch"
+            if self.trainer.max_epochs == 1000:
+                warnings.warn("Max epochs was 1000, make sure you want this")
+            if self.lr_ratio > 20:
+                warnings.warn(
+                    f"Provided LR ratio '{self.lr_ratio}' seems a lil high,"
+                    " make sure you want that for the OneCycleLR scheduler"
+                )
+                time.sleep(3)  # just so the user has time to see the message...
+            max_lr = self.lr * self.lr_ratio
+            print(
+                f">> Scheduler setup: max_lr {max_lr}, "
+                f"Max Epochs: {self.trainer.max_epochs}, "
+                f"Steps per epoch: {self.steps_per_epoch}, "
+                f"Accumulate Batches {self.trainer.accumulate_grad_batches}"
             )
+            spe = self.steps_per_epoch // self.trainer.accumulate_grad_batches
+            scheduler_dict = {
+                "scheduler": torch.optim.lr_scheduler.OneCycleLR(
+                    opt,
+                    max_lr,
+                    epochs=self.trainer.max_epochs,
+                    steps_per_epoch=spe,
+                ),
+                "interval": "step",
+            }
+
         else:
             raise ValueError(
                 "Scheduler should be one of 'plateau' or 'cosine', passed: ",
                 self.scheduler,
             )
 
-        return {"optimizer": opt, "lr_scheduler": scheduler, "monitor": "v_l"}
+        print(f"\n\n>>> Setting up schedulers:\n\n{scheduler_dict}")
+
+        return [opt], [scheduler_dict]
 
     def _step(self, batch, batch_idx):
         encoded_sequence, charge, encoded_spectra, norm_irt = batch
         yhat_irt, yhat_spectra = self(encoded_sequence, charge)
-
-        assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
-        assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
+        yhat_irt = yhat_irt[~norm_irt.isnan()]
+        norm_irt = norm_irt[~norm_irt.isnan()]
 
         loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
-        loss_spectra = 1 - self.angle_loss(yhat_spectra, encoded_spectra).mean()
+        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra).mean()
 
-        total_loss = (loss_irt + loss_spectra * 9) / 10
+        if len(norm_irt.data) == 0:
+            total_loss = loss_spectra
+        else:
+            total_loss = (loss_irt + loss_spectra * 9) / 10
 
         out = {
             "l": total_loss,
@@ -537,10 +609,12 @@ class PepTransformerModel(pl.LightningModule):
         }
 
         assert not torch.isnan(total_loss), print(
-            f"Fail at Loss: {total_loss},\n"
-            f" yhat: {total_loss},\n"
-            f" y_spec: {encoded_spectra}\n"
-            f" y_irt: {norm_irt}"
+            f"Fail at... \n Loss: {total_loss},\n"
+            f"\n loss_irt: {loss_irt}\n"
+            f"\n loss_spectra: {loss_spectra}\n"
+            f"\n yhat_spec: {yhat_spectra},\n"
+            f"\n y_spec: {encoded_spectra}\n"
+            f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
         )
 
         return out
@@ -548,6 +622,7 @@ class PepTransformerModel(pl.LightningModule):
     def training_step(self, batch, batch_idx=None):
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"t_" + k: v for k, v in step_out.items()}
+        log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
 
         self.log_dict(
             log_dict,

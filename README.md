@@ -1,6 +1,6 @@
 # PPPTR
 
-## Peptide Property Prrediction using Transformers
+## Peptide Property Prediction using Transformers
 
 This repository attempts to implement a neural net that leverages the transformer architecture to predict peptide
 properties (retention time and fragmentation).
@@ -21,19 +21,25 @@ On the transformer side of things I must admit that many of the elements of this
 
 ## Resources on transformers
 
--   An amazing illustrated guide to understand the transformer architecture: <http://jalammar.github.io/illustrated-transformer/>
--   Full implementation of a transformer in pytorch with the explaination of each part: <https://nlp.seas.harvard.edu/2018/04/03/attention.html>
--   Official pytorch implementation of the transformer: <https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html>
+- An amazing illustrated guide to understand the transformer architecture: <http://jalammar.github.io/illustrated-transformer/>
+- Full implementation of a transformer in pytorch with the explanation of each part: <https://nlp.seas.harvard.edu/2018/04/03/attention.html>
+- Official pytorch implementation of the transformer: <https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html>
 
 ### TODO list
 
-**Urgent**
+#### Urgent
+
 - Find a better name for the project
+  - Ideas:
+    - elFragmentador
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
+- Allow training with missing values
 
-**Posible**
+#### Possible
+
 - Add neutral losses specific to some PTMs
 
-**If I get time**
+#### If I get time
+
 - Write ablation models and benchmark them (remove parts of the model and see how much worse it gets without it)
