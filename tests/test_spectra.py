@@ -80,12 +80,27 @@ def test_parse_phospho_spectrast():
 
 
 def test_parse_sptxt(shared_datadir):
-    print(list(spectra.read_sptxt(str(shared_datadir / "sample.sptxt"))))
+    in_path = str(shared_datadir / "sample.sptxt")
+    print(list(spectra.read_sptxt(in_path)))
+
+
+def test_parse_spectrast_sptxt(shared_datadir):
+    in_path = str(shared_datadir / "small_proteome_spectrast.sptxt")
+    print(list(spectra.read_sptxt(in_path)))
+
+
+def test_parse_phospho_spectrast_sptxt(shared_datadir):
+    in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")
+    print(list(spectra.read_sptxt(in_path)))
 
 
 def test_spectrum():
     spec = spectra.Spectrum("AAA", 2, 500, mzs=[100.1, 100.2], intensities=[200, 500])
     print(spec)
+
+def test_sptxt_to_pd(shared_datadir):
+    in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")
+    print(spectra.encode_sptxt(in_path))
 
 
 if __name__ == "__main__":

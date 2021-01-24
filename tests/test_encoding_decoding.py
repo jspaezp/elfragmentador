@@ -13,15 +13,22 @@ def test_aa_encoding():
 
 def test_mod_aa_encoding():
     test_seqs = [
-        "AAAC[160]DDDK",  
-        "M[147]AAAK",  
-        "AAACSS[167]",  
-        "KAKT[181]AA",  
-        "KAKY[243]FG", ]
+        "AAAC[160]DDDK",
+        "M[147]AAAK",
+        "AAACSS[167]",
+        "KAKT[181]AA",
+        "KAKY[243]FG",
+    ]
 
     for s in test_seqs:
-        out = encoding_decoding.encode_mod_seq(s)
-        assert len(out[0])
+        out_s, out_m = encoding_decoding.encode_mod_seq(s)
+        assert len(out_s) == constants.MAX_SEQUENCE
+        decoded = encoding_decoding.decode_mod_seq(out_s, out_m)
+        s = s.replace("C[160]", "C")
+        for k, v in constants.MOD_PEPTIDE_ALIASES.items():
+            s = s.replace(k, f"{k[0]}[{v}]")
+
+        assert s == decoded
 
 
 def test_fragment_encoding_decoding():

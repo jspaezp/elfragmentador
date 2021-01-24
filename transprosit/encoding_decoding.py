@@ -6,6 +6,7 @@ from torch import Tensor
 
 sequence_pair = namedtuple("SequencePair", "aas, mods")
 
+
 def encode_mod_seq(seq):
     """
     Encodes a peptide sequence to a numeric vector
@@ -17,9 +18,11 @@ def encode_mod_seq(seq):
     30
     >>> out = encode_mod_seq(samp_seq)
     >>> out
-    [1, 1, 8, 5, 18, 18, 1, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    SequencePair(aas=[1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0,..., 0, 0])
     >>> len(out)
-    30
+    2
+    >>> [len(x) for x in out]
+    [30, 30]
     """
     seq_out = [0] * constants.MAX_SEQUENCE
     mod_out = [0] * constants.MAX_SEQUENCE
@@ -27,8 +30,10 @@ def encode_mod_seq(seq):
     try:
         split_seq = list(annotate.peptide_parser(seq))
         seq_out_i = [constants.ALPHABET[x[:1]] for x in split_seq]
-        mod_out_i = [constants.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq]
-        mod_out_i = [constants.MOD_INDICES.get(x, 0) for x in mod_out_i ]
+        mod_out_i = [
+            constants.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq
+        ]
+        mod_out_i = [constants.MOD_INDICES.get(x, 0) for x in mod_out_i]
         seq_out[: len(seq_out_i)] = seq_out_i
         mod_out[: len(mod_out_i)] = mod_out_i
     except ValueError:
@@ -38,11 +43,11 @@ def encode_mod_seq(seq):
     return sequence_pair(seq_out, mod_out)
 
 
-def decode_mod_seq(seq_encoding, mod_encoding = None):
+def decode_mod_seq(seq_encoding, mod_encoding=None):
     out = []
 
     if mod_encoding is None:
-        mod_encoding = [0]*len(seq_encoding)
+        mod_encoding = [0] * len(seq_encoding)
 
     for i, s in enumerate(seq_encoding):
         if s == 0:

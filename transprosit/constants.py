@@ -43,11 +43,11 @@ MODIFICATION = {
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
 }
 
-MOD_INDICES = {v:i+1 for i, v in enumerate(MODIFICATION)}
+MOD_INDICES = {v: i + 1 for i, v in enumerate(MODIFICATION)}
 # {'': 0, 'CARBAMIDOMETHYL': 1, 'ACETYL': 2, 'DEAMIDATED': 3, ...
 
 MOD_INDICES_S = {integer: char for char, integer in MOD_INDICES.items()}
-# {0: '', 1: 'CARBAMIDOMETHYL', 2: 'ACETYL', 
+# {0: '', 1: 'CARBAMIDOMETHYL', 2: 'ACETYL',
 
 AMINO_ACID = {
     "G": 57.021464,
@@ -73,7 +73,8 @@ AMINO_ACID = {
     "K": 128.094963,
 }
 
-ALPHABET = {v:i+1 for i, v in enumerate(sorted(AMINO_ACID))}
+AMINO_ACID_SET = set(AMINO_ACID)
+ALPHABET = {v: i + 1 for i, v in enumerate(sorted(AMINO_ACID))}
 # {'A': 1, 'C': 2, ... 'W': 20, 'Y': 21}
 
 ALPHABET_S = {integer: char for char, integer in ALPHABET.items()}
@@ -82,14 +83,21 @@ ALPHABET_S = {integer: char for char, integer in ALPHABET.items()}
 AAS_NUM = len(ALPHABET)
 
 MOD_PEPTIDE_ALIASES = {
-    "C[160]" : "", # This makes it so it assumes it is always modified
-    "M[147]" : "OXIDATION",
-    "S[167]" : "PHOSPHO",
-    "T[181]" : "PHOSPHO",
-    "Y[243]" : "PHOSPHO", 
+    "C[160]": "",  # This makes it so it assumes it is always modified
+    "M[147]": "OXIDATION",
+    "M(ox)": "OXIDATION",
+    "S[167]": "PHOSPHO",
+    "T[181]": "PHOSPHO",
+    "Y[243]": "PHOSPHO",
 }
 
-AMINO_ACID_SET = set(AMINO_ACID)
+MOD_AA_MASSES = AMINO_ACID.copy()
+MOD_AA_MASSES.update(
+    {
+        k: AMINO_ACID[k[0]] + MODIFICATION.get(v, 0)
+        for k, v in MOD_PEPTIDE_ALIASES.items()
+    }
+)
 
 # Atomic elements
 PROTON = 1.007276467

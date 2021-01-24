@@ -8,6 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from transprosit import datamodules, model
 import transprosit as tp
 
+
 def build_parser():
     parser = ArgumentParser(add_help=False)
 
