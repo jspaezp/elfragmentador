@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
-from transprosit import constants
+from transprosit import constants, spectra
 from pandas.core.frame import DataFrame
 from torch.utils.data.dataloader import DataLoader
 from typing import Union
@@ -21,55 +21,65 @@ train_batch = namedtuple(
 )
 
 
+def match_lengths(nested_list, max_len, name="items", verbose=True):
+    lengths = [len(x) for x in nested_list]
+    unique_lengths = set(lengths)
+    match_max = [1 for x in lengths if x == max_len]
+
+    out_message = (
+        f"{len(match_max)}/{len(nested_list)} "
+        f"{name} actually match the max sequence length of"
+        f" {max_len},"
+        f" found {unique_lengths}"
+    )
+    if verbose:
+        print(out_message)
+
+    out = [
+        x + ([0] * (max_len - len(x))) if len(x) != max_len else x for x in nested_list
+    ]
+    out = torch.stack([torch.Tensor(x).T for x in out])
+    return out
+
+
+def match_colnames(df):
+    colnames = list(df)
+    out = {
+        "SeqE": [i for i, x in enumerate(colnames) if "Encoding" in x and "Seq" in x][
+            0
+        ],
+        "SpecE": [i for i, x in enumerate(colnames) if "Encoding" in x and "Spec" in x][
+            0
+        ],
+        "Ch": [i for i, x in enumerate(colnames) if "harg" in x][0],
+        "iRT": [i for i, x in enumerate(colnames) if "IRT" in x or "iRT" in x][0],
+    }
+    out = {k: colnames[v] for k, v in out.items()}
+    return out
+
+
 class PeptideDataset(torch.utils.data.Dataset):
     def __init__(self, df: DataFrame) -> None:
         super().__init__()
         print("\n>>> Initalizing Dataset")
-        self.df = df
+        self.df = df  # TODO remove this for memmory ...
 
-        sequence_encodings = [eval(x) for x in self.df["SequenceEncoding"]]
-        lengths = [len(x) for x in sequence_encodings]
-        unique_lengths = set(lengths)
-        match_max = [1 for x in lengths if x == constants.MAX_SEQUENCE]
-        print(
-            (
-                f"{len(match_max)}/{len(sequence_encodings)} "
-                f"Sequences actually match the max sequence length of"
-                f" {constants.MAX_SEQUENCE},"
-                f" found {unique_lengths}"
-            )
+        name_match = match_colnames(df)
+
+        sequence_encodings = [eval(x) for x in self.df[name_match["SeqE"]]]
+        sequence_encodings = match_lengths(
+            sequence_encodings, constants.MAX_SEQUENCE, "Sequences"
         )
+        self.sequence_encodings = sequence_encodings.long()
 
-        sequence_encodings = [
-            x + ([0] * (constants.MAX_SEQUENCE - len(x))) for x in sequence_encodings
-        ]
-        self.sequence_encodings = [torch.Tensor(x).long().T for x in sequence_encodings]
-
-        spectra_encodings = [eval(x) for x in self.df["SpectraEncoding"]]
-        lengths = [len(x) for x in spectra_encodings]
-        unique_lengths = set(lengths)
-        match_max = [1 for x in lengths if x == constants.NUM_FRAG_EMBEDINGS]
-        print(
-            (
-                f"{len(match_max)}/{len(spectra_encodings)} "
-                f"Spectra actually match the max spectra length of "
-                f"{constants.NUM_FRAG_EMBEDINGS}, "
-                f"found {unique_lengths}"
-            )
+        spectra_encodings = [eval(x) for x in self.df[name_match["SpecE"]]]
+        spectra_encodings = match_lengths(
+            spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
         )
+        self.spectra_encodings = spectra_encodings.float()
 
-        spectra_encodings = [
-            x + ([0] * (constants.NUM_FRAG_EMBEDINGS - len(x)))
-            for x in spectra_encodings
-        ]
-        spectra_encodings = [torch.Tensor(x).float().T for x in spectra_encodings]
-
-        self.spectra_encodings = [
-            torch.where(x > 0.01, x, torch.Tensor([0.0])) for x in spectra_encodings
-        ]
-
-        spectra_lengths = set([len(x) for x in self.spectra_encodings])
-        sequence_lengths = set([len(x) for x in self.sequence_encodings])
+        spectra_lengths = len(self.spectra_encodings[0])
+        sequence_lengths = len(self.sequence_encodings[0])
         print(
             (
                 f"Dataset Initialized with {len(df)} entries."
@@ -79,10 +89,20 @@ class PeptideDataset(torch.utils.data.Dataset):
         )
 
         # Pretty sure this last 2 can be optimized vectorizing them
-        self.norm_irts = [torch.Tensor([x / 100]).float() for x in self.df["mIRT"]]
-        self.charges = [torch.Tensor([x]).long() for x in self.df["Charges"]]
+        self.norm_irts = (
+            torch.Tensor(self.df[name_match["iRT"]] / 100).float().unsqueeze(1)
+        )
+        self.charges = torch.Tensor(self.df[name_match["Ch"]]).long().unsqueeze(1)
 
         print(">>> Done Initializing dataset\n")
+
+    @staticmethod
+    def from_sptxt(filepath, max_spec=1e6, filter_df=True, *args, **kwargs):
+        df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
+        if filter_df:
+            df = filter_df_on_sequences(df)
+
+        return PeptideDataset(df)
 
     def __len__(self) -> int:
         return len(self.df)
@@ -100,11 +120,11 @@ class PeptideDataset(torch.utils.data.Dataset):
 
 
 def filter_df_on_sequences(df, name=""):
-    print(df)
+    name_match = match_colnames(df)
     print(list(df))
     print(f"Removing Large sequences, currently {name}: {len(df)}")
     df = (
-        df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in df["SequenceEncoding"]]]
+        df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in df[name_match["SeqE"]]]]
         .copy()
         .reset_index(drop=True)
     )

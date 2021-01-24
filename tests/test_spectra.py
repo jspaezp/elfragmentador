@@ -1,4 +1,4 @@
-from transprosit import spectra
+from transprosit import spectra, constants
 
 
 def test_parse_spec():
@@ -15,8 +15,9 @@ def test_parse_spec():
     print(spec)
     spec.annotate_peaks()
     print(spec)
-    print(spec.encode_annotations())
-    print(spec.encode_annotations(dry=True))
+    out_encoding = spec.encode_spectra()
+    print(out_encoding)
+    assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
 
 
 def test_parse_spectrast():
@@ -50,7 +51,9 @@ def test_parse_spectrast():
     print(spec)
     spec.annotate_peaks()
     print(spec)
-    print(spec.encode_annotations())
+    out_encoding = spec.encode_spectra()
+    print(out_encoding)
+    assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
 
 
 def test_parse_phospho_spectrast():
@@ -76,7 +79,13 @@ def test_parse_phospho_spectrast():
     print(spec)
     spec.annotate_peaks()
     print(spec)
-    print(spec.encode_annotations())
+    out_encoding = spec.encode_spectra()
+    print(out_encoding)
+    assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
+    out_encoding = spec.encode_sequence()
+    print(out_encoding)
+    assert len(out_encoding.aas) == constants.MAX_SEQUENCE
+    assert len(out_encoding.mods) == constants.MAX_SEQUENCE
 
 
 def test_parse_sptxt(shared_datadir):

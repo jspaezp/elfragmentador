@@ -1,3 +1,4 @@
+import warnings
 from typing import List
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from transprosit import encoding_decoding
 from transprosit.encoding_decoding import get_fragment_encoding_labels
 
 import pandas as pd
+import numpy as np
 from tqdm.auto import tqdm
 
 
@@ -19,7 +21,6 @@ class Spectrum:
         mzs: List[float],
         intensities: List[float],
         modifications=None,
-        ion_types="by",
         tolerance=25,
         tolerance_unit="ppm",
         nce=None,
@@ -56,13 +57,10 @@ class Spectrum:
         self.delta_ppm = 1e6 * abs(self.delta_m) / self.theoretical_mz
 
         # Annotation related section
-        self.ion_types = "".join(sorted(ion_types))
         self.tolerance = tolerance
         self.tolerance_unit = tolerance_unit
 
-        self._theoretical_peaks = annotate.get_peptide_ions(
-            self.sequence, charges=range(1, self.charge), ion_types=self.ion_types
-        )
+        self._theoretical_peaks = annotate.get_peptide_ions(self.sequence)
 
         self._annotated_peaks = None
         self.nce = nce
@@ -160,7 +158,7 @@ class Spectrum:
         return out
 
 
-def encode_sptxt(filepath, max_spec=1e9, *args, **kwargs):
+def encode_sptxt(filepath, max_spec=1e9, irt_fun=None, *args, **kwargs):
     iter = read_sptxt(filepath, *args, **kwargs)
 
     sequences = []
@@ -170,6 +168,8 @@ def encode_sptxt(filepath, max_spec=1e9, *args, **kwargs):
     spectra_encodings = []
     charges = []
     rts = []
+    nces = []
+    orig = []
 
     for i, spec in enumerate(tqdm(iter)):
         if i >= max_spec:
@@ -184,6 +184,8 @@ def encode_sptxt(filepath, max_spec=1e9, *args, **kwargs):
         sequences.append(spec.sequence)
         mod_sequences.append(spec.mod_sequence)
         rts.append(spec.rt)
+        nces.append(spec.nce)
+        orig.append(spec.raw_spectra)
 
     ret = pd.DataFrame(
         {
@@ -194,8 +196,19 @@ def encode_sptxt(filepath, max_spec=1e9, *args, **kwargs):
             "SeqEncodings": seq_encodings,
             "Charges": charges,
             "RTs": rts,
+            "NCEs": nces,
+            "OrigSpectra": orig,
         }
     )
+
+    if irt_fun is not None:
+        raise NotImplementedError
+    else:
+        warnings.warn(
+            "No calculation function passed for iRT,"
+            " will replace the column with missing"
+        )
+        ret["iRT"] = np.nan
 
     return ret
 
