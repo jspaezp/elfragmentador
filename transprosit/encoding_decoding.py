@@ -60,9 +60,6 @@ def decode_mod_seq(seq_encoding, mod_encoding=None):
     return "".join(out)
 
 
-# TODO add PTM parsing
-
-
 def get_fragment_encoding_labels(annotated_peaks=None):
     """
     Gets either the laels or an sequence that encodes a spectra
@@ -119,13 +116,8 @@ def decode_fragment_tensor(
     >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
     >>> # plt.show()
     """
-    max_charge = constants.MAX_FRAG_CHARGE
-    ions = "".join(sorted(constants.ION_TYPES))
-
-    key_list = get_fragment_encoding_labels(annotated_peaks=None)
-    fragment_ions = annotate.get_peptide_ions(
-        sequence, list(range(1, max_charge + 1)), ion_types=ions
-    )
+    key_list = constants.FRAG_EMBEDING_LABELS
+    fragment_ions = annotate.get_peptide_ions(sequence)
     masses = [fragment_ions.get(k, 0) for k in key_list]
     intensities = [float(x) for x in tensor]
 

@@ -98,6 +98,7 @@ def test_spectrum():
     spec = spectra.Spectrum("AAA", 2, 500, mzs=[100.1, 100.2], intensities=[200, 500])
     print(spec)
 
+
 def test_sptxt_to_pd(shared_datadir):
     in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")
     print(spectra.encode_sptxt(in_path))

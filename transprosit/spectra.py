@@ -72,6 +72,23 @@ class Spectrum:
         self.rt = rt
         self.raw_spectra = raw_spectra
 
+    @staticmethod
+    def from_tensors(
+        sequence_tensor, fragment_tensor, mod_tensor=None, *args, **kwargs
+    ):
+        mod_sequence = encoding_decoding.decode_mod_seq(sequence_tensor, mod_tensor)
+        fragment_df = encoding_decoding.decode_fragment_tensor(
+            mod_sequence, fragment_tensor
+        )
+        spec_out = Spectrum(
+            mod_sequence,
+            mzs=fragment_df["Mass"],
+            intensities=fragment_df["Intensity"],
+            *args,
+            **kwargs,
+        )
+        return spec_out
+
     def precursor_error(self, error_type="ppm"):
         if error_type == "ppm":
             return self.delta_ppm
@@ -248,7 +265,7 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer=None, *args, **kwargs):
 
     rt = comment_dict.get("RetentionTime", None)
     if rt is not None:
-        rt = float(rt.split(',')[0])
+        rt = float(rt.split(",")[0])
 
     raw_spectra = comment_dict.get("RawSpectrum", None)
 

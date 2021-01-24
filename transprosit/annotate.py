@@ -126,12 +126,21 @@ def get_annotation(
     return collections.OrderedDict(sorted(all_.items(), key=lambda t: t[0]))
 
 
-def get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
+def get_peptide_ions(aa_seq):
+    out = _get_peptide_ions(
+        aa_seq,
+        charges=range(1, constants.MAX_FRAG_CHARGE + 1),
+        ion_types=constants.ION_TYPES,
+    )
+    return out
+
+
+def _get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
     """
 
     Examples
     ========
-    >>> foo = get_peptide_ions("AA", [1,2])
+    >>> foo = _get_peptide_ions("AA", [1,2])
     >>> foo
     {'z1y1': 90.054955167, ..., 'z2b1-NH3': 28.0125589145}
     >>> {k:v for k,v in foo.items() if "-" not in k} # This removes the neutral losses
