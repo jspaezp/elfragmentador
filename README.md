@@ -1,6 +1,6 @@
-# PPPTR
+# ElFragmentador
 
-## Peptide Property Prediction using Transformers
+## ElFragmentador
 
 This repository attempts to implement a neural net that leverages the transformer architecture to predict peptide
 properties (retention time and fragmentation).
@@ -19,6 +19,10 @@ Many of the elements from this project are actually a combination of the princip
 
 On the transformer side of things I must admit that many of the elements of this project are derived from [DETR:  End to end detection using transformers](https://github.com/facebookresearch/detr) in particular the trainable embeddings as an input for the decoder and some of the concepts discussed about it on [Yannic Kilcher's Youtube channel](https://youtu.be/T35ba_VXkMY) (which I highly recommend).
 
+## Why the name?
+
+Two main reasons ... it translates to 'The fragmenter' in spanish and the project intends to predic framgnetations. On the other hand ... The name was free in pypi.
+
 ## Resources on transformers
 
 - An amazing illustrated guide to understand the transformer architecture: <http://jalammar.github.io/illustrated-transformer/>
@@ -32,9 +36,10 @@ On the transformer side of things I must admit that many of the elements of this
 - Find a better name for the project
   - Ideas:
     - elFragmentador
+- Write usage documentation on the readme
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
-- Allow training with missing values
+- Allow training with missing values (done for RT, not for spectra)
 
 #### Possible
 

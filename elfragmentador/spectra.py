@@ -2,10 +2,10 @@ import warnings
 from typing import List
 from pathlib import Path
 
-from transprosit import constants
-from transprosit import annotate
-from transprosit import encoding_decoding
-from transprosit.encoding_decoding import get_fragment_encoding_labels
+from elfragmentador import constants
+from elfragmentador import annotate
+from elfragmentador import encoding_decoding
+from elfragmentador.encoding_decoding import get_fragment_encoding_labels
 
 import pandas as pd
 import numpy as np

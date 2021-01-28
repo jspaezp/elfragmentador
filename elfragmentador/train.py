@@ -5,8 +5,8 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
-from transprosit import datamodules, model
-import transprosit as tp
+from elfragmentador import datamodules, model
+import elfragmentador as tp
 
 
 def build_parser():

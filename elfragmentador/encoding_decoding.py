@@ -1,6 +1,6 @@
 from collections import namedtuple
 import pandas as pd
-from transprosit import constants, annotate
+from elfragmentador import constants, annotate
 from pandas.core.frame import DataFrame
 from torch import Tensor
 

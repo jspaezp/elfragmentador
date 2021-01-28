@@ -1,6 +1,6 @@
 import torch
-from transprosit import encoding_decoding
-from transprosit import constants
+from elfragmentador import encoding_decoding
+from elfragmentador import constants
 
 
 def test_aa_encoding():

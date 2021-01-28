@@ -11,6 +11,7 @@ except ImportError:
 import warnings
 import math
 import time
+from collections import namedtuple
 
 import torch
 from torch import Tensor, nn
@@ -18,10 +19,11 @@ import pytorch_lightning as pl
 
 from argparse import ArgumentParser
 
-import transprosit
-from transprosit import constants
-from transprosit import encoding_decoding
+import elfragmentador
+from elfragmentador import constants
+from elfragmentador import encoding_decoding
 
+prediction_results = namedtuple("PredictionResults", "irt, spectra")
 
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)
@@ -348,7 +350,7 @@ class PeptideTransformerDecoder(torch.nn.Module):
 
 class PepTransformerModel(pl.LightningModule):
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
-    __version__ = transprosit.__version__
+    __version__ = elfragmentador.__version__
 
     def __init__(
         self,
@@ -444,7 +446,7 @@ class PepTransformerModel(pl.LightningModule):
 
         spectra_output = self.decoder(trans_encoder_output, charge, debug=debug)
 
-        return rt_output, spectra_output
+        return prediction_results(rt_output, spectra_output)
 
     def predict_from_seq(self, seq: str, charge: int, debug: bool = False):
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)

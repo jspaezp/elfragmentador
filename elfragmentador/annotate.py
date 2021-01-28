@@ -7,7 +7,7 @@ And released under an Apache 2.0 license
 
 import numpy
 import collections
-from transprosit import constants
+from elfragmentador import constants
 from collections import OrderedDict
 from numpy import bool_, float64, ndarray
 from typing import Iterator

@@ -1,5 +1,5 @@
 import pytest
-from transprosit import train, model
+from elfragmentador import train, model
 
 
 def test_cli_help():

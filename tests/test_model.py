@@ -3,9 +3,9 @@ from pathlib import Path
 
 import torch
 
-from transprosit import model
-from transprosit import datamodules
-from transprosit import constants
+from elfragmentador import model
+from elfragmentador import datamodules
+from elfragmentador import constants
 
 
 def test_concat_encoder():

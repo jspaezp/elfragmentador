@@ -1,4 +1,4 @@
-from transprosit import annotate
+from elfragmentador import annotate
 
 
 def test_peptide_parser():

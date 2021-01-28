@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 import pytorch_lightning as pl
-from transprosit import datamodules, model
+from elfragmentador import datamodules, model
 
 
 def get_datamodule(datadir):

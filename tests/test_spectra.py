@@ -1,4 +1,4 @@
-from transprosit import spectra, constants
+from elfragmentador import spectra, constants
 
 
 def test_parse_spec():

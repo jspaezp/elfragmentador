@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
-from transprosit import constants, spectra
+from elfragmentador import constants, spectra
 from pandas.core.frame import DataFrame
 from torch.utils.data.dataloader import DataLoader
 from typing import Union

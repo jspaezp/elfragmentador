@@ -1,4 +1,4 @@
-from transprosit.train import main
+from elfragmentador.train import main
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from transprosit import constants, datamodules
+from elfragmentador import constants, datamodules
 from pathlib import Path
 import pandas as pd
 import numpy as np
