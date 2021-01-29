@@ -39,8 +39,10 @@ MODIFICATION = {
     "METHYL": 14.015650,  # Methylation
     "DIMETHYL": 28.031300,  # Dimethylation
     "TRIMETHYL": 42.046950,  # Trimethylation
+    "FORMYL": 27.994915,  # Formylation
     "GG": 114.042927,  # GlyGly ubiquitinylation residue
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
+    "NITRO": 44.985078,  #  Oxidation to nitro
 }
 
 MOD_INDICES = {v: i + 1 for i, v in enumerate(MODIFICATION)}
@@ -87,9 +89,23 @@ MOD_PEPTIDE_ALIASES = {
     "M[147]": "OXIDATION",
     "M(ox)": "OXIDATION",
     "S[167]": "PHOSPHO",
+    "S[PHOSPHO]": "PHOSPHO",
+    "S[PHOS]": "PHOSPHO",
     "T[181]": "PHOSPHO",
+    "T[PHOSPHO]": "PHOSPHO",
+    "T[PHOS]": "PHOSPHO",
     "Y[243]": "PHOSPHO",
+    "K[Acetyl]": "ACETYL",
+    "K[GlyGly]": "GG",
+    "K[142]": "METHYL",
+    "K[156]": "FORMYL",  # or "DIMETHYL",
+    "P[113]": "OXIDATION",
+    "R[170]": "METHYL",
+    "R[184]": "DIMETHYL",
+    "Y[208]": "NITRO",
 }
+
+# n[43] # TODO deal with terminal acetylation
 
 MOD_AA_MASSES = AMINO_ACID.copy()
 MOD_AA_MASSES.update(

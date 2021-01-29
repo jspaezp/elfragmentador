@@ -25,6 +25,7 @@ from elfragmentador import encoding_decoding
 
 prediction_results = namedtuple("PredictionResults", "irt, spectra")
 
+
 class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)
     From: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
@@ -245,19 +246,18 @@ class PeptideTransformerEncoder(torch.nn.Module):
 
     def init_weights(self) -> None:
         initrange = 0.1
-        ptm_initrange = initrange * 0.1
+        ptm_initrange = initrange * 0.01
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
         torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
 
-    def forward(self, src: Tensor, mods: None = None, debug: bool = False) -> Tensor:
+    def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
         trans_encoder_mask = ~src.bool()
         if debug:
             print(f"TE: Shape of mask {trans_encoder_mask.size()}")
 
         src = self.aa_encoder(src.permute(1, 0))
-        if mods is not None:
-            mods = self.mod_encoder(mods.permute(1, 0))
-            src = src + mods
+        mods = self.mod_encoder(mods.permute(1, 0))
+        src = src + mods
 
         src = src * math.sqrt(self.ninp)
         if debug:
@@ -319,17 +319,12 @@ class PeptideTransformerDecoder(torch.nn.Module):
         )
 
     def forward(
-        self, src: Tensor, charge: Tensor, nce: None = None, debug: bool = False
+        self, src: Tensor, charge: Tensor, nce: Tensor, debug: bool = False
     ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
         trans_decoder_tgt = trans_decoder_tgt.repeat(1, charge.size(0), 1)
         trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
-        if nce is not None:
-            raise NotImplementedError(
-                "Sorry, I have not implemented NCE"
-                " (mainly due to the dataset, all the code is ready for it ...)"
-            )
-            trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
+        trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
         if debug:
             print(f"TD: Shape of query embedding {trans_decoder_tgt.shape}")
 
@@ -345,7 +340,12 @@ class PeptideTransformerDecoder(torch.nn.Module):
         if debug:
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
-        return torch.nn.functional.leaky_relu(spectra_output)
+        if self.training:
+            spectra_output = torch.nn.functional.leaky_relu(spectra_output)
+        else:
+            spectra_output = torch.nn.functional.relu(spectra_output)
+
+        return spectra_output
 
 
 class PepTransformerModel(pl.LightningModule):

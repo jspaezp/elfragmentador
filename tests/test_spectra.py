@@ -104,7 +104,9 @@ def test_parse_phospho_spectrast_sptxt(shared_datadir):
 
 
 def test_spectrum():
-    spec = spectra.Spectrum("AAA", 2, 500, mzs=[100.1, 100.2], intensities=[200, 500])
+    spec = spectra.Spectrum(
+        "AAA", 2, 500, mzs=[100.1, 100.2], intensities=[200, 500], nce=27.0
+    )
     print(spec)
 
 
