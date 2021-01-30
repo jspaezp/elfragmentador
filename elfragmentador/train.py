@@ -9,7 +9,7 @@ from elfragmentador import datamodules, model
 import elfragmentador as tp
 
 
-def build_parser():
+def build_train_parser():
     parser = ArgumentParser(add_help=False)
 
     program_parser = parser.add_argument_group(
@@ -119,16 +119,3 @@ def main_train(model, args):
     )
 
     trainer.fit(model, datamodule)
-
-
-def main():
-    pl.seed_everything(2020)
-    parser = build_parser()
-    args = parser.parse_args()
-    dict_args = vars(args)
-    print("\n====== Passed command line args/params =====\n")
-    for k, v in dict_args.items():
-        print(f">> {k}: {v}")
-
-    mod = model.PepTransformerModel(**dict_args)
-    main_train(mod, args)
