@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elfragmentador"
-version = "0.14.0"
+version = "0.15.1"
 description = "Predicts peptide fragmentations using transformers"
 authors = ["J. Sebastian Paez <jspaezp@gmail.com>"]
 license = "Apache 2.0"
@@ -30,6 +30,7 @@ python-igraph = "^0.8.3"
 MonkeyType = "^20.5.0"
 pytest-cov = "^2.11.1"
 pydocstyle = "^5.1.1"
+pytest-benchmark = "^3.2.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
