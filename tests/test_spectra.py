@@ -12,10 +12,9 @@ def test_parse_spec():
     ]
 
     spec = spectra._parse_spectra_sptxt(sample_spec)
-    print(spec)
-    spec.annotate_peaks()
-    print(spec)
+    spec.annotated_peaks
     out_encoding = spec.encode_spectra()
+    print(spec)
     print(out_encoding)
     assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
 
@@ -48,10 +47,9 @@ def test_parse_spectrast():
         "490.2626\t3638.8\ty4/0.001\t",
     ]
     spec = spectra._parse_spectra_sptxt(sample_spec)
-    print(spec)
-    spec.annotate_peaks()
-    print(spec)
+    spec.annotated_peaks
     out_encoding = spec.encode_spectra()
+    print(spec)
     print(out_encoding)
     assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
 
@@ -76,8 +74,7 @@ def test_parse_phospho_spectrast():
         "952.5225\t271.0\ty8/-0.000\t",
     ]
     spec = spectra._parse_spectra_sptxt(sample_spec)
-    print(spec)
-    spec.annotate_peaks()
+    spec.annotated_peaks
     print(spec)
     out_encoding = spec.encode_spectra()
     print(out_encoding)

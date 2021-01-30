@@ -1,3 +1,4 @@
+from typing import NamedTuple
 import torch
 from torch.utils.data import DataLoader
 from elfragmentador import constants, datamodules
@@ -6,12 +7,24 @@ import pandas as pd
 import numpy as np
 
 
-def check_lengths(i):
-    lengths = [x.size() for x in i]
-    assert lengths[0] == torch.Size([constants.MAX_SEQUENCE])
-    assert lengths[1] == torch.Size([1])
-    assert lengths[2] == torch.Size([constants.NUM_FRAG_EMBEDINGS])
-    assert lengths[3] == torch.Size([1])
+def check_lengths(i: NamedTuple):
+    expect_names = set(
+        [
+            "encoded_sequence",
+            "encoded_mods",
+            "encoded_spectra",
+            "charge",
+            "norm_irt",
+            "nce",
+        ]
+    )
+    assert expect_names == set(i._fields)
+    assert i.encoded_sequence.shape == torch.Size([constants.MAX_SEQUENCE])
+    assert i.encoded_mods.shape == torch.Size([constants.MAX_SEQUENCE])
+    assert i.encoded_spectra.shape == torch.Size([constants.NUM_FRAG_EMBEDINGS])
+    assert i.charge.shape == torch.Size([1])
+    assert i.norm_irt.shape == torch.Size([1])
+    assert i.nce.shape == torch.Size([1])
 
 
 def test_dataset_outputs_correct_dims(shared_datadir):
@@ -29,8 +42,15 @@ def test_dataset_outputs_correct_dims(shared_datadir):
 
 
 def test_dataset_from_sptxt_works(shared_datadir):
-    ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + "/sample.sptxt")
-    check_lengths(ds[0])
+    infiles = [
+        "/small_phospho_spectrast.sptxt",
+        "/small_proteome_spectrast.sptxt",
+        "/sample.sptxt",
+    ]
+
+    for f in infiles:
+        ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + f)
+        check_lengths(ds[0])
 
 
 def base_dataloader_handles_missing(datadir):

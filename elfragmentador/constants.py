@@ -1,4 +1,9 @@
 """
+Defines the constants that are used in the rest of the project.
+
+Such as the masses of aminoacids, supported modifications, length of the encodings,
+maximum length supported, labes and order of the encoded ions ...
+
 Greatly inspired/copied from:
 https://github.com/kusterlab/prosit/blob/master/prosit/constants.py
 

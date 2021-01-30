@@ -1,23 +1,21 @@
+import warnings
 from collections import namedtuple
-from argparse import ArgumentParser
 from pathlib import PosixPath, Path
+from typing import Union
 
 import pandas as pd
-from pandas.core.indexes import base
-from sklearn.model_selection import KFold
+from pandas.core.frame import DataFrame
 
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data.dataloader import DataLoader
 
 import pytorch_lightning as pl
 
 from elfragmentador import constants, spectra
-from pandas.core.frame import DataFrame
-from torch.utils.data.dataloader import DataLoader
-from typing import Union
 
-train_batch = namedtuple(
-    "TrainBatch", "encoded_sequence, charge, encoded_spectra, norm_irt"
+TrainBatch = namedtuple(
+    "TrainBatch",
+    "encoded_sequence, encoded_mods, charge, nce, encoded_spectra, norm_irt",
 )
 
 
@@ -43,18 +41,47 @@ def match_lengths(nested_list, max_len, name="items", verbose=True):
 
 
 def match_colnames(df):
+    def match_col(string1, string2, colnames, match_mode="in", combine_mode=None):
+        m = {
+            "in": lambda q, t: q in t,
+            "startswith": lambda q, t: q.startswith(t),
+            "equals": lambda q, t: q == t,
+        }
+        match_fun = m[match_mode]
+        match_indices1 = [i for i, x in enumerate(colnames) if match_fun(string1, x)]
+
+        if string2 is None:
+            match_indices = match_indices1
+        else:
+            match_indices2 = [
+                i for i, x in enumerate(colnames) if match_fun(string2, x)
+            ]
+            if combine_mode == "union":
+                match_indices = set(match_indices1).union(set(match_indices2))
+            elif combine_mode == "intersect":
+                match_indices = set(match_indices1).intersection(set(match_indices2))
+            else:
+                raise NotImplementedError
+
+        try:
+            out_index = list(match_indices)[0]
+        except IndexError:
+            out_index = None
+
+        return out_index
+
     colnames = list(df)
     out = {
-        "SeqE": [i for i, x in enumerate(colnames) if "Encoding" in x and "Seq" in x][
-            0
-        ],
-        "SpecE": [i for i, x in enumerate(colnames) if "Encoding" in x and "Spec" in x][
-            0
-        ],
-        "Ch": [i for i, x in enumerate(colnames) if "harg" in x][0],
-        "iRT": [i for i, x in enumerate(colnames) if "IRT" in x or "iRT" in x][0],
+        "SeqE": match_col("Encoding", "Seq", colnames, combine_mode="intersect"),
+        "ModE": match_col("Encoding", "Mod", colnames, combine_mode="intersect"),
+        "SpecE": match_col("Encoding", "Spec", colnames, combine_mode="intersect"),
+        "Ch": match_col("harg", None, colnames),
+        "iRT": match_col("IRT", "iRT", colnames, combine_mode="union"),
+        "NCE": match_col(
+            "nce", "NCE", colnames, combine_mode="union", match_mode="equals"
+        ),
     }
-    out = {k: colnames[v] for k, v in out.items()}
+    out = {k: (colnames[v] if v is not None else None) for k, v in out.items()}
     return out
 
 
@@ -72,6 +99,23 @@ class PeptideDataset(torch.utils.data.Dataset):
         )
         self.sequence_encodings = sequence_encodings.long()
 
+        if name_match["ModE"] is None:
+            warnings.warn(
+                (
+                    "Found missing Modification Encodings,"
+                    " Assuming all peptides are unmodified."
+                    " Please fix the data for future use,"
+                    " since this imputation will be removed in the future"
+                ),
+                FutureWarning,
+            )
+            mod_encodings = [[0] * constants.MAX_SEQUENCE for _ in sequence_encodings]
+        else:
+            mod_encodings = [eval(x) for x in self.df[name_match["ModE"]]]
+
+        mod_encodings = match_lengths(mod_encodings, constants.MAX_SEQUENCE, "Mods")
+        self.mod_encodings = mod_encodings.long()
+
         spectra_encodings = [eval(x) for x in self.df[name_match["SpecE"]]]
         spectra_encodings = match_lengths(
             spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
@@ -88,10 +132,34 @@ class PeptideDataset(torch.utils.data.Dataset):
             )
         )
 
-        # Pretty sure this last 2 can be optimized vectorizing them
         self.norm_irts = (
             torch.Tensor(self.df[name_match["iRT"]] / 100).float().unsqueeze(1)
         )
+
+        if name_match["NCE"] is None:
+            nces = (
+                torch.Tensor([float("nan")] * len(self.norm_irts)).float().unsqueeze(1)
+            )
+        else:
+            nces = torch.Tensor(self.df[name_match["NCE"]]).float().unsqueeze(1)
+
+        self.nces = nces
+
+        if torch.any(self.nces.isnan()):
+            # TODO decide if here should be the place to impute NCEs ... and warn ...
+            warnings.warn(
+                (
+                    "Found missing values in NCEs, assuming 30."
+                    " Please fix the data for future use, "
+                    "since this imputation will be removed in the future"
+                ),
+                FutureWarning,
+            )
+            self.nces = torch.where(self.nces.isnan(), torch.Tensor([30.0]), self.nces)
+
+            # This syntax is compatible in torch +1.8, will change when colab migrates to it
+            # self.nces = torch.nan_to_num(self.nces, nan=30.0)
+
         self.charges = torch.Tensor(self.df[name_match["Ch"]]).long().unsqueeze(1)
 
         print(">>> Done Initializing dataset\n")
@@ -111,11 +179,20 @@ class PeptideDataset(torch.utils.data.Dataset):
         # encoded_pept = torch.Tensor(eval(self.df.iloc[index].Encoding)).long().T
         # norm_irt = torch.Tensor([self.df.iloc[index].mIRT / 100]).float()
         encoded_sequence = self.sequence_encodings[index]
+        encoded_mods = self.mod_encodings[index]
         encoded_spectra = self.spectra_encodings[index]
         norm_irt = self.norm_irts[index]
         charge = self.charges[index]
+        nce = self.nces[index]
 
-        out = train_batch(encoded_sequence, charge, encoded_spectra, norm_irt)
+        out = TrainBatch(
+            encoded_sequence=encoded_sequence,
+            encoded_mods=encoded_mods,
+            charge=charge,
+            nce=nce,
+            encoded_spectra=encoded_spectra,
+            norm_irt=norm_irt,
+        )
         return out
 
 

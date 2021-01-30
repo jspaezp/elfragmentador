@@ -22,8 +22,9 @@ from argparse import ArgumentParser
 import elfragmentador
 from elfragmentador import constants
 from elfragmentador import encoding_decoding
+from elfragmentador.datamodules import TrainBatch
 
-prediction_results = namedtuple("PredictionResults", "irt, spectra")
+PredictionResults = namedtuple("PredictionResults", "irt spectra")
 
 
 class MLP(nn.Module):
@@ -289,10 +290,8 @@ class PeptideTransformerDecoder(torch.nn.Module):
         print(f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}")
         charge_dims = math.ceil(ninp * charge_dims_pct)
         nce_dims = math.ceil(ninp * nce_dims_pct)
-        n_embeds = ninp - (charge_dims)
+        n_embeds = ninp - (charge_dims + nce_dims)
 
-        warnings.warn("NCE has not been implemented yet ...  sorry")
-        # ninp = ninp - (charge_dims + nce_dims)
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=ninp, nhead=nhead, dropout=dropout
         )
@@ -319,7 +318,11 @@ class PeptideTransformerDecoder(torch.nn.Module):
         )
 
     def forward(
-        self, src: Tensor, charge: Tensor, nce: Tensor, debug: bool = False
+        self,
+        src: Tensor,
+        charge: Tensor,
+        nce: Tensor,
+        debug: bool = False,
     ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
         trans_decoder_tgt = trans_decoder_tgt.repeat(1, charge.size(0), 1)
@@ -407,17 +410,30 @@ class PepTransformerModel(pl.LightningModule):
         self.lr_ratio = lr_ratio
         self.steps_per_epoch = steps_per_epoch
 
-    def forward(self, src: torch.long, charge=None, mods=None, debug=False):
+    def forward(
+        self,
+        src: torch.long,
+        nce: torch.float,
+        mods: torch.long = None,
+        charge: torch.long = None,
+        debug: bool = False,
+    ):
         """
-        Parameters:
+        Parameters
+        ----------
             src: Encoded pepide sequence [B, L] (view details)
-            charge: Tensor with the charges [B, 1]
+            nce: float Tensor with the charges [B, 1]
+            mods: Encoded modification sequence [B, L]
+            charge: long Tensor with the charges [B, 1]
 
-        Details:
+        Details
+        -------
             src:
                 The peptide is encoded as integers for the aminoacid.
                 "AAA" encoded for a max length of 5 would be
                 torch.Tensor([ 1,  1,  1,  0,  0]).long()
+            nce:
+                Normalized collision energy to use during the prediction.
             charge:
                 A tensor corresponding to the charges of each of the
                 peptide precursors (long)
@@ -435,8 +451,16 @@ class PepTransformerModel(pl.LightningModule):
             mods = src.get("mods", None)
             src = src["src"]
 
-        trans_encoder_output = self.encoder(src, mods=mods, debug=debug)
-        rt_output = self.rt_decoder(trans_encoder_output)
+        if debug:
+            print(
+                f"PT: Shape of inputs src={src.shape},"
+                f" mods={mods.shape if mods is not None else None},"
+                f" nce={nce.shape}"
+                f" charge={charge.shape}"
+            )
+
+        trans_encoder_output = self.encoder.forward(src=src, mods=mods, debug=debug)
+        rt_output = self.rt_decoder.forward(trans_encoder_output)
         if debug:
             print(f"PT: Shape after RT decoder {rt_output.shape}")
 
@@ -444,29 +468,59 @@ class PepTransformerModel(pl.LightningModule):
         if debug:
             print(f"PT: Shape of RT output {rt_output.shape}")
 
-        spectra_output = self.decoder(trans_encoder_output, charge, debug=debug)
+        spectra_output = self.decoder.forward(
+            src=trans_encoder_output, charge=charge, nce=nce, debug=debug
+        )
 
-        return prediction_results(rt_output, spectra_output)
+        if debug:
+            print(
+                f"PT: Final Outputs of shapes {rt_output.shape}, {spectra_output.shape}"
+            )
 
-    def predict_from_seq(self, seq: str, charge: int, debug: bool = False):
+        return PredictionResults(rt_output, spectra_output)
+
+    def batch_forward(self, inputs, debug=False):
+        def unsqueeze_if_needed(x, dims):
+            if len(x.shape) != dims:
+                if debug:
+                    print(f"PT: Unsqueezing tensor of shape {x.shape}")
+                x = x.unsqueeze(1)
+            else:
+                if debug:
+                    print(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
+            return x
+
+        out = self.forward(
+            src=unsqueeze_if_needed(inputs.encoded_sequence, 2),
+            mods=unsqueeze_if_needed(inputs.encoded_mods, 2),
+            nce=unsqueeze_if_needed(inputs.nce, 2),
+            charge=unsqueeze_if_needed(inputs.charge, 2),
+            debug=debug,
+        )
+        return out
+
+    def predict_from_seq(self, seq: str, charge: int, nce: float, debug: bool = False):
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
         in_charge = torch.Tensor([charge]).unsqueeze(0).long()
+        in_nce = torch.Tensor([nce]).unsqueeze(0).float()
 
         if debug:
             print(
                 f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}"
             )
 
-        out = self(src=src, charge=in_charge, mods=mods, debug=debug)
+        out = self.forward(
+            src=src, charge=in_charge, mods=mods, nce=in_nce, debug=debug
+        )
         out = tuple([x.squeeze(0) for x in out])
 
         return out
 
     @staticmethod
-    def add_model_specific_args(parser):
+    def add_model_specific_args(parser: ArgumentParser) -> ArgumentParser:
         parser.add_argument(
             "--num_queries",
             default=150,
@@ -590,14 +644,13 @@ class PepTransformerModel(pl.LightningModule):
 
         return [opt], [scheduler_dict]
 
-    def _step(self, batch, batch_idx):
-        encoded_sequence, charge, encoded_spectra, norm_irt = batch
-        yhat_irt, yhat_spectra = self(encoded_sequence, charge)
-        yhat_irt = yhat_irt[~norm_irt.isnan()]
-        norm_irt = norm_irt[~norm_irt.isnan()]
+    def _step(self, batch: TrainBatch, batch_idx):
+        yhat_irt, yhat_spectra = self.batch_forward(batch)
+        yhat_irt = yhat_irt[~batch.norm_irt.isnan()]
+        norm_irt = batch.norm_irt[~batch.norm_irt.isnan()]
 
         loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
-        loss_spectra = self.angle_loss(yhat_spectra, encoded_spectra).mean()
+        loss_spectra = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
 
         if len(norm_irt.data) == 0:
             total_loss = loss_spectra
@@ -615,7 +668,7 @@ class PepTransformerModel(pl.LightningModule):
             f"\n loss_irt: {loss_irt}\n"
             f"\n loss_spectra: {loss_spectra}\n"
             f"\n yhat_spec: {yhat_spectra},\n"
-            f"\n y_spec: {encoded_spectra}\n"
+            f"\n y_spec: {batch.encoded_spectra}\n"
             f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
         )
 

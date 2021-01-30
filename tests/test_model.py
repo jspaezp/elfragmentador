@@ -25,12 +25,19 @@ def mod_forward_base(datadir):
     datamodule.setup()
 
     for x in datamodule.val_dataloader():
+        print(x)
         break
 
     print(f">> Shape of inputs {[y.shape for y in x]}")
 
     with torch.no_grad():
-        yhat_irt, yhat_spectra = mod(x[0], x[1], debug=True)
+        yhat_irt, yhat_spectra = mod.forward(
+            src=x.encoded_sequence,
+            charge=x.charge,
+            mods=x.encoded_mods,
+            nce=x.nce,
+            debug=True,
+        )
 
     assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
     assert not all(torch.isnan(yhat_spectra).flatten()), print(yhat_spectra.mean())
@@ -41,7 +48,7 @@ def mod_forward_base(datadir):
 def test_model_forward_seq():
     mod = model.PepTransformerModel(nhead=4, ninp=64)
     with torch.no_grad():
-        out = mod.predict_from_seq("AAAACDMK", 3, debug=True)
+        out = mod.predict_from_seq("AAAACDMK", 3, nce=27.0, debug=True)
     print(f">> Shape of outputs {[y.shape for y in out]}")
 
 
@@ -88,7 +95,14 @@ def base_export_torchscript(datadir, keep=False):
     for input_sample in datamodule.val_dataloader():
         break
 
-    dummy_input = tuple([input_sample[0], input_sample[1]])
+    dummy_input = tuple(
+        [
+            input_sample.encoded_sequence,
+            input_sample.nce,
+            input_sample.encoded_mods,
+            input_sample.charge,
+        ]
+    )
 
     print("Exporting to TorchScript")
     script = mod.to_torchscript(example_inputs=dummy_input, method="trace")

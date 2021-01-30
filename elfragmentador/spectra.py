@@ -265,12 +265,12 @@ class Spectrum:
         ['z1b1', 'z1y1', 'z1b2', 'z1y2', 'z1b3',..., 'z3b29', 'z3y29']
         """
         if self._annotated_peaks is None and not dry:
-            self._annotate_peaks()
+            self.annotated_peaks
 
         if dry:
             peak_annot = None
         else:
-            peak_annot = self._annotated_peaks
+            peak_annot = self.annotated_peaks
 
         return get_fragment_encoding_labels(annotated_peaks=peak_annot)
 
@@ -459,6 +459,11 @@ def encode_sptxt(
     return ret
 
 
+def sptxt_to_csv(filepath, output_path):
+    df = encode_sptxt(filepath=filepath)
+    df.to_csv(output_path, index=False)
+
+
 def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
     """
     read_sptxt reads a spectra library file.
@@ -504,7 +509,7 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
     digits = [str(v) for v in range(10)]
 
     # Header Handling
-    named_params = [v for v in x if ":" in v]
+    named_params = [v for v in x if v[:1].isalpha() and ":" in v]
     named_params_dict = {}
     for v in named_params:
         tmp = v.split(":")
@@ -525,6 +530,15 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
     rt = comment_dict.get("RetentionTime", None)
     if rt is not None:
         rt = float(rt.split(",")[0])
+
+    if comment_dict.get("iRT", None) is not None:
+        warnings.warn(
+            (
+                "Noticed the comment dict has iRT values,"
+                " We have not implemented reading them but will do in the future"
+            ),
+            FutureWarning,
+        )
 
     raw_spectra = comment_dict.get("RawSpectrum", None)
 

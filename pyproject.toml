@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elfragmentador"
-version = "0.12.0"
+version = "0.13.0"
 description = "Predicts peptide fragmentations using transformers"
 authors = ["J. Sebastian Paez <jspaezp@gmail.com>"]
 license = "Apache 2.0"
@@ -29,6 +29,7 @@ matplotlib = "^3.3.0"
 python-igraph = "^0.8.3"
 MonkeyType = "^20.5.0"
 pytest-cov = "^2.11.1"
+pydocstyle = "^5.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -36,12 +37,16 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--doctest-modules --disable-warnings -v --cov=transprosit"
+addopts = "--doctest-modules -v --cov=elfragmentador"
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE NUMBER"
 testpaths = [
     "tests",
-    "transprosit",
+    "elfragmentador",
+]
+filterwarnings=[
+    'ignore:.*Call to deprecated.*[File|Enum|Field]Descriptor\(\).*:DeprecationWarning',
+    'ignore:.*Call to deprecated.*Descriptor\(\).*:DeprecationWarning',
 ]
 
 [tool.poetry.scripts]
-train_transprosit = "transprosit.train:main"
+train_transprosit = "elfragmentador.train:main"
