@@ -1,3 +1,4 @@
+from pathlib import Path
 import argparse
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 import pytorch_lightning as pl
@@ -21,8 +22,11 @@ def convert_sptxt():
 
     for f in args.file:
         out_file = f.name + ".csv"
-        print(f"Converting '{f.name}' to '{out_file}'")
-        sptxt_to_csv(f.name, out_file)
+        if Path(out_file).exists():
+            print(f"Skipping conversion of '{f.name}' to '{out_file}', because {out_file} exists.")
+        else:
+            print(f"Converting '{f.name}' to '{out_file}'")
+            sptxt_to_csv(f.name, out_file)
 
 
 def evaluate_checkpoint():
