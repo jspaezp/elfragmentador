@@ -513,13 +513,13 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
     named_params_dict = {}
     for v in named_params:
         tmp = v.split(":")
-        named_params_dict[tmp[0].strip()] = tmp[1]
+        named_params_dict[tmp[0].strip()] = ":".join(tmp[1:])
 
     fragmentation = named_params_dict.get("FullName", None)
     if fragmentation is not None:
         fragmentation = fragmentation[fragmentation.index("(") + 1 : -1]
 
-    comment_sec = [v.split("=") for v in named_params_dict["Comment"].strip().split()]
+    comment_sec = [v.split("=") for v in named_params_dict["Comment"].strip().split(" ")]
     comment_dict = {v[0]: v[1] for v in comment_sec}
     sequence, charge = named_params_dict["Name"].split("/")
 
