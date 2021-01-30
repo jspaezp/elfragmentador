@@ -492,8 +492,8 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
                         yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
                     except AssertionError as e:
                         wargnings.warn("Skipping spectra with assertion error: ", e) 
-                        spectrum_section = []
-                        continue
+                        pass
+                    spectrum_section = []
             else:
                 spectrum_section.append(stripped_line)
 
