@@ -34,7 +34,6 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 #### Urgent
 
 - Complete dosctrings and add documentation website
-- Deal with terminal acetylation...
 - Write usage documentation on the readme
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
