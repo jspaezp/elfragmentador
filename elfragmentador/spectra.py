@@ -224,9 +224,19 @@ class Spectrum:
             return out
 
         annots = {}
+        max_delta = (
+            self.tolerance
+            if self.tolerance_unit == "da"
+            else max(self.mzs) * self.tolerance / 1e6
+        )
+
+        # TODO optimize this section of the function ...
+        # and actualy write a test for it working ...
         for mz, inten in zip(self.mzs, self.intensities):
             matching = {
-                k: inten for k, v in self._theoretical_peaks.items() if in_tol(v, mz)
+                k: inten
+                for k, v in self._theoretical_peaks.items()
+                if abs(mz - v) <= max_delta and in_tol(v, mz)
             }
             annots.update(matching)
 
@@ -459,8 +469,8 @@ def encode_sptxt(
     return ret
 
 
-def sptxt_to_csv(filepath, output_path):
-    df = encode_sptxt(filepath=filepath)
+def sptxt_to_csv(filepath, output_path, *args, **kwargs):
+    df = encode_sptxt(filepath=filepath, *args, **kwargs)
     df.to_csv(output_path, index=False)
 
 
@@ -519,7 +529,9 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
     if fragmentation is not None:
         fragmentation = fragmentation[fragmentation.index("(") + 1 : -1]
 
-    comment_sec = [v.split("=") for v in named_params_dict["Comment"].strip().split(" ")]
+    comment_sec = [
+        v.split("=") for v in named_params_dict["Comment"].strip().split(" ")
+    ]
     comment_dict = {v[0]: v[1] for v in comment_sec}
     sequence, charge = named_params_dict["Name"].split("/")
 

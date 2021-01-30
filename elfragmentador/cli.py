@@ -5,11 +5,17 @@ from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import sptxt_to_csv
 
+
 def convert_sptxt():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument("file", type=argparse.FileType("r"), nargs="+", help="Input file(s) to convert (sptxt)")
+    parser.add_argument(
+        "file",
+        type=argparse.FileType("r"),
+        nargs="+",
+        help="Input file(s) to convert (sptxt)",
+    )
 
-    args=parser.parse_args()
+    args = parser.parse_args()
 
     print([x.name for x in args.file])
 
@@ -18,8 +24,10 @@ def convert_sptxt():
         print(f"Converting '{f.name}' to '{out_file}'")
         sptxt_to_csv(f.name, out_file)
 
+
 def evaluate_checkpoint():
     raise NotImplementedError
+
 
 def train():
     pl.seed_everything(2020)
