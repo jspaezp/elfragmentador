@@ -77,7 +77,7 @@ class Spectrum:
         # Makes sure all elements in the sequence are aminoacids
         assert set(parsed_peptide) <= constants.AMINO_ACID_SET.union(
             constants.MOD_PEPTIDE_ALIASES
-        ), print(sequence, parsed_peptide)
+        ), f"Assertion of supported modifications failed for {sequence}: {parsed_peptide}"
         sequence = "".join(parsed_peptide)
         self.sequence = "".join([x[:1] for x in parsed_peptide])
         self.mod_sequence = sequence
@@ -488,13 +488,20 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
             stripped_line = line.strip()
             if len(stripped_line) == 0:
                 if len(spectrum_section) > 0:
-                    yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
-                    spectrum_section = []
+                    try:
+                        yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
+                    except AssertionError as e:
+                        wargnings.warn("Skipping spectra with assertion error: ", e) 
+                        spectrum_section = []
+                        continue
             else:
                 spectrum_section.append(stripped_line)
 
         if len(spectrum_section) > 0:
-            yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
+            try:
+                yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
+            except AssertionError as e:
+                wargnings.warn("Skipping spectra with assertion error: ", e) 
 
 
 def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
