@@ -546,7 +546,7 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
             FutureWarning,
         )
 
-    raw_spectra = comment_dict.get("RawSpectrum", None)
+    raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get("BestRawSpectrum", None)
 
     # Peaks Handling
     peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]
