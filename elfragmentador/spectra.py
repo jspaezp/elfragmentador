@@ -437,12 +437,12 @@ def encode_sptxt(
         {
             "Sequences": sequences,
             "ModSequences": mod_sequences,
+            "Charges": charges,
+            "NCEs": nces,
+            "RTs": rts,
             "SpectraEncodings": spectra_encodings,
             "ModEncodings": mod_encodings,
             "SeqEncodings": seq_encodings,
-            "Charges": charges,
-            "RTs": rts,
-            "NCEs": nces,
             "OrigSpectra": orig,
         }
     )
