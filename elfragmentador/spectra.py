@@ -70,10 +70,15 @@ class Spectrum:
         """
         tolerance, tolerance_unit = constants.TOLERANCE[analyzer]
         parsed_peptide = list(annotate.peptide_parser(sequence))
+        if parsed_peptide[0] == "n[43]":
+            parsed_peptide.pop(0)
+            parsed_peptide[0] += "[nACETYL]"
+
         # Makes sure all elements in the sequence are aminoacids
         assert set(parsed_peptide) <= constants.AMINO_ACID_SET.union(
             constants.MOD_PEPTIDE_ALIASES
-        ), print(sequence)
+        ), print(sequence, parsed_peptide)
+        sequence = "".join(parsed_peptide)
         self.sequence = "".join([x[:1] for x in parsed_peptide])
         self.mod_sequence = sequence
         self.length = len(parsed_peptide)

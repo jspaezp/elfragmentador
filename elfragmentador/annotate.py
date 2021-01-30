@@ -201,7 +201,6 @@ def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"
 
 def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"):
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
-    # TODO optimize this section of the function ...
 
     mz_pairs = [[m, i] for m, i in zip(mzs, intensities)]
     theo_peaks = [[k, v] for k, v in theoretical_peaks.items()]
@@ -227,18 +226,20 @@ def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm
             curr_theo_val, tolerance, unit
         ):
             annots.update({curr_theo_key: inten})
-
-    try:
-        while True:
-            curr_theo_key, curr_theo_val = next(theo_iter)
-            deltamass = mz - curr_theo_val
-            in_deltam = abs(deltamass) <= max_delta
-            if in_deltam and abs(deltamass) <= get_tolerance(
-                curr_theo_val, tolerance, unit
-            ):
-                annots.update({curr_theo_key: inten})
-    except StopIteration:
-        pass
+    else:
+        try:
+            while True:
+                curr_theo_key, curr_theo_val = next(theo_iter)
+                deltamass = mz - curr_theo_val
+                if deltamass < -max_delta:
+                    break
+                in_deltam = abs(deltamass) <= max_delta
+                if in_deltam and abs(deltamass) <= get_tolerance(
+                    curr_theo_val, tolerance, unit
+                ):
+                    annots.update({curr_theo_key: inten})
+        except StopIteration:
+            pass
 
     max_int = max([v for v in annots.values()] + [0])
     annots = {k: v / max_int for k, v in annots.items()}

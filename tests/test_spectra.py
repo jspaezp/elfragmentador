@@ -130,6 +130,11 @@ def test_spectrum():
     )
     print(spec)
 
+def test_spectrum_works_on_term_acetyl():
+    spec = spectra.Spectrum(
+        "n[43]AAA", 2, 500, mzs=[100.1, 100.2], intensities=[200, 500], nce=27.0
+    )
+    print(spec)
 
 def test_sptxt_to_pd(shared_datadir):
     in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")

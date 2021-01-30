@@ -110,7 +110,8 @@ MOD_PEPTIDE_ALIASES = {
     "Y[208]": "NITRO",
 }
 
-# n[43] # TODO deal with terminal acetylation
+# TERMINAL_ACETYLATIONS
+MOD_PEPTIDE_ALIASES.update({ aa + "[nACETYL]" : "ACETYL" for aa in AMINO_ACID })
 
 MOD_AA_MASSES = AMINO_ACID.copy()
 MOD_AA_MASSES.update(
