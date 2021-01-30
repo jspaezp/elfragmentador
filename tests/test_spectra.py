@@ -1,4 +1,4 @@
-from elfragmentador import spectra, constants
+from elfragmentador import spectra, constants, annotate
 
 
 def test_parse_spec():
@@ -80,7 +80,7 @@ def test_parse_phospho_spectrast():
     print(spec.annotated_peaks)
     print(spec._theoretical_peaks)
     assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
-    assert sum([x>0 for x in out_encoding]) == 5
+    assert sum([x > 0 for x in out_encoding]) == 5
     out_encoding = spec.encode_sequence()
     print(out_encoding)
     assert len(out_encoding.aas) == constants.MAX_SEQUENCE
@@ -100,6 +100,28 @@ def test_parse_spectrast_sptxt(shared_datadir):
 def test_parse_phospho_spectrast_sptxt(shared_datadir):
     in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")
     print(list(spectra.read_sptxt(in_path)))
+
+
+def test_benchmark_spectra_parsing(shared_datadir, benchmark):
+    in_path = str(shared_datadir / "single_spectrum.txt")
+    with open(in_path, "r") as f:
+        spec_chunk = list(f)
+    spec = spectra._parse_spectra_sptxt(spec_chunk)
+    out = benchmark(
+        annotate.annotate_peaks, spec._theoretical_peaks, spec.mzs, spec.intensities
+    )
+    print(out)
+
+
+def test_benchmark_spectra_parsing2(shared_datadir, benchmark):
+    in_path = str(shared_datadir / "single_spectrum.txt")
+    with open(in_path, "r") as f:
+        spec_chunk = list(f)
+    spec = spectra._parse_spectra_sptxt(spec_chunk)
+    out = benchmark(
+        annotate.annotate_peaks2, spec._theoretical_peaks, spec.mzs, spec.intensities
+    )
+    print(out)
 
 
 def test_spectrum():

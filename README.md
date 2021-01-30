@@ -33,9 +33,7 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 
 #### Urgent
 
-- Find a better name for the project
-  - Ideas:
-    - elFragmentador
+- Complete dosctrings and add documentation website
 - Write usage documentation on the readme
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)

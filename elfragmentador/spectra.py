@@ -217,31 +217,13 @@ class Spectrum:
             )
 
     def _annotate_peaks(self) -> None:
-        def in_tol(tmz, omz):
-            out = annotate.is_in_tolerance(
-                tmz, omz, tolerance=self.tolerance, unit=self.tolerance_unit
-            )
-            return out
-
-        annots = {}
-        max_delta = (
-            self.tolerance
-            if self.tolerance_unit == "da"
-            else max(self.mzs) * self.tolerance / 1e6
+        annots = annotate.annotate_peaks2(
+            self._theoretical_peaks,
+            self.mzs,
+            self.intensities,
+            self.tolerance,
+            self.tolerance_unit,
         )
-
-        # TODO optimize this section of the function ...
-        # and actualy write a test for it working ...
-        for mz, inten in zip(self.mzs, self.intensities):
-            matching = {
-                k: inten
-                for k, v in self._theoretical_peaks.items()
-                if abs(mz - v) <= max_delta and in_tol(v, mz)
-            }
-            annots.update(matching)
-
-        max_int = max([v for v in annots.values()] + [0])
-        annots = {k: v / max_int for k, v in annots.items()}
         self._annotated_peaks = annots
 
     def encode_spectra(self, dry=False) -> Union[List[int], List[str]]:

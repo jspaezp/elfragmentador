@@ -154,7 +154,7 @@ def _get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
     for charge in charges:
         for ion in ion_types:
             ion_dict = get_annotation(fw, bw, charge, ion)
-            ion_dict = {"z" + str(charge) + k : v for k, v in ion_dict.items()}
+            ion_dict = {"z" + str(charge) + k: v for k, v in ion_dict.items()}
             out.update(ion_dict)
 
     return out
@@ -178,3 +178,68 @@ def is_in_tolerance(
     lower = observed - mz_tolerance
     upper = observed + mz_tolerance
     return theoretical >= lower and theoretical <= upper
+
+
+def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"):
+    annots = {}
+    max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
+
+    # TODO optimize this section of the function ...
+    # and actualy write a test for it working ...
+    for mz, inten in zip(mzs, intensities):
+        matching = {
+            k: inten
+            for k, v in theoretical_peaks.items()
+            if abs(mz - v) <= max_delta and is_in_tolerance(v, mz, tolerance, unit)
+        }
+        annots.update(matching)
+
+    max_int = max([v for v in annots.values()] + [0])
+    annots = {k: v / max_int for k, v in annots.items()}
+    return annots
+
+
+def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"):
+    max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
+    # TODO optimize this section of the function ...
+
+    mz_pairs = [[m, i] for m, i in zip(mzs, intensities)]
+    theo_peaks = [[k, v] for k, v in theoretical_peaks.items()]
+
+    mz_pairs.sort(key=lambda x: x[0])
+    theo_peaks.sort(key=lambda x: x[1])
+
+    theo_iter = iter(theo_peaks)
+    curr_theo_key, curr_theo_val = next(theo_iter)
+
+    annots = {}
+    for mz, inten in mz_pairs:
+        deltamass = mz - curr_theo_val
+        try:
+            while deltamass >= max_delta:
+                curr_theo_key, curr_theo_val = next(theo_iter)
+                deltamass = mz - curr_theo_val
+        except StopIteration:
+            pass
+
+        in_deltam = abs(deltamass) <= max_delta
+        if in_deltam and abs(deltamass) <= get_tolerance(
+            curr_theo_val, tolerance, unit
+        ):
+            annots.update({curr_theo_key: inten})
+
+    try:
+        while True:
+            curr_theo_key, curr_theo_val = next(theo_iter)
+            deltamass = mz - curr_theo_val
+            in_deltam = abs(deltamass) <= max_delta
+            if in_deltam and abs(deltamass) <= get_tolerance(
+                curr_theo_val, tolerance, unit
+            ):
+                annots.update({curr_theo_key: inten})
+    except StopIteration:
+        pass
+
+    max_int = max([v for v in annots.values()] + [0])
+    annots = {k: v / max_int for k, v in annots.items()}
+    return annots
