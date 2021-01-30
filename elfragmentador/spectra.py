@@ -491,7 +491,7 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
                     try:
                         yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
                     except AssertionError as e:
-                        wargnings.warn("Skipping spectra with assertion error: ", e) 
+                        warnings.warn("Skipping spectra with assertion error: ", e) 
                         pass
                     spectrum_section = []
             else:
@@ -501,7 +501,7 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
             try:
                 yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
             except AssertionError as e:
-                wargnings.warn("Skipping spectra with assertion error: ", e) 
+                warnings.warn("Skipping spectra with assertion error: ", e) 
 
 
 def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
