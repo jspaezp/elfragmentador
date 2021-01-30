@@ -100,7 +100,7 @@ class Spectrum:
         self.tolerance = tolerance
         self.tolerance_unit = tolerance_unit
 
-        self._theoretical_peaks = annotate.get_peptide_ions(self.sequence)
+        self._theoretical_peaks = annotate.get_peptide_ions(self.mod_sequence)
 
         self._annotated_peaks = None
         self.nce = nce

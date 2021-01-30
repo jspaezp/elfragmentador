@@ -77,8 +77,10 @@ def test_parse_phospho_spectrast():
     spec.annotated_peaks
     print(spec)
     out_encoding = spec.encode_spectra()
-    print(out_encoding)
+    print(spec.annotated_peaks)
+    print(spec._theoretical_peaks)
     assert len(out_encoding) == constants.NUM_FRAG_EMBEDINGS
+    assert sum([x>0 for x in out_encoding]) == 5
     out_encoding = spec.encode_sequence()
     print(out_encoding)
     assert len(out_encoding.aas) == constants.MAX_SEQUENCE

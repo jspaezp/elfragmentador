@@ -119,10 +119,12 @@ def get_annotation(
         masses = get_mzs(cummass, ion_type, charge)
         d = {tmp.format(ion_type, i + 1): m for i, m in enumerate(masses)}
         all_.update(d)
+        """
         for nl, offset in constants.NEUTRAL_LOSS.items():
             nl_masses = get_mzs(cummass - offset, ion_type, charge)
             d = {tmp_nl.format(ion_type, i + 1, nl): m for i, m in enumerate(nl_masses)}
             all_.update(d)
+        """
     return collections.OrderedDict(sorted(all_.items(), key=lambda t: t[0]))
 
 
@@ -152,7 +154,7 @@ def _get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
     for charge in charges:
         for ion in ion_types:
             ion_dict = get_annotation(fw, bw, charge, ion)
-            ion_dict = {"z" + str(charge) + k: v for k, v in ion_dict.items()}
+            ion_dict = {"z" + str(charge) + k : v for k, v in ion_dict.items()}
             out.update(ion_dict)
 
     return out
