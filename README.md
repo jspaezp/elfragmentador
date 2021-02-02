@@ -42,6 +42,7 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 #### Possible
 
 - Add neutral losses specific to some PTMs
+- Translate annotation functions (getting ions) to numpy/torch
 
 #### If I get time
 

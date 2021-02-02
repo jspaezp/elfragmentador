@@ -93,8 +93,10 @@ MOD_PEPTIDE_ALIASES = {
     "C[160]": "",  # This makes it so it assumes it is always modified
     "M[147]": "OXIDATION",
     "M(ox)": "OXIDATION",
+    "M[OXIDATION]": "OXIDATION",
     "S[167]": "PHOSPHO",
     "S[PHOSPHO]": "PHOSPHO",
+    "Y[PHOSPHO]": "PHOSPHO",
     "S[PHOS]": "PHOSPHO",
     "T[181]": "PHOSPHO",
     "T[PHOSPHO]": "PHOSPHO",
@@ -111,7 +113,7 @@ MOD_PEPTIDE_ALIASES = {
 }
 
 # TERMINAL_ACETYLATIONS
-MOD_PEPTIDE_ALIASES.update({ aa + "[nACETYL]" : "ACETYL" for aa in AMINO_ACID })
+MOD_PEPTIDE_ALIASES.update({aa + "[nACETYL]": "ACETYL" for aa in AMINO_ACID})
 
 MOD_AA_MASSES = AMINO_ACID.copy()
 MOD_AA_MASSES.update(

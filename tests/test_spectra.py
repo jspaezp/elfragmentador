@@ -102,15 +102,15 @@ def test_parse_phospho_spectrast_sptxt(shared_datadir):
     print(list(spectra.read_sptxt(in_path)))
 
 
-def test_benchmark_spectra_parsing(shared_datadir, benchmark):
-    in_path = str(shared_datadir / "single_spectrum.txt")
-    with open(in_path, "r") as f:
-        spec_chunk = list(f)
-    spec = spectra._parse_spectra_sptxt(spec_chunk)
-    out = benchmark(
-        annotate.annotate_peaks, spec._theoretical_peaks, spec.mzs, spec.intensities
-    )
-    print(out)
+# def test_benchmark_spectra_parsing(shared_datadir, benchmark):
+#     in_path = str(shared_datadir / "single_spectrum.txt")
+#     with open(in_path, "r") as f:
+#         spec_chunk = list(f)
+#     spec = spectra._parse_spectra_sptxt(spec_chunk)
+#     out = benchmark(
+#         annotate.annotate_peaks, spec._theoretical_peaks, spec.mzs, spec.intensities
+#     )
+#     print(out)
 
 
 def test_benchmark_spectra_parsing2(shared_datadir, benchmark):
@@ -130,11 +130,13 @@ def test_spectrum():
     )
     print(spec)
 
+
 def test_spectrum_works_on_term_acetyl():
     spec = spectra.Spectrum(
         "n[43]AAA", 2, 500, mzs=[100.1, 100.2], intensities=[200, 500], nce=27.0
     )
     print(spec)
+
 
 def test_sptxt_to_pd(shared_datadir):
     in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")

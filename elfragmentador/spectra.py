@@ -491,7 +491,7 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
                     try:
                         yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
                     except AssertionError as e:
-                        warnings.warn(f"Skipping spectra with assertion error: {e}") 
+                        warnings.warn(f"Skipping spectra with assertion error: {e}")
                         pass
                     spectrum_section = []
             else:
@@ -501,7 +501,7 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
             try:
                 yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
             except AssertionError as e:
-                warnings.warn(f"Skipping spectra with assertion error: {e}") 
+                warnings.warn(f"Skipping spectra with assertion error: {e}")
 
 
 def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
@@ -546,7 +546,9 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
             FutureWarning,
         )
 
-    raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get("BestRawSpectrum", None)
+    raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get(
+        "BestRawSpectrum", None
+    )
 
     # Peaks Handling
     peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]

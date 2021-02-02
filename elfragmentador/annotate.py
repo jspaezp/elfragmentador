@@ -1,16 +1,19 @@
 """
 Greatly inspired/copied from:
-https://github.com/kusterlab/prosit/blob/master/prosit/constants.py
+https://github.com/kusterlab/prosit/blob/master/prosit
 
 And released under an Apache 2.0 license
 """
 
-import numpy
 import collections
-from elfragmentador import constants
-from collections import OrderedDict
-from numpy import bool_, float64, ndarray
+from collections import OrderedDict, defaultdict
 from typing import Iterator
+import warnings
+
+import numpy
+from numpy import bool_, float64, ndarray
+
+from elfragmentador import constants
 
 
 def peptide_parser(p: str) -> Iterator[str]:
@@ -77,7 +80,7 @@ def get_forward_backward(peptide: str):
     amino_acids = peptide_parser(peptide)
     masses = [constants.MOD_AA_MASSES[a] for a in amino_acids]
     forward = numpy.cumsum(masses)
-    backward = numpy.cumsum(list(reversed(masses)))
+    backward = numpy.cumsum(masses[::-1])
     return forward, backward
 
 
@@ -86,6 +89,7 @@ def get_mz(sum_: float64, ion_offset: float, charge: int) -> float64:
 
 
 def get_mzs(cumsum, ion_type, z):
+    # return (cumsum[:-1] + constants.ION_OFFSET[ion_type] + (z * constants.PROTON))/z
     return [get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-1]]
 
 
@@ -104,7 +108,7 @@ def get_annotation(
     >>> bw
     array([160.03064872, 291.07113372, 362.10824772])
     >>> get_annotation(fw, bw, 3, "y")
-    OrderedDict([('y1', 60.354347608199994), ..., ('y2-NH3', 98.35899290653332)])
+    OrderedDict([('y1', 60.354347608199994), ...])
     """
     tmp = "{}{}"
     tmp_nl = "{}{}-{}"
@@ -144,9 +148,7 @@ def _get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
     ========
     >>> foo = _get_peptide_ions("AA", [1,2])
     >>> foo
-    {'z1y1': 90.054955167, ..., 'z2b1-NH3': 28.0125589145}
-    >>> {k:v for k,v in foo.items() if "-" not in k} # This removes the neutral losses
-    {'z1y1': 90.054955167, 'z1b1': 72.044390467, 'z2y1': 45.531115817, 'z2b1': 36.525833467}
+    {'z1y1': 90.054955167, ...}
     """
     fw, bw = get_forward_backward(aa_seq)
     out = {}
@@ -184,8 +186,11 @@ def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"
     annots = {}
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
 
-    # TODO optimize this section of the function ...
-    # and actualy write a test for it working ...
+    raise DeprecationWarning(
+        "Use `annotate_peaks2`, this version of the"
+        " function is deprecated and will be removed in the future"
+    )
+
     for mz, inten in zip(mzs, intensities):
         matching = {
             k: inten
@@ -199,19 +204,29 @@ def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"
     return annots
 
 
+def is_sorted(lst, key=lambda x: x):
+    for i, el in enumerate(lst[1:]):
+        if key(el) < key(lst[i]): # i is the index of the previous element
+            return False
+    return True
+
+def sort_if_needed(lst, key=lambda x: x):
+    if not is_sorted(lst, key):
+        lst.sort(key = key)
+
 def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"):
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
 
     mz_pairs = [[m, i] for m, i in zip(mzs, intensities)]
     theo_peaks = [[k, v] for k, v in theoretical_peaks.items()]
 
-    mz_pairs.sort(key=lambda x: x[0])
-    theo_peaks.sort(key=lambda x: x[1])
+    sort_if_needed(mz_pairs, key=lambda x: x[0])
+    sort_if_needed(theo_peaks, key=lambda x: x[1])
 
     theo_iter = iter(theo_peaks)
     curr_theo_key, curr_theo_val = next(theo_iter)
 
-    annots = {}
+    annots = defaultdict(lambda: 0)
     for mz, inten in mz_pairs:
         deltamass = mz - curr_theo_val
         try:
@@ -225,7 +240,7 @@ def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm
         if in_deltam and abs(deltamass) <= get_tolerance(
             curr_theo_val, tolerance, unit
         ):
-            annots.update({curr_theo_key: inten})
+            annots[curr_theo_key] += inten
     else:
         try:
             while True:
@@ -237,7 +252,7 @@ def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm
                 if in_deltam and abs(deltamass) <= get_tolerance(
                     curr_theo_val, tolerance, unit
                 ):
-                    annots.update({curr_theo_key: inten})
+                    annots[curr_theo_key] += inten
         except StopIteration:
             pass
 

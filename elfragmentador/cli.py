@@ -23,7 +23,9 @@ def convert_sptxt():
     for f in args.file:
         out_file = f.name + ".csv"
         if Path(out_file).exists():
-            print(f"Skipping conversion of '{f.name}' to '{out_file}', because {out_file} exists.")
+            print(
+                f"Skipping conversion of '{f.name}' to '{out_file}', because {out_file} exists."
+            )
         else:
             print(f"Converting '{f.name}' to '{out_file}'")
             sptxt_to_csv(f.name, out_file)
