@@ -168,7 +168,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     @staticmethod
     def from_sptxt(
         filepath: str, max_spec: float = 1e6, filter_df: bool = True, *args, **kwargs
-    ) -> PeptideDataset:
+    ):  # Adding this type hint breaks the code bause the class is not yet defined... fix -> PeptideDataset
         df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
         if filter_df:
             df = filter_df_on_sequences(df)
