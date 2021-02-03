@@ -32,7 +32,7 @@ def build_train_parser() -> ArgumentParser:
     program_parser.add_argument(
         "--run_name",
         type=str,
-        default=f"prosit_transformer",
+        default=f"ElFragmentador",
         help="Name to be given to the run (logging)",
     )
     program_parser.add_argument(
