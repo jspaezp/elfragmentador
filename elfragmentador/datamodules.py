@@ -12,6 +12,7 @@ from torch.utils.data.dataloader import DataLoader
 import pytorch_lightning as pl
 
 from elfragmentador import constants, spectra
+from argparse import _ArgumentGroup
 
 TrainBatch = namedtuple(
     "TrainBatch",
@@ -165,7 +166,9 @@ class PeptideDataset(torch.utils.data.Dataset):
         print(">>> Done Initializing dataset\n")
 
     @staticmethod
-    def from_sptxt(filepath, max_spec=1e6, filter_df=True, *args, **kwargs):
+    def from_sptxt(
+        filepath: str, max_spec: float = 1e6, filter_df: bool = True, *args, **kwargs
+    ) -> PeptideDataset:
         df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
         if filter_df:
             df = filter_df_on_sequences(df)
@@ -175,7 +178,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     def __len__(self) -> int:
         return len(self.df)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> TrainBatch:
         # encoded_pept = torch.Tensor(eval(self.df.iloc[index].Encoding)).long().T
         # norm_irt = torch.Tensor([self.df.iloc[index].mIRT / 100]).float()
         encoded_sequence = self.sequence_encodings[index]
@@ -196,7 +199,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         return out
 
 
-def filter_df_on_sequences(df, name=""):
+def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     name_match = match_colnames(df)
     print(list(df))
     print(f"Removing Large sequences, currently {name}: {len(df)}")
@@ -233,7 +236,7 @@ class PeptideDataModule(pl.LightningDataModule):
         self.val_df = val_df
 
     @staticmethod
-    def add_model_specific_args(parser):
+    def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
         return parser
@@ -242,7 +245,7 @@ class PeptideDataModule(pl.LightningDataModule):
         self.train_dataset = PeptideDataset(self.train_df)
         self.val_dataset = PeptideDataset(self.val_df)
 
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.train_dataset, num_workers=0, batch_size=self.batch_size, shuffle=True
         )

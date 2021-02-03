@@ -182,7 +182,7 @@ class Spectrum:
         )
         return spec_out
 
-    def precursor_error(self, error_type="ppm"):
+    def precursor_error(self, error_type: str = "ppm") -> float:
         """
         precursor_error Calculates the mass error of the precursor.
 

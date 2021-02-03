@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.datamodules import PeptideDataset
+from numpy import ndarray
 
 # Given a model checkpoint and some input data, parse the data and return metrics, also a csv with the report
 
@@ -55,7 +56,8 @@ def evaluate_on_dataset(
     return out, summ_out
 
 
-def norm(x):
+def norm(x: ndarray) -> ndarray:
+    """Normalizes a numpy array by substracting mean and dividing by standard deviation"""
     return (x - x.mean()) / x.std()
 
 
@@ -63,6 +65,7 @@ def norm(x):
 # Implementation from:
 # https://stackoverflow.com/questions/893657/
 def polyfit(x, y, degree=1):
+    """Fits a polynomial fit"""
     results = {}
 
     coeffs = np.polyfit(x, y, degree)
@@ -72,6 +75,7 @@ def polyfit(x, y, degree=1):
 
     # r-squared
     p = np.poly1d(coeffs)
+
     # fit values, and mean
     yhat = p(x)  # or [p(z) for z in x]
     ybar = np.sum(y) / len(y)  # or sum(y)/len(y)

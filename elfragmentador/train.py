@@ -1,5 +1,5 @@
 import math
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import Namespace, ArgumentParser, ArgumentDefaultsHelpFormatter
 
 import torch
 import pytorch_lightning as pl
@@ -7,9 +7,10 @@ from pytorch_lightning.loggers import WandbLogger
 
 from elfragmentador import datamodules, model
 import elfragmentador as tp
+from elfragmentador.model import PepTransformerModel
 
 
-def build_train_parser():
+def build_train_parser() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
 
     program_parser = parser.add_argument_group(
@@ -96,7 +97,7 @@ def get_callbacks(run_name, termination_patience=20, wandb_project="rttransforme
     return {"logger": wandb_logger, "callbacks": [lr_monitor, checkpointer, terminator]}
 
 
-def main_train(model, args):
+def main_train(model: PepTransformerModel, args: Namespace) -> None:
     print(model)
     datamodule = datamodules.PeptideDataModule(
         batch_size=args.batch_size, base_dir=args.data_dir

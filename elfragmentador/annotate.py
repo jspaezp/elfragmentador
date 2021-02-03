@@ -206,13 +206,15 @@ def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"
 
 def is_sorted(lst, key=lambda x: x):
     for i, el in enumerate(lst[1:]):
-        if key(el) < key(lst[i]): # i is the index of the previous element
+        if key(el) < key(lst[i]):  # i is the index of the previous element
             return False
     return True
 
+
 def sort_if_needed(lst, key=lambda x: x):
     if not is_sorted(lst, key):
-        lst.sort(key = key)
+        lst.sort(key=key)
+
 
 def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"):
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
