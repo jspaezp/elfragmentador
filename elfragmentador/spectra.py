@@ -229,6 +229,13 @@ class Spectrum:
             self.tolerance,
             self.tolerance_unit,
         )
+        assert len(annots) > 0, f"No peaks were annotated in this spectrum {self.sequence}"
+        if len(annots) < 3:
+            warnings.warn(
+                f"Less than 3 ({len(annots)}) peaks were"
+                f" annotated for spectra {self.sequence}"
+            )
+
         self._annotated_peaks = annots
 
     def encode_spectra(self, dry=False) -> Union[List[int], List[str]]:
@@ -413,14 +420,22 @@ def encode_sptxt(
     nces = []
     orig = []
 
-    for i, spec in enumerate(tqdm(iter)):
+    i = 0
+    for spec in tqdm(iter):
+        i += 1
         if i >= max_spec:
             break
-        # TODO add offset to skip the first x sequences
+
+        # TODO add offset to skip the first x sequences and a way to make the selection random
         seq_encode, mod_encode = spec.encode_sequence()
         seq_encode, mod_encode = str(seq_encode), str(mod_encode)
 
-        spectra_encodings.append(str(spec.encode_spectra()))
+        try:
+            spectra_encodings.append(str(spec.encode_spectra()))
+        except AssertionError as e:
+            warnings.warn(f"Skipping because of error: {e}")
+            continue
+
         seq_encodings.append(seq_encode)
         mod_encodings.append(mod_encode)
         charges.append(spec.charge)
@@ -447,17 +462,21 @@ def encode_sptxt(
     if irt_fun is not None:
         raise NotImplementedError
     else:
+        """
         warnings.warn(
             "No calculation function passed for iRT,"
             " will replace the column with missing"
         )
+        """
         ret["iRT"] = np.nan
 
     return ret
 
 
-def sptxt_to_csv(filepath, output_path, *args, **kwargs):
+def sptxt_to_csv(filepath, output_path, filter_irt_peptides = True, *args, **kwargs):
     df = encode_sptxt(filepath=filepath, *args, **kwargs)
+    if filter_irt_peptides:
+        df = df[[x not in constants.IRT_PEPTIDES for x in df["Sequences"]]]
     df.to_csv(output_path, index=False)
 
 

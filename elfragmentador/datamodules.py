@@ -122,16 +122,10 @@ class PeptideDataset(torch.utils.data.Dataset):
             spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
         )
         self.spectra_encodings = spectra_encodings.float()
+        avg_peaks = torch.sum(spectra_encodings > 0.01, axis=1).float().mean()
 
         spectra_lengths = len(self.spectra_encodings[0])
         sequence_lengths = len(self.sequence_encodings[0])
-        print(
-            (
-                f"Dataset Initialized with {len(df)} entries."
-                f" Spectra length: {spectra_lengths}"
-                f" Sequence length: {sequence_lengths}"
-            )
-        )
 
         self.norm_irts = (
             torch.Tensor(self.df[name_match["iRT"]] / 100).float().unsqueeze(1)
@@ -163,6 +157,14 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         self.charges = torch.Tensor(self.df[name_match["Ch"]]).long().unsqueeze(1)
 
+        print(
+            (
+                f"Dataset Initialized with {len(df)} entries."
+                f" Sequence length: {sequence_lengths}"
+                f" Spectra length: {spectra_lengths}"
+                f"; Average Peaks/spec: {avg_peaks}"
+            )
+        )
         print(">>> Done Initializing dataset\n")
 
     @staticmethod
@@ -221,11 +223,11 @@ class PeptideDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         base_dir = Path(base_dir)
 
-        train_path = base_dir / "combined_train.csv"
-        val_path = base_dir / "combined_val.csv"
+        train_path = list(base_dir.glob("*train*.csv"))[0]
+        val_path = list(base_dir.glob("*val*.csv"))[0]
 
-        assert train_path.exists(), f"File '{train_path}' not found"
-        assert val_path.exists(), f"File '{val_path}' not found"
+        assert train_path.exists(), f"Train File '{train_path}' not found"
+        assert val_path.exists(), f"Val File '{val_path}' not found"
 
         train_df = pd.read_csv(str(train_path))
         train_df = filter_df_on_sequences(train_df)

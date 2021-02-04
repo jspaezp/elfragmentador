@@ -47,6 +47,12 @@ def build_train_parser() -> ArgumentParser:
         default="5",
         help="Patience for early termination",
     )
+    trainer_parser.add_argument(
+        "--from_checkpoint",
+        type=str,
+        default=None,
+        help="The path of a checkpoint to copy weights from before training",
+    )
 
     # add model specific args
     model_parser = model.PepTransformerModel.add_model_specific_args(model_parser)
