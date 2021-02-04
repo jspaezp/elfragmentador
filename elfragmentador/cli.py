@@ -3,8 +3,15 @@ import argparse
 from argparse import (
     ArgumentDefaultsHelpFormatter,
     ArgumentParser,
-    BooleanOptionalAction,
 )
+
+try:
+    from argparse import BooleanOptionalAction
+except ImportError:
+    # Exception for py <3.8 compatibility ...
+    BooleanOptionalAction = 'store_true'
+
+
 import warnings
 
 import pytorch_lightning as pl
