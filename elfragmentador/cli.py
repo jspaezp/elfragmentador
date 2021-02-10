@@ -9,7 +9,7 @@ try:
     from argparse import BooleanOptionalAction
 except ImportError:
     # Exception for py <3.8 compatibility ...
-    BooleanOptionalAction = 'store_true'
+    BooleanOptionalAction = "store_true"
 
 
 import warnings
@@ -30,12 +30,41 @@ def convert_sptxt():
         nargs="+",
         help="Input file(s) to convert (sptxt)",
     )
-    parser.add_argument("--warn", default=False, action=BooleanOptionalAction, help="Wether to show warnings or not")
-    parser.add_argument("--filter_irts", default=True, action=BooleanOptionalAction, help="Wether to remove sequences that match procal and biognosys iRT peptides")
+    parser.add_argument(
+        "--warn",
+        default=False,
+        action=BooleanOptionalAction,
+        help="Wether to show warnings or not",
+    )
+    parser.add_argument(
+        "--keep_irts",
+        default=False,
+        action=BooleanOptionalAction,
+        help="Wether to remove sequences that match procal and biognosys iRT peptides",
+    )
+    parser.add_argument(
+        "--min_peaks",
+        default=3,
+        type=int,
+        help="Minimum number of annotated peaks required to keep the spectrum",
+    )
+    parser.add_argument(
+        "--min_delta_ascore",
+        default=20,
+        type=int,
+        help="Minimum ascore required to keep a spectrum",
+    )
 
     args = parser.parse_args()
 
     print([x.name for x in args.file])
+    converter = lambda fname, outname: sptxt_to_csv(
+        fname,
+        outname,
+        filter_irt_peptides=args.keep_irts,
+        min_delta_ascore=args.min_delta_ascore,
+        min_peaks=args.min_peaks,
+    )
 
     for f in args.file:
         out_file = f.name + ".csv"
@@ -47,10 +76,15 @@ def convert_sptxt():
         else:
             print(f"Converting '{f.name}' to '{out_file}'")
             if args.warn:
-                sptxt_to_csv(f.name, out_file, filter_irt_peptides=args.filter_irts)
+                print("Warning stuff ...")
+                converter(f.name, out_file)
             else:
-                with warnings.catch_warnings():
-                    sptxt_to_csv(f.name, out_file, filter_irt_peptides=args.filter_irts)
+                with warnings.catch_warnings(record=True) as c:
+                    print("Not Warning stuff ...")
+                    converter(f.name, out_file)
+
+                if len(c) > 0:
+                    warnings.warn(f"Last Error Message of {len(c)}: '{c[-1].message}'")
 
 
 def evaluate_checkpoint():

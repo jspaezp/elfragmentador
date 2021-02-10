@@ -8,6 +8,11 @@ from pytorch_lightning.loggers import WandbLogger
 from elfragmentador import datamodules, model
 import elfragmentador as tp
 from elfragmentador.model import PepTransformerModel
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
+from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
+from pytorch_lightning.loggers.wandb import WandbLogger
+from typing import Dict, List, Union
 
 
 def build_train_parser() -> ArgumentParser:
@@ -76,7 +81,14 @@ def build_train_parser() -> ArgumentParser:
     return parser
 
 
-def get_callbacks(run_name, termination_patience=20, wandb_project="rttransformer"):
+def get_callbacks(
+    run_name: str, termination_patience: int = 20, wandb_project: str = "rttransformer"
+) -> Dict[
+    str,
+    Union[
+        WandbLogger, List[Union[LearningRateMonitor, ModelCheckpoint, EarlyStopping]]
+    ],
+]:
     complete_run_name = f"{tp.__version__}_{run_name}"
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()

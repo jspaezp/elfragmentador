@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import warnings
 from collections import namedtuple
 from pathlib import PosixPath, Path
-from typing import Union
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from pandas.core.frame import DataFrame
@@ -13,6 +15,7 @@ import pytorch_lightning as pl
 
 from elfragmentador import constants, spectra
 from argparse import _ArgumentGroup
+from torch import Tensor
 
 TrainBatch = namedtuple(
     "TrainBatch",
@@ -20,7 +23,12 @@ TrainBatch = namedtuple(
 )
 
 
-def match_lengths(nested_list, max_len, name="items", verbose=True):
+def match_lengths(
+    nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
+    max_len: int,
+    name: str = "items",
+    verbose: bool = True,
+) -> Tensor:
     lengths = [len(x) for x in nested_list]
     unique_lengths = set(lengths)
     match_max = [1 for x in lengths if x == max_len]
@@ -41,7 +49,7 @@ def match_lengths(nested_list, max_len, name="items", verbose=True):
     return out
 
 
-def match_colnames(df):
+def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     def match_col(string1, string2, colnames, match_mode="in", combine_mode=None):
         m = {
             "in": lambda q, t: q in t,
@@ -170,7 +178,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     @staticmethod
     def from_sptxt(
         filepath: str, max_spec: float = 1e6, filter_df: bool = True, *args, **kwargs
-    ):  # Adding this type hint breaks the code bause the class is not yet defined... fix -> PeptideDataset
+    ) -> PeptideDataset:
         df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
         if filter_df:
             df = filter_df_on_sequences(df)
@@ -217,21 +225,23 @@ def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
 
 class PeptideDataModule(pl.LightningDataModule):
     def __init__(
-        self, batch_size: int = 64, base_dir: Union[PosixPath, str] = "."
+        self, batch_size: int = 64, base_dir: Union[str, PosixPath] = "."
     ) -> None:
         super().__init__()
         self.batch_size = batch_size
         base_dir = Path(base_dir)
 
-        train_path = list(base_dir.glob("*train*.csv"))[0]
-        val_path = list(base_dir.glob("*val*.csv"))[0]
+        train_path = list(base_dir.glob("*train*.csv"))
+        val_path = list(base_dir.glob("*val*.csv"))
 
-        assert train_path.exists(), f"Train File '{train_path}' not found"
-        assert val_path.exists(), f"Val File '{val_path}' not found"
+        assert (
+            len(train_path) > 0
+        ), f"Train File '{train_path}' not found in '{base_dir}'"
+        assert len(val_path) > 0, f"Val File '{val_path}' not found in '{base_dir}'"
 
-        train_df = pd.read_csv(str(train_path))
+        train_df = pd.concat([pd.read_csv(str(x)) for x in train_path])
         train_df = filter_df_on_sequences(train_df)
-        val_df = pd.read_csv(str(val_path))
+        val_df = pd.concat([pd.read_csv(str(x)) for x in val_path])
         val_df = filter_df_on_sequences(val_df)
 
         self.train_df = train_df

@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.datamodules import PeptideDataset
-from numpy import ndarray
+from numpy import float32, float64, ndarray
+from pandas.core.series import Series
+from typing import Dict, List, Tuple, Union
 
 
 def build_evaluate_parser() -> ArgumentParser:
@@ -41,15 +43,24 @@ def build_evaluate_parser() -> ArgumentParser:
 
 # Given a model checkpoint and some input data, parse the data and return metrics, also a csv with the report
 def evaluate_checkpoint(
-    checkpoint_path: str, sptxt_path: str, batch_size=4, device="cpu", out_csv=None, max_spec=1e6
+    checkpoint_path: str,
+    sptxt_path: str,
+    batch_size=4,
+    device="cpu",
+    out_csv=None,
+    max_spec=1e6,
 ):
     model = PepTransformerModel.load_from_checkpoint(checkpoint_path=checkpoint_path)
     model.eval()
 
     out, summ_out = evaluate_on_sptxt(
-        model, filepath=sptxt_path, batch_size=batch_size, device=device, max_spec=max_spec
+        model,
+        filepath=sptxt_path,
+        batch_size=batch_size,
+        device=device,
+        max_spec=max_spec,
     )
-    out = pd.DataFrame(out).sort_values(['Spectra_Similarity']).reset_index()
+    out = pd.DataFrame(out).sort_values(["Spectra_Similarity"]).reset_index()
     print(summ_out)
     print(out)
     if out_csv is not None:
@@ -65,8 +76,11 @@ def evaluate_on_sptxt(model, filepath, batch_size=4, device="cpu", *args, **kwar
 
 
 def evaluate_on_dataset(
-    model: PepTransformerModel, dataset: PeptideDataset, batch_size=4, device="cpu"
-):
+    model: PepTransformerModel,
+    dataset: PeptideDataset,
+    batch_size: int = 4,
+    device: str = "cpu",
+) -> Tuple[Dict[str, Union[Series, ndarray]], Dict[str, Union[float64, float32]]]:
     dl = torch.utils.data.DataLoader(dataset, batch_size)
     cs = torch.nn.CosineSimilarity()
 
@@ -132,7 +146,9 @@ def norm(x: ndarray) -> ndarray:
 # Polynomial Regression
 # Implementation from:
 # https://stackoverflow.com/questions/893657/
-def polyfit(x, y, degree=1):
+def polyfit(
+    x: ndarray, y: ndarray, degree: int = 1
+) -> Dict[str, Union[List[float], float64]]:
     """Fits a polynomial fit"""
     results = {}
 

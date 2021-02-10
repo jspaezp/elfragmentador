@@ -3,6 +3,7 @@ import pandas as pd
 from elfragmentador import constants, annotate
 from pandas.core.frame import DataFrame
 from torch import Tensor
+from typing import Dict, List, Optional, Union
 
 sequence_pair = namedtuple("SequencePair", "aas, mods")
 
@@ -43,7 +44,9 @@ def encode_mod_seq(seq):
     return sequence_pair(seq_out, mod_out)
 
 
-def decode_mod_seq(seq_encoding, mod_encoding=None):
+def decode_mod_seq(
+    seq_encoding: List[int], mod_encoding: Optional[List[int]] = None
+) -> str:
     out = []
 
     if mod_encoding is None:
@@ -60,7 +63,9 @@ def decode_mod_seq(seq_encoding, mod_encoding=None):
     return "".join(out)
 
 
-def get_fragment_encoding_labels(annotated_peaks=None):
+def get_fragment_encoding_labels(
+    annotated_peaks: Optional[Union[Dict[str, int], Dict[str, float]]] = None
+) -> Union[List[Union[int, float]], List[int], List[str]]:
     """
     Gets either the laels or an sequence that encodes a spectra
 
@@ -95,7 +100,7 @@ def get_fragment_encoding_labels(annotated_peaks=None):
 
 def decode_fragment_tensor(
     sequence: str,
-    tensor: Tensor,
+    tensor: Union[List[int], Tensor],
 ) -> DataFrame:
     """
     Returns a data frame with annotations from sequence

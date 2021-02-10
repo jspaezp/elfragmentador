@@ -3,10 +3,13 @@ from itertools import permutations
 from elfragmentador.annotate import peptide_parser
 
 
-def _get_mod_isoforms(seq: str, mod: str, aas: str):
+def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
     # mod = "PHOSPHO"
     # seq = "S[PHOSPHO]AS"
     # aas = "STY"
+    if mod not in seq:
+        return [seq]
+
     parsed_seq = list(peptide_parser(seq))
     stripped_seq = [x.replace(f"[{mod}]", "") for x in parsed_seq]
 
@@ -16,13 +19,23 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str):
     placeholder_seq = "".join(placeholder_seq)
     mod_sampler = [x[1:] for x in parsed_seq if any([x[:1] == y for y in aas])]
 
-    out_seqs = [
-        placeholder_seq.format(*x) for x in permutations(mod_sampler, len(mod_sampler))
-    ]
+    if len(set(mod_sampler)) == 1:
+        perm_iter = [mod_sampler]
+    else:
+        perm_iter = list(set(permutations(mod_sampler, len(mod_sampler))))
+
+    out_seqs = []
+
+    for i, x in enumerate(perm_iter):
+        out_seqs.append(placeholder_seq.format(*x))
+        if i > 1000:
+            print(mod_sampler)
+            raise ValueError
+
     return list(set(out_seqs))
 
 
-def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]):
+def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]) -> List[str]:
     # seq = "M[OXIDATION]YPEPT[PHOSPHO]MIDES"
     # mods_list = ["PHOSPHO", "OXIDATION"]
     # aas_list = ["STY", "M"]

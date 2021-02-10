@@ -7,7 +7,7 @@ And released under an Apache 2.0 license
 
 import collections
 from collections import OrderedDict, defaultdict
-from typing import Iterator
+from typing import Callable, Dict, List, Tuple, Union, Iterator
 import warnings
 
 import numpy
@@ -16,7 +16,18 @@ from numpy import bool_, float64, ndarray
 from elfragmentador import constants
 
 
-def peptide_parser(p: str) -> Iterator[str]:
+def solve_alias(x):
+    if x == "n[43]":
+        # There has to be a better way to handle this ...
+        return x
+
+    x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
+    x = x if len(x) != 3 else x[:1]  # Takes care of C[]
+
+    return x
+
+
+def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
     """
     Parses maxquant formatted peptide strings
 
@@ -48,7 +59,8 @@ def peptide_parser(p: str) -> Iterator[str]:
                 nexts.append(p_.index(an))
             j = min(nexts)
             offset = i + j + 3
-            yield p[i:offset]
+            out = p[i:offset]
+            yield solve_alias(out) if solve_aliases else out
             i = offset
         else:
             yield p[i]
@@ -63,7 +75,7 @@ def get_precursor_mz(peptide: str, charge: int):
     raise NotImplementedError
 
 
-def get_forward_backward(peptide: str):
+def get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
     """
     Calculates masses forward and backwards from aminoacid
     sequences
@@ -88,7 +100,7 @@ def get_mz(sum_: float64, ion_offset: float, charge: int) -> float64:
     return (sum_ + ion_offset + charge * constants.PROTON) / charge
 
 
-def get_mzs(cumsum, ion_type, z):
+def get_mzs(cumsum: ndarray, ion_type: str, z: int) -> List[float64]:
     # return (cumsum[:-1] + constants.ION_OFFSET[ion_type] + (z * constants.PROTON))/z
     return [get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-1]]
 
@@ -132,7 +144,7 @@ def get_annotation(
     return collections.OrderedDict(sorted(all_.items(), key=lambda t: t[0]))
 
 
-def get_peptide_ions(aa_seq):
+def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
     out = _get_peptide_ions(
         aa_seq,
         charges=range(1, constants.MAX_FRAG_CHARGE + 1),
@@ -141,7 +153,11 @@ def get_peptide_ions(aa_seq):
     return out
 
 
-def _get_peptide_ions(aa_seq, charges=range(1, 5), ion_types="yb"):
+def _get_peptide_ions(
+    aa_seq: str,
+    charges: Union[List[int], range] = range(1, 5),
+    ion_types: Union[str, List[str]] = "yb",
+) -> Dict[str, float64]:
     """
 
     Examples
@@ -204,19 +220,41 @@ def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"
     return annots
 
 
-def is_sorted(lst, key=lambda x: x):
+def is_sorted(
+    lst: Union[
+        List[List[Union[int, float]]],
+        List[List[float]],
+        List[List[Union[str, float64]]],
+        List[List[Union[float64, int]]],
+    ],
+    key: Callable = lambda x: x,
+) -> bool:
     for i, el in enumerate(lst[1:]):
         if key(el) < key(lst[i]):  # i is the index of the previous element
             return False
     return True
 
 
-def sort_if_needed(lst, key=lambda x: x):
+def sort_if_needed(
+    lst: Union[
+        List[List[Union[int, float]]],
+        List[List[float]],
+        List[List[Union[str, float64]]],
+        List[List[Union[float64, int]]],
+    ],
+    key: Callable = lambda x: x,
+) -> None:
     if not is_sorted(lst, key):
         lst.sort(key=key)
 
 
-def annotate_peaks2(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"):
+def annotate_peaks2(
+    theoretical_peaks: Dict[str, float64],
+    mzs: Union[List[float64], List[float]],
+    intensities: Union[List[float], List[int]],
+    tolerance: int = 25,
+    unit: str = "ppm",
+) -> Dict[str, float]:
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
 
     mz_pairs = [[m, i] for m, i in zip(mzs, intensities)]
