@@ -68,6 +68,7 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 
 - Add neutral losses specific to some PTMs
 - consider if using pyteomics as  a backend for most ms-related tasks
+- Translate annotation functions (getting ions) to numpy/torch
 
 #### If I get time
 

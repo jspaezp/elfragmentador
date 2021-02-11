@@ -10,7 +10,7 @@ MW: 1516.7525
 PrecursorMZ: 505.5842
 Status: Normal
 FullName: K.AAAT[181]PAKKTVT[181]PAK.A/3 (HCD)
-Comment: AvePrecursorMz=505.8650 BinaryFileOffset=620 CollisionEnergy=28.0 FracUnassigned=0.65,3/5;0.61,12/20;0.54,93/150 MassDiff=0.0003 Mods=2/3,T,Phospho/10,T,Phospho NAA=14 NMC=2 NTT=2 Nreps=1/1 OrigMaxIntensity=9.5e+05 Parent=505.584 Pep=Tryptic PrecursorIntensity=3.2e+07 Prob=0.9967 Protein=1/sp|P19338|NUCL_HUMAN RawSpectrum=20171122_QE3_nLC7_AH_LFQrep2_short90_C2.03163.03163 RetentionTime=605.4,605.4,605.4 Sample=1/_data_interact-20171122_QE3_nLC7_AH_LFQrep2_short90_C2,1,1 Se=1^C1:pb=0.9967/0,fv=2.0933/0 Spec=CONSENSUS TotalIonCurrent=1.8e+07
+Comment: AvePrecursorMz=505.8650 BinaryFileOffset=620 CollisionEnergy=28.0 FracUnassigned=0.65,3/5;0.61,12/20;0.54,93/150 MassDiff=0.0003 Mods=2/3,T,Phospho/10,T,Phospho NAA=14 NMC=2 NTT=2 Nreps=1/1 OrigMaxIntensity=9.5e+05 Parent=505.584 Pep=Tryptic PrecursorIntensity=3.2e+07 Prob=0.9967 Protein=1/sp|P19338|NUCL_HUMAN RawSpectrum=20171122_QE3_nLC7_AH_LFQrep2_short90_C2.03163.03163 RetentionTime=605.4,605.4,605.4 iRT=605.4,605.4,605.4 Sample=1/_data_interact-20171122_QE3_nLC7_AH_LFQrep2_short90_C2,1,1 Se=1^C1:pb=0.9967/0,fv=2.0933/0 Spec=CONSENSUS TotalIonCurrent=1.8e+07
 NumPeaks: 150
 101.0713	299.0	y2-17^2/0.006	
 110.0717	1864.3	?	

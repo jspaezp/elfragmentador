@@ -1,5 +1,5 @@
 import math
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import Namespace, ArgumentParser, ArgumentDefaultsHelpFormatter
 
 import torch
 import pytorch_lightning as pl
@@ -7,9 +7,15 @@ from pytorch_lightning.loggers import WandbLogger
 
 from elfragmentador import datamodules, model
 import elfragmentador as tp
+from elfragmentador.model import PepTransformerModel
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
+from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
+from pytorch_lightning.loggers.wandb import WandbLogger
+from typing import Dict, List, Union
 
 
-def build_train_parser():
+def build_train_parser() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
 
     program_parser = parser.add_argument_group(
@@ -31,7 +37,7 @@ def build_train_parser():
     program_parser.add_argument(
         "--run_name",
         type=str,
-        default=f"prosit_transformer",
+        default=f"ElFragmentador",
         help="Name to be given to the run (logging)",
     )
     program_parser.add_argument(
@@ -45,6 +51,12 @@ def build_train_parser():
         type=int,
         default="5",
         help="Patience for early termination",
+    )
+    trainer_parser.add_argument(
+        "--from_checkpoint",
+        type=str,
+        default=None,
+        help="The path of a checkpoint to copy weights from before training",
     )
 
     # add model specific args
@@ -69,7 +81,14 @@ def build_train_parser():
     return parser
 
 
-def get_callbacks(run_name, termination_patience=20, wandb_project="rttransformer"):
+def get_callbacks(
+    run_name: str, termination_patience: int = 20, wandb_project: str = "rttransformer"
+) -> Dict[
+    str,
+    Union[
+        WandbLogger, List[Union[LearningRateMonitor, ModelCheckpoint, EarlyStopping]]
+    ],
+]:
     complete_run_name = f"{tp.__version__}_{run_name}"
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()
@@ -96,7 +115,7 @@ def get_callbacks(run_name, termination_patience=20, wandb_project="rttransforme
     return {"logger": wandb_logger, "callbacks": [lr_monitor, checkpointer, terminator]}
 
 
-def main_train(model, args):
+def main_train(model: PepTransformerModel, args: Namespace) -> None:
     print(model)
     datamodule = datamodules.PeptideDataModule(
         batch_size=args.batch_size, base_dir=args.data_dir

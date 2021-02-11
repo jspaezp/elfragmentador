@@ -1,10 +1,10 @@
 try:
-    from typing import Optional, Union, Literal
+    from typing import Dict, List, Tuple, Optional, Union, Literal
 
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
-    from typing import Union, NewType
+    from typing import Dict, List, Tuple, Optional, Union, NewType
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
@@ -17,12 +17,18 @@ import torch
 from torch import Tensor, nn
 import pytorch_lightning as pl
 
-from argparse import ArgumentParser
+from argparse import _ArgumentGroup, ArgumentParser
 
 import elfragmentador
 from elfragmentador import constants
 from elfragmentador import encoding_decoding
 from elfragmentador.datamodules import TrainBatch
+from torch.optim.adamw import AdamW
+from torch.optim.lr_scheduler import (
+    CosineAnnealingWarmRestarts,
+    OneCycleLR,
+    ReduceLROnPlateau,
+)
 
 PredictionResults = namedtuple("PredictionResults", "irt spectra")
 
@@ -84,7 +90,7 @@ class ConcatenationEncoder(torch.nn.Module):
         self,
         dims_add: int,
         dropout: float = 0.1,
-        max_val: float = 200.0,
+        max_val: Union[float, int] = 200.0,
         static_size: bool = False,
     ) -> None:
         super().__init__()
@@ -210,10 +216,10 @@ class PositionalEncoding(torch.nn.Module):
 
 
 class CosineLoss(torch.nn.CosineSimilarity):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def forward(self, truth, prediction):
+    def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
         out = super().forward(truth, prediction)
         out = 1 - out
         return out
@@ -365,8 +371,8 @@ class PepTransformerModel(pl.LightningModule):
         dropout: float = 0.2,
         lr: float = 1e-4,
         scheduler: str = "plateau",
-        lr_ratio: float = 200,
-        steps_per_epoch=None,
+        lr_ratio: Union[float, int] = 200,
+        steps_per_epoch: None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -412,12 +418,12 @@ class PepTransformerModel(pl.LightningModule):
 
     def forward(
         self,
-        src: torch.long,
-        nce: torch.float,
-        mods: torch.long = None,
-        charge: torch.long = None,
+        src: Tensor,
+        nce: Tensor,
+        mods: Optional[Tensor] = None,
+        charge: Optional[Tensor] = None,
         debug: bool = False,
-    ):
+    ) -> PredictionResults:
         """
         Parameters
         ----------
@@ -479,7 +485,9 @@ class PepTransformerModel(pl.LightningModule):
 
         return PredictionResults(rt_output, spectra_output)
 
-    def batch_forward(self, inputs, debug=False):
+    def batch_forward(
+        self, inputs: TrainBatch, debug: bool = False
+    ) -> PredictionResults:
         def unsqueeze_if_needed(x, dims):
             if len(x.shape) != dims:
                 if debug:
@@ -499,7 +507,9 @@ class PepTransformerModel(pl.LightningModule):
         )
         return out
 
-    def predict_from_seq(self, seq: str, charge: int, nce: float, debug: bool = False):
+    def predict_from_seq(
+        self, seq: str, charge: int, nce: float, debug: bool = False
+    ) -> Tuple[Tensor, Tensor]:
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
@@ -520,7 +530,7 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def add_model_specific_args(parser: ArgumentParser) -> ArgumentParser:
+    def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
         parser.add_argument(
             "--num_queries",
             default=150,
@@ -582,7 +592,13 @@ class PepTransformerModel(pl.LightningModule):
         )
         return parser
 
-    def configure_optimizers(self):
+    def configure_optimizers(
+        self,
+    ) -> Union[
+        Tuple[List[AdamW], List[Dict[str, Union[ReduceLROnPlateau, str]]]],
+        Tuple[List[AdamW], List[Dict[str, Union[CosineAnnealingWarmRestarts, str]]]],
+        Tuple[List[AdamW], List[Dict[str, Union[OneCycleLR, str]]]],
+    ]:
         opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
 
         if self.scheduler == "plateau":
@@ -644,7 +660,7 @@ class PepTransformerModel(pl.LightningModule):
 
         return [opt], [scheduler_dict]
 
-    def _step(self, batch: TrainBatch, batch_idx):
+    def _step(self, batch: TrainBatch, batch_idx: int) -> Dict[str, Tensor]:
         yhat_irt, yhat_spectra = self.batch_forward(batch)
         yhat_irt = yhat_irt[~batch.norm_irt.isnan()]
         norm_irt = batch.norm_irt[~batch.norm_irt.isnan()]
@@ -674,7 +690,9 @@ class PepTransformerModel(pl.LightningModule):
 
         return out
 
-    def training_step(self, batch, batch_idx=None):
+    def training_step(
+        self, batch: TrainBatch, batch_idx: Optional[int] = None
+    ) -> Dict[str, Tensor]:
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"t_" + k: v for k, v in step_out.items()}
         log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
@@ -686,7 +704,9 @@ class PepTransformerModel(pl.LightningModule):
 
         return {"loss": step_out["l"]}
 
-    def validation_step(self, batch, batch_idx=None):
+    def validation_step(
+        self, batch: TrainBatch, batch_idx: Optional[int] = None
+    ) -> None:
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"v_" + k: v for k, v in step_out.items()}
 

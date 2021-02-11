@@ -8,3 +8,5 @@ dist/**
 lightning_logs/**
 settings.json
 .coverage
+htmlcov/**
+.tox/**

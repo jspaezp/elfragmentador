@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import warnings
 from collections import namedtuple
 from pathlib import PosixPath, Path
-from typing import Union
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from pandas.core.frame import DataFrame
@@ -12,6 +14,8 @@ from torch.utils.data.dataloader import DataLoader
 import pytorch_lightning as pl
 
 from elfragmentador import constants, spectra
+from argparse import _ArgumentGroup
+from torch import Tensor
 
 TrainBatch = namedtuple(
     "TrainBatch",
@@ -19,7 +23,12 @@ TrainBatch = namedtuple(
 )
 
 
-def match_lengths(nested_list, max_len, name="items", verbose=True):
+def match_lengths(
+    nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
+    max_len: int,
+    name: str = "items",
+    verbose: bool = True,
+) -> Tensor:
     lengths = [len(x) for x in nested_list]
     unique_lengths = set(lengths)
     match_max = [1 for x in lengths if x == max_len]
@@ -40,7 +49,7 @@ def match_lengths(nested_list, max_len, name="items", verbose=True):
     return out
 
 
-def match_colnames(df):
+def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     def match_col(string1, string2, colnames, match_mode="in", combine_mode=None):
         m = {
             "in": lambda q, t: q in t,
@@ -121,16 +130,10 @@ class PeptideDataset(torch.utils.data.Dataset):
             spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
         )
         self.spectra_encodings = spectra_encodings.float()
+        avg_peaks = torch.sum(spectra_encodings > 0.01, axis=1).float().mean()
 
         spectra_lengths = len(self.spectra_encodings[0])
         sequence_lengths = len(self.sequence_encodings[0])
-        print(
-            (
-                f"Dataset Initialized with {len(df)} entries."
-                f" Spectra length: {spectra_lengths}"
-                f" Sequence length: {sequence_lengths}"
-            )
-        )
 
         self.norm_irts = (
             torch.Tensor(self.df[name_match["iRT"]] / 100).float().unsqueeze(1)
@@ -162,10 +165,20 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         self.charges = torch.Tensor(self.df[name_match["Ch"]]).long().unsqueeze(1)
 
+        print(
+            (
+                f"Dataset Initialized with {len(df)} entries."
+                f" Sequence length: {sequence_lengths}"
+                f" Spectra length: {spectra_lengths}"
+                f"; Average Peaks/spec: {avg_peaks}"
+            )
+        )
         print(">>> Done Initializing dataset\n")
 
     @staticmethod
-    def from_sptxt(filepath, max_spec=1e6, filter_df=True, *args, **kwargs):
+    def from_sptxt(
+        filepath: str, max_spec: float = 1e6, filter_df: bool = True, *args, **kwargs
+    ) -> PeptideDataset:
         df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
         if filter_df:
             df = filter_df_on_sequences(df)
@@ -175,7 +188,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     def __len__(self) -> int:
         return len(self.df)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> TrainBatch:
         # encoded_pept = torch.Tensor(eval(self.df.iloc[index].Encoding)).long().T
         # norm_irt = torch.Tensor([self.df.iloc[index].mIRT / 100]).float()
         encoded_sequence = self.sequence_encodings[index]
@@ -196,7 +209,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         return out
 
 
-def filter_df_on_sequences(df, name=""):
+def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     name_match = match_colnames(df)
     print(list(df))
     print(f"Removing Large sequences, currently {name}: {len(df)}")
@@ -212,28 +225,30 @@ def filter_df_on_sequences(df, name=""):
 
 class PeptideDataModule(pl.LightningDataModule):
     def __init__(
-        self, batch_size: int = 64, base_dir: Union[PosixPath, str] = "."
+        self, batch_size: int = 64, base_dir: Union[str, PosixPath] = "."
     ) -> None:
         super().__init__()
         self.batch_size = batch_size
         base_dir = Path(base_dir)
 
-        train_path = base_dir / "combined_train.csv"
-        val_path = base_dir / "combined_val.csv"
+        train_path = list(base_dir.glob("*train*.csv"))
+        val_path = list(base_dir.glob("*val*.csv"))
 
-        assert train_path.exists(), f"File '{train_path}' not found"
-        assert val_path.exists(), f"File '{val_path}' not found"
+        assert (
+            len(train_path) > 0
+        ), f"Train File '{train_path}' not found in '{base_dir}'"
+        assert len(val_path) > 0, f"Val File '{val_path}' not found in '{base_dir}'"
 
-        train_df = pd.read_csv(str(train_path))
+        train_df = pd.concat([pd.read_csv(str(x)) for x in train_path])
         train_df = filter_df_on_sequences(train_df)
-        val_df = pd.read_csv(str(val_path))
+        val_df = pd.concat([pd.read_csv(str(x)) for x in val_path])
         val_df = filter_df_on_sequences(val_df)
 
         self.train_df = train_df
         self.val_df = val_df
 
     @staticmethod
-    def add_model_specific_args(parser):
+    def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
         return parser
@@ -242,7 +257,7 @@ class PeptideDataModule(pl.LightningDataModule):
         self.train_dataset = PeptideDataset(self.train_df)
         self.val_dataset = PeptideDataset(self.val_df)
 
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.train_dataset, num_workers=0, batch_size=self.batch_size, shuffle=True
         )

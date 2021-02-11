@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "elfragmentador"
-version = "0.17.0"
+version = "0.20.0"
 description = "Predicts peptide fragmentations using transformers"
 authors = ["J. Sebastian Paez <jspaezp@gmail.com>"]
 license = "Apache 2.0"
 readme = "README.md"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/jspaezp/elfragmentador/issues"
 
 [tool.poetry.dependencies]
 python = "^3.6.9"
