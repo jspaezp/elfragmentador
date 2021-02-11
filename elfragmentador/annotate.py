@@ -54,7 +54,7 @@ def peptide_parser(p: str) -> Iterator[str]:
 
 def get_precursor_mz(peptide: str, charge: int):
     """
-    Calcultes the theoretical mass of a precursor peptide
+    Calculates the theoretical mass of a precursor peptide
     (assumes positive mode)
     """
     raise NotImplementedError
@@ -115,7 +115,7 @@ def get_annotation(
         elif ion_type in constants.BACKWARD:
             cummass = backward
         else:
-            raise ValueError("unkown ion_type: {}".format(ion_type))
+            raise ValueError("unknown ion_type: {}".format(ion_type))
         masses = get_mzs(cummass, ion_type, charge)
         d = {tmp.format(ion_type, i + 1): m for i, m in enumerate(masses)}
         all_.update(d)
@@ -184,8 +184,6 @@ def annotate_peaks(theoretical_peaks, mzs, intensities, tolerance=25, unit="ppm"
     annots = {}
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
 
-    # TODO optimize this section of the function ...
-    # and actualy write a test for it working ...
     for mz, inten in zip(mzs, intensities):
         matching = {
             k: inten
