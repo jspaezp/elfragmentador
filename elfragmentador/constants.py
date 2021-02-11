@@ -2,7 +2,7 @@
 Defines the constants that are used in the rest of the project.
 
 Such as the masses of aminoacids, supported modifications, length of the encodings,
-maximum length supported, labes and order of the encoded ions ...
+maximum length supported, labels and order of the encoded ions ...
 
 Greatly inspired/copied from:
 https://github.com/kusterlab/prosit/blob/master/prosit/constants.py
@@ -111,7 +111,7 @@ MOD_PEPTIDE_ALIASES = {
 }
 
 # TERMINAL_ACETYLATIONS
-MOD_PEPTIDE_ALIASES.update({ aa + "[nACETYL]" : "ACETYL" for aa in AMINO_ACID })
+MOD_PEPTIDE_ALIASES.update({aa + "[nACETYL]": "ACETYL" for aa in AMINO_ACID})
 
 MOD_AA_MASSES = AMINO_ACID.copy()
 MOD_AA_MASSES.update(

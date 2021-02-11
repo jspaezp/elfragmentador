@@ -7,9 +7,7 @@ import warnings
 from typing import Optional, List, Union
 from pathlib import Path
 
-from elfragmentador import constants
-from elfragmentador import annotate
-from elfragmentador import encoding_decoding
+from elfragmentador import constants, annotate, encoding_decoding
 from elfragmentador.encoding_decoding import get_fragment_encoding_labels
 
 from pandas.core.frame import DataFrame
@@ -35,7 +33,7 @@ class Spectrum:
         raw_spectra=None,
     ):
         """
-        Representation of spectra with methods to conver from and to encodings.
+        Representation of spectra with methods to convert from and to encodings.
 
         This class provides a way to represent spectra and its associated peptide sequence,
         as well as multiple methods to convert these information to the encoding required
@@ -44,7 +42,7 @@ class Spectrum:
         Parameters
         ----------
         sequence : str
-            String representing the aminoacid sequence with or without modidications
+            String representing the aminoacid sequence with or without modifications
         charge : int
             Charge of the precursor associated with the spectrum
         parent_mz : float
@@ -325,7 +323,7 @@ class Spectrum:
         """
         __repr__ Represents the summary of the spectrum for the console.
 
-        it is implicitly called by print but allows nice prining of the SPectrum
+        it is implicitly called by print but allows nice printing of the Spectrum
         objects in the console for debugging purposes mainly.
 
         Returns
@@ -491,7 +489,7 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
                     try:
                         yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
                     except AssertionError as e:
-                        warnings.warn(f"Skipping spectra with assertion error: {e}") 
+                        warnings.warn(f"Skipping spectra with assertion error: {e}")
                         pass
                     spectrum_section = []
             else:
@@ -501,7 +499,7 @@ def read_sptxt(filepath: Path, *args, **kwargs) -> List[Spectrum]:
             try:
                 yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
             except AssertionError as e:
-                warnings.warn(f"Skipping spectra with assertion error: {e}") 
+                warnings.warn(f"Skipping spectra with assertion error: {e}")
 
 
 def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
@@ -546,7 +544,9 @@ def _parse_spectra_sptxt(x, instrument=None, analyzer="FTMS", *args, **kwargs):
             FutureWarning,
         )
 
-    raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get("BestRawSpectrum", None)
+    raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get(
+        "BestRawSpectrum", None
+    )
 
     # Peaks Handling
     peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]

@@ -29,6 +29,31 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 - Full implementation of a transformer in pytorch with the explanation of each part: <https://nlp.seas.harvard.edu/2018/04/03/attention.html>
 - Official pytorch implementation of the transformer: <https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html>
 
+## "Common" questions
+
+- What scale are the retention times predicted.
+  - Out of the model it uses a scaled version of the Biognosys retention time
+    scale, so if using the base model, you will need to multiply by 100 and then
+    you will get something compatible with the iRT kit.
+- Is it any good?
+  - Well ... yes but if you want to see if it is good for you own data I have
+    added an API to test the model on a spectral library (made with spectrast).
+    Just get a checkpoint of the model,
+    run the command: `elfragmentador_evaluate {your_checkpoint.ckpt} {your_splib.sptxt}`
+  - TODO add some metrics.
+- Crosslinked peptides?
+  - No
+- ETD ?
+  - No
+- CID ?
+  - No
+- Glycosilation ?
+  - No
+- No ?
+  - Not really ... I think all of those are interesting questions but
+    AS IT IS RIGHT NOW it is not within the scope of the project. If you want
+    to discuss it, write an issue in the repo and we can see if it is feasible.
+
 ### TODO list
 
 #### Urgent
@@ -42,6 +67,7 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 #### Possible
 
 - Add neutral losses specific to some PTMs
+- consider if using pyteomics as  a backend for most ms-related tasks
 
 #### If I get time
 
