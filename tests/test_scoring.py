@@ -45,6 +45,16 @@ def test_ascore_calculation_benchmark(benchmark):
     benchmark(calc_delta_ascore, seq, mods_list, aas_list, mzs, ints)
 
 
+def test_ascore_calculation_benchmark_many_posibilities(benchmark):
+    seq = "M[OXIDATION]EQQPTRPPQTSQPPPPPPPM[OXIDATION]PFR"
+    mods_list = ["OXIDATION"]
+    aas_list = ["MP"]
+    pep_ions = get_peptide_ions(seq)
+    mzs = [i for i in pep_ions.values()]
+    ints = [random.randint(0, 100) for _ in range(len(mzs))]
+    benchmark(calc_delta_ascore, seq, mods_list, aas_list, mzs, ints)
+
+
 def test_testing_test():
     seq = "GHY[PHOSPHO]TIGK"
     seq2 = "GHYT[PHOSPHO]IGK"
