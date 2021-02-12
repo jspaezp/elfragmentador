@@ -40,7 +40,7 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
     added an API to test the model on a spectral library (made with spectrast).
     Just get a checkpoint of the model,
     run the command: `elfragmentador_evaluate {your_checkpoint.ckpt} {your_splib.sptxt}`
-  - TODO add some metrics.
+  - TODO add some benchmarking metrics to this readme ...
 - Crosslinked peptides?
   - No
 - ETD ?

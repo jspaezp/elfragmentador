@@ -19,8 +19,28 @@ import pytorch_lightning as pl
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import sptxt_to_csv
-from elfragmentador import evaluate
+from elfragmentador import evaluate, rt
 
+
+def calculate_irt():
+    parser = ArgumentParser()
+    parser.add_argument(
+        "file",
+        type=argparse.FileType("r"),
+        nargs="+",
+        help="Input file(s) to convert (skyline csv output)",
+    )
+    parser.add_argument(
+        "--out",
+        default="out.csv",
+        type ="str",
+        help="Name of the file where the output will be written (csv)",
+    )
+
+    args = parser.parse_args()
+    files = [x.name for x in args.file]
+    df = rt.calculate_multifile_iRT(files)
+    df.to_csv(str(args.out))
 
 def convert_sptxt():
     parser = ArgumentParser()

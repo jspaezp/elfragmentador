@@ -3,9 +3,9 @@ import pandas as pd
 from elfragmentador import constants, annotate
 from pandas.core.frame import DataFrame
 from torch import Tensor
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Sequence, Union
 
-sequence_pair = namedtuple("SequencePair", "aas, mods")
+SequencePair = namedtuple("SequencePair", "aas, mods")
 
 
 def encode_mod_seq(seq):
@@ -41,7 +41,7 @@ def encode_mod_seq(seq):
         print(seq)
         raise ValueError
 
-    return sequence_pair(seq_out, mod_out)
+    return SequencePair(seq_out, mod_out)
 
 
 def decode_mod_seq(

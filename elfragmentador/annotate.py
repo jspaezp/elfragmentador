@@ -67,6 +67,41 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
             i += 1
 
 
+def canonicalize_seq(seq: str, robust: bool = False) -> str:
+    """canonicalize_seq Solves all modification aliases in a sequence.
+
+    Given a sequence, converts al supported modification aliases to the
+    "canonical" version of them and returns the new version.
+
+    Parameters
+    ----------
+    seq : str
+        Modified peptide sequence, for example "PEPTIDE[+23]TIDE")
+    robust : bool, optional
+        Wether you want error to be silent and return none when they happen, by default False
+
+    Returns
+    -------
+    str
+        Same sequence as input but with all mod aliases replaced for the primary
+        one in this package
+
+    Raises
+    ------
+    e
+        [description]
+    """
+    try:
+        out = "".join(peptide_parser(seq, solve_aliases=True))
+    except KeyError as e:
+        out = None
+        if not robust:
+            warnings.warn(f"Non-supported sequence found in {seq}")
+            raise e
+
+    return out
+
+
 def get_precursor_mz(peptide: str, charge: int):
     """
     Calculates the theoretical mass of a precursor peptide

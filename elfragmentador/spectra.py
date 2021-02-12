@@ -6,11 +6,11 @@ Contains utilities to represent spectra as well as functions to read them in bul
 from __future__ import annotations
 
 import warnings
-from typing import Iterator, Dict, Optional, List, Union
+from typing import Iterator, Dict, Optional, List, Sequence, Union
 from pathlib import Path
 
-from elfragmentador import constants, annotate, encoding_decoding
-from elfragmentador.encoding_decoding import get_fragment_encoding_labels
+from elfragmentador import constants, annotate, encoding_decoding, scoring
+from elfragmentador.encoding_decoding import get_fragment_encoding_labels, SequencePair
 
 from pandas.core.frame import DataFrame
 import numpy as np
@@ -33,6 +33,7 @@ class Spectrum:
         analyzer: str = "FTMS",
         rt: Optional[float] = None,
         raw_spectra: Optional[str] = None,
+        nreps: Optional[int] = None,
     ) -> None:
         """
         Representation of spectra with methods to convert from and to encodings.
@@ -67,9 +68,12 @@ class Spectrum:
             Retention time of the spectra, by default None
         raw_spectra : str, optional
             String describing the file where the spectra originated, by default None
+        nreps : int, optional
+            Integer describing how many spectra were used to generate this concensus spectrum
         """
         tolerance, tolerance_unit = constants.TOLERANCE[analyzer]
         parsed_peptide = list(annotate.peptide_parser(sequence, solve_aliases=True))
+        # TODO make the parser actually deal with this case ...
         if parsed_peptide[0] == "n[43]":
             parsed_peptide.pop(0)
             parsed_peptide[0] += "[nACETYL]"
@@ -114,6 +118,7 @@ class Spectrum:
         self.analyzer = analyzer
         self.rt = rt
         self.raw_spectra = raw_spectra
+        self.nreps = nreps
 
     @classmethod
     def from_tensors(
@@ -303,7 +308,7 @@ class Spectrum:
 
         return get_fragment_encoding_labels(annotated_peaks=peak_annot)
 
-    def encode_sequence(self):
+    def encode_sequence(self) -> SequencePair:
         """
         encode_sequence returns the encoded sequence of the aminoacids/modifications.
 
@@ -402,7 +407,7 @@ class Spectrum:
 
 
 def encode_sptxt(
-    filepath: str,
+    filepath: Union[str, Path],
     max_spec: float = 1e9,
     min_peaks: int = 3,
     min_delta_ascore: int = 20,
@@ -423,7 +428,7 @@ def encode_sptxt(
     max_spec : int, optional
         Maximum number of spectra to read, by default 1e9
     min_peaks : int
-        Minumum number of annotated peaks for a spectrum to be added
+        Minimum number of annotated peaks for a spectrum to be added
     irt_fun : [type], optional
         Not yet implemented but would take a callable that converts
         the retention times to iRTs, by default None
@@ -453,6 +458,7 @@ def encode_sptxt(
     nces = []
     orig = []
     d_ascores = []
+    nreps = []
 
     i = 0
     skipped_spec = 0
@@ -466,7 +472,9 @@ def encode_sptxt(
         seq_encode, mod_encode = str(seq_encode), str(mod_encode)
 
         try:
-            spec_encode = str(spec.encode_spectra())
+            spec_encode = spec.encode_spectra()
+            spec_encode = [round(x, 5) for x in spec_encode]
+            spec_encode = str(spec_encode)
         except AssertionError as e:
             warnings.warn(f"Skipping because of error: {e}")
             skipped_spec += 1
@@ -474,7 +482,7 @@ def encode_sptxt(
 
         if min_peaks is not None and spec.num_matching_peaks < min_peaks:
             warnings.warn(
-                f"Skipping peptide due few peaks beaing annotated {spec.mod_sequence}"
+                f"Skipping peptide due few peaks being annotated {spec.mod_sequence}"
             )
             skipped_spec += 1
             continue
@@ -496,6 +504,7 @@ def encode_sptxt(
         nces.append(spec.nce)
         orig.append(spec.raw_spectra)
         d_ascores.append(spec.delta_ascore)
+        nreps.append(spec.nreps)
 
     ret = DataFrame(
         {
@@ -509,6 +518,7 @@ def encode_sptxt(
             "SeqEncodings": seq_encodings,
             "OrigSpectra": orig,
             "DeltaAscore": d_ascores,
+            "Nreps": nreps,
         }
     )
 
@@ -606,6 +616,8 @@ def _parse_spectra_sptxt(
     comment_dict = {v[0]: v[1] for v in comment_sec}
     sequence, charge = named_params_dict["Name"].split("/")
 
+
+
     nce = comment_dict.get("CollisionEnergy", None)
     if nce is not None:
         nce = float(nce)
@@ -622,6 +634,10 @@ def _parse_spectra_sptxt(
             ),
             FutureWarning,
         )
+
+    nreps = comment_dict.get("Nreps", None)
+    if nreps is not None:
+        nreps = int(nreps.split("/")[0])
 
     raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get(
         "BestRawSpectrum", None
@@ -645,6 +661,7 @@ def _parse_spectra_sptxt(
         nce=nce,
         rt=rt,
         raw_spectra=raw_spectra,
+        nreps=nreps,
         *args,
         **kwargs,
     )
