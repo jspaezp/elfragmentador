@@ -100,6 +100,7 @@ def test_ascore_calculation_works_without_mods():
     assert out_ascore > 0
     print(out_ascore)
 
+
 spectrum_1_string = """
 Spectrum.from_tensors(
     [ 10, 3, 10, 16, 16, 10, 1, 21, 16, 6, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
@@ -127,13 +128,19 @@ Spectrum.from_tensors(
         0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],)
 """
 
+
 def test_ascore_ascore_calculates_correctly_best_annotation():
     test_spec1 = eval(spectrum_1_string)
     test_spec2 = eval(spectrum_2_string)
 
-    print( f"{test_spec2.delta_ascore} < {test_spec1.delta_ascore}" )
+    print(f"{test_spec2.delta_ascore} < {test_spec1.delta_ascore}")
     assert test_spec2.delta_ascore < test_spec1.delta_ascore
 
-    ascore_wrong = calc_delta_ascore(test_spec2.mod_sequence, ["PHOSPHO"], ["STY"], test_spec1.mzs, test_spec1.intensities)
+    ascore_wrong = calc_delta_ascore(
+        test_spec2.mod_sequence,
+        ["PHOSPHO"],
+        ["STY"],
+        test_spec1.mzs,
+        test_spec1.intensities,
+    )
     assert ascore_wrong < 0
-

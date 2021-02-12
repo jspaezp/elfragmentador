@@ -33,7 +33,7 @@ def calculate_irt():
     parser.add_argument(
         "--out",
         default="out.csv",
-        type =str,
+        type=str,
         help="Name of the file where the output will be written (csv)",
     )
 
@@ -41,6 +41,7 @@ def calculate_irt():
     files = [x.name for x in args.file]
     df = rt.calculate_multifile_iRT(files)
     df.to_csv(str(args.out))
+
 
 def convert_sptxt():
     parser = ArgumentParser()

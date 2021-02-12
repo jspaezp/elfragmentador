@@ -107,32 +107,36 @@ AAS_NUM = len(ALPHABET)
 
 MOD_PEPTIDE_ALIASES = {
     "C[160]": "",  # This makes it so it assumes it is always modified
-    "M[147]": "OXIDATION",
     "M(ox)": "OXIDATION",
     "M[OXIDATION]": "OXIDATION",
     "P[OXIDATION]": "OXIDATION",  # Hydroxylation of proline
-    "S[167]": "PHOSPHO",
     "S[PHOSPHO]": "PHOSPHO",
     "Y[PHOSPHO]": "PHOSPHO",
     "S[PHOS]": "PHOSPHO",
-    "T[181]": "PHOSPHO",
     "T[PHOSPHO]": "PHOSPHO",
     "T[PHOS]": "PHOSPHO",
-    "Y[243]": "PHOSPHO",
     "K[Acetyl]": "ACETYL",
     "K[GlyGly]": "GG",
-    "K[142]": "METHYL",
     "K[156]": "FORMYL",  # or "DIMETHYL",
-    "K[354]": "BIOTINYL",
-    "P[113]": "OXIDATION",
-    "R[170]": "METHYL",
-    "R[184]": "DIMETHYL",
+    "P[113]": "OXIDATION",  # aka hydroxilation
     "R[157]": "DEAMIDATED",  # aka citrullinated
-    "Y[208]": "NITRO",
 }
 
 # TERMINAL_ACETYLATIONS
 MOD_PEPTIDE_ALIASES.update({aa + "[nACETYL]": "nACETYL" for aa in AMINO_ACID})
+# This generages aliases like T[+80]
+int_aliases = [
+    {aa + f"[+{str(round(MODIFICATION[k]))}]": k for aa in v}
+    for k, v in VARIABLE_MODS.items()
+]
+[MOD_PEPTIDE_ALIASES.update(x) for x in int_aliases[::-1]]
+# This generages aliases like T[181]
+int_aliases = [
+    {aa + f"[{str(round(MODIFICATION[k] + AMINO_ACID[aa]))}]": k for aa in v}
+    for k, v in VARIABLE_MODS.items()
+]
+[MOD_PEPTIDE_ALIASES.update(x) for x in int_aliases[::-1]]
+del int_aliases
 
 MOD_AA_MASSES = AMINO_ACID.copy()
 MOD_AA_MASSES.update(
