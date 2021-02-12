@@ -54,9 +54,6 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
 
     for i, x in enumerate(perm_iter):
         out_seqs.append(placeholder_seq.format(*x))
-        if i > 1000:
-            print(mod_sampler)
-            raise ValueError
 
     return list(set(out_seqs))
 
@@ -72,7 +69,7 @@ def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]) -> Lis
         for s in seqs:
             x = _get_mod_isoforms(s, mod, aas)
             tmp_seqs.extend(list(set(x)))
-            if len(tmp_seqs) > 1000:
+            if len(tmp_seqs) > 10000:
                 warnings.warn("Large number of mod combinations found, clipping at 1k")
                 continue
 

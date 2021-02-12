@@ -48,11 +48,13 @@ MODIFICATION = {
     "GG": 114.042927,  # GlyGly ubiquitinylation residue
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
     "NITRO": 44.985078,  #  Oxidation to nitro
+    "BIOTINYL": 226.077598,  #  Biotinilation
     "nACETYL": 42.010565,  # Acetylation of the terminus
 }
 
 VARIABLE_MODS = {
     "ACETYL": "K",  # Acetylation
+    "BIOTINYL": "K",  # Biotinilation
     "DEAMIDATED": "RNQ",  # Deamidation
     "OXIDATION": "MP",  # Oxidation
     "PHOSPHO": "STY",  # Phosphorylation
@@ -121,9 +123,11 @@ MOD_PEPTIDE_ALIASES = {
     "K[GlyGly]": "GG",
     "K[142]": "METHYL",
     "K[156]": "FORMYL",  # or "DIMETHYL",
+    "K[354]": "BIOTINYL",
     "P[113]": "OXIDATION",
     "R[170]": "METHYL",
     "R[184]": "DIMETHYL",
+    "R[157]": "DEAMIDATED",  # aka citrullinated
     "Y[208]": "NITRO",
 }
 
