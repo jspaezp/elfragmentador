@@ -33,7 +33,7 @@ def calculate_irt():
     parser.add_argument(
         "--out",
         default="out.csv",
-        type ="str",
+        type =str,
         help="Name of the file where the output will be written (csv)",
     )
 

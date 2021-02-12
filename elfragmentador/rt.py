@@ -11,9 +11,7 @@ def calculate_file_iRT(file: Union[Path, str]) -> pd.DataFrame:
     df["RT"] = df['Min Start Time'] + df['Max End Time']
     fits = {}
     for g, sub_df in df.groupby("File Name"):
-        print(g)
         irt_sub_df = sub_df[[x in constants.IRT_PEPTIDES for x in sub_df['Peptide Modified Sequence']]].copy()
-        print(len(irt_sub_df))
         if len(irt_sub_df) < 4:
             continue
 
@@ -31,7 +29,7 @@ def calculate_multifile_iRT(filelist: List[Union[str, Path]]):
 
     out_df = pd.concat(out_dfs)
     group_cols = [x for x in list(out_df) if "Sequence" in x]
-    gdf = out_df.groupby(group_cols).aggregate({'Calculated iRT': ['mean', 'std']}).fillna(0)
+    gdf = out_df.groupby(group_cols).aggregate({'Calculated iRT': ['mean', 'std', 'count']}).fillna(0)
     gdf.columns = [' '.join(col) for col in gdf.columns.values]
     gdf.sort_values("Calculated iRT std")
     return gdf
