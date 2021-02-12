@@ -1,4 +1,5 @@
-from __future__ import annotations
+# -*- coding: future_annotations -*-
+# This adds the equivalent to from __future__ import annotations for python 3.6
 
 import warnings
 from collections import namedtuple

@@ -1,9 +1,10 @@
+# -*- coding: future_annotations -*-
+# This adds the equivalent to from __future__ import annotations for python 3.6
+
 """
 Contains utilities to represent spectra as well as functions to read them in bulk from
 .sptxt files
 """
-
-from __future__ import annotations
 
 import warnings
 from typing import Iterator, Dict, Optional, List, Sequence, Union
