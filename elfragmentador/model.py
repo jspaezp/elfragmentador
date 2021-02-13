@@ -1006,4 +1006,4 @@ spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
             prog_bar=True,
         )
     
-    __doc__ += "\n"*2 + __init__.__doc__ + "\n"*2 + forward.__doc__ 
+    __doc__ += "\n" * 2 + __init__.__doc__ + "\n" * 2 + forward.__doc__

@@ -54,7 +54,7 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     def match_col(string1, string2, colnames, match_mode="in", combine_mode=None):
         m = {
             "in": lambda q, t: q in t,
-            "startswith": lambda q, t: q.startswith(t),
+            "startswith": lambda q, t: q.startswith(t) or t.startswith(q),
             "equals": lambda q, t: q == t,
         }
         match_fun = m[match_mode]
@@ -88,17 +88,26 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
         "Ch": match_col("harg", None, colnames),
         "iRT": match_col("IRT", "iRT", colnames, combine_mode="union"),
         "NCE": match_col(
-            "nce", "NCE", colnames, combine_mode="union", match_mode="equals"
+            "nce", "NCE", colnames, combine_mode="union", match_mode="startswith"
         ),
     }
     out = {k: (colnames[v] if v is not None else None) for k, v in out.items()}
+    print(f">>> Mapped column names to the provided dataset {out}")
     return out
 
 
 class PeptideDataset(torch.utils.data.Dataset):
-    def __init__(self, df: DataFrame) -> None:
+    def __init__(self, df: DataFrame, max_spec: int = 1e6) -> None:
         super().__init__()
         print("\n>>> Initalizing Dataset")
+        if max_spec < len(df):
+            print(
+                "\n>>> Filtering out to have "
+                f"{max_spec}, change the 'max_spec' argument if you don't want"
+                "this to happen"
+            )
+            df = df.sample(n=max_spec)
+
         self.df = df  # TODO remove this for memmory ...
 
         name_match = match_colnames(df)
@@ -178,7 +187,11 @@ class PeptideDataset(torch.utils.data.Dataset):
 
     @staticmethod
     def from_sptxt(
-        filepath: str, max_spec: float = 1e6, filter_df: bool = True, *args, **kwargs
+        filepath: str,
+        max_spec: float = 1e6,
+        filter_df: bool = True,
+        *args,
+        **kwargs,
     ) -> PeptideDataset:
         df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
         if filter_df:
@@ -186,7 +199,11 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         return PeptideDataset(df)
 
-    def __len__(self) -> int:
+    @staticmethod
+    def from_csv(filepath: Union[str, Path], max_spec: int = 1e6):
+        df = filter_df_on_sequences(pd.read_csv(str(filepath)))
+        return PeptideDataset(df, max_spec=max_spec)
+
         return len(self.df)
 
     def __getitem__(self, index: int) -> TrainBatch:

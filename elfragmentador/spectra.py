@@ -617,8 +617,6 @@ def _parse_spectra_sptxt(
     comment_dict = {v[0]: v[1] for v in comment_sec}
     sequence, charge = named_params_dict["Name"].split("/")
 
-
-
     nce = comment_dict.get("CollisionEnergy", None)
     if nce is not None:
         nce = float(nce)

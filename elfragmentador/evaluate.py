@@ -1,14 +1,18 @@
 import time
-from tqdm.auto import tqdm
+from typing import Dict, List, Tuple, Union
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
 import torch
 import numpy as np
+from numpy import float32, float64, ndarray
+
 import pandas as pd
+from pandas.core.series import Series
+from tqdm.auto import tqdm
+
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.datamodules import PeptideDataset
-from numpy import float32, float64, ndarray
-from pandas.core.series import Series
-from typing import Dict, List, Tuple, Union
+import uniplot
 
 
 def build_evaluate_parser() -> ArgumentParser:
@@ -16,7 +20,9 @@ def build_evaluate_parser() -> ArgumentParser:
     parser.add_argument(
         "checkpoint_path", type=str, help="Checkpoint to use for the testing"
     )
-    parser.add_argument("sptxt_path", type=str, help="Sptxt file to use for testing")
+    input_group = parser.add_mutually_exclusive_group()
+    input_group.add_argument("--sptxt", type=str, help="Sptxt file to use for testing")
+    input_group.add_argument("--csv", type=str, help="Sptxt file to use for testing")
     parser.add_argument(
         "--device",
         default="cpu",
@@ -75,6 +81,13 @@ def evaluate_on_sptxt(model, filepath, batch_size=4, device="cpu", *args, **kwar
     )
 
 
+def evaluate_on_csv(model, filepath, batch_size=4, device="cpu", max_spec=1e6):
+    ds = PeptideDataset.from_csv(filepath=filepath, max_spec=max_spec)
+    return evaluate_on_dataset(
+        model=model, dataset=ds, batch_size=batch_size, device=device
+    )
+
+
 def evaluate_on_dataset(
     model: PepTransformerModel,
     dataset: PeptideDataset,
@@ -89,6 +102,12 @@ def evaluate_on_dataset(
     rt_results = []
     mod_sequences = dataset.df["ModSequences"]
     rt_real = dataset.df["RTs"]
+    irt_real = dataset.df["iRT"]
+
+    if sum(~np.isnan(np.array(irt_real).astype("float"))) > 1:
+        print("Using iRT instead of RT")
+        rt_real = irt_real
+
     charges = dataset.df["Charges"]
     spec_results = []
 
@@ -130,7 +149,32 @@ def evaluate_on_dataset(
         "Spectra_Similarity": spec_results.numpy().flatten(),
     }
 
-    rt_fit = polyfit(norm(out["Predicted_iRT"]), norm(out["Real_RT"]))
+    uniplot.histogram(
+        out["Spectra_Similarity"],
+        title=f"Spectra Similarity mean:{out['Spectra_Similarity'].mean()}",
+    )
+
+    # TODO consider the possibility of stratifying on files before normalizing
+    missing_vals = np.isnan(np.array(irt_real).astype("float"))
+    print(
+        f"Will remove {sum(missing_vals)}/{len(missing_vals)} "
+        "because they have missing iRTs"
+    )
+    norm_p_irt = norm(out["Predicted_iRT"][~missing_vals])
+    norm_r_irt = norm(out["Real_RT"][~missing_vals])
+
+    rt_fit = polyfit(norm_p_irt, norm_r_irt)
+
+    uniplot.plot(
+        ys=norm_p_irt,
+        xs=norm_r_irt,
+        title=(
+            f"Normalized Predicted iRT (y) vs normalized RT (x)"
+            f" (R2={rt_fit['determination']})"
+        ),
+    )
+
+    print(rt_fit)
     summ_out = {
         "normRT Rsquared": rt_fit["determination"],
         "AverageSpectraSimilarty": out["Spectra_Similarity"].mean(),

@@ -114,8 +114,19 @@ def evaluate_checkpoint():
     parser = evaluate.build_evaluate_parser()
     args = parser.parse_args()
     dict_args = vars(args)
+    print(dict_args)
 
-    evaluate.evaluate_checkpoint(**dict_args)
+    if dict_args["csv"] is not None:
+        model = PepTransformerModel.load_from_checkpoint(args.checkpoint_path)
+        evaluate.evaluate_on_csv(
+            model,
+            args.csv,
+            batch_size=args.batch_size,
+            device=args.device,
+            max_spec=args.max_spec,
+        )
+    else:
+        evaluate.evaluate_checkpoint(**dict_args)
 
 
 def train():
@@ -135,3 +146,15 @@ def train():
         del weights_mod
 
     main_train(mod, args)
+
+
+if __name__ == "__main__":
+    model = PepTransformerModel.load_from_checkpoint(
+        "/home/jspaezp/Downloads/0.23.0_onecycle_20e_petite-v_l=0.137555_epoch=014.ckpt"
+    )
+    evaluate.evaluate_on_csv(
+        model,
+        "~/Downloads/holdout_combined_massive_20200212.sptxt.irt.sptxt.csv",
+        batch_size=4,
+        max_spec=5000,
+    )
