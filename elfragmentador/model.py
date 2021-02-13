@@ -34,13 +34,31 @@ PredictionResults = namedtuple("PredictionResults", "irt spectra")
 
 
 class MLP(nn.Module):
-    """Very simple multi-layer perceptron (also called FFN)
-    From: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
+    """MLP implements a very simple multi-layer perceptron (also called FFN).
+
+    Concatenates hidden linear layers with activations for n layers.
+    This implementation uses gelu instead of relu
+    (linear > gelu) * (n-1) > linear
+
+    Based on: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
     """
 
     def __init__(
         self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int
     ) -> None:
+        """__init__ create a new instance of the MLP.
+
+        Parameters
+        ----------
+        input_dim : int
+            Expected dimensions for the input
+        hidden_dim : int
+            Number of dimensions of the hidden layers
+        output_dim : int
+            Output dimensions
+        num_layers : int
+            Number of layers (total)
+        """
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
@@ -49,6 +67,32 @@ class MLP(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        """Forward pass over the network.
+
+        Parameters
+        ----------
+        x : Tensor
+            Dimensions should match the ones specified instantiating the class
+
+        Returns
+        -------
+        Tensor
+            The dims of this tensor are defined when instantiating the class
+
+        Examples
+        --------
+        >>> pl.seed_everything(42)
+        42
+        >>> net = MLP(1000, 512, 2, 10)
+        >>> out = net.forward(torch.rand([5, 1000]))
+        >>> out
+        tensor([[-0.0061, -0.0219],
+                [-0.0061, -0.0219],
+                [-0.0061, -0.0220],
+                [-0.0061, -0.0220],
+                [-0.0061, -0.0219]], grad_fn=<AddmmBackward>) >>> out.shape
+        torch.Size([5, 2])
+        """
         for i, layer in enumerate(self.layers):
             x = (
                 torch.nn.functional.gelu(layer(x))
@@ -59,8 +103,7 @@ class MLP(nn.Module):
 
 
 class ConcatenationEncoder(torch.nn.Module):
-    """
-    ConcatenationEncoder concatenates information into the embedding
+    """ConcatenationEncoder concatenates information into the embedding.
 
     Adds information on continuous variables into an embedding by concatenating an n number
     of dimensions to it
@@ -105,22 +148,28 @@ class ConcatenationEncoder(torch.nn.Module):
         self.static_size = static_size
 
     def forward(self, x: Tensor, val: Tensor, debug: bool = False) -> Tensor:
-        r"""Inputs of forward function
-        Args:
-            x: the sequence fed to the encoder model (required).
-            val: value to be encoded into the sequence (required).
+        r"""Forward pass thought the encoder.
+
+        Args
+        ----
+        x: 
+            the sequence fed to the encoder model (required).
+        val:
+            value to be encoded into the sequence (required).
         Shape:
             x: [sequence length, batch size, embed dim]
             val: [batch size, 1]
             output: [sequence length, batch size, embed_dim + added_dims]
-        Examples:
-            >>> x1 = torch.zeros((5, 1, 20))
-            >>> x2 = torch.zeros((5, 2, 20))
-            >>> encoder = ConcatenationEncoder(10, 0.1, 10)
-            >>> output = encoder(x1, torch.tensor([[7]]))
-            >>> output.shape
-            torch.Size([5, 1, 30])
-            >>> output = encoder(x2, torch.tensor([[7], [4]]))
+        
+        Examples
+        --------
+        >>> x1 = torch.zeros((5, 1, 20))
+        >>> x2 = torch.zeros((5, 2, 20))
+        >>> encoder = ConcatenationEncoder(10, 0.1, 10)
+        >>> output = encoder(x1, torch.tensor([[7]]))
+        >>> output.shape
+        torch.Size([5, 1, 30])
+        >>> output = encoder(x2, torch.tensor([[7], [4]]))
         """
         if debug:
             print(f"CE: Shape of inputs val={val.shape} x={x.shape}")
@@ -149,25 +198,39 @@ class ConcatenationEncoder(torch.nn.Module):
 
 
 class PositionalEncoding(torch.nn.Module):
-    r"""Inject some information about the relative or absolute position of the tokens
-        in the sequence. The positional encodings have the same dimension as
-        the embeddings, so that the two can be summed. Here, we use sine and cosine
-        functions of different frequencies.
+    r"""PositionalEncoding adds positional information to tensors.
+    
+    Inject some information about the relative or absolute position of the tokens
+    in the sequence. The positional encodings have the same dimension as
+    the embeddings, so that the two can be summed. Here, we use sine and cosine
+    functions of different frequencies.
+
     .. math::
         \text{PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model))
         \text{PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))
         \text{where pos is the word position and i is the embed idx)
-    Args:
-        d_model: the embed dim (required).
-        dropout: the dropout value (default=0.1).
-        max_len: the max. length of the incoming sequence (default=5000).
-    Examples:
-        >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
-        >>> x = torch.ones((2,1,20)).float()
-        >>> x.shape
-        torch.Size([2, 1, 20])
-        >>> posencoder(x).shape
-        torch.Size([2, 1, 20])
+
+    Args
+    ----
+    d_model: int
+       the embed dim (required), must be even.
+    dropout: float
+       the dropout value (default=0.1).
+    max_len: int
+       the max. length of the incoming sequence (default=5000).
+    static_size : Union[LiteralFalse, int], optional
+        If it is an integer it is the size of the inputs that will
+        be given, it is used only when tracing the model for torchscript
+        (since torchscript needs fixed length inputs), by default False
+
+    Examples
+    --------
+    >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
+    >>> x = torch.ones((2,1,20)).float()
+    >>> x.shape
+    torch.Size([2, 1, 20])
+    >>> posencoder(x).shape
+    torch.Size([2, 1, 20])
 
     Therefore encoding are (seq_length, batch, encodings)
     """
@@ -177,8 +240,9 @@ class PositionalEncoding(torch.nn.Module):
         d_model: int,
         dropout: float = 0.1,
         max_len: int = 5000,
-        static_size: bool = False,
+        static_size: Union[LiteralFalse, int] = False,
     ) -> None:
+        """__init__ Creates a new instance."""
         super(PositionalEncoding, self).__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
 
@@ -194,18 +258,31 @@ class PositionalEncoding(torch.nn.Module):
         self.static_size = static_size
 
     def forward(self, x: Tensor) -> Tensor:
-        r"""Inputs of forward function
-        Args:
+        r"""Forward pass though the encoder.
+
+        Args
+        ----
             x: the sequence fed to the positional encoder model (required).
-        Shape:
+        Shape
+        -----
             x: [sequence length, batch size, embed dim]
             output: [sequence length, batch size, embed dim]
-        Examples:
-            >>> x = torch.ones((1,2,20)).float()
-            >>> pos_encoder = PositionalEncoding(20, 0.1, max_len=20)
-            >>> output = pos_encoder(x)
-        """
 
+        Examples
+        --------
+        >>> pl.seed_everything(42)
+        42
+        >>> x = torch.ones((1,4,6)).float()
+        >>> pos_encoder = PositionalEncoding(6, 0.1, max_len=10)
+        >>> output = pos_encoder(x)
+        >>> output.shape
+        torch.Size([1, 4, 6])
+        >>> output
+        tensor([[[1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222],
+               [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222],
+               [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 0.0000],
+               [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222]]])
+        """
         if self.static_size:
             end_position = self.static_size
         else:
@@ -216,16 +293,45 @@ class PositionalEncoding(torch.nn.Module):
 
 
 class CosineLoss(torch.nn.CosineSimilarity):
+    """CosineLoss Implements a simple cosine similarity based loss."""
+
     def __init__(self, *args, **kwargs) -> None:
+        """__init__ Instantiates the class.
+
+        All arguments are passed to `torch.nn.CosineSimilarity`
+        """
         super().__init__(*args, **kwargs)
 
     def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
+        """Forward calculates the loss.
+
+        [extended_summary]
+
+        Parameters
+        ----------
+        truth : Tensor
+        prediction : Tensor
+
+        Returns
+        -------
+        Tensor
+
+        Examples
+        --------
+        >>> loss = CosineLoss(dim=1, eps=1e-4)
+        >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
+        tensor([[1., 1., 1., 1., 1.]])
+        >>> loss(torch.ones([1,2,5]), 5*torch.zeros([1,2,5]))
+        tensor([[1., 1., 1., 1., 1.]])
+        >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+        tensor([[0., 0., 0., 0., 0.]])
+        """
         out = super().forward(truth, prediction)
         out = 1 - out
         return out
 
 
-class PeptideTransformerEncoder(torch.nn.Module):
+class _PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
         self, ninp: int, dropout: float, nhead: int, nhid: int, layers: int
     ) -> None:
@@ -282,7 +388,7 @@ class PeptideTransformerEncoder(torch.nn.Module):
         return trans_encoder_output
 
 
-class PeptideTransformerDecoder(torch.nn.Module):
+class _PeptideTransformerDecoder(torch.nn.Module):
     def __init__(
         self,
         ninp: int,
@@ -358,6 +464,8 @@ class PeptideTransformerDecoder(torch.nn.Module):
 
 
 class PepTransformerModel(pl.LightningModule):
+    """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
+
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
     __version__ = elfragmentador.__version__
 
@@ -365,10 +473,10 @@ class PepTransformerModel(pl.LightningModule):
         self,
         num_decoder_layers: int = 6,
         num_encoder_layers: int = 6,
-        nhid: int = 1024,
+        nhid: int = 2024,
         ninp: int = 516,
-        nhead: int = 8,
-        dropout: float = 0.2,
+        nhead: int = 4,
+        dropout: float = 0.1,
         lr: float = 1e-4,
         scheduler: str = "plateau",
         lr_ratio: Union[float, int] = 200,
@@ -376,18 +484,52 @@ class PepTransformerModel(pl.LightningModule):
         *args,
         **kwargs,
     ) -> None:
-        """
-        Parameters:
-            num_queries:
-                number of outputs to generate, should be the number of indices in the
-                prediction matrix for the ions.
-        """
+        """__init__ Instantiates the class.
 
+        Generates a new instance of the PepTransformerModel
+
+        Parameters
+        ----------
+        num_decoder_layers : int, optional
+            Number of layers in the transformer decoder, by default 6
+        num_encoder_layers : int, optional
+            Number of laters in the transformer encoder, by default 6
+        nhid : int, optional
+            Number of dimensions used in the feedforward networks inside
+            the transformer encoder and decoders, by default 2024
+        ninp : int, optional
+            Number of features to pass to the transformer encoder.
+            The embedding transforms the input to this input, by default 516
+        nhead : int, optional
+            Number of multi-attention heads in the transformer, by default 4
+        dropout : float, optional
+            dropout, by default 0.1
+        lr : float, optional
+            Learning rate, by default 1e-4
+        scheduler : str, optional
+            What scheduler to use, check the available ones with
+            `PepTransformerModel.accepted_schedulers`, by default "plateau"
+        lr_ratio : Union[float, int], optional
+            For cosine annealing:
+            Ratio of the initial learning rate to use with cosine annealing for
+            instance a lr or 1 and a ratio of 10 would have a minimum learning
+            rate of 0.1.
+
+            For onecycle:
+            Ratio of the initial lr and and maximum one,
+            for instance if lr is 0.1 and ratio is 10, the max learn rate
+            would be 1.0.
+
+            by default 200
+        steps_per_epoch : None, optional
+            expected number of steps per epoch, used internally to calculate
+            learning rates when using the oncecycle scheduler, by default None
+        """
         super().__init__()
         self.save_hyperparameters()
 
         # Peptide encoder
-        self.encoder = PeptideTransformerEncoder(
+        self.encoder = _PeptideTransformerEncoder(
             ninp=ninp,
             dropout=dropout,
             nhead=nhead,
@@ -396,7 +538,7 @@ class PepTransformerModel(pl.LightningModule):
         )
 
         # Peptide decoder
-        self.decoder = PeptideTransformerDecoder(
+        self.decoder = _PeptideTransformerDecoder(
             ninp=ninp, nhead=nhead, layers=num_decoder_layers, dropout=dropout
         )
 
@@ -416,6 +558,7 @@ class PepTransformerModel(pl.LightningModule):
         self.lr_ratio = lr_ratio
         self.steps_per_epoch = steps_per_epoch
 
+
     def forward(
         self,
         src: Tensor,
@@ -424,13 +567,23 @@ class PepTransformerModel(pl.LightningModule):
         charge: Optional[Tensor] = None,
         debug: bool = False,
     ) -> PredictionResults:
-        """
+        """Forward Generate predictions.
+
+        Privides the function for the forward pass to the model.
+
         Parameters
         ----------
-            src: Encoded pepide sequence [B, L] (view details)
-            nce: float Tensor with the charges [B, 1]
-            mods: Encoded modification sequence [B, L]
-            charge: long Tensor with the charges [B, 1]
+        src : Tensor
+            Encoded pepide sequence [B, L] (view details)
+        nce : Tensor
+            float Tensor with the charges [B, 1]
+        mods : Optional[Tensor], optional
+            Encoded modification sequence [B, L], by default None
+        charge : Optional[Tensor], optional
+            long Tensor with the charges [B, 1], by default None
+        debug : bool, optional
+            When set, it will print (a lot) of the shapes of the intermediate
+            tensors inside the model. By default False
 
         Details
         -------
@@ -446,12 +599,13 @@ class PepTransformerModel(pl.LightningModule):
             mods:
                 Modifications encoded as integers
 
-        Returns:
+        Returns
+        -------
+        PredictionResults
+            A named tuple with two named results; irt and spectra
             iRT prediction [B, 1]
             Spectra prediction [B, self.num_queries]
-
         """
-
         if type(src) == dict and charge is None and mods is None:
             charge = src["charge"]
             mods = src.get("mods", None)
@@ -488,6 +642,25 @@ class PepTransformerModel(pl.LightningModule):
     def batch_forward(
         self, inputs: TrainBatch, debug: bool = False
     ) -> PredictionResults:
+        """batch_forward Forward function that takes a `TrainBatch` as an input.
+
+        This function is a wrapper around forward but takes a named tuple as an
+        input instead of the positional/keword arguments.
+
+        Parameters
+        ----------
+        inputs : TrainBatch
+            Named tuple (check the documentation of that object for which names)
+        debug : bool, optional
+            When set, it will print (a lot) of the shapes of the intermediate
+            tensors inside the model. By default False
+
+        Returns
+        -------
+        PredictionResults
+            A named tuple with two named results; irt and spectra
+            
+        """
         def unsqueeze_if_needed(x, dims):
             if len(x.shape) != dims:
                 if debug:
@@ -509,7 +682,69 @@ class PepTransformerModel(pl.LightningModule):
 
     def predict_from_seq(
         self, seq: str, charge: int, nce: float, debug: bool = False
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> PredictionResults:
+        """predict_from_seq Predicts spectra from a sequence as a string.
+
+        Utility method that gets a sequence as a string, encodes it internally
+        to the correct input form and outputs the predicted spectra.
+
+        Note that the spectra is not decoded as an output, please check
+        `elfragmentador.encoding_decoding.decode_fragment_tensor` for the
+        decoding.
+
+        The irt is scaled by 100 and is in the Biognosys scale.
+
+        TODO: consider if the output should be decoded ...
+
+        Parameters
+        ----------
+        seq : str
+            Sequence to use for prediction, supports modifications in the form
+            of S[PHOSPHO], S[+80] and T[181]
+        charge : int
+            Precursor charge to be assumed during the fragmentation
+        nce : float
+            Normalized collision energy to use during the prediction
+        debug : bool, optional
+            When set, it will print (a lot) of the shapes of the intermediate
+            tensors inside the model. By default False
+
+        Returns
+        -------
+        PredictionResults
+            A named tuple with two named results; irt and spectra
+
+        Examples
+        --------
+        >>> pl.seed_everything(42)
+        42
+        >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
+        Creating TransformerDecoder ninp=516 nhead=4 layers=6
+        Creating embedding for spectra of length 174
+        >>> _ = my_model.eval()
+        >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
+        PredictionResults(irt=tensor([-0.1290], grad_fn=<SqueezeBackward1>), \
+spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
+        >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
+        >>PT: PEPTIDE INPUT Shape of peptide inputs torch.Size([1, 30]), torch.Size([1, 1])
+        PT: Shape of inputs src=torch.Size([1, 30]), mods=torch.Size([1, 30]), nce=torch.Size([1, 1]) charge=torch.Size([1, 1])
+        TE: Shape of mask torch.Size([1, 30])
+        TE: Shape after encoder torch.Size([30, 1, 516])
+        TE: Shape after pos encoder torch.Size([30, 1, 516])
+        TE: Shape after trans encoder torch.Size([30, 1, 516])
+        PT: Shape after RT decoder torch.Size([30, 1, 1])
+        PT: Shape of RT output torch.Size([1, 1])
+        CE: Shape of inputs val=torch.Size([1, 1]) x=torch.Size([174, 1, 464])
+        CE: Shape before concat e=torch.Size([174, 1, 26]) x=torch.Size([174, 1, 464])
+        CE: Shape after concat x=torch.Size([174, 1, 490])
+        TD: Shape of query embedding torch.Size([174, 1, 516])
+        TD: Shape of the output spectra torch.Size([174, 1, 516])
+        TD: Shape of the MLP spectra torch.Size([174, 1, 1])
+        TD: Shape of the permuted spectra torch.Size([1, 174])
+        PT: Final Outputs of shapes torch.Size([1, 1]), torch.Size([1, 174])
+        PredictionResults(irt=tensor([-0.1290], grad_fn=<SqueezeBackward1>), \
+spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
+        """
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
@@ -519,18 +754,35 @@ class PepTransformerModel(pl.LightningModule):
 
         if debug:
             print(
-                f">>PT: PEPTIDE INPUT Shape of peptide inputs {src.shape}, {in_charge.shape}"
+                f">>PT: PEPTIDE INPUT Shape of peptide"
+                f" inputs {src.shape}, {in_charge.shape}"
             )
 
         out = self.forward(
             src=src, charge=in_charge, mods=mods, nce=in_nce, debug=debug
         )
-        out = tuple([x.squeeze(0) for x in out])
+        out = PredictionResults(*[x.squeeze(0) for x in out])
 
         return out
 
     @staticmethod
     def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
+        """add_model_specific_args Adds arguments to a parser.
+
+        It is used to add the command line arguments for the training/generation
+        of the model.
+
+        Parameters
+        ----------
+        parser : _ArgumentGroup
+            An argparser parser (anything that has the `.add_argument` method)
+            to which the arguments will be added
+
+        Returns
+        -------
+        _ArgumentGroup
+            Same parser with the added arguments
+        """
         parser.add_argument(
             "--num_queries",
             default=150,
@@ -599,6 +851,36 @@ class PepTransformerModel(pl.LightningModule):
         Tuple[List[AdamW], List[Dict[str, Union[CosineAnnealingWarmRestarts, str]]]],
         Tuple[List[AdamW], List[Dict[str, Union[OneCycleLR, str]]]],
     ]:
+        """configure_optimizers COnfigures the optimizers for training.
+
+        It is internally used by pytorch_lightning during training, so far I
+        implemented 3 options (set when making the module).
+
+        OneCycleLR seems to give the best results overall in the least amount
+        of time. The only tradeoff that I see is that resuming training does
+        not seem to be really easy.
+
+        Check the pytorch_lightning documentation to see how this is used in the
+        training loop
+
+        Returns
+        -------
+        Union[
+            Tuple[List[AdamW], List[Dict[str, Union[ReduceLROnPlateau, str]]]],
+            Tuple[List[AdamW], List[Dict[str, Union[CosineAnnealingWarmRestarts, str]]]],
+            Tuple[List[AdamW], List[Dict[str, Union[OneCycleLR, str]]]],
+        ]
+            Two lists, one containing the optimizer and another contining the
+            scheduler.
+
+        Raises
+        ------
+        ValueError
+            Raised when a scheduler that is not supported is requested.
+            If you want to use another one, please over-write this method
+            or make a subclass with the modification. (PRs are also welcome)
+
+        """
         opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
 
         if self.scheduler == "plateau":
@@ -661,6 +943,13 @@ class PepTransformerModel(pl.LightningModule):
         return [opt], [scheduler_dict]
 
     def _step(self, batch: TrainBatch, batch_idx: int) -> Dict[str, Tensor]:
+        """Run main functionality during training an testing steps.
+
+        Internally used in training and evaluation steps during the training
+        loop in pytorch_lightning.
+
+        Does inference, loss calculation, handling of missing values ...
+        """
         yhat_irt, yhat_spectra = self.batch_forward(batch)
         yhat_irt = yhat_irt[~batch.norm_irt.isnan()]
         norm_irt = batch.norm_irt[~batch.norm_irt.isnan()]
@@ -693,6 +982,7 @@ class PepTransformerModel(pl.LightningModule):
     def training_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
     ) -> Dict[str, Tensor]:
+        """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"t_" + k: v for k, v in step_out.items()}
         log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
@@ -707,6 +997,7 @@ class PepTransformerModel(pl.LightningModule):
     def validation_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
     ) -> None:
+        """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"v_" + k: v for k, v in step_out.items()}
 
@@ -714,3 +1005,5 @@ class PepTransformerModel(pl.LightningModule):
             log_dict,
             prog_bar=True,
         )
+    
+    __doc__ += "\n"*2 + __init__.__doc__ + "\n"*2 + forward.__doc__ 
