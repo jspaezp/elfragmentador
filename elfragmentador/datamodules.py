@@ -204,6 +204,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         df = filter_df_on_sequences(pd.read_csv(str(filepath)))
         return PeptideDataset(df, max_spec=max_spec)
 
+    def __len__(self) -> int:
         return len(self.df)
 
     def __getitem__(self, index: int) -> TrainBatch:
