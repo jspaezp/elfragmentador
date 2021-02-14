@@ -11,6 +11,7 @@ from typing import Iterator, Dict, Optional, List, Sequence, Union
 from pathlib import Path
 
 from elfragmentador import constants, annotate, encoding_decoding, scoring
+import elfragmentador
 from elfragmentador.encoding_decoding import get_fragment_encoding_labels, SequencePair
 
 from pandas.core.frame import DataFrame
@@ -18,8 +19,20 @@ import numpy as np
 from tqdm.auto import tqdm
 
 
+
 class Spectrum:
     """Represents Spectra and bundles methods to annotate peaks."""
+
+    __SPTXT_TEMPLATE = (
+    "Name: {name}\n"
+    # "LibID: {lib_id}\n"
+    "MW: {mw}\n"
+    "PrecursorMZ: {precursor_mz}\n"
+    "FullName: {full_name}\n"
+    "Comment: {comment}\n"
+    "Num Peaks: {num_peaks}\n"
+    "{peaks}\n\n"
+    )
 
     def __init__(
         self,
@@ -92,6 +105,7 @@ class Spectrum:
         self.modifications = modifications
 
         amino_acids = annotate.peptide_parser(sequence)
+        # TODO redefine these with the functions inside annotate
         self.theoretical_mass = (
             sum([constants.MOD_AA_MASSES[a] for a in amino_acids]) + constants.H2O
         )
@@ -120,6 +134,64 @@ class Spectrum:
         self.rt = rt
         self.raw_spectra = raw_spectra
         self.nreps = nreps
+
+    @classmethod
+    def theoretical_spectrum(
+        cls,
+        seq: str,
+        charge: int,
+    ) -> Spectrum:
+        """theoretical_spectrum Generates theoretical spectra from sequences.
+
+        Parameters
+        ----------
+        seq : str
+            Peptide sequence
+        charge : int
+            Precursor charge to use
+
+        Returns
+        -------
+        Spectrum
+            A spectrum object with 1 as the theoretical intensities
+
+        Examples
+        --------
+        >>> spec = Spectrum.theoretical_spectrum("MYPEPTIDE", 2)
+        >>> spec
+        Spectrum:
+            Sequence: MYPEPTIDE len:9
+            Mod.Sequence: MYPEPTIDE
+            Charge: 2
+            MZs: [132.047761467, 295.111090467, 392.16385446699996]...16
+            Ints: [1.0, 1.0, 1.0]...16
+            Instrument: None
+            Analyzer: FTMS
+            NCE: None
+            RT: None
+            OriginalSpectra: Predicted
+            Annotations: {'z2y2': 1.0, 'z2b2': 1.0, ...
+        """
+        ions = annotate.get_peptide_ions(seq)
+        ions = {k:v for k,v in ions.items() if int(k[1]) < charge}
+        parent_mz = annotate.get_precursor_mz(seq, charge)
+        mzs = list(ions.values())
+        mzs = sorted(mzs)
+        intensities = [1. for _ in mzs]
+
+        spec = cls(
+            sequence=seq,
+            charge=charge,
+            parent_mz=parent_mz,
+            mzs=mzs,
+            intensities=intensities,
+            nce=None,
+            raw_spectra="Predicted")
+
+        spec.annotated_peaks
+
+        return spec
+
 
     @classmethod
     def from_tensors(
@@ -405,6 +477,64 @@ class Spectrum:
             out += f"\tAnnotations: {self._annotated_peaks}\n"
 
         return out
+    
+    def to_sptxt(self) -> str:
+        """
+        to_sptxt Represents the spectrum for an sptxt file
+
+        Returns
+        -------
+        str
+            String representation of the object
+
+        Examples
+        --------
+        >>> myspec = Spectrum("MYPEPT[181]IDEK", 2, 200, [100, 200], [1e8, 1e7], nce=27.0)
+        >>> myspec
+        Spectrum:
+            Sequence: MYPEPTIDEK len:10
+            Mod.Sequence: MYPEPT[PHOSPHO]IDEK
+            Charge: 2
+            MZs: [100, 200]...2
+            Ints: [100000000.0, 10000000.0]...2
+            Instrument: None
+            Analyzer: FTMS
+            NCE: 27.0
+            RT: None
+            OriginalSpectra: None
+        >>> print(myspec.to_sptxt())
+        Name: MYPEPT[PHOSPHO]IDEK/2
+        MW: 1301.5250727000002
+        PrecursorMZ: 651.7698128170001
+        FullName: MYPEPT[PHOSPHO]IDEK/2 (HCD)
+        Comment: CollisionEnergy=27.0 Origin=ElFragmentador_v...
+        100 100000000.0
+        200 10000000.0
+
+        """
+        mod_seq = annotate.mass_diff_encode_seq(self.mod_sequence)
+        name = f"{mod_seq}/{self.charge}"
+        mw = self.theoretical_mass
+        precursor_mz = self.theoretical_mz
+        full_name = name + " (HCD)"
+        comment = {
+            'CollisionEnergy': self.nce,
+            'Origin': f'ElFragmentador_v{elfragmentador.__version__}'}
+
+        comment = " ".join([f"{k}={v}" for k, v in comment.items()])
+        peaks = "\n".join([f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.1])
+
+        out = self.__SPTXT_TEMPLATE.format(
+            name = name,
+            mw = mw,
+            precursor_mz = precursor_mz,
+            full_name = full_name,
+            comment = comment,
+            num_peaks = len(self.mzs),
+            peaks = peaks
+        )
+        return out
+
 
 
 def encode_sptxt(

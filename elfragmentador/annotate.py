@@ -67,6 +67,13 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
             i += 1
 
 
+def mass_diff_encode_seq(seq):
+    iter = peptide_parser(seq, solve_aliases=True)
+    # For some reason skyline detects T[80] but not T[+80] ...
+    # And does not detect T[181] as a valid mod ...
+    out = "".join([constants.MASS_DIFF_ALIASES_I[x].replace("+", "") for x in iter])
+    return out
+
 def canonicalize_seq(seq: str, robust: bool = False) -> str:
     """canonicalize_seq Solves all modification aliases in a sequence.
 
@@ -102,12 +109,33 @@ def canonicalize_seq(seq: str, robust: bool = False) -> str:
     return out
 
 
+def get_theoretical_mass(peptide: str):
+    """
+    Calculates the theoretical mass of a peptide
+
+    Example
+    -------
+    >>> get_theoretical_mass("MYPEPTIDE")
+    1093.4637787000001
+    """
+    aas = peptide_parser(peptide)
+    out = sum([constants.MOD_AA_MASSES[a] for a in aas]) + constants.H2O
+    return out
+
+
 def get_precursor_mz(peptide: str, charge: int):
     """
-    Calculates the theoretical mass of a precursor peptide
+    Calculates the theoretical mass/charge of a precursor peptide
     (assumes positive mode)
+
+    Example
+    -------
+    >>> get_precursor_mz("MYPEPTIDE", 1)
+    1094.4710551670003
+    >>> get_precursor_mz("MYPEPTIDE", 2)
+    547.7391658170001
     """
-    raise NotImplementedError
+    return get_mz(get_theoretical_mass(peptide), 0, charge)
 
 
 def get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
