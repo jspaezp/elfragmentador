@@ -154,38 +154,54 @@ def evaluate_on_dataset(
         title=f"Spectra Similarity mean:{out['Spectra_Similarity'].mean()}",
     )
 
+    qs = [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]
+    similarity_quantiles = np.quantile(1-out['Spectra_Similarity'], qs)
+    uniplot.plot(
+        xs = similarity_quantiles,
+        ys = qs,
+        lines=True,
+        title="Accumulative distribution (y) of the spectra similarity errors (x)")
+
     # TODO consider the possibility of stratifying on files before normalizing
     missing_vals = np.isnan(np.array(irt_real).astype("float"))
     print(
         f"Will remove {sum(missing_vals)}/{len(missing_vals)} "
         "because they have missing iRTs"
     )
-    norm_p_irt = norm(out["Predicted_iRT"][~missing_vals])
-    norm_r_irt = norm(out["Real_RT"][~missing_vals])
+    norm_p_irt, rev_p_irt = norm(out["Predicted_iRT"][~missing_vals])
+    norm_r_irt, rev_r_irt = norm(out["Real_RT"][~missing_vals])
 
     rt_fit = polyfit(norm_p_irt, norm_r_irt)
 
     uniplot.plot(
-        ys=norm_p_irt,
-        xs=norm_r_irt,
+        ys=rev_p_irt(norm_p_irt),
+        xs=rev_r_irt(norm_r_irt),
         title=(
-            f"Normalized Predicted iRT (y) vs normalized RT (x)"
-            f" (R2={rt_fit['determination']})"
+            f"Predicted iRT (y) vs RT (x)"
+            f" (normalized R2={rt_fit['determination']})"
         ),
     )
 
-    print(rt_fit)
+    qs = [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]
+    mass_err_quantiles = np.quantile(abs(rev_r_irt(norm_r_irt) - rev_r_irt(norm_p_irt)), qs)
+    uniplot.plot(
+        xs = mass_err_quantiles,
+        ys = qs,
+        lines=True,
+        title="Accumulative distribution (y) of the RT errors (x)")
+
     summ_out = {
         "normRT Rsquared": rt_fit["determination"],
         "AverageSpectraSimilarty": out["Spectra_Similarity"].mean(),
     }
-    return out, summ_out
+    return pd.DataFrame(out), summ_out
 
 
 def norm(x: ndarray) -> ndarray:
     """Normalizes a numpy array by substracting mean and dividing by standard deviation"""
-    return (x - x.mean()) / x.std()
-
+    sd = x.std()
+    m = x.mean()
+    return (x - x.mean()) / x.std(), lambda y: (y*sd) + m
 
 # Polynomial Regression
 # Implementation from:

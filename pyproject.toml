@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elfragmentador"
-version = "0.24.1"
+version = "0.24.2"
 description = "Predicts peptide fragmentations using transformers"
 authors = ["J. Sebastian Paez <jspaezp@gmail.com>"]
 license = "Apache 2.0"

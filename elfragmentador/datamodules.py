@@ -6,6 +6,7 @@ from collections import namedtuple
 from pathlib import PosixPath, Path
 from typing import Dict, List, Optional, Union
 
+import numpy as np
 import pandas as pd
 from pandas.core.frame import DataFrame
 
@@ -145,9 +146,14 @@ class PeptideDataset(torch.utils.data.Dataset):
         spectra_lengths = len(self.spectra_encodings[0])
         sequence_lengths = len(self.sequence_encodings[0])
 
+        try:
+            irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
         self.norm_irts = (
-            torch.Tensor(self.df[name_match["iRT"]] / 100).float().unsqueeze(1)
+                torch.from_numpy(irts).float().unsqueeze(1)
         )
+        except ValueError:
+            print(self.df[name_match["iRT"]])
+            raise e
 
         if name_match["NCE"] is None:
             nces = (
