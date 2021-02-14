@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple, Union
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 import torch
+import pytorch_lightning as pl
 import numpy as np
 from numpy import float32, float64, ndarray
 
@@ -14,6 +15,67 @@ from elfragmentador.model import PepTransformerModel
 from elfragmentador.datamodules import PeptideDataset
 import uniplot
 
+class PearsonCorrelation(torch.nn.Module):
+    """PearsonCorrelation Implements a simple pearson correlation."""
+    def __init__(self, axis=1, eps = 1e-4):
+        """__init__ Instantiates the class.
+
+        Creates a callable object to calculate the pearson correlation on an axis
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis over which the correlation is calculated.
+            For instance, if the input has shape [5, 500] and the axis is set
+            to 1, the output will be of shape [5]. On the other hand, if the axis
+            is set to 0, the output will have shape [500], by default 1
+        eps : float, optional
+            Number to be added to to prevent division by 0, by default 1e-4
+        """
+        super().__init__()
+        self.axis = axis
+        self.eps = eps
+
+    def forward(self, x, y):
+        """Forward calculates the loss.
+
+        Parameters
+        ----------
+        truth : Tensor
+        prediction : Tensor
+
+        Returns
+        -------
+        Tensor
+
+        Examples
+        --------
+        >>> pl.seed_everything(42)
+        42
+        >>> loss = PearsonCorrelation(axis=1, eps=1e-4)
+        >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
+        tensor([[1., 1., 1., 1., 1.]])
+        >>> loss(torch.ones([1,2,5]), 5*torch.zeros([1,2,5]))
+        tensor([[1., 1., 1., 1., 1.]])
+        >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+        tensor([[0., 0., 0., 0., 0.]])
+        >>> out = loss(torch.rand([5, 174]), torch.rand([5, 174]))
+        >>> out.shape
+        torch.Size([5])
+        >>> loss = PearsonCorrelation(axis=0, eps=1e-4)
+        >>> out = loss(torch.rand([5, 174]), torch.rand([5, 174]))
+        >>> out.shape
+        torch.Size([174])
+        """
+        vx = x - torch.mean(x, axis = self.axis).unsqueeze(self.axis)
+        vy = y - torch.mean(y, axis = self.axis).unsqueeze(self.axis)
+
+        num = torch.sum(vx * vy, axis = self.axis)
+        denom_1 = torch.sqrt(torch.sum(vx ** 2, axis = self.axis))
+        denom_2 = torch.sqrt(torch.sum(vy ** 2, axis = self.axis))
+        denom = (denom_1 * denom_2) + self.eps
+        cost =  num / denom
+        return cost
 
 def build_evaluate_parser() -> ArgumentParser:
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -87,6 +149,31 @@ def evaluate_on_csv(model, filepath, batch_size=4, device="cpu", max_spec=1e6):
         model=model, dataset=ds, batch_size=batch_size, device=device
     )
 
+def terminal_plot_similarity(similarities, name = ""):
+    if all([np.isnan(x) for x in similarities]):
+        print("Skipping because all values are missing")
+        return None
+
+    uniplot.histogram(
+        similarities,
+        title=f"{name} mean:{similarities.mean()}",
+    )
+
+    qs = [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]
+    similarity_quantiles = np.quantile(1-similarities, qs)
+    p90 = similarity_quantiles[2]
+    p10 = similarity_quantiles[-3]
+    q1 = similarity_quantiles[5]
+    med = similarity_quantiles[4]
+    q3 = similarity_quantiles[3]
+    title = f"Accumulative distribution (y) of the 1 - {name} (x)"
+    title += f"\nP90={1-p90:.3f} Q3={1-q3:.3f}"
+    title += f" Median={1-med:.3f} Q1={1-q1:.3f} P10={1-p10:.3f}"
+    uniplot.plot(
+        xs = similarity_quantiles,
+        ys = qs,
+        lines=True,
+        title=title)
 
 def evaluate_on_dataset(
     model: PepTransformerModel,
@@ -96,6 +183,7 @@ def evaluate_on_dataset(
 ) -> Tuple[Dict[str, Union[Series, ndarray]], Dict[str, Union[float64, float32]]]:
     dl = torch.utils.data.DataLoader(dataset, batch_size)
     cs = torch.nn.CosineSimilarity()
+    pc = PearsonCorrelation()
 
     model.eval()
     model.to(device)
@@ -109,7 +197,8 @@ def evaluate_on_dataset(
         rt_real = irt_real
 
     charges = dataset.df["Charges"]
-    spec_results = []
+    spec_results_cs = []
+    spec_results_pc = []
 
     print(">>> Starting Evaluation of the spectra <<<")
     start_time = time.time()
@@ -125,7 +214,8 @@ def evaluate_on_dataset(
             out_spec = outs.spectra.cpu().clone()
             out_spec = out_spec / out_spec.max(axis=1).values.unsqueeze(0).T
 
-            spec_results.append(cs(out_spec, b.encoded_spectra))
+            spec_results_cs.append(cs(out_spec, b.encoded_spectra))
+            spec_results_pc.append(pc(out_spec, b.encoded_spectra))
             rt_results.append(outs.irt.cpu().clone())
             del b
             del outs
@@ -134,74 +224,67 @@ def evaluate_on_dataset(
     elapsed_time = end_time - start_time
 
     rt_results = torch.cat(rt_results) * 100
-    spec_results = torch.cat(spec_results)
+    spec_results_pc = torch.cat(spec_results_pc)
+    spec_results_cs = torch.cat(spec_results_cs)
 
-    print(f">> Elapsed time for {len(spec_results)} results was {elapsed_time}.")
+    print(f">> Elapsed time for {len(spec_results_cs)} results was {elapsed_time}.")
     print(
-        f">> {len(spec_results) / elapsed_time} results/sec"
-        f"; {elapsed_time / len(spec_results)} sec/res"
+        f">> {len(spec_results_cs) / elapsed_time} results/sec"
+        f"; {elapsed_time / len(spec_results_cs)} sec/res"
     )
     out = {
         "ModSequence": mod_sequences,
         "Charges": charges,
         "Predicted_iRT": rt_results.numpy().flatten(),
         "Real_RT": rt_real.to_numpy().flatten(),
-        "Spectra_Similarity": spec_results.numpy().flatten(),
+        "Spectra_Similarity_Cosine": spec_results_cs.numpy().flatten(),
+        "Spectra_Similarity_Pearson": spec_results_pc.numpy().flatten(),
     }
 
-    uniplot.histogram(
-        out["Spectra_Similarity"],
-        title=f"Spectra Similarity mean:{out['Spectra_Similarity'].mean()}",
-    )
-
-    qs = [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]
-    similarity_quantiles = np.quantile(1-out['Spectra_Similarity'], qs)
-    uniplot.plot(
-        xs = similarity_quantiles,
-        ys = qs,
-        lines=True,
-        title="Accumulative distribution (y) of the spectra similarity errors (x)")
+    terminal_plot_similarity(out['Spectra_Similarity_Pearson'], "Pearson Similarity")
+    terminal_plot_similarity(out['Spectra_Similarity_Cosine'], "Cosine Similarity")
 
     # TODO consider the possibility of stratifying on files before normalizing
-    missing_vals = np.isnan(np.array(irt_real).astype("float"))
+    missing_vals = np.isnan(np.array(rt_real).astype("float"))
     print(
         f"Will remove {sum(missing_vals)}/{len(missing_vals)} "
         "because they have missing iRTs"
     )
-    norm_p_irt, rev_p_irt = norm(out["Predicted_iRT"][~missing_vals])
-    norm_r_irt, rev_r_irt = norm(out["Real_RT"][~missing_vals])
+    norm_p_irt, rev_p_irt = norm(out["Predicted_iRT"])
+    norm_r_irt, rev_r_irt = norm(out["Real_RT"])
 
-    rt_fit = polyfit(norm_p_irt, norm_r_irt)
+    if sum(missing_vals) == len(norm_p_irt):
+        rt_fit = {'determination': None}
+    else:
+        rt_fit = polyfit(norm_p_irt[~missing_vals], norm_r_irt[~missing_vals])
 
-    uniplot.plot(
-        ys=rev_p_irt(norm_p_irt),
-        xs=rev_r_irt(norm_r_irt),
-        title=(
-            f"Predicted iRT (y) vs RT (x)"
-            f" (normalized R2={rt_fit['determination']})"
-        ),
-    )
+        uniplot.plot(
+            ys=rev_p_irt(norm_p_irt)[~missing_vals],
+            xs=rev_r_irt(norm_r_irt)[~missing_vals],
+            title=(
+                f"Predicted iRT (y) vs RT (x)"
+                f" (normalized R2={rt_fit['determination']})"
+            ),
+        )
 
-    qs = [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]
-    mass_err_quantiles = np.quantile(abs(rev_r_irt(norm_r_irt) - rev_r_irt(norm_p_irt)), qs)
-    uniplot.plot(
-        xs = mass_err_quantiles,
-        ys = qs,
-        lines=True,
-        title="Accumulative distribution (y) of the RT errors (x)")
+        rt_errors = abs(rev_r_irt(norm_r_irt) - rev_r_irt(norm_p_irt))
+        out.update({"RT_Error": rt_errors})
+        terminal_plot_similarity(rt_errors[~missing_vals], "RT prediction error")
 
     summ_out = {
         "normRT Rsquared": rt_fit["determination"],
-        "AverageSpectraSimilarty": out["Spectra_Similarity"].mean(),
+        "AverageSpectraCosineSimilarty": out["Spectra_Similarity_Cosine"].mean(),
+        "AverageSpectraPearsonSimilarty": out["Spectra_Similarity_Pearson"].mean(),
     }
     return pd.DataFrame(out), summ_out
 
 
 def norm(x: ndarray) -> ndarray:
     """Normalizes a numpy array by substracting mean and dividing by standard deviation"""
-    sd = x.std()
-    m = x.mean()
-    return (x - x.mean()) / x.std(), lambda y: (y*sd) + m
+    sd = np.nanstd(x)
+    m = np.nanmean(x)
+    out = (x - m) / sd
+    return out, lambda y: (y*sd) + m
 
 # Polynomial Regression
 # Implementation from:

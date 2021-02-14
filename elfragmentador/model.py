@@ -91,6 +91,7 @@ class MLP(nn.Module):
                 [-0.0061, -0.0220],
                 [-0.0061, -0.0220],
                 [-0.0061, -0.0219]], grad_fn=<AddmmBackward>) >>> out.shape
+        >>> out.shape
         torch.Size([5, 2])
         """
         for i, layer in enumerate(self.layers):
@@ -152,7 +153,7 @@ class ConcatenationEncoder(torch.nn.Module):
 
         Args
         ----
-        x: 
+        x:
             the sequence fed to the encoder model (required).
         val:
             value to be encoded into the sequence (required).
@@ -160,7 +161,7 @@ class ConcatenationEncoder(torch.nn.Module):
             x: [sequence length, batch size, embed dim]
             val: [batch size, 1]
             output: [sequence length, batch size, embed_dim + added_dims]
-        
+
         Examples
         --------
         >>> x1 = torch.zeros((5, 1, 20))
@@ -199,7 +200,7 @@ class ConcatenationEncoder(torch.nn.Module):
 
 class PositionalEncoding(torch.nn.Module):
     r"""PositionalEncoding adds positional information to tensors.
-    
+
     Inject some information about the relative or absolute position of the tokens
     in the sequence. The positional encodings have the same dimension as
     the embeddings, so that the two can be summed. Here, we use sine and cosine
@@ -304,8 +305,6 @@ class CosineLoss(torch.nn.CosineSimilarity):
 
     def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
         """Forward calculates the loss.
-
-        [extended_summary]
 
         Parameters
         ----------
@@ -558,7 +557,6 @@ class PepTransformerModel(pl.LightningModule):
         self.lr_ratio = lr_ratio
         self.steps_per_epoch = steps_per_epoch
 
-
     def forward(
         self,
         src: Tensor,
@@ -659,8 +657,9 @@ class PepTransformerModel(pl.LightningModule):
         -------
         PredictionResults
             A named tuple with two named results; irt and spectra
-            
+
         """
+
         def unsqueeze_if_needed(x, dims):
             if len(x.shape) != dims:
                 if debug:
@@ -1005,5 +1004,5 @@ spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
             log_dict,
             prog_bar=True,
         )
-    
+
     __doc__ += "\n" * 2 + __init__.__doc__ + "\n" * 2 + forward.__doc__

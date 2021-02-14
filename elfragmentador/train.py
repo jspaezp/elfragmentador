@@ -118,7 +118,9 @@ def get_callbacks(
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
     print(model)
     datamodule = datamodules.PeptideDataModule(
-        batch_size=args.batch_size, base_dir=args.data_dir
+        batch_size=args.batch_size,
+        base_dir=args.data_dir,
+        drop_missing_vals=args.drop_missing_vals,
     )
     datamodule.setup()
     spe = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)

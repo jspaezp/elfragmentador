@@ -98,9 +98,18 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
 
 
 class PeptideDataset(torch.utils.data.Dataset):
-    def __init__(self, df: DataFrame, max_spec: int = 1e6) -> None:
+    def __init__(
+        self, df: DataFrame,
+        max_spec: int = 1e6,
+        drop_missing_vals = False,
+    ) -> None:
         super().__init__()
         print("\n>>> Initalizing Dataset")
+        if drop_missing_vals:
+            former_len = len(df)
+            df.dropna(inplace=True)
+            print(f"\n>>> {former_len}/{len(df)} rows left after dropping missing values")
+
         if max_spec < len(df):
             print(
                 "\n>>> Filtering out to have "
@@ -109,7 +118,7 @@ class PeptideDataset(torch.utils.data.Dataset):
             )
             df = df.sample(n=max_spec)
 
-        self.df = df  # TODO remove this for memmory ...
+        self.df = df  # TODO remove this for memory ...
 
         name_match = match_colnames(df)
 
@@ -151,7 +160,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         self.norm_irts = (
                 torch.from_numpy(irts).float().unsqueeze(1)
         )
-        except ValueError:
+        except ValueError as e:
             print(self.df[name_match["iRT"]])
             raise e
 
@@ -160,7 +169,12 @@ class PeptideDataset(torch.utils.data.Dataset):
                 torch.Tensor([float("nan")] * len(self.norm_irts)).float().unsqueeze(1)
             )
         else:
-            nces = torch.Tensor(self.df[name_match["NCE"]]).float().unsqueeze(1)
+            try:
+                nces = np.array(self.df[name_match["NCE"]]).astype("float")
+                nces = torch.from_numpy(nces).float().unsqueeze(1)
+            except ValueError as e:
+                print(self.df[name_match["NCE"]])
+                raise e
 
         self.nces = nces
 
@@ -179,7 +193,8 @@ class PeptideDataset(torch.utils.data.Dataset):
             # This syntax is compatible in torch +1.8, will change when colab migrates to it
             # self.nces = torch.nan_to_num(self.nces, nan=30.0)
 
-        self.charges = torch.Tensor(self.df[name_match["Ch"]]).long().unsqueeze(1)
+        charges = np.array(self.df[name_match["Ch"]]).astype('long')
+        self.charges = torch.Tensor(charges).long().unsqueeze(1)
 
         print(
             (
@@ -250,10 +265,14 @@ def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
 
 class PeptideDataModule(pl.LightningDataModule):
     def __init__(
-        self, batch_size: int = 64, base_dir: Union[str, PosixPath] = "."
+        self,
+        batch_size: int = 64,
+        base_dir: Union[str, PosixPath] = ".",
+        drop_missing_vals: bool = False,
     ) -> None:
         super().__init__()
         self.batch_size = batch_size
+        self.drop_missing_vals = drop_missing_vals
         base_dir = Path(base_dir)
 
         train_path = list(base_dir.glob("*train*.csv"))
@@ -276,11 +295,12 @@ class PeptideDataModule(pl.LightningDataModule):
     def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
+        parser.add_argument("--drop_missing_vals", type=bool, default=False)
         return parser
 
     def setup(self) -> None:
-        self.train_dataset = PeptideDataset(self.train_df)
-        self.val_dataset = PeptideDataset(self.val_df)
+        self.train_dataset = PeptideDataset(self.train_df, drop_missing_vals=self.drop_missing_vals)
+        self.val_dataset = PeptideDataset(self.val_df, drop_missing_vals=self.drop_missing_vals)
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
