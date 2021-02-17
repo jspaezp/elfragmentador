@@ -163,7 +163,7 @@ class Spectrum:
             Sequence: MYPEPTIDE len:9
             Mod.Sequence: MYPEPTIDE
             Charge: 2
-            MZs: [132.047761467, 295.111090467, 392.16385446699996]...16
+            MZs: [132.047761467, 148.060434167, 263.087377167]...16
             Ints: [1.0, 1.0, 1.0]...16
             Instrument: None
             Analyzer: FTMS
@@ -503,13 +503,15 @@ class Spectrum:
             RT: None
             OriginalSpectra: None
         >>> print(myspec.to_sptxt())
-        Name: MYPEPT[PHOSPHO]IDEK/2
+        Name: MYPEPT[80]IDEK/2
         MW: 1301.5250727000002
         PrecursorMZ: 651.7698128170001
-        FullName: MYPEPT[PHOSPHO]IDEK/2 (HCD)
-        Comment: CollisionEnergy=27.0 Origin=ElFragmentador_v...
-        100 100000000.0
-        200 10000000.0
+        FullName: MYPEPT[80]IDEK/2 (HCD)
+        Comment: CollisionEnergy=27.0 ...
+        Num Peaks: 2
+        100\t100000000.0\t"?"
+        200\t10000000.0\t"?"
+        
 
         """
         mod_seq = annotate.mass_diff_encode_seq(self.mod_sequence)

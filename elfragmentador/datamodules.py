@@ -157,9 +157,9 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         try:
             irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
-        self.norm_irts = (
-                torch.from_numpy(irts).float().unsqueeze(1)
-        )
+            self.norm_irts = (
+                    torch.from_numpy(irts).float().unsqueeze(1)
+            )
         except ValueError as e:
             print(self.df[name_match["iRT"]])
             raise e

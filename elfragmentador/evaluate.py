@@ -273,7 +273,7 @@ def evaluate_on_dataset(
 
     summ_out = {
         "normRT Rsquared": rt_fit["determination"],
-        "AverageSpectraCosineSimilarty": out["Spectra_Similarity_Cosine"].mean(),
+        "AverageSpectraCosineSimilarity": out["Spectra_Similarity_Cosine"].mean(),
         "AverageSpectraPearsonSimilarty": out["Spectra_Similarity_Pearson"].mean(),
     }
     return pd.DataFrame(out), summ_out

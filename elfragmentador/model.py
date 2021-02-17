@@ -90,7 +90,7 @@ class MLP(nn.Module):
                 [-0.0061, -0.0219],
                 [-0.0061, -0.0220],
                 [-0.0061, -0.0220],
-                [-0.0061, -0.0219]], grad_fn=<AddmmBackward>) >>> out.shape
+                [-0.0061, -0.0219]], grad_fn=<AddmmBackward>)
         >>> out.shape
         torch.Size([5, 2])
         """

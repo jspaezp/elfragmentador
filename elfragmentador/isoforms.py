@@ -1,24 +1,50 @@
 import warnings
-from typing import List
-from itertools import permutations
+from typing import List, Generator, Iterable
 from elfragmentador.annotate import peptide_parser
 
 
 # Answer from https://stackoverflow.com/questions/6284396
-class unique_element:
+class _unique_element:
     def __init__(self, value, occurrences):
         self.value = value
         self.occurrences = occurrences
 
 
-def perm_unique(elements):
+def perm_unique(elements: Iterable) -> Generator:
+    """perm_unique Gets permutations of elements taking into account repeated.
+
+    Permutes the elements passed but skips all permutations where elements are
+    the same. For instance (0, 1, 0) would five 3 possibilities.
+
+    Parameters
+    ----------
+    elements : List or str
+        Elements to be permuted
+
+    Returns
+    -------
+    Generator
+        A list with all permutations
+    
+    Examples
+    --------
+    >>> out = list(perm_unique("COM"))
+    >>> sorted(out)
+    [('C', 'M', 'O'), ('C', 'O', 'M'), ('M', 'C', 'O'), ('M', 'O', 'C'), ('O', 'C', 'M'), ('O', 'M', 'C')]
+    >>> out = list(perm_unique("CCM"))
+    >>> sorted(out)
+    [('C', 'C', 'M'), ('C', 'M', 'C'), ('M', 'C', 'C')]
+    >>> out = list(perm_unique([0,1,0]))
+    >>> sorted(out)
+    [(0, 0, 1), (0, 1, 0), (1, 0, 0)]
+    """
     eset = set(elements)
-    listunique = [unique_element(i, elements.count(i)) for i in eset]
+    listunique = [_unique_element(i, elements.count(i)) for i in eset]
     u = len(elements)
-    return perm_unique_helper(listunique, [0] * u, u - 1)
+    return _perm_unique_helper(listunique, [0] * u, u - 1)
 
 
-def perm_unique_helper(listunique, result_list, d):
+def _perm_unique_helper(listunique, result_list, d):
     if d < 0:
         yield tuple(result_list)
     else:
@@ -26,7 +52,7 @@ def perm_unique_helper(listunique, result_list, d):
             if i.occurrences > 0:
                 result_list[d] = i.value
                 i.occurrences -= 1
-                for g in perm_unique_helper(listunique, result_list, d - 1):
+                for g in _perm_unique_helper(listunique, result_list, d - 1):
                     yield g
                 i.occurrences += 1
 
@@ -54,16 +80,40 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
 
     out_seqs = []
 
-    for i, x in enumerate(perm_iter):
+    for _, x in enumerate(perm_iter):
         out_seqs.append(placeholder_seq.format(*x))
 
     return list(set(out_seqs))
 
 
 def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]) -> List[str]:
-    # seq = "M[OXIDATION]YPEPT[PHOSPHO]MIDES"
-    # mods_list = ["PHOSPHO", "OXIDATION"]
-    # aas_list = ["STY", "M"]
+    """get_mod_isoforms 
+
+    [extended_summary]
+
+    Parameters
+    ----------
+    seq : str
+        [description]
+    mods_list : List[str]
+        [description]
+    aas_list : List[str]
+        [description]
+
+    Returns
+    -------
+    List[str]
+        [description]
+    
+    Example
+    -------
+    >>> seq = "M[OXIDATION]YPEPT[PHOSPHO]MIDES"
+    >>> mods_list = ["PHOSPHO", "OXIDATION"]
+    >>> aas_list = ["STY", "M"]
+    >>> out = list(get_mod_isoforms(seq, mods_list, aas_list))
+    >>> sorted(out)
+    ['MYPEPTM[OXIDATION]IDES[PHOSPHO]', ... 'M[OXIDATION]Y[PHOSPHO]PEPTMIDES']
+    """
     seqs = [seq]
 
     for mod, aas in zip(mods_list, aas_list):
