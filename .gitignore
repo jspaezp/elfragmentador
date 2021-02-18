@@ -11,3 +11,11 @@ settings.json
 htmlcov/**
 .tox/**
 elfragmentador.egg-info/**
+**/.snakemake
+benchmarking_workflow/comet
+benchmarking_workflow/fasta
+benchmarking_workflow/ind_spectrast
+benchmarking_workflow/raw
+benchmarking_workflow/ip
+benchmarking_workflow/pp
+benchmarking_workflow/spectrast

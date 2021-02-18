@@ -11,6 +11,7 @@ import pandas as pd
 from pandas.core.series import Series
 from tqdm.auto import tqdm
 
+from elfragmentador import constants
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.datamodules import PeptideDataset
 import uniplot
@@ -97,6 +98,17 @@ def build_evaluate_parser() -> ArgumentParser:
         type=int,
         help="Batch size to use during the valuation",
     )
+    nce_group = parser.add_mutually_exclusive_group()
+    nce_group.add_argument(
+        "--overwrite_nce",
+        type=float,
+        help="NCE to overwrite the collision energy with",
+    )
+    nce_group.add_argument(
+        "--screen_nce",
+        type=str,
+        help="Comma delimited series of collision energies to use",
+    )
     parser.add_argument(
         "--max_spec",
         default=1e6,
@@ -130,14 +142,13 @@ def evaluate_checkpoint(
     )
     out = pd.DataFrame(out).sort_values(["Spectra_Similarity"]).reset_index()
     print(summ_out)
-    print(out)
     if out_csv is not None:
         print(f">>> Saving results to {out_csv}")
         out.to_csv(out_csv, index=False)
 
 
-def evaluate_on_sptxt(model, filepath, batch_size=4, device="cpu", *args, **kwargs):
-    ds = PeptideDataset.from_sptxt(filepath=filepath, *args, **kwargs)
+def evaluate_on_sptxt(model, filepath, batch_size=4, device="cpu", max_spec=1e6, *args, **kwargs):
+    ds = PeptideDataset.from_sptxt(filepath=filepath, max_spec=max_spec, *args, **kwargs)
     return evaluate_on_dataset(
         model=model, dataset=ds, batch_size=batch_size, device=device
     )
@@ -180,6 +191,7 @@ def evaluate_on_dataset(
     dataset: PeptideDataset,
     batch_size: int = 4,
     device: str = "cpu",
+    overwrite_nce: Union[float, bool] = False,
 ) -> Tuple[Dict[str, Union[Series, ndarray]], Dict[str, Union[float64, float32]]]:
     dl = torch.utils.data.DataLoader(dataset, batch_size)
     cs = torch.nn.CosineSimilarity()
@@ -204,11 +216,19 @@ def evaluate_on_dataset(
     start_time = time.time()
     with torch.no_grad():
         for b in tqdm(dl):
+            if overwrite_nce:
+                nce = torch.where(
+                    torch.tensor(True),
+                    torch.tensor(overwrite_nce),
+                    b.nce)
+            else:
+                nce = b.nce
+
             outs = model.forward(
                 src=b.encoded_sequence.clone().to(device),
                 charge=b.charge.clone().to(device),
                 mods=b.encoded_mods.clone().to(device),
-                nce=b.nce.clone().to(device),
+                nce=nce.clone().to(device),
             )
 
             out_spec = outs.spectra.cpu().clone()
@@ -216,7 +236,7 @@ def evaluate_on_dataset(
 
             spec_results_cs.append(cs(out_spec, b.encoded_spectra))
             spec_results_pc.append(pc(out_spec, b.encoded_spectra))
-            rt_results.append(outs.irt.cpu().clone())
+            rt_results.append(outs.irt.cpu().clone().flatten())
             del b
             del outs
 
@@ -311,3 +331,17 @@ def polyfit(
     results["determination"] = ssreg / sstot
 
     return results
+
+def evaluate_landmark_rt(model: PepTransformerModel):
+    model.eval()
+    real_rt = []
+    pred_rt = []
+    for seq, desc in constants.IRT_PEPTIDES.items():
+        with torch.no_grad():
+            out = model.predict_from_seq(seq, 2, 25)
+            pred_rt.append(100*out.irt.numpy())
+            real_rt.append(np.array(desc['irt']))
+
+    uniplot.plot(
+        xs = np.array(real_rt).flatten(),
+        ys = np.array(pred_rt).flatten())

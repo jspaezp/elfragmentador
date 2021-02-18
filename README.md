@@ -54,6 +54,10 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
     AS IT IS RIGHT NOW it is not within the scope of the project. If you want
     to discuss it, write an issue in the repo and we can see if it is feasible.
 
+### Known Issues
+
+- When setting `--max_spec` on `elfragmentador_evaluate --sptxt`, the retention time accuracy is not calculated correctly because the retention times are scaled within the selected range. Since the spectra are subset in their import order, therefore only the first-eluting peptides are used.
+
 ### TODO list
 
 #### Urgent

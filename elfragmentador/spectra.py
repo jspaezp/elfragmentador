@@ -668,6 +668,9 @@ def encode_sptxt(
 
     if skipped_spec >= 1:
         warnings.warn(f"{skipped_spec}/{i} Spectra were skipped")
+    
+    print(list(ret))
+    print(ret)
 
     return ret
 

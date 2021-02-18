@@ -19,7 +19,9 @@ import pytorch_lightning as pl
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import sptxt_to_csv
-from elfragmentador import evaluate, rt
+from elfragmentador import datamodules, evaluate, rt
+
+import uniplot
 
 
 def calculate_irt():
@@ -116,17 +118,49 @@ def evaluate_checkpoint():
     dict_args = vars(args)
     print(dict_args)
 
+    model = PepTransformerModel.load_from_checkpoint(args.checkpoint_path)
     if dict_args["csv"] is not None:
-        model = PepTransformerModel.load_from_checkpoint(args.checkpoint_path)
-        evaluate.evaluate_on_csv(
-            model,
+        ds = datamodules.PeptideDataset.from_csv(
             args.csv,
-            batch_size=args.batch_size,
-            device=args.device,
+            max_spec=args.max_spec,
+        )
+    elif dict_args["sptxt"] is not None:
+        ds = datamodules.PeptideDataset.from_sptxt(
+            args.sptxt,
             max_spec=args.max_spec,
         )
     else:
-        evaluate.evaluate_checkpoint(**dict_args)
+        raise ValueError("Must have an argument to either --csv or --sptxt")
+
+    if dict_args["screen_nce"] is not None:
+        nces = [float(x) for x in dict_args["screen_nce"].split(",")]
+    elif dict_args["overwrite_nce"] is not None:
+        nces = [dict_args["overwrite_nce"]]
+    else:
+        nces = [False]
+
+    best_res = tuple([{}, {"AverageSpectraCosineSimilarity": 0}])
+    best_nce = None
+    res_history = []
+    for nce in nces:
+        if nce:
+            print(f">>>> Starting evaluation of NCE={nce}")
+        res = evaluate.evaluate_on_dataset(
+            model=model,
+            dataset=ds,
+            batch_size=args.batch_size,
+            device=args.device,
+            overwrite_nce=nce
+        )
+        res_history.append(res[1]["AverageSpectraCosineSimilarity"])
+        if res[1]["AverageSpectraCosineSimilarity"] > best_res[1]["AverageSpectraCosineSimilarity"]:
+            best_res = res
+            best_nce = nce
+    
+    if len(nces) > 1:
+        print(f"Best Nce was {best_nce}")
+        uniplot.plot(ys = res_history, xs = nces)
+
 
 
 def train():

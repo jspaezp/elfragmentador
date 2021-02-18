@@ -480,6 +480,7 @@ class PepTransformerModel(pl.LightningModule):
         scheduler: str = "plateau",
         lr_ratio: Union[float, int] = 200,
         steps_per_epoch: None = None,
+        loss_ratio: float = 5,
         *args,
         **kwargs,
     ) -> None:
@@ -523,6 +524,10 @@ class PepTransformerModel(pl.LightningModule):
         steps_per_epoch : None, optional
             expected number of steps per epoch, used internally to calculate
             learning rates when using the oncecycle scheduler, by default None
+        loss_ratio: float, optional
+            The ratio of the spectrum to retention time loss to use when adding
+            before passing to the optimizer. Higher values mean more weight to
+            spectra with respect to the retention time. By default 5
         """
         super().__init__()
         self.save_hyperparameters()
@@ -556,6 +561,7 @@ class PepTransformerModel(pl.LightningModule):
         self.scheduler = scheduler
         self.lr_ratio = lr_ratio
         self.steps_per_epoch = steps_per_epoch
+        self.loss_ratio = loss_ratio
 
     def forward(
         self,
@@ -841,6 +847,15 @@ spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
                 "would be 1.0"
             ),
         )
+        parser.add_argument(
+            "--loss_ratio",
+            default=5.0,
+            type=float,
+            help=("Ratio between the retention time and the spectrum loss"
+                 " (higher values mean more weight to the spectra loss"
+                 " with respect to the retention time loss)"
+            ),
+        )
         return parser
 
     def configure_optimizers(
@@ -936,7 +951,8 @@ spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
                 "Scheduler should be one of 'plateau' or 'cosine', passed: ",
                 self.scheduler,
             )
-
+        # TODO check if using different optimizers for different parts of the
+        # model would work better
         print(f"\n\n>>> Setting up schedulers:\n\n{scheduler_dict}")
 
         return [opt], [scheduler_dict]
@@ -959,7 +975,8 @@ spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
         if len(norm_irt.data) == 0:
             total_loss = loss_spectra
         else:
-            total_loss = (loss_irt + loss_spectra * 9) / 10
+            total_loss = (loss_irt + loss_spectra * self.loss_ratio)
+            total_loss = total_loss / (self.loss_ratio + 1)
 
         out = {
             "l": total_loss,
