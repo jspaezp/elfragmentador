@@ -103,6 +103,61 @@ class MLP(nn.Module):
         return x
 
 
+class InvPositionalEmbed(torch.nn.Module):
+    def __init__(self, dims_add: int = 10, max_len: int = 30):
+        super().__init__()
+        pe = torch.zeros(max_len, dims_add)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+
+        div_term_enum = torch.arange(0, dims_add, 2).float()
+        div_term_denom = -math.log(10000.0) / dims_add
+        div_term = torch.exp(div_term_enum * div_term_denom)
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe[0, :] = 0
+        self.register_buffer("pe", pe)
+
+    def forward(self, x: torch.LongTensor):
+        """forward Concatenates the values to the 
+
+        [extended_summary]
+
+        Parameters
+        ----------
+        x : Tensor
+            Tensor of shape [BatchSize, SequenceLength], this should encode
+            a sequence and be padded with zeros
+
+        Returns
+        -------
+        Tensor
+            Tensor of shape [SequenceLength, BatchSize, DimensionsAdded],
+            Where 
+        """
+        vals = x.flip(0).bool().long().cumsum(0)
+        out = self.pe[vals].flip(0)
+        return out
+
+
+def test_inverted_positional_encoder():
+    encoder = InvPositionalEmbed(6, 50)
+    x = torch.cat([torch.ones(1,2), torch.ones(1,2)*2, torch.zeros((1,2))], dim = -1).long()
+    x[0]
+    x.shape
+    encoder(x)
+    # Test that the encoder adds the right number of dimensions
+    assert False
+
+    input_t = torch.tril(torch.ones((3,3))).long()
+    input_t
+    input_t[0][2]
+    encoder(input_t)[:,1,:]
+    # Test that the values are actually 0 when expected
+    assert False
+
+    # Test that values match corresponding positions
+
+
 class ConcatenationEncoder(torch.nn.Module):
     """ConcatenationEncoder concatenates information into the embedding.
 
@@ -129,6 +184,7 @@ class ConcatenationEncoder(torch.nn.Module):
     >>> output = encoder(x1, torch.tensor([[7]]))
     >>> output = encoder(x2, torch.tensor([[7], [4]]))
     """
+    # TODO evaluate if fropout is actually useful here ...
 
     def __init__(
         self,
@@ -143,10 +199,11 @@ class ConcatenationEncoder(torch.nn.Module):
         # pos would be a variable ...
         div_term = torch.exp(
             torch.arange(0, dims_add, 2).float()
-            * (-math.log(float(2 * max_val)) / dims_add)
+            * (-math.log(float(2 * max_val)) / (dims_add))
         )
         self.register_buffer("div_term", div_term)
         self.static_size = static_size
+        self.dims_add = dims_add
 
     def forward(self, x: Tensor, val: Tensor, debug: bool = False) -> Tensor:
         r"""Forward pass thought the encoder.
@@ -165,8 +222,8 @@ class ConcatenationEncoder(torch.nn.Module):
         Examples
         --------
         >>> x1 = torch.zeros((5, 1, 20))
-        >>> x2 = torch.zeros((5, 2, 20))
-        >>> encoder = ConcatenationEncoder(10, 0.1, 10)
+        >>> x2 = torch.cat([x1, x1+1], axis = 1)
+        >>> encoder = ConcatenationEncoder(10, dropout = 0, max_val = 10)
         >>> output = encoder(x1, torch.tensor([[7]]))
         >>> output.shape
         torch.Size([5, 1, 30])
@@ -187,6 +244,18 @@ class ConcatenationEncoder(torch.nn.Module):
         e_sin = torch.sin(val * self.div_term)
         e_cos = torch.cos(torch.cos(val * self.div_term))
         e = torch.cat([e_sin, e_cos], axis=-1)
+
+        if debug:
+            print(f"CE: Making encodings e={e.shape}")
+
+        assert e.shape[-1] < self.dims_add + 2, (
+            "Internal error in concatenation encoder"
+        )
+        e = e[...,:self.dims_add]
+
+        if debug:
+            print(f"CE: clipping encodings e={e.shape}")
+
         e = torch.cat([e.unsqueeze(0)] * end_position)
 
         if debug:
