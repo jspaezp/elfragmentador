@@ -23,6 +23,8 @@ import elfragmentador
 from elfragmentador import constants
 from elfragmentador import encoding_decoding
 from elfragmentador.datamodules import TrainBatch
+from elfragmentador.metrics import CosineLoss
+from elfragmentador.nn_encoding import ConcatenationEncoder, PositionalEncoding, AASequenceEmbedding
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
@@ -103,351 +105,29 @@ class MLP(nn.Module):
         return x
 
 
-class InvPositionalEmbed(torch.nn.Module):
-    def __init__(self, dims_add: int = 10, max_len: int = 30):
-        super().__init__()
-        pe = torch.zeros(max_len, dims_add)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-
-        div_term_enum = torch.arange(0, dims_add, 2).float()
-        div_term_denom = -math.log(10000.0) / dims_add
-        div_term = torch.exp(div_term_enum * div_term_denom)
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe[0, :] = 0
-        self.register_buffer("pe", pe)
-
-    def forward(self, x: torch.LongTensor):
-        """forward Concatenates the values to the 
-
-        [extended_summary]
-
-        Parameters
-        ----------
-        x : Tensor
-            Tensor of shape [BatchSize, SequenceLength], this should encode
-            a sequence and be padded with zeros
-
-        Returns
-        -------
-        Tensor
-            Tensor of shape [SequenceLength, BatchSize, DimensionsAdded],
-            Where 
-        """
-        vals = x.flip(0).bool().long().cumsum(0)
-        out = self.pe[vals].flip(0)
-        return out
-
-
-def test_inverted_positional_encoder():
-    encoder = InvPositionalEmbed(6, 50)
-    x = torch.cat([torch.ones(1,2), torch.ones(1,2)*2, torch.zeros((1,2))], dim = -1).long()
-    x[0]
-    x.shape
-    encoder(x)
-    # Test that the encoder adds the right number of dimensions
-    assert False
-
-    input_t = torch.tril(torch.ones((3,3))).long()
-    input_t
-    input_t[0][2]
-    encoder(input_t)[:,1,:]
-    # Test that the values are actually 0 when expected
-    assert False
-
-    # Test that values match corresponding positions
-
-
-class ConcatenationEncoder(torch.nn.Module):
-    """ConcatenationEncoder concatenates information into the embedding.
-
-    Adds information on continuous variables into an embedding by concatenating an n number
-    of dimensions to it
-
-    Parameters
-    ----------
-    dims_add : int
-        Number of dimensions to add as an encoding
-    dropout : float, optional
-        dropout, by default 0.1
-    max_val : float, optional
-        maximum expected value of the variable that will be encoded, by default 200.0
-    static_size : Union[Literal[False], float], optional
-        Optional ingeter to pass in order to make the size deterministic.
-        This is only required if you want to export your model to torchscript, by default False
-
-    Examples
-    --------
-    >>> x1 = torch.zeros((5, 1, 20))
-    >>> x2 = torch.zeros((5, 2, 20))
-    >>> encoder = ConcatenationEncoder(10, 0.1, 10)
-    >>> output = encoder(x1, torch.tensor([[7]]))
-    >>> output = encoder(x2, torch.tensor([[7], [4]]))
-    """
-    # TODO evaluate if fropout is actually useful here ...
-
-    def __init__(
-        self,
-        dims_add: int,
-        dropout: float = 0.1,
-        max_val: Union[float, int] = 200.0,
-        static_size: bool = False,
-    ) -> None:
-        super().__init__()
-        self.dropout = torch.nn.Dropout(p=dropout)
-
-        # pos would be a variable ...
-        div_term = torch.exp(
-            torch.arange(0, dims_add, 2).float()
-            * (-math.log(float(2 * max_val)) / (dims_add))
-        )
-        self.register_buffer("div_term", div_term)
-        self.static_size = static_size
-        self.dims_add = dims_add
-
-    def forward(self, x: Tensor, val: Tensor, debug: bool = False) -> Tensor:
-        r"""Forward pass thought the encoder.
-
-        Args
-        ----
-        x:
-            the sequence fed to the encoder model (required).
-        val:
-            value to be encoded into the sequence (required).
-        Shape:
-            x: [sequence length, batch size, embed dim]
-            val: [batch size, 1]
-            output: [sequence length, batch size, embed_dim + added_dims]
-
-        Examples
-        --------
-        >>> x1 = torch.zeros((5, 1, 20))
-        >>> x2 = torch.cat([x1, x1+1], axis = 1)
-        >>> encoder = ConcatenationEncoder(10, dropout = 0, max_val = 10)
-        >>> output = encoder(x1, torch.tensor([[7]]))
-        >>> output.shape
-        torch.Size([5, 1, 30])
-        >>> output = encoder(x2, torch.tensor([[7], [4]]))
-        """
-        if debug:
-            print(f"CE: Shape of inputs val={val.shape} x={x.shape}")
-
-        if self.static_size:
-            assert self.static_size == x.size(0), (
-                f"Size of the first dimension ({x.size(0)}) "
-                f"does not match the expected value ({self.static_size})"
-            )
-            end_position = self.static_size
-        else:
-            end_position = x.size(0)
-
-        e_sin = torch.sin(val * self.div_term)
-        e_cos = torch.cos(torch.cos(val * self.div_term))
-        e = torch.cat([e_sin, e_cos], axis=-1)
-
-        if debug:
-            print(f"CE: Making encodings e={e.shape}")
-
-        assert e.shape[-1] < self.dims_add + 2, (
-            "Internal error in concatenation encoder"
-        )
-        e = e[...,:self.dims_add]
-
-        if debug:
-            print(f"CE: clipping encodings e={e.shape}")
-
-        e = torch.cat([e.unsqueeze(0)] * end_position)
-
-        if debug:
-            print(f"CE: Shape before concat e={e.shape} x={x.shape}")
-
-        x = torch.cat((x, e), axis=-1)
-        if debug:
-            print(f"CE: Shape after concat x={x.shape}")
-        return self.dropout(x)
-
-
-class PositionalEncoding(torch.nn.Module):
-    r"""PositionalEncoding adds positional information to tensors.
-
-    Inject some information about the relative or absolute position of the tokens
-    in the sequence. The positional encodings have the same dimension as
-    the embeddings, so that the two can be summed. Here, we use sine and cosine
-    functions of different frequencies.
-
-    .. math::
-        \text{PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model))
-        \text{PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))
-        \text{where pos is the word position and i is the embed idx)
-
-    Args
-    ----
-    d_model: int
-       the embed dim (required), must be even.
-    dropout: float
-       the dropout value (default=0.1).
-    max_len: int
-       the max. length of the incoming sequence (default=5000).
-    static_size : Union[LiteralFalse, int], optional
-        If it is an integer it is the size of the inputs that will
-        be given, it is used only when tracing the model for torchscript
-        (since torchscript needs fixed length inputs), by default False
-
-    Examples
-    --------
-    >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
-    >>> x = torch.ones((2,1,20)).float()
-    >>> x.shape
-    torch.Size([2, 1, 20])
-    >>> posencoder(x).shape
-    torch.Size([2, 1, 20])
-
-    Therefore encoding are (seq_length, batch, encodings)
-    """
-
-    def __init__(
-        self,
-        d_model: int,
-        dropout: float = 0.1,
-        max_len: int = 5000,
-        static_size: Union[LiteralFalse, int] = False,
-    ) -> None:
-        """__init__ Creates a new instance."""
-        super(PositionalEncoding, self).__init__()
-        self.dropout = torch.nn.Dropout(p=dropout)
-
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
-        )
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer("pe", pe)
-        self.static_size = static_size
-
-    def forward(self, x: Tensor) -> Tensor:
-        r"""Forward pass though the encoder.
-
-        Args
-        ----
-            x: the sequence fed to the positional encoder model (required).
-        Shape
-        -----
-            x: [sequence length, batch size, embed dim]
-            output: [sequence length, batch size, embed dim]
-
-        Examples
-        --------
-        >>> pl.seed_everything(42)
-        42
-        >>> x = torch.ones((1,4,6)).float()
-        >>> pos_encoder = PositionalEncoding(6, 0.1, max_len=10)
-        >>> output = pos_encoder(x)
-        >>> output.shape
-        torch.Size([1, 4, 6])
-        >>> output
-        tensor([[[1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222],
-               [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222],
-               [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 0.0000],
-               [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222]]])
-        """
-        if self.static_size:
-            end_position = self.static_size
-        else:
-            end_position = x.size(0)
-
-        x = x + self.pe[:end_position, :]
-        return self.dropout(x)
-
-
-class CosineLoss(torch.nn.CosineSimilarity):
-    """CosineLoss Implements a simple cosine similarity based loss."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """__init__ Instantiates the class.
-
-        All arguments are passed to `torch.nn.CosineSimilarity`
-        """
-        super().__init__(*args, **kwargs)
-
-    def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
-        """Forward calculates the loss.
-
-        Parameters
-        ----------
-        truth : Tensor
-        prediction : Tensor
-
-        Returns
-        -------
-        Tensor
-
-        Examples
-        --------
-        >>> loss = CosineLoss(dim=1, eps=1e-4)
-        >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-        tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.ones([1,2,5]), 5*torch.zeros([1,2,5]))
-        tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
-        tensor([[0., 0., 0., 0., 0.]])
-        """
-        out = super().forward(truth, prediction)
-        out = 1 - out
-        return out
-
-
 class _PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
         self, ninp: int, dropout: float, nhead: int, nhid: int, layers: int
     ) -> None:
         super().__init__()
 
-        # Positional encoding section
-        self.ninp = ninp
-        self.pos_encoder = PositionalEncoding(
-            ninp, dropout, max_len=constants.MAX_SEQUENCE * 2
-        )
-
-        # Aminoacid encoding layer
-        self.aa_encoder = torch.nn.Embedding(constants.AAS_NUM + 1, ninp, padding_idx=0)
-        # PTM encoder
-        self.mod_encoder = torch.nn.Embedding(
-            len(constants.MODIFICATION) + 1, ninp, padding_idx=0
-        )
-
+        # Aminoacid embedding
+        self.aa_encoder = AASequenceEmbedding(ninp=ninp, position_ratio=0.1)
+        
         # Transformer encoder sections
         encoder_layers = torch.nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = torch.nn.TransformerEncoder(encoder_layers, layers)
 
-        # Weight Initialization
-        self.init_weights()
-
-    def init_weights(self) -> None:
-        initrange = 0.1
-        ptm_initrange = initrange * 0.01
-        torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
-        torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
-
     def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
         trans_encoder_mask = ~src.bool()
         if debug:
-            print(f"TE: Shape of mask {trans_encoder_mask.size()}")
+            print(f"TE: Shape of mask {trans_encoder_mask.shape}")
 
-        src = self.aa_encoder(src.permute(1, 0))
-        mods = self.mod_encoder(mods.permute(1, 0))
-        src = src + mods
-
-        src = src * math.sqrt(self.ninp)
+        src = self.aa_encoder.forward(src=src, mods=mods, debug=debug)
         if debug:
-            print(f"TE: Shape after encoder {src.shape}")
-        src = self.pos_encoder(src)
-        if debug:
-            print(f"TE: Shape after pos encoder {src.shape}")
+            print(f"TE: Shape after AASequence encoder {src.shape}")
 
-        trans_encoder_output = self.transformer_encoder(
+        trans_encoder_output = self.transformer_encoder.forward(
             src, src_key_padding_mask=trans_encoder_mask
         )
         if debug:
@@ -797,27 +477,9 @@ class PepTransformerModel(pl.LightningModule):
         Creating embedding for spectra of length 174
         >>> _ = my_model.eval()
         >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
-        PredictionResults(irt=tensor([-0.1290], grad_fn=<SqueezeBackward1>), \
-spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
-        >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
-        >>PT: PEPTIDE INPUT Shape of peptide inputs torch.Size([1, 30]), torch.Size([1, 1])
-        PT: Shape of inputs src=torch.Size([1, 30]), mods=torch.Size([1, 30]), nce=torch.Size([1, 1]) charge=torch.Size([1, 1])
-        TE: Shape of mask torch.Size([1, 30])
-        TE: Shape after encoder torch.Size([30, 1, 516])
-        TE: Shape after pos encoder torch.Size([30, 1, 516])
-        TE: Shape after trans encoder torch.Size([30, 1, 516])
-        PT: Shape after RT decoder torch.Size([30, 1, 1])
-        PT: Shape of RT output torch.Size([1, 1])
-        CE: Shape of inputs val=torch.Size([1, 1]) x=torch.Size([174, 1, 464])
-        CE: Shape before concat e=torch.Size([174, 1, 26]) x=torch.Size([174, 1, 464])
-        CE: Shape after concat x=torch.Size([174, 1, 490])
-        TD: Shape of query embedding torch.Size([174, 1, 516])
-        TD: Shape of the output spectra torch.Size([174, 1, 516])
-        TD: Shape of the MLP spectra torch.Size([174, 1, 1])
-        TD: Shape of the permuted spectra torch.Size([1, 174])
-        PT: Final Outputs of shapes torch.Size([1, 1]), torch.Size([1, 174])
-        PredictionResults(irt=tensor([-0.1290], grad_fn=<SqueezeBackward1>), \
-spectra=tensor([0.1503, ... 0.1528], grad_fn=<SqueezeBackward1>))
+        PredictionResults(irt=tensor([...], grad_fn=<SqueezeBackward1>), \
+spectra=tensor([...], grad_fn=<SqueezeBackward1>))
+        >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
         """
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
 

@@ -160,6 +160,9 @@ def evaluate_checkpoint():
     if len(nces) > 1:
         print(f"Best Nce was {best_nce}")
         uniplot.plot(ys = res_history, xs = nces)
+    
+    if dict_args["out_csv"] is not None:
+        best_res[0].to_csv(dict_args["out_csv"], index=False)
 
 
 
