@@ -115,8 +115,8 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         self.aa_encoder = AASequenceEmbedding(ninp=ninp, position_ratio=0.1)
         
         # Transformer encoder sections
-        encoder_layers = torch.nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout)
-        self.transformer_encoder = torch.nn.TransformerEncoder(encoder_layers, layers)
+        encoder_layers = nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout, activation="gelu")
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
     def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
         trans_encoder_mask = ~src.bool()
@@ -153,7 +153,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         n_embeds = ninp - (charge_dims + nce_dims)
 
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model=ninp, nhead=nhead, dropout=dropout
+            d_model=ninp, nhead=nhead, dropout=dropout, activation="gelu"
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
         self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
@@ -161,7 +161,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         print(
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
         )
-        self.trans_decoder_embedding = torch.nn.Embedding(
+        self.trans_decoder_embedding = nn.Embedding(
             constants.NUM_FRAG_EMBEDINGS, n_embeds
         )
         self.charge_encoder = ConcatenationEncoder(
@@ -173,7 +173,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
 
     def init_weights(self):
         initrange = 0.1
-        torch.nn.init.uniform_(
+        nn.init.uniform_(
             self.trans_decoder_embedding.weight, -initrange, initrange
         )
 
@@ -204,9 +204,9 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
         if self.training:
-            spectra_output = torch.nn.functional.leaky_relu(spectra_output)
+            spectra_output = nn.functional.leaky_relu(spectra_output)
         else:
-            spectra_output = torch.nn.functional.relu(spectra_output)
+            spectra_output = nn.functional.relu(spectra_output)
 
         return spectra_output
 
@@ -297,7 +297,7 @@ class PepTransformerModel(pl.LightningModule):
 
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
-        self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
+        self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=4)
 
         # Training related things
         self.mse_loss = torch.nn.MSELoss()

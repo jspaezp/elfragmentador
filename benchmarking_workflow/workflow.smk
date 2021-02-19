@@ -4,15 +4,7 @@ import subprocess
 import pathlib
 import shutil
 
-# samples = pd.read_table("sample_info.tsv").set_index("sample", drop=False)
-
-samples = pd.DataFrame({
-    'sample' : ["20161213_NGHF_DBJ_SA_Exp3A_HeLa_1ug_30min_15000_01", "20200604_RH_SVC_F10_Phos", "samp2"],
-    'experiment' : ["second"] + ["first"] * 2,
-    'comet_params': ["comet_params/comet.params.high_high"] + ["comet_params/comet_phospho.params.high_high"] * 2,
-    'fasta': ["fasta/human_contam.fasta"] * 3,
-    'server': ["ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2017/11/PXD006932"] + ["ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2020/11/PXD020183/"] + ["ftp://asdad"],
-}).set_index("sample", drop=False)
+samples = pd.read_table("sample_info.tsv").set_index("sample", drop=False)
 
 def get_samples(experiment):
     return list(samples[samples['experiment'] == experiment]['sample'])
@@ -31,11 +23,9 @@ else:
 
 rule all:
     input:
-        # "samp1.decoy.pep.xml",
-        "ip/second.iproph.pp.pep.xml",
-        "spectrast/second.iproph.pp.sptxt",
-        "spectrast/concensus_second.iproph.pp.sptxt",
-        "ind_spectrast/20161213_NGHF_DBJ_SA_Exp3A_HeLa_1ug_30min_15000_01.pp.sptxt"
+        [f"ind_spectrast/{x}.pp.sptxt" for x in samples["sample"]],
+        [f"spectrast/concensus_{x}.iproph.pp.sptxt" for x in samples["experiment"]],
+        [f"prosit_in/{x}.iproph.pp.sptxt" for x in samples["experiment"]],
 
 rule crap_fasta:
     output:
@@ -106,9 +96,23 @@ rule comet_phospho_params:
         "comet_params/comet_phospho.params.high_high"
     shell:
         """
-        cat {input} | sed -e "s/variable_mod02 = 0.0 X 0 3 -1 0 0/variable_mod02 = 79.966331 STY 0 3 -1 0 0/g" > {output}
+        cat {input} | \
+            sed -e "s/variable_mod02 = 0.0 X 0 3 -1 0 0/variable_mod02 = 79.966331 STY 0 3 -1 0 0/g" \
+            | tee {output}
         """
 
+rule comet_proalanase_params:
+    input:
+        "comet_params/comet.params.high_high"
+    output:
+        "comet_params/comet.params.proalanase.high_high"
+    shell:
+        """
+        cat {input} | \
+            sed -e "s/^search_enzyme_number.*/search_enzyme_number = 10/g" | \
+            sed -e "s/^10. Chymotrypsin.*/10. ProAlanase 1 PA -/g" \
+            | tee {output}
+        """
 
 rule comet_search:
     input:
@@ -116,7 +120,8 @@ rule comet_search:
         fasta=get_fasta,
         comet_params=get_comet_params,
     output:
-        decoy_pepxml = "comet/{sample}.decoy.pep.xml",
+        # Enable if using 2 in the decoy search parameter
+        # decoy_pepxml = "comet/{sample}.decoy.pep.xml", 
         forward_pepxml = "comet/{sample}.pep.xml"
     run:
         shell("mkdir -p comet")
@@ -129,7 +134,7 @@ rule comet_search:
         print(cmd)
         shell(cmd)
         shell(f"cp raw/{wildcards.sample}.pep.xml ./comet/.")
-        shell(f"cp raw/{wildcards.sample}.decoy.pep.xml ./comet/.")
+        # shell(f"cp raw/{wildcards.sample}.decoy.pep.xml ./comet/.")
 
 
 rule interact:
@@ -215,3 +220,25 @@ rule spectrast:
         " -Lspectrast/concensus_{wildcards.experiment}.iproph.pp.log"
         " -cNspectrast/concensus_{wildcards.experiment}.iproph.pp "
         " spectrast/{wildcards.experiment}.iproph.pp.splib"
+
+
+rule prosit_input:
+    input:
+        "spectrast/{experiment}.iproph.pp.sptxt",
+    output:
+        "prosit_in/{experiment}.iproph.pp.sptxt",
+    shell:
+        """
+        set -x
+        set -e
+
+        mkdir -p prosit_in
+
+        printf "modified_sequence,collision_energy,precursor_charge\n" > {output}
+        CE="$(grep -oP "CollisionEne.*? " {input} | uniq |  sed -e "s/CollisionEnergy=//g | sed -e "s/\..*//g") 
+        grep -P "^Name" {input} | \
+            sed -e "s/Name: //g" | \
+            sed -e "s+/+,${CE},+g" >> {output}
+
+        head {output}
+        """
