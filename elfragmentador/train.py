@@ -132,6 +132,9 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         termination_patience=args.terminator_patience,
         wandb_project=args.wandb_project,
     )
+
+    callbacks["logger"].watch(model)
+    
     trainer = pl.Trainer.from_argparse_args(
         args,
         profiler="simple",
