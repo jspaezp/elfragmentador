@@ -18,6 +18,14 @@ def test_concat_encoder():
     print(output)
 
 
+def test_concat_encoder_adds_right_number():
+    x = torch.zeros((5,1,20))
+    for d in range(1, 10, 1):
+        encoder = model.ConcatenationEncoder(d, 0, 200)
+        out = encoder(x, torch.tensor([[7]]), debug = True)
+        dim_diff = (out.shape[-1] - 20)
+        assert d == dim_diff, "Concatenation Encoder does not add the right number of dims"
+
 def mod_forward_base(datadir):
     mod = model.PepTransformerModel(nhead=4, ninp=64)
     print(mod)
@@ -84,6 +92,7 @@ def _test_export_onnx(datadir, keep=False):
 
 
 def base_export_torchscript(datadir, keep=False):
+    # TODO make this a class method ...
     mod = model.PepTransformerModel(nhead=4, ninp=64)
     mod.encoder.pos_encoder.static_size = constants.MAX_SEQUENCE
     mod.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
