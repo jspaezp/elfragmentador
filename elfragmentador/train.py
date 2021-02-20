@@ -133,8 +133,9 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         wandb_project=args.wandb_project,
     )
 
-    callbacks["logger"].watch(model)
-    
+    callbacks["logger"].watch(model.encoder)
+    callbacks["logger"].watch(model.decoder)
+
     trainer = pl.Trainer.from_argparse_args(
         args,
         profiler="simple",

@@ -234,11 +234,11 @@ rule prosit_input:
 
         mkdir -p prosit_in
 
-        printf "modified_sequence,collision_energy,precursor_charge\n" > {output}
-        CE="$(grep -oP "CollisionEne.*? " {input} | uniq |  sed -e "s/CollisionEnergy=//g | sed -e "s/\..*//g") 
+        echo 'modified_sequence,collision_energy,precursor_charge' > {output}
+        CE=$(grep -oP "CollisionEne.*? " {input} | uniq |  sed -e "s/CollisionEnergy=//g" | sed -e "s/\..*//g")
         grep -P "^Name" {input} | \
             sed -e "s/Name: //g" | \
-            sed -e "s+/+,${CE},+g" >> {output}
+            sed -e "s+/+,${{CE}},+g" >> {output}
 
         head {output}
         """

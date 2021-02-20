@@ -300,7 +300,7 @@ class PepTransformerModel(pl.LightningModule):
         self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=4)
 
         # Training related things
-        self.mse_loss = torch.nn.MSELoss()
+        self.mse_loss = nn.MSELoss()
         self.angle_loss = CosineLoss(dim=1, eps=1e-4)
         self.lr = lr
 
