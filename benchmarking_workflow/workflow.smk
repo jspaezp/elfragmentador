@@ -1,8 +1,10 @@
 
+from pathlib import Path
 import pandas as pd
 import subprocess
 import pathlib
 import shutil
+from elfragmentador.spectra import sptxt_to_csv
 
 samples = pd.read_table("sample_info.tsv").set_index("sample", drop=False)
 
@@ -26,6 +28,7 @@ rule all:
         [f"ind_spectrast/{x}.pp.sptxt" for x in samples["sample"]],
         [f"spectrast/concensus_{x}.iproph.pp.sptxt" for x in samples["experiment"]],
         [f"prosit_in/{x}.iproph.pp.sptxt" for x in samples["experiment"]],
+        [f"sptxt_csv/{x}.iproph.pp.sptxt.csv" for x in samples["experiment"]],
 
 rule crap_fasta:
     output:
@@ -216,10 +219,23 @@ rule spectrast:
         " -Lspectrast/{wildcards.experiment}.iproph.pp.log"
         " -cNspectrast/{wildcards.experiment}.iproph.pp {input} ;"
         f"{TPP_DOCKER}"
-        " spectrast -cr2 -cAC -c_DIS " 
+        " spectrast -cr1 -cAC -c_DIS " 
         " -Lspectrast/concensus_{wildcards.experiment}.iproph.pp.log"
         " -cNspectrast/concensus_{wildcards.experiment}.iproph.pp "
         " spectrast/{wildcards.experiment}.iproph.pp.splib"
+
+rule generate_sptxt_csv:
+    input:
+        "spectrast/{experiment}.iproph.pp.sptxt",
+    output:
+        "sptxt_csv/{experiment}.iproph.pp.sptxt.csv"
+    run:
+        Path(str(output)).parent.mkdir(exist_ok=True)
+        sptxt_to_csv(
+            filepath=str(input),
+            output_path=str(output),
+            min_peaks=3,
+            min_delta_ascore=20)
 
 
 rule prosit_input:
