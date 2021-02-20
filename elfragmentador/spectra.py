@@ -6,6 +6,11 @@ Contains utilities to represent spectra as well as functions to read them in bul
 .sptxt files
 """
 
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
 import warnings
 from typing import Iterator, Dict, Optional, List, Sequence, Union
 from pathlib import Path
@@ -537,6 +542,23 @@ class Spectrum:
         )
         return out
 
+
+    def plot(self, mirror: Spectrum = None):
+        if plt is None:
+            raise ImportError((
+                "Unable to import matplotlib, please install it "
+                "to use plotting functions and re-load elfragmentador"))
+        
+        plt.title(self.mod_sequence)
+        plt.vlines(self.mzs, 0, self.intensities, color = "blue")
+        plt.axhline(0, color='black')
+
+        if mirror:
+            plt.vlines(mirror.mz, 0, mirror.intensities, color="red")
+            plt.vlines(0, -1, 1, color = "gray")
+        else:
+            plt.vlines(0, 0, 1, color = "gray")
+        # plt.show()
 
 
 def encode_sptxt(

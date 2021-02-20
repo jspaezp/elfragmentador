@@ -22,6 +22,7 @@ from argparse import _ArgumentGroup, ArgumentParser
 import elfragmentador
 from elfragmentador import constants
 from elfragmentador import encoding_decoding
+from elfragmentador.spectra import Spectrum
 from elfragmentador.datamodules import TrainBatch
 from elfragmentador.metrics import CosineLoss
 from elfragmentador.nn_encoding import ConcatenationEncoder, PositionalEncoding, AASequenceEmbedding
@@ -435,8 +436,8 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     def predict_from_seq(
-        self, seq: str, charge: int, nce: float, debug: bool = False
-    ) -> PredictionResults:
+        self, seq: str, charge: int, nce: float, as_spectrum=False, debug: bool = False
+    ) -> Union[PredictionResults, Spectrum]:
         """predict_from_seq Predicts spectra from a sequence as a string.
 
         Utility method that gets a sequence as a string, encodes it internally
@@ -459,6 +460,8 @@ class PepTransformerModel(pl.LightningModule):
             Precursor charge to be assumed during the fragmentation
         nce : float
             Normalized collision energy to use during the prediction
+        as_spectrum : bool
+            Wether to return a Spectrum object instead of the raw tensor predictions
         debug : bool, optional
             When set, it will print (a lot) of the shapes of the intermediate
             tensors inside the model. By default False
@@ -467,6 +470,8 @@ class PepTransformerModel(pl.LightningModule):
         -------
         PredictionResults
             A named tuple with two named results; irt and spectra
+        Spectrum
+            A spectrum object with the predicted spectrum
 
         Examples
         --------
@@ -479,6 +484,9 @@ class PepTransformerModel(pl.LightningModule):
         >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
         PredictionResults(irt=tensor([...], grad_fn=<SqueezeBackward1>), \
 spectra=tensor([...], grad_fn=<SqueezeBackward1>))
+        >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, as_spectrum=True)
+        >>> type(out)
+        <class 'elfragmentador.spectra.Spectrum'>
         >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
         """
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
@@ -498,6 +506,15 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             src=src, charge=in_charge, mods=mods, nce=in_nce, debug=debug
         )
         out = PredictionResults(*[x.squeeze(0) for x in out])
+
+        if as_spectrum:
+            out = Spectrum.from_tensors(
+                sequence_tensor=encoded_seq,
+                fragment_tensor=out.spectra,
+                mod_tensor=encoded_mods,
+                charge=charge,
+                nce=nce,
+                rt=float(out.irt)*100)
 
         return out
 
