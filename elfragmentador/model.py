@@ -426,6 +426,9 @@ class PepTransformerModel(pl.LightningModule):
                     print(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
             return x
 
+        if isinstance(inputs, list):
+            inputs = TrainBatch(*inputs)
+
         out = self.forward(
             src=unsqueeze_if_needed(inputs.encoded_sequence, 2),
             mods=unsqueeze_if_needed(inputs.encoded_mods, 2),
