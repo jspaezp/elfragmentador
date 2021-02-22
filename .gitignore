@@ -10,6 +10,7 @@ settings.json
 .coverage
 htmlcov/**
 .tox/**
+wandb/**
 elfragmentador.egg-info/**
 **/.snakemake
 benchmarking_workflow/comet
@@ -19,3 +20,4 @@ benchmarking_workflow/raw
 benchmarking_workflow/ip
 benchmarking_workflow/pp
 benchmarking_workflow/spectrast
+benchmarking_workflow/prosit_in

@@ -426,6 +426,9 @@ class PepTransformerModel(pl.LightningModule):
                     print(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
             return x
 
+        if isinstance(inputs, list):
+            inputs = TrainBatch(*inputs)
+
         out = self.forward(
             src=unsqueeze_if_needed(inputs.encoded_sequence, 2),
             mods=unsqueeze_if_needed(inputs.encoded_mods, 2),
@@ -713,6 +716,10 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
 
         Does inference, loss calculation, handling of missing values ...
         """
+
+        if isinstance(batch, list):
+            batch = TrainBatch(*batch)
+
         yhat_irt, yhat_spectra = self.batch_forward(batch)
         yhat_irt = yhat_irt[~batch.norm_irt.isnan()]
         norm_irt = batch.norm_irt[~batch.norm_irt.isnan()]
