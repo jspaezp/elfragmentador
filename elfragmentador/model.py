@@ -510,7 +510,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         if as_spectrum:
             out = Spectrum.from_tensors(
                 sequence_tensor=encoded_seq,
-                fragment_tensor=out.spectra,
+                fragment_tensor=out.spectra / out.spectra.max(),
                 mod_tensor=encoded_mods,
                 charge=charge,
                 nce=nce,
