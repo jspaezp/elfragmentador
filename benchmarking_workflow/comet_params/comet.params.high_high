@@ -3,7 +3,7 @@
 # Everything following the '#' symbol is treated as a comment.
 
 database_name = /some/path/db.fasta
-decoy_search = 1                       # 0=no (default), 1=concatenated search, 2=separate search
+decoy_search = 0                       # 0=no (default), 1=concatenated search, 2=separate search
 peff_format = 0                        # 0=no (normal fasta, default), 1=PEFF PSI-MOD, 2=PEFF Unimod
 peff_obo =                             # path to PSI Mod or Unimod OBO file
 
@@ -22,7 +22,7 @@ isotope_error = 3                      # 0=off, 1=0/1 (C13 error), 2=0/1/2, 3=0/
 #
 # search enzyme
 #
-search_enzyme_number = 1               # choose from list at end of this params file
+search_enzyme_number = 2               # choose from list at end of this params file
 num_enzyme_termini = 2                 # 1 (semi-digested), 2 (fully digested, default), 8 C-term unspecific , 9 N-term unspecific
 allowed_missed_cleavage = 2            # maximum value is 5; for enzyme search
 
@@ -67,7 +67,7 @@ output_sqtstream = 0                   # 0=no, 1=yes  write sqt to standard outp
 output_sqtfile = 0                     # 0=no, 1=yes  write sqt file
 output_txtfile = 0                     # 0=no, 1=yes  write tab-delimited txt file
 output_pepxmlfile = 1                  # 0=no, 1=yes  write pep.xml file
-output_percolatorfile = 0              # 0=no, 1=yes  write Percolator tab-delimited input file
+output_percolatorfile = 1              # 0=no, 1=yes  write Percolator tab-delimited input file
 print_expect_score = 1                 # 0=no, 1=yes to replace Sp with expect in out & sqt
 num_output_lines = 5                   # num peptide results to show
 show_fragment_ions = 0                 # 0=no, 1=yes for out files only

@@ -179,8 +179,8 @@ def plot_bipartite_seq(B):
     l, r = nx.bipartite.sets(B)
     pos = {}
     # Update position for node from each group
-    pos.update((node, (int(node[1:])), 1) for node in l)
-    pos.update((node, (int(node[1:-1])), 2) for node in r)
+    pos.update((node, (int(node[1:]), 1)) for node in l)
+    pos.update((node, (int(node[1:-1]), 2)) for node in r)
     weights = list(nx.get_edge_attributes(B,'weight').values())
     mean_weight = np.array(weights).mean()
     min_weight = np.array(weights).min()
