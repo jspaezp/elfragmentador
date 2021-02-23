@@ -16,7 +16,7 @@ else
     echo "Docker not found, attempting singfularity run"
     singularity exec --writable \
         -S /mywineprefix/ ${CLUSTER_SCRATCH}/pwiz_sandbox/pwiz_sandbox \
-        mywine msconvert
+        mywine msconvert \
         --zlib \
         --filter "peakPicking true 1-" \
         --filter "activation HCD" \

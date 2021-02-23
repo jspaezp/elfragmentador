@@ -1,0 +1,26 @@
+{
+    "__default__":
+    {
+        "account": "standby",
+        "mem": "20G",
+        "time": "1:00:00",
+        "cpus-per-task": "1",
+        "N": "1"
+    },
+    "comet_search":
+    {
+        "mem": "50G",
+        "cpus-per-task": "24"
+    },
+    "mokapot":
+    {
+        "mem": "90G",
+        "cpus-per-task": "10"
+    },
+    "mokapot_spectrast":
+    {
+        "mem": "90G",
+        "cpus-per-task": "4",
+        "time": "4:00:00"
+    }
+}

@@ -5,7 +5,7 @@ import subprocess
 import pathlib
 import shutil
 from elfragmentador.spectra import sptxt_to_csv
-import pyteomics
+from pyteomics import fasta
 import mokapot
 
 samples = pd.read_table("sample_info.tsv").set_index("sample", drop=False)
@@ -25,23 +25,40 @@ curr_dir = str(pathlib.Path(".").absolute())
 if shutil.which("docker"):
     TPP_DOCKER=f"docker run -v {curr_dir}/:/data/ spctools/tpp "
 else:
-    TPP_DOCKER=f"singularity exec /scratch/brown/jpaezpae/opt/tpp.img"
+    TPP_DOCKER=f"singularity exec /scratch/brown/jpaezpae/opt/tpp.img "
+
+localrules: 
+    all,
+    crap_fasta,
+    decoy_db,
+    biognosys_irt_fasta,
+    human_fasta,
+    h_contam_fasta,
+    download_file,
+    comet_phospho_params,
+    comet_proalanase_params,
+    generate_sptxt_csv,
+    prosit_input
 
 rule all:
     input:
-        [f"ind_spectrast/{x}.pp.sptxt" for x in samples["sample"]],
-        [f"spectrast/concensus_{x}.iproph.pp.sptxt" for x in samples["experiment"]],
-        [f"prosit_in/{x}.iproph.pp.sptxt" for x in samples["experiment"]],
-        [f"sptxt_csv/{x}.iproph.pp.sptxt.csv" for x in samples["experiment"]],
+        # [f"ind_spectrast/{x}.pp.sptxt" for x in samples["sample"]],
+        [f"mokapot_spectrast/concensus_{x}.mokapot.psms.spidx" for x in samples["experiment"]],
+        # [f"prosit_in/{x}.iproph.pp.sptxt" for x in samples["experiment"]],
+        # [f"sptxt_csv/{x}.iproph.pp.sptxt.csv" for x in samples["experiment"]],
 
 rule crap_fasta:
     output:
         fasta="fasta/crap.fasta",
-        decoy_fasta="fasta/crap.decoy.fasta"
     shell:
         """
         mkdir -p fasta
-        wget ftp://ftp.thegpm.org/fasta/cRAP/crap.fasta -O ./fasta/crap.fasta
+        wget \
+            --timeout=15 \
+            --limit-rate=50m \
+            --wait=5 \
+            ftp://ftp.thegpm.org/fasta/cRAP/crap.fasta \
+            -O ./fasta/crap.fasta
         """
 
 rule decoy_db:
@@ -50,7 +67,7 @@ rule decoy_db:
     output:
         "fasta/{file}.decoy.fasta"
     run:
-        pyteomics.fasta.write_decoy_db("{input}", "{output}")
+        fasta.write_decoy_db(str(input), str(output))
 
 
 rule biognosys_irt_fasta:
@@ -59,7 +76,9 @@ rule biognosys_irt_fasta:
     shell:
         """
         mkdir -p fasta
-        wget https://biognosys.com/media.ashx/irtfusion.fasta -O fasta/irtfusion.fasta
+        wget \
+            https://biognosys.com/media.ashx/irtfusion.fasta \
+            -O fasta/irtfusion.fasta
         """
 
 
@@ -69,7 +88,9 @@ rule human_fasta:
     shell:
         """
         mkdir -p fasta
-        wget https://www.uniprot.org/uniprot/\?query\=proteome:UP000005640%20reviewed:yes\&format\=fasta -O fasta/human.fasta
+        wget \
+            https://www.uniprot.org/uniprot/\?query\=proteome:UP000005640%20reviewed:yes\&format\=fasta \
+            -O fasta/human.fasta
         """
 
 rule h_contam_fasta:
@@ -144,7 +165,7 @@ rule comet_search:
     output:
         # Enable if using 2 in the decoy search parameter
         # decoy_pepxml = "comet/{sample}.decoy.pep.xml", 
-        forward_pepxml = "comet/{sample}.pep.xml"
+        forward_pepxml = "comet/{sample}.pep.xml",
         forward_pin = "comet/{sample}.pin"
     run:
         shell("mkdir -p comet")
@@ -157,6 +178,7 @@ rule comet_search:
         print(cmd)
         shell(cmd)
         shell(f"cp raw/{wildcards.sample}.pep.xml ./comet/.")
+        shell(f"cp raw/{wildcards.sample}.pin ./comet/.")
 
 def get_mokapot_ins(wildcards):
     outs = expand("comet/{sample}.pin", sample = get_samples(wildcards.experiment))
@@ -172,8 +194,8 @@ rule mokapot:
     input:
         get_mokapot_ins
     output:
-        "mokapot/{wildcards.experiment}.mokapot.psms.txt",
-        "mokapot/{wildcards.experiment}.mokapot.peptides.txt"
+        "mokapot/{experiment}.mokapot.psms.txt",
+        "mokapot/{experiment}.mokapot.peptides.txt"
     params:
         enzyme_regex=get_enzyme_regex,
         fasta=get_exp_fasta,
@@ -198,10 +220,11 @@ rule mokapot:
 
 rule mokapot_spectrast_in:
     input:
-        "mokapot/{wildcards.experiment}.mokapot.psms.txt",
+        "mokapot/{experiment}.mokapot.psms.txt",
     output:
-        "mokapot/{wildcards.experiment}.spectrast.mokapot.psms.tsv",
+        "mokapot/{experiment}.spectrast.mokapot.psms.tsv",
     run:
+        # TODO change this so it uses column names
         index_order=[0, 2, 5, 9, 7, 6]
         df = pd.read_table(str(input))
         df['Peptide'] = [x.replace("[", "[+") for x in df['Peptide']]
