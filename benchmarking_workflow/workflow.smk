@@ -206,14 +206,13 @@ rule mokapot:
 
         mkdir -p mokapot
         mokapot --verbosity 2 \
-            --subset_max_train 10000000 \
             --seed 2020 \
             --enzyme {params.enzyme_regex} \
             --decoy_prefix DECOY_ \
             --proteins {params.fasta} \
             --missed_cleavages 2 \
-            --min_length 6 \
-            --max_length 30 \
+            --min_length 5 \
+            --max_length 50 \
             -d mokapot \
             -r {wildcards.experiment} {input} 
         """
@@ -225,6 +224,7 @@ rule mokapot_spectrast_in:
         "mokapot/{experiment}.spectrast.mokapot.psms.tsv",
     run:
         # TODO change this so it uses column names
+        # TODO filter based on peptides and protein fdr as well
         index_order=[0, 2, 5, 9, 7, 6]
         df = pd.read_table(str(input))
         df['Peptide'] = [x.replace("[", "[+") for x in df['Peptide']]
