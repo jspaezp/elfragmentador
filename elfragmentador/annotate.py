@@ -74,6 +74,7 @@ def mass_diff_encode_seq(seq):
     out = "".join([constants.MASS_DIFF_ALIASES_I[x].replace("+", "") for x in iter])
     return out
 
+
 def canonicalize_seq(seq: str, robust: bool = False) -> str:
     """canonicalize_seq Solves all modification aliases in a sequence.
 

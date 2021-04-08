@@ -3,8 +3,11 @@ from typing import List, Generator, Iterable
 from elfragmentador.annotate import peptide_parser
 
 
-# Answer from https://stackoverflow.com/questions/6284396
 class _unique_element:
+    """
+    Part of the answer from https://stackoverflow.com/questions/6284396
+    """
+
     def __init__(self, value, occurrences):
         self.value = value
         self.occurrences = occurrences
@@ -12,6 +15,8 @@ class _unique_element:
 
 def perm_unique(elements: Iterable) -> Generator:
     """perm_unique Gets permutations of elements taking into account repeated.
+
+    Part of the answer from https://stackoverflow.com/questions/6284396
 
     Permutes the elements passed but skips all permutations where elements are
     the same. For instance (0, 1, 0) would five 3 possibilities.
@@ -25,7 +30,7 @@ def perm_unique(elements: Iterable) -> Generator:
     -------
     Generator
         A list with all permutations
-    
+
     Examples
     --------
     >>> out = list(perm_unique("COM"))
@@ -45,6 +50,9 @@ def perm_unique(elements: Iterable) -> Generator:
 
 
 def _perm_unique_helper(listunique, result_list, d):
+    """
+    Part of the answer from https://stackoverflow.com/questions/6284396
+    """
     if d < 0:
         yield tuple(result_list)
     else:
@@ -87,24 +95,28 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
 
 
 def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]) -> List[str]:
-    """get_mod_isoforms 
+    """get_mod_isoforms
 
-    [extended_summary]
+    Gets modification isoforms for a peptide with modifications
 
     Parameters
     ----------
     seq : str
-        [description]
+        Sequence used
     mods_list : List[str]
-        [description]
+        List of modification names that can be permuted
     aas_list : List[str]
-        [description]
+        List of the aminoacids that can be the modified by each modification.
+
+    Details
+    -------
+    This functions expects the modification and the aminoacid list to be the same length
 
     Returns
     -------
     List[str]
-        [description]
-    
+        A list with the combination of the sequence with the modifications.
+
     Example
     -------
     >>> seq = "M[OXIDATION]YPEPT[PHOSPHO]MIDES"

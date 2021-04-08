@@ -46,6 +46,12 @@ def calculate_irt():
 
 
 def convert_sptxt():
+    """
+    convert_sptxt Provides a CLI to convert an sptxt to a csv for training
+
+    provides a CLI for the sptxt_to_csv function, chek that guy out for the actual
+    implementation
+    """
     parser = ArgumentParser()
     parser.add_argument(
         "file",
@@ -81,6 +87,8 @@ def convert_sptxt():
     args = parser.parse_args()
 
     print([x.name for x in args.file])
+
+    # Here we make the partial function that will be used to actually read the data
     converter = lambda fname, outname: sptxt_to_csv(
         fname,
         outname,
@@ -150,20 +158,22 @@ def evaluate_checkpoint():
             dataset=ds,
             batch_size=args.batch_size,
             device=args.device,
-            overwrite_nce=nce
+            overwrite_nce=nce,
         )
         res_history.append(res[1]["AverageSpectraCosineSimilarity"])
-        if res[1]["AverageSpectraCosineSimilarity"] > best_res[1]["AverageSpectraCosineSimilarity"]:
+        if (
+            res[1]["AverageSpectraCosineSimilarity"]
+            > best_res[1]["AverageSpectraCosineSimilarity"]
+        ):
             best_res = res
             best_nce = nce
-    
+
     if len(nces) > 1:
         print(f"Best Nce was {best_nce}")
-        uniplot.plot(ys = res_history, xs = nces)
-    
+        uniplot.plot(ys=res_history, xs=nces)
+
     if dict_args["out_csv"] is not None:
         best_res[0].to_csv(dict_args["out_csv"], index=False)
-
 
 
 def train():

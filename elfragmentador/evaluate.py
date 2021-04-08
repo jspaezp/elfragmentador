@@ -87,8 +87,12 @@ def evaluate_checkpoint(
         out.to_csv(out_csv, index=False)
 
 
-def evaluate_on_sptxt(model, filepath, batch_size=4, device="cpu", max_spec=1e6, *args, **kwargs):
-    ds = PeptideDataset.from_sptxt(filepath=filepath, max_spec=max_spec, *args, **kwargs)
+def evaluate_on_sptxt(
+    model, filepath, batch_size=4, device="cpu", max_spec=1e6, *args, **kwargs
+):
+    ds = PeptideDataset.from_sptxt(
+        filepath=filepath, max_spec=max_spec, *args, **kwargs
+    )
     return evaluate_on_dataset(
         model=model, dataset=ds, batch_size=batch_size, device=device
     )
@@ -100,7 +104,8 @@ def evaluate_on_csv(model, filepath, batch_size=4, device="cpu", max_spec=1e6):
         model=model, dataset=ds, batch_size=batch_size, device=device
     )
 
-def terminal_plot_similarity(similarities, name = ""):
+
+def terminal_plot_similarity(similarities, name=""):
     if all([np.isnan(x) for x in similarities]):
         print("Skipping because all values are missing")
         return None
@@ -111,7 +116,7 @@ def terminal_plot_similarity(similarities, name = ""):
     )
 
     qs = [0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1]
-    similarity_quantiles = np.quantile(1-similarities, qs)
+    similarity_quantiles = np.quantile(1 - similarities, qs)
     p90 = similarity_quantiles[2]
     p10 = similarity_quantiles[-3]
     q1 = similarity_quantiles[5]
@@ -120,11 +125,8 @@ def terminal_plot_similarity(similarities, name = ""):
     title = f"Accumulative distribution (y) of the 1 - {name} (x)"
     title += f"\nP90={1-p90:.3f} Q3={1-q3:.3f}"
     title += f" Median={1-med:.3f} Q1={1-q1:.3f} P10={1-p10:.3f}"
-    uniplot.plot(
-        xs = similarity_quantiles,
-        ys = qs,
-        lines=True,
-        title=title)
+    uniplot.plot(xs=similarity_quantiles, ys=qs, lines=True, title=title)
+
 
 def evaluate_on_dataset(
     model: PepTransformerModel,
@@ -158,9 +160,8 @@ def evaluate_on_dataset(
         for b in tqdm(dl):
             if overwrite_nce:
                 nce = torch.where(
-                    torch.tensor(True),
-                    torch.tensor(overwrite_nce),
-                    b.nce)
+                    torch.tensor(True), torch.tensor(overwrite_nce), b.nce
+                )
             else:
                 nce = b.nce
 
@@ -201,8 +202,8 @@ def evaluate_on_dataset(
         "Spectra_Similarity_Pearson": spec_results_pc.numpy().flatten(),
     }
 
-    terminal_plot_similarity(out['Spectra_Similarity_Pearson'], "Pearson Similarity")
-    terminal_plot_similarity(out['Spectra_Similarity_Cosine'], "Cosine Similarity")
+    terminal_plot_similarity(out["Spectra_Similarity_Pearson"], "Pearson Similarity")
+    terminal_plot_similarity(out["Spectra_Similarity_Cosine"], "Cosine Similarity")
 
     # TODO consider the possibility of stratifying on files before normalizing
     missing_vals = np.isnan(np.array(rt_real).astype("float"))
@@ -214,7 +215,7 @@ def evaluate_on_dataset(
     norm_r_irt, rev_r_irt = norm(out["Real_RT"])
 
     if sum(missing_vals) == len(norm_p_irt):
-        rt_fit = {'determination': None}
+        rt_fit = {"determination": None}
     else:
         rt_fit = polyfit(norm_p_irt[~missing_vals], norm_r_irt[~missing_vals])
 
@@ -244,7 +245,8 @@ def norm(x: ndarray) -> ndarray:
     sd = np.nanstd(x)
     m = np.nanmean(x)
     out = (x - m) / sd
-    return out, lambda y: (y*sd) + m
+    return out, lambda y: (y * sd) + m
+
 
 # Polynomial Regression
 # Implementation from:
@@ -290,9 +292,7 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     for seq, desc in constants.IRT_PEPTIDES.items():
         with torch.no_grad():
             out = model.predict_from_seq(seq, 2, 25)
-            pred_rt.append(100*out.irt.numpy())
-            real_rt.append(np.array(desc['irt']))
+            pred_rt.append(100 * out.irt.numpy())
+            real_rt.append(np.array(desc["irt"]))
 
-    uniplot.plot(
-        xs = np.array(real_rt).flatten(),
-        ys = np.array(pred_rt).flatten())
+    uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())

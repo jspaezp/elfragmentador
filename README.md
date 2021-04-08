@@ -67,6 +67,8 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
 - Allow training with missing values (done for RT, not for spectra)
+- Add n-terma and c-term token to the encoding (and evaluate if it is better)
+- Migrate training data preparation script to snakemake
 
 #### Possible
 

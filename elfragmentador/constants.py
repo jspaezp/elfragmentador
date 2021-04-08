@@ -131,9 +131,9 @@ int_aliases = [
 ]
 MASS_DIFF_ALIASES = {}
 _ = [MASS_DIFF_ALIASES.update(x) for x in int_aliases[::-1]]
-MASS_DIFF_ALIASES_I = {k[0]+f'[{v}]': k for k,v in MASS_DIFF_ALIASES.items()}
-MASS_DIFF_ALIASES_I.update({"C" : "C[+57]"})
-MASS_DIFF_ALIASES_I.update({k:k for k in AMINO_ACID})
+MASS_DIFF_ALIASES_I = {k[0] + f"[{v}]": k for k, v in MASS_DIFF_ALIASES.items()}
+MASS_DIFF_ALIASES_I.update({"C": "C[+57]"})
+MASS_DIFF_ALIASES_I.update({k: k for k in AMINO_ACID})
 
 MOD_PEPTIDE_ALIASES.update(MASS_DIFF_ALIASES)
 # This generages aliases like T[181]

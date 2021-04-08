@@ -1,6 +1,6 @@
-
 import torch
 from torch import Tensor
+
 
 class CosineLoss(torch.nn.CosineSimilarity):
     """CosineLoss Implements a simple cosine similarity based loss."""
@@ -41,7 +41,8 @@ class CosineLoss(torch.nn.CosineSimilarity):
 
 class PearsonCorrelation(torch.nn.Module):
     """PearsonCorrelation Implements a simple pearson correlation."""
-    def __init__(self, axis=1, eps = 1e-4):
+
+    def __init__(self, axis=1, eps=1e-4):
         """__init__ Instantiates the class.
 
         Creates a callable object to calculate the pearson correlation on an axis
@@ -89,12 +90,12 @@ class PearsonCorrelation(torch.nn.Module):
         >>> out.shape
         torch.Size([174])
         """
-        vx = x - torch.mean(x, axis = self.axis).unsqueeze(self.axis)
-        vy = y - torch.mean(y, axis = self.axis).unsqueeze(self.axis)
+        vx = x - torch.mean(x, axis=self.axis).unsqueeze(self.axis)
+        vy = y - torch.mean(y, axis=self.axis).unsqueeze(self.axis)
 
-        num = torch.sum(vx * vy, axis = self.axis)
-        denom_1 = torch.sqrt(torch.sum(vx ** 2, axis = self.axis))
-        denom_2 = torch.sqrt(torch.sum(vy ** 2, axis = self.axis))
+        num = torch.sum(vx * vy, axis=self.axis)
+        denom_1 = torch.sqrt(torch.sum(vx ** 2, axis=self.axis))
+        denom_2 = torch.sqrt(torch.sum(vy ** 2, axis=self.axis))
         denom = (denom_1 * denom_2) + self.eps
-        cost =  num / denom
+        cost = num / denom
         return cost

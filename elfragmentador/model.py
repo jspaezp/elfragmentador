@@ -25,7 +25,11 @@ from elfragmentador import encoding_decoding
 from elfragmentador.spectra import Spectrum
 from elfragmentador.datamodules import TrainBatch
 from elfragmentador.metrics import CosineLoss
-from elfragmentador.nn_encoding import ConcatenationEncoder, PositionalEncoding, AASequenceEmbedding
+from elfragmentador.nn_encoding import (
+    ConcatenationEncoder,
+    PositionalEncoding,
+    AASequenceEmbedding,
+)
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
@@ -114,9 +118,11 @@ class _PeptideTransformerEncoder(torch.nn.Module):
 
         # Aminoacid embedding
         self.aa_encoder = AASequenceEmbedding(ninp=ninp, position_ratio=0.1)
-        
+
         # Transformer encoder sections
-        encoder_layers = nn.TransformerEncoderLayer(ninp, nhead, nhid, dropout, activation="gelu")
+        encoder_layers = nn.TransformerEncoderLayer(
+            ninp, nhead, nhid, dropout, activation="gelu"
+        )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
     def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
@@ -174,9 +180,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
 
     def init_weights(self):
         initrange = 0.1
-        nn.init.uniform_(
-            self.trans_decoder_embedding.weight, -initrange, initrange
-        )
+        nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
 
     def forward(
         self,
@@ -517,7 +521,8 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
                 mod_tensor=encoded_mods,
                 charge=charge,
                 nce=nce,
-                rt=float(out.irt)*100)
+                rt=float(out.irt) * 100,
+            )
 
         return out
 
@@ -602,9 +607,10 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             "--loss_ratio",
             default=5.0,
             type=float,
-            help=("Ratio between the retention time and the spectrum loss"
-                 " (higher values mean more weight to the spectra loss"
-                 " with respect to the retention time loss)"
+            help=(
+                "Ratio between the retention time and the spectrum loss"
+                " (higher values mean more weight to the spectra loss"
+                " with respect to the retention time loss)"
             ),
         )
         return parser
@@ -646,7 +652,9 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             or make a subclass with the modification. (PRs are also welcome)
 
         """
-        opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        opt = torch.optim.AdamW(
+            filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr
+        )
 
         if self.scheduler == "plateau":
             scheduler_dict = {
@@ -730,7 +738,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         if len(norm_irt.data) == 0:
             total_loss = loss_spectra
         else:
-            total_loss = (loss_irt + loss_spectra * self.loss_ratio)
+            total_loss = loss_irt + loss_spectra * self.loss_ratio
             total_loss = total_loss / (self.loss_ratio + 1)
 
         out = {

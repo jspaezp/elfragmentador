@@ -14,6 +14,7 @@ from torch import Tensor, nn
 from elfragmentador import constants
 import pytorch_lightning as pl
 
+
 class SeqPositionalEmbed(torch.nn.Module):
     def __init__(self, dims_add: int = 10, max_len: int = 30, inverted=True):
         super().__init__()
@@ -30,55 +31,81 @@ class SeqPositionalEmbed(torch.nn.Module):
         self.inverted = inverted
 
     def forward(self, x: torch.LongTensor):
-        """forward Concatenates the values to the 
+        """forward Concatenates the values to the
 
         [extended_summary]
 
         Parameters
         ----------
         x : Tensor
-            Tensor of shape [BatchSize, SequenceLength], this should encode
+            Integer Tensor of shape [BatchSize, SequenceLength], this should encode
             a sequence and be padded with zeros
 
         Returns
         -------
         Tensor
             Tensor of shape [SequenceLength, BatchSize, DimensionsAdded],
-            Where 
+
+        Example
+        -------
+        >>> encoder = SeqPositionalEmbed(6, 50, inverted=True)
+        >>> x = torch.cat([torch.ones(1,2), torch.ones(1,2)*2, torch.zeros((1,2))], dim = -1).long()
+        >>> x[0]
+        tensor([1, 1, 2, 2, 0, 0])
+        >>> x.shape
+        torch.Size([1, 6])
+        >>> out = encoder(x)
+        >>> out.shape
+        torch.Size([6, 1, 6])
+        >>> out
+        tensor([[[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]],
+               [[ 0.1411, -0.9900,  0.8567,  0.5158,  0.3456,  0.9384]],
+               [[ 0.9093, -0.4161,  0.6334,  0.7738,  0.2331,  0.9725]],
+               [[ 0.8415,  0.5403,  0.3363,  0.9418,  0.1174,  0.9931]],
+               [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
+               [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]])
         """
         vals = x.bool().long()
         if self.inverted:
             vals = vals.flip(1)
-            
+
         out = self.pe[vals.cumsum(1)]
         if self.inverted:
             out = out.flip(1)
-            
-        return out.transpose(1,0)
+
+        return out.transpose(1, 0)
 
 
 def test_inverted_positional_encoder():
     encoder = SeqPositionalEmbed(6, 50, inverted=True)
-    x = torch.cat([torch.ones(1,2), torch.ones(1,2)*2, torch.zeros((1,2))], dim = -1).long()
+    x = torch.cat(
+        [torch.ones(1, 2), torch.ones(1, 2) * 2, torch.zeros((1, 2))], dim=-1
+    ).long()
     x[0]
     # tensor([1, 1, 2, 2, 0, 0])
     x.shape
     # torch.Size([1, 6])
     out = encoder(x)
-    assert out.shape == torch.Size((6,1,6))
-    assert torch.all(out[5,0,:] == 0)
-    assert torch.all(out[4,0,:] == 0)
-    assert torch.all(out[3,0,:] != 0)
-    assert torch.all(out[3,0,:] == encoder.pe[1])
-    assert torch.any(out[3,0,:] == encoder.pe[2])
-    assert torch.any(out[3,0,:] != out[0,0,:])
+    assert out.shape == torch.Size((6, 1, 6))
+
+    # Check that the embedding of the empty encodings are empty
+    assert torch.all(out[5, 0, :] == 0)
+    assert torch.all(out[4, 0, :] == 0)
+
+    # Check that the embedding of a non empty is not empty
+    assert torch.all(out[3, 0, :] != 0)
+    assert torch.all(out[3, 0, :] == encoder.pe[1])
+    assert torch.any(out[2, 0, :] == encoder.pe[2])
+    assert torch.any(out[1, 0, :] == encoder.pe[3])
+    assert torch.any(out[0, 0, :] == encoder.pe[4])
+    assert torch.any(out[3, 0, :] != out[0, 0, :])
 
     encoder = SeqPositionalEmbed(6, 50, inverted=True)
-    input_t = torch.tril(torch.ones((3,3))).long()
+    input_t = torch.tril(torch.ones((3, 3))).long()
     input_t[1]
     # tensor([1, 1, 0])
     out = encoder(input_t)
-    assert out.shape == torch.Size((3,3,6))
+    assert out.shape == torch.Size((3, 3, 6))
     assert torch.all(out[2, 1, :] == 0)
     assert torch.any(out[1, 1, :] != 0)
     assert torch.any(out[0, 1, :] != 0)
@@ -111,6 +138,7 @@ class ConcatenationEncoder(torch.nn.Module):
     >>> output = encoder(x1, torch.tensor([[7]]))
     >>> output = encoder(x2, torch.tensor([[7], [4]]))
     """
+
     # TODO evaluate if fropout is actually useful here ...
 
     def __init__(
@@ -175,10 +203,10 @@ class ConcatenationEncoder(torch.nn.Module):
         if debug:
             print(f"CE: Making encodings e={e.shape}")
 
-        assert e.shape[-1] < self.dims_add + 2, (
-            "Internal error in concatenation encoder"
-        )
-        e = e[...,:self.dims_add]
+        assert (
+            e.shape[-1] < self.dims_add + 2
+        ), "Internal error in concatenation encoder"
+        e = e[..., : self.dims_add]
 
         if debug:
             print(f"CE: clipping encodings e={e.shape}")
@@ -292,25 +320,21 @@ class PositionalEncoding(torch.nn.Module):
 class AASequenceEmbedding(torch.nn.Module):
     def __init__(self, ninp, position_ratio=0.1):
         super().__init__()
-        positional_ninp = int((ninp/2) * position_ratio)
+        positional_ninp = int((ninp / 2) * position_ratio)
         if positional_ninp % 2:
             positional_ninp += 1
-        ninp_embed = int(ninp - (2*positional_ninp))
+        ninp_embed = int(ninp - (2 * positional_ninp))
 
         # Positional information additions
         self.fw_position_embed = SeqPositionalEmbed(
-            max_len=constants.MAX_SEQUENCE * 4,
-            dims_add=positional_ninp,
-            inverted=False)
+            max_len=constants.MAX_SEQUENCE * 4, dims_add=positional_ninp, inverted=False
+        )
         self.rev_position_embed = SeqPositionalEmbed(
-            max_len=constants.MAX_SEQUENCE * 4,
-            dims_add=positional_ninp,
-            inverted=True)
+            max_len=constants.MAX_SEQUENCE * 4, dims_add=positional_ninp, inverted=True
+        )
 
         # Aminoacid embedding
-        self.aa_encoder = nn.Embedding(
-            constants.AAS_NUM + 1, ninp_embed, padding_idx=0
-        )
+        self.aa_encoder = nn.Embedding(constants.AAS_NUM + 1, ninp_embed, padding_idx=0)
         # PTM embedding
         self.mod_encoder = nn.Embedding(
             len(constants.MODIFICATION) + 1, ninp_embed, padding_idx=0
@@ -326,7 +350,7 @@ class AASequenceEmbedding(torch.nn.Module):
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
         torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
 
-    def forward(self, src, mods, debug: bool=False):
+    def forward(self, src, mods, debug: bool = False):
         if debug:
             print(f"AAE: Input shapes src={src.shape}, mods={mods.shape}")
         fw_pos_emb = self.fw_position_embed(src)
@@ -341,7 +365,7 @@ class AASequenceEmbedding(torch.nn.Module):
         if debug:
             print(f"AAE: Shape after embedding {src.shape}")
 
-        src = torch.cat([src, fw_pos_emb, rev_pos_emb], dim = -1)
+        src = torch.cat([src, fw_pos_emb, rev_pos_emb], dim=-1)
         if debug:
             print(f"AAE: Shape after embedding positions {src.shape}")
 

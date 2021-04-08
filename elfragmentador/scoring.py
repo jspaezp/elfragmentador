@@ -11,6 +11,44 @@ def get_site_localizing_ions(
     Tuple[Dict[str, Dict[Any, Any]], Dict[str, Dict[str, float64]]],
     Tuple[Dict[str, Dict[str, float64]], Dict[str, Dict[str, float64]]],
 ]:
+    """
+    get_site_localizing_ions
+
+    [extended_summary]
+
+    Parameters
+    ----------
+    seq : str
+        [description]
+    mod : List[str]
+        [description]
+    aas : List[str]
+        [description]
+
+    Returns
+    -------
+    Tuple[
+        Dict[str, Dict[str, float64]],
+        Dict[str, Dict[str, float64]]]
+
+    Returns two dictionaries whose keys are isoform sequences and the values are
+    dictionaries of ion:mass pairs.
+
+    The first one contins only the ions unique to each sequence and the second contains
+    all the ions for each modified sequence
+
+    Example
+    -------
+    >>> seq = "MY[PHOSPHO]PTMIDE"
+    >>> mods_list = ["PHOSPHO"]
+    >>> aas_list = ["STY"]
+    >>> get_site_localizing_ions(seq, mods_list, aas_list)
+    ({'MY[PHOSPHO]PTMIDE': {'z1b2': ...}, 'MYPT[PHOSPHO]MIDE': {'z1b2': ...}},
+     {'MY[PHOSPHO]PTMIDE': {'z1b1': ...}, 'MYPT[PHOSPHO]MIDE': {'z1b1': ...}})
+    >>> out = get_site_localizing_ions(seq, mods_list, aas_list)
+    >>> [{k: len(v) for k,v in x.items()} for x in out]
+    [{'MY[PHOSPHO]PTMIDE': 12, 'MYPT[PHOSPHO]MIDE': 12}, {'MY[PHOSPHO]PTMIDE': 42, 'MYPT[PHOSPHO]MIDE': 42}]
+    """
     mod_isoforms = isoforms.get_mod_isoforms(seq, mod, aas)
     mod_isoform_ions = {k: annotate.get_peptide_ions(k) for k in mod_isoforms}
 
