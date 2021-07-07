@@ -216,10 +216,20 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         return spectra_output
 
 
+_model_sections = [ 
+    'TransEncoder',
+    'TransDecoder',
+    'AAEmbedding',
+    'MODEmbedding',
+    'FragmentEmbedding',
+    'FragmentFFN',
+    'RTFFN',
+]
 class PepTransformerModel(pl.LightningModule):
     """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
 
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
+    model_sections = _model_sections
     __version__ = elfragmentador.__version__
 
     def __init__(
@@ -235,6 +245,7 @@ class PepTransformerModel(pl.LightningModule):
         lr_ratio: Union[float, int] = 200,
         steps_per_epoch: None = None,
         loss_ratio: float = 5,
+        trainable_sections: List[str] = _model_sections,
         *args,
         **kwargs,
     ) -> None:
@@ -316,6 +327,19 @@ class PepTransformerModel(pl.LightningModule):
         self.lr_ratio = lr_ratio
         self.steps_per_epoch = steps_per_epoch
         self.loss_ratio = loss_ratio
+
+        self.model_sections = {
+            'TransEncoder': self.encoder.transformer_encoder,
+            'TransDecoder': self.decoder.trans_decoder,
+            'AAEmbedding': self.encoder.aa_encoder.aa_encoder,
+            'MODEmbedding': self.encoder.aa_encoder.mod_encoder,
+            'FragmentEmbedding': self.decoder.trans_decoder_embedding,
+            'FragmentFFN': self.decoder.peak_decoder, 
+            'RTFFN': self.rt_decoder, 
+        }
+
+        self.make_trainable_sections(trainable_sections)
+
 
     def forward(
         self,
@@ -613,7 +637,31 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
                 " with respect to the retention time loss)"
             ),
         )
+        parser.add_argument(
+            '--trainable_secions',
+            nargs = '+', type = str, default=PepTransformerModel.model_sections,
+            help=(
+                f'Sections of the model to train, '
+                f'can be any subset of {PepTransformerModel.model_sections}'
+            ),
+        )
+
         return parser
+
+
+    def make_trainable_sections(self, sections: List) -> None:
+        def set_grad_section(model_section, trainable = True):
+            """Freezes or unfreezes a model section"""
+            for param in model_section.parameters():
+                param.requires_grad = trainable
+
+        print("Freezing the model")
+        set_grad_section(self, trainable=False)
+
+        for section in sections:
+            print(f"Unfreezing {section}")
+            set_grad_section(self.model_sections[section], trainable=True)
+        
 
     def configure_optimizers(
         self,
