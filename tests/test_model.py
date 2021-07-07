@@ -94,7 +94,6 @@ def _test_export_onnx(datadir, keep=False):
 def base_export_torchscript(datadir, keep=False):
     # TODO make this a class method ...
     mod = model.PepTransformerModel(nhead=4, ninp=64)
-    mod.encoder.pos_encoder.static_size = constants.MAX_SEQUENCE
     mod.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
     mod.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
 

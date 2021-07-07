@@ -1,10 +1,9 @@
-# -*- coding: future_annotations -*-
-# This adds the equivalent to from __future__ import annotations for python 3.6
-
 """
 Contains utilities to represent spectra as well as functions to read them in bulk from
 .sptxt files
 """
+
+from __future__ import annotations
 
 try:
     import matplotlib.pyplot as plt
@@ -24,19 +23,18 @@ import numpy as np
 from tqdm.auto import tqdm
 
 
-
 class Spectrum:
     """Represents Spectra and bundles methods to annotate peaks."""
 
     __SPTXT_TEMPLATE = (
-    "Name: {name}\n"
-    # "LibID: {lib_id}\n"
-    "MW: {mw}\n"
-    "PrecursorMZ: {precursor_mz}\n"
-    "FullName: {full_name}\n"
-    "Comment: {comment}\n"
-    "Num Peaks: {num_peaks}\n"
-    "{peaks}\n\n"
+        "Name: {name}\n"
+        # "LibID: {lib_id}\n"
+        "MW: {mw}\n"
+        "PrecursorMZ: {precursor_mz}\n"
+        "FullName: {full_name}\n"
+        "Comment: {comment}\n"
+        "Num Peaks: {num_peaks}\n"
+        "{peaks}\n\n"
     )
 
     def __init__(
@@ -178,11 +176,11 @@ class Spectrum:
             Annotations: {'z2y2': 1.0, 'z2b2': 1.0, ...
         """
         ions = annotate.get_peptide_ions(seq)
-        ions = {k:v for k,v in ions.items() if int(k[1]) < charge}
+        ions = {k: v for k, v in ions.items() if int(k[1]) < charge}
         parent_mz = annotate.get_precursor_mz(seq, charge)
         mzs = list(ions.values())
         mzs = sorted(mzs)
-        intensities = [1. for _ in mzs]
+        intensities = [1.0 for _ in mzs]
 
         spec = cls(
             sequence=seq,
@@ -191,12 +189,12 @@ class Spectrum:
             mzs=mzs,
             intensities=intensities,
             nce=None,
-            raw_spectra="Predicted")
+            raw_spectra="Predicted",
+        )
 
         spec.annotated_peaks
 
         return spec
-
 
     @classmethod
     def from_tensors(
@@ -482,7 +480,7 @@ class Spectrum:
             out += f"\tAnnotations: {self._annotated_peaks}\n"
 
         return out
-    
+
     def to_sptxt(self) -> str:
         """
         to_sptxt Represents the spectrum for an sptxt file
@@ -516,7 +514,7 @@ class Spectrum:
         Num Peaks: 2
         100\t100000000.0\t"?"
         200\t10000000.0\t"?"
-        
+
 
         """
         mod_seq = annotate.mass_diff_encode_seq(self.mod_sequence)
@@ -525,39 +523,44 @@ class Spectrum:
         precursor_mz = self.theoretical_mz
         full_name = name + " (HCD)"
         comment = {
-            'CollisionEnergy': self.nce,
-            'Origin': f'ElFragmentador_v{elfragmentador.__version__}'}
+            "CollisionEnergy": self.nce,
+            "Origin": f"ElFragmentador_v{elfragmentador.__version__}",
+        }
 
         comment = " ".join([f"{k}={v}" for k, v in comment.items()])
-        peaks = "\n".join([f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.1])
+        peaks = "\n".join(
+            [f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.1]
+        )
 
         out = self.__SPTXT_TEMPLATE.format(
-            name = name,
-            mw = mw,
-            precursor_mz = precursor_mz,
-            full_name = full_name,
-            comment = comment,
-            num_peaks = len(self.mzs),
-            peaks = peaks
+            name=name,
+            mw=mw,
+            precursor_mz=precursor_mz,
+            full_name=full_name,
+            comment=comment,
+            num_peaks=len(self.mzs),
+            peaks=peaks,
         )
         return out
 
-
     def plot(self, mirror: Spectrum = None):
         if plt is None:
-            raise ImportError((
-                "Unable to import matplotlib, please install it "
-                "to use plotting functions and re-load elfragmentador"))
-        
+            raise ImportError(
+                (
+                    "Unable to import matplotlib, please install it "
+                    "to use plotting functions and re-load elfragmentador"
+                )
+            )
+
         plt.title(self.mod_sequence)
-        plt.vlines(self.mzs, 0, self.intensities, color = "blue")
-        plt.axhline(0, color='black')
+        plt.vlines(self.mzs, 0, self.intensities, color="blue")
+        plt.axhline(0, color="black")
 
         if mirror:
             plt.vlines(mirror.mz, 0, mirror.intensities, color="red")
-            plt.vlines(0, -1, 1, color = "gray")
+            plt.vlines(0, -1, 1, color="gray")
         else:
-            plt.vlines(0, 0, 1, color = "gray")
+            plt.vlines(0, 0, 1, color="gray")
         # plt.show()
 
 
@@ -690,7 +693,7 @@ def encode_sptxt(
 
     if skipped_spec >= 1:
         warnings.warn(f"{skipped_spec}/{i} Spectra were skipped")
-    
+
     print(list(ret))
     print(ret)
 

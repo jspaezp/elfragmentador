@@ -1,3 +1,5 @@
+import logging
+
 try:
     import matplotlib.pyplot as plt
 except ImportError:
@@ -24,16 +26,25 @@ class SelfAttentionExplorer(torch.no_grad):
     Examples
     --------
 
-    >>> model.eval()
+    >>> model = PepTransformerModel() # Or load the model from a checkpoint
+    >>> _ = model.eval()
     >>> with SelfAttentionExplorer(model) as sea:
-    ...     model.predict_from_seq("MYPEPTIDEK", 2, 30)
-    ...     model.predict_from_seq("MY[PHOSPHO]PEPTIDEK", 2, 30)
-    >>> sea.get_encoder_attn(layer=0, index=0)
-    >>> sea.get_decoder_attn(layer=0, index=0)
+    ...     _ = model.predict_from_seq("MYPEPTIDEK", 2, 30)
+    ...     _ = model.predict_from_seq("MY[PHOSPHO]PEPTIDEK", 2, 30)
+    >>> out = sea.get_encoder_attn(layer=0, index=0)
+    >>> type(out)
+    <class 'pandas.core.frame.DataFrame'>
+    >>> list(out)
+    ['M1', 'Y2', 'P3', 'E4', 'P5', 'T6', 'I7', 'D8', 'E9', 'K10']
+    >>> out = sea.get_decoder_attn(layer=0, index=0)
+    >>> type(out)
+    <class 'pandas.core.frame.DataFrame'>
+    >>> list(out)[:5]
+    ['z1b1', 'z1b2', 'z1b3', 'z1b4', 'z1b5']
     """
 
     def __init__(self, model: PepTransformerModel):
-        print("Initializing SelfAttentionExplorer")
+        logging.info("Initializing SelfAttentionExplorer")
         super().__init__()
 
         self.encoder_viz = {}
@@ -47,13 +58,13 @@ class SelfAttentionExplorer(torch.no_grad):
 
         encoder_hook = self._make_hook_transformer_layer(self.encoder_viz)
         for layer in range(0, len(encoder.layers)):
-            print(f"Adding hook to encoder layer: {layer}")
+            logging.info(f"Adding hook to encoder layer: {layer}")
             handle = encoder.layers[layer].self_attn.register_forward_hook(encoder_hook)
             self.handles.append(handle)
 
         decoder_hook = self._make_hook_transformer_layer(self.decoder_viz)
         for layer in range(0, len(decoder.layers)):
-            print(f"Adding hook to decoder layer: {layer}")
+            logging.info(f"Adding hook to decoder layer: {layer}")
             handle = decoder.layers[layer].self_attn.register_forward_hook(decoder_hook)
             self.handles.append(handle)
 
@@ -70,7 +81,7 @@ class SelfAttentionExplorer(torch.no_grad):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        print("Removing Handles")
+        logging.info("Removing Handles")
         super().__exit__(exc_type, exc_value, exc_traceback)
         for h in self.handles:
             h.remove()

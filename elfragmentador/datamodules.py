@@ -1,5 +1,4 @@
-# -*- coding: future_annotations -*-
-# This adds the equivalent to from __future__ import annotations for python 3.6
+from __future__ import annotations
 
 import warnings
 from collections import namedtuple
@@ -99,16 +98,19 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
 
 class PeptideDataset(torch.utils.data.Dataset):
     def __init__(
-        self, df: DataFrame,
+        self,
+        df: DataFrame,
         max_spec: int = 1e6,
-        drop_missing_vals = False,
+        drop_missing_vals=False,
     ) -> None:
         super().__init__()
         print("\n>>> Initalizing Dataset")
         if drop_missing_vals:
             former_len = len(df)
             df.dropna(inplace=True)
-            print(f"\n>>> {former_len}/{len(df)} rows left after dropping missing values")
+            print(
+                f"\n>>> {former_len}/{len(df)} rows left after dropping missing values"
+            )
 
         if max_spec < len(df):
             print(
@@ -157,9 +159,7 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         try:
             irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
-            self.norm_irts = (
-                    torch.from_numpy(irts).float().unsqueeze(1)
-            )
+            self.norm_irts = torch.from_numpy(irts).float().unsqueeze(1)
         except ValueError as e:
             print(self.df[name_match["iRT"]])
             raise e
@@ -193,7 +193,7 @@ class PeptideDataset(torch.utils.data.Dataset):
             # This syntax is compatible in torch +1.8, will change when colab migrates to it
             # self.nces = torch.nan_to_num(self.nces, nan=30.0)
 
-        charges = np.array(self.df[name_match["Ch"]]).astype('long')
+        charges = np.array(self.df[name_match["Ch"]]).astype("long")
         self.charges = torch.Tensor(charges).long().unsqueeze(1)
 
         print(
@@ -299,8 +299,12 @@ class PeptideDataModule(pl.LightningDataModule):
         return parser
 
     def setup(self) -> None:
-        self.train_dataset = PeptideDataset(self.train_df, drop_missing_vals=self.drop_missing_vals)
-        self.val_dataset = PeptideDataset(self.val_df, drop_missing_vals=self.drop_missing_vals)
+        self.train_dataset = PeptideDataset(
+            self.train_df, drop_missing_vals=self.drop_missing_vals
+        )
+        self.val_dataset = PeptideDataset(
+            self.val_df, drop_missing_vals=self.drop_missing_vals
+        )
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(

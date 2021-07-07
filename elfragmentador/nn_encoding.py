@@ -75,6 +75,7 @@ class SeqPositionalEmbed(torch.nn.Module):
 
         return out.transpose(1, 0)
 
+
 class ConcatenationEncoder(torch.nn.Module):
     """ConcatenationEncoder concatenates information into the embedding.
 

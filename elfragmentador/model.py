@@ -1,3 +1,5 @@
+import logging
+
 try:
     from typing import Dict, List, Tuple, Optional, Union, Literal
 
@@ -154,7 +156,9 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         nce_dims_pct: float = 0.05,
     ) -> None:
         super().__init__()
-        print(f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}")
+        logging.info(
+            f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}"
+        )
         charge_dims = math.ceil(ninp * charge_dims_pct)
         nce_dims = math.ceil(ninp * nce_dims_pct)
         n_embeds = ninp - (charge_dims + nce_dims)
@@ -165,7 +169,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
         self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
 
-        print(
+        logging.info(
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
         )
         self.trans_decoder_embedding = nn.Embedding(
@@ -216,15 +220,17 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         return spectra_output
 
 
-_model_sections = [ 
-    'TransEncoder',
-    'TransDecoder',
-    'AAEmbedding',
-    'MODEmbedding',
-    'FragmentEmbedding',
-    'FragmentFFN',
-    'RTFFN',
+_model_sections = [
+    "TransEncoder",
+    "TransDecoder",
+    "AAEmbedding",
+    "MODEmbedding",
+    "FragmentEmbedding",
+    "FragmentFFN",
+    "RTFFN",
 ]
+
+
 class PepTransformerModel(pl.LightningModule):
     """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
 
@@ -329,17 +335,16 @@ class PepTransformerModel(pl.LightningModule):
         self.loss_ratio = loss_ratio
 
         self.model_sections = {
-            'TransEncoder': self.encoder.transformer_encoder,
-            'TransDecoder': self.decoder.trans_decoder,
-            'AAEmbedding': self.encoder.aa_encoder.aa_encoder,
-            'MODEmbedding': self.encoder.aa_encoder.mod_encoder,
-            'FragmentEmbedding': self.decoder.trans_decoder_embedding,
-            'FragmentFFN': self.decoder.peak_decoder, 
-            'RTFFN': self.rt_decoder, 
+            "TransEncoder": self.encoder.transformer_encoder,
+            "TransDecoder": self.decoder.trans_decoder,
+            "AAEmbedding": self.encoder.aa_encoder.aa_encoder,
+            "MODEmbedding": self.encoder.aa_encoder.mod_encoder,
+            "FragmentEmbedding": self.decoder.trans_decoder_embedding,
+            "FragmentFFN": self.decoder.peak_decoder,
+            "RTFFN": self.rt_decoder,
         }
 
         self.make_trainable_sections(trainable_sections)
-
 
     def forward(
         self,
@@ -509,8 +514,6 @@ class PepTransformerModel(pl.LightningModule):
         >>> pl.seed_everything(42)
         42
         >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
-        Creating TransformerDecoder ninp=516 nhead=4 layers=6
-        Creating embedding for spectra of length 174
         >>> _ = my_model.eval()
         >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
         PredictionResults(irt=tensor([...], grad_fn=<SqueezeBackward1>), \
@@ -638,30 +641,30 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             ),
         )
         parser.add_argument(
-            '--trainable_secions',
-            nargs = '+', type = str, default=PepTransformerModel.model_sections,
+            "--trainable_secions",
+            nargs="+",
+            type=str,
+            default=PepTransformerModel.model_sections,
             help=(
-                f'Sections of the model to train, '
-                f'can be any subset of {PepTransformerModel.model_sections}'
+                f"Sections of the model to train, "
+                f"can be any subset of {PepTransformerModel.model_sections}"
             ),
         )
 
         return parser
 
-
     def make_trainable_sections(self, sections: List) -> None:
-        def set_grad_section(model_section, trainable = True):
+        def set_grad_section(model_section, trainable=True):
             """Freezes or unfreezes a model section"""
             for param in model_section.parameters():
                 param.requires_grad = trainable
 
-        print("Freezing the model")
+        logging.warning("Freezing the model")
         set_grad_section(self, trainable=False)
 
         for section in sections:
-            print(f"Unfreezing {section}")
+            logging.warning(f"Unfreezing {section}")
             set_grad_section(self.model_sections[section], trainable=True)
-        
 
     def configure_optimizers(
         self,

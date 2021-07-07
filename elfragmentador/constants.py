@@ -94,6 +94,8 @@ AMINO_ACID = {
     "H": 137.058912,
     "D": 115.026943,
     "K": 128.094963,
+    "n": 0,  # Placeholder to have n terminal modifications
+    "c": 0,  # Placeholder to have c terminal modifications
 }
 
 AMINO_ACID_SET = set(AMINO_ACID)
@@ -288,6 +290,7 @@ del ion
 del key
 
 if __name__ == "__main__":
+    # This is implemented so the constants can be printed if needed running this file directly
     my_vars = {k: v for k, v in globals().items() if not k.startswith("_")}
     for k, v in my_vars.items():
         print(f"\n>>> {k} {type(v)} = {v}")

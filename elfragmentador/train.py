@@ -93,7 +93,6 @@ def get_callbacks(
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()
     checkpointer = pl.callbacks.ModelCheckpoint(
-        prefix=complete_run_name,
         monitor="v_l",
         verbose=True,
         save_top_k=2,
@@ -101,7 +100,7 @@ def get_callbacks(
         dirpath=".",
         save_last=True,
         mode="min",
-        filename="{v_l:.6f}_{epoch:03d}",
+        filename="{complete_run_name}_{v_l:.6f}_{epoch:03d}",
     )
 
     terminator = pl.callbacks.early_stopping.EarlyStopping(
@@ -116,6 +115,7 @@ def get_callbacks(
 
 
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
+    # TODO add loggging levela and a more structured logger ...
     print(model)
     datamodule = datamodules.PeptideDataModule(
         batch_size=args.batch_size,

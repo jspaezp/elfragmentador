@@ -13,6 +13,12 @@ def test_cli_help():
 
 
 def test_cli_train(shared_datadir):
+    # Set up wandb to pretend that we are already logged in.
+    # On a real world setting we would use $ wandb login
+    import wandb
+    wandb.login(anonymous = "true")
+
+    # Actual cli call
     parser = train.build_train_parser()
     args = parser.parse_args(["--fast_dev_run", "1", "--data_dir", str(shared_datadir)])
     dict_args = vars(args)
