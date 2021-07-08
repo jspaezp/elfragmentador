@@ -59,6 +59,8 @@ elfragmentador_evaluate --sptxt {my_sptxt_file} {path_to_my_checkpoint}
 
 #### Predict Spectra
 
+You can use it from python like so ...
+
 ```python
 checkpoint_path = "some/path/to/a/checkpoint"
 model = PepTransformerModel.load_from_checkpoint(checkpoint_path)
@@ -67,6 +69,10 @@ model = PepTransformerModel.load_from_checkpoint(checkpoint_path)
 _ = model.eval()
 model.predict_from_seq("MYPEPTIDEK", charge=2, nce=27.0)
 ```
+
+If you want to use graphical interface, I am currently working in
+a flask app to visualize the results, check out the readme in the
+repository on the `viz_app` subdirectory.
 
 ## Why transformers?
 
