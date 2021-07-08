@@ -1,34 +1,31 @@
+
+import pytest
+
 import torch
 from elfragmentador import encoding_decoding
 from elfragmentador import constants
 
 
-def test_aa_encoding():
-    out, _ = encoding_decoding.encode_mod_seq("_AACD_")
-    assert out[:10] == [1, 1, 2, 3, 0, 0, 0, 0, 0, 0]
+testdata_aa_encoding = [
+    ("_AACD_", [23, 1, 1, 2, 3, 22, 0, 0, 0, 0, 0], "AACD"),
+    ("n[43]AACD", [23, 1, 1, 2, 3, 22, 0, 0, 0, 0, 0], "n[ACETYL]AACD"),
+    ("AAAC[160]DDDK", None, "AAACDDDK"),
+    ("M[147]AAAK", None, "M[OXIDATION]AAAK"),
+    ("AAACSS[167]", None, "AAACSS[PHOSPHO]"),
+    ("KAKT[181]AA", None, "KAKT[PHOSPHO]AA"),
+    ("KAKY[243]FG", None, "KAKY[PHOSPHO]FG"),
+    ("KAKY[+80]FG", None, "KAKY[PHOSPHO]FG"),
+]
+
+@pytest.mark.parametrize("input_sequence,expected_first_10_encoding,expected_output_sequence", testdata_aa_encoding)
+def test_aa_encoding(input_sequence, expected_first_10_encoding, expected_output_sequence):
+    out, mods_out = encoding_decoding.encode_mod_seq(input_sequence)
+
+    if expected_first_10_encoding is not None:
+        assert out[:10] == expected_first_10_encoding[:10]
     assert len(out) == constants.MAX_SEQUENCE
-    decoded = encoding_decoding.decode_mod_seq(out)
-    assert decoded == "AACD"
-
-
-def test_mod_aa_encoding():
-    test_seqs = [
-        "AAAC[160]DDDK",
-        "M[147]AAAK",
-        "AAACSS[167]",
-        "KAKT[181]AA",
-        "KAKY[243]FG",
-    ]
-
-    for s in test_seqs:
-        out_s, out_m = encoding_decoding.encode_mod_seq(s)
-        assert len(out_s) == constants.MAX_SEQUENCE
-        decoded = encoding_decoding.decode_mod_seq(out_s, out_m)
-        s = s.replace("C[160]", "C")
-        for k, v in constants.MOD_PEPTIDE_ALIASES.items():
-            s = s.replace(k, f"{k[0]}[{v}]")
-
-        assert s == decoded
+    decoded = encoding_decoding.decode_mod_seq(out, mods_out)
+    assert decoded == expected_output_sequence
 
 
 def test_fragment_encoding_decoding():

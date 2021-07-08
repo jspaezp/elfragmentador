@@ -16,7 +16,8 @@ def test_cli_train(shared_datadir):
     # Set up wandb to pretend that we are already logged in.
     # On a real world setting we would use $ wandb login
     import wandb
-    wandb.login(anonymous = "true")
+    wandb.init(mode="offline")
+    wandb.login(anonymous = "true", key="A" * 40)
 
     # Actual cli call
     parser = train.build_train_parser()

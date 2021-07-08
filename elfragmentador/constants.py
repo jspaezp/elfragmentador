@@ -22,6 +22,7 @@ CHARGES = [1, 2, 3, 4, 5, 6]
 DEFAULT_MAX_CHARGE = max(CHARGES)
 MAX_FRAG_CHARGE = 3
 MAX_SEQUENCE = 30
+MAX_TENSOR_SEQUENCE = 30 + 2
 MAX_ION = MAX_SEQUENCE - 1
 ION_TYPES = ["y", "b"]
 ION_TYPES = sorted(ION_TYPES)
@@ -31,10 +32,36 @@ NLOSSES = ["", "H2O", "NH3"]
 FORWARD = {"a", "b", "c"}
 BACKWARD = {"x", "y", "z"}
 
+# Atomic elements
+PROTON = 1.007276467
+ELECTRON = 0.00054858
+H = 1.007825035
+C = 12.0
+O = 15.99491463
+N = 14.003074
+
+# Tiny molecules
+N_TERMINUS = H
+C_TERMINUS = O + H
+CO = C + O
+CHO = C + H + O
+NH2 = N + H * 2
+H2O = H * 2 + O
+NH3 = N + H * 3
+
+NEUTRAL_LOSS = {"NH3": NH3, "H2O": H2O}
+
+ION_OFFSET = {
+    "a": 0 - CHO,
+    "b": 0 - H,
+    "c": 0 + NH2,
+    "x": 0 + CO - H,
+    "y": 0 + H,
+    "z": 0 - NH2,
+}
+
 # Amino acids
-
 # Modifications use high caps PSI-MS name
-
 MODIFICATION = {
     "CARBAMIDOMETHYL": 57.0214637236,  # Carbamidomethylation (CAM)
     "ACETYL": 42.010565,  # Acetylation
@@ -49,11 +76,10 @@ MODIFICATION = {
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
     "NITRO": 44.985078,  #  Oxidation to nitro
     "BIOTINYL": 226.077598,  #  Biotinilation
-    "nACETYL": 42.010565,  # Acetylation of the terminus
 }
 
 VARIABLE_MODS = {
-    "ACETYL": "K",  # Acetylation
+    "ACETYL": "Kn",  # Acetylation
     "BIOTINYL": "K",  # Biotinilation
     "DEAMIDATED": "RNQ",  # Deamidation
     "OXIDATION": "MP",  # Oxidation
@@ -94,8 +120,8 @@ AMINO_ACID = {
     "H": 137.058912,
     "D": 115.026943,
     "K": 128.094963,
-    "n": 0,  # Placeholder to have n terminal modifications
-    "c": 0,  # Placeholder to have c terminal modifications
+    "n": N_TERMINUS,  # Placeholder to have n terminal modifications
+    "c": C_TERMINUS,  # Placeholder to have c terminal modifications
 }
 
 AMINO_ACID_SET = set(AMINO_ACID)
@@ -122,10 +148,10 @@ MOD_PEPTIDE_ALIASES = {
     "K[156]": "FORMYL",  # or "DIMETHYL",
     "P[113]": "OXIDATION",  # aka hydroxilation
     "R[157]": "DEAMIDATED",  # aka citrullinated
+    "n[43]": "ACETYL", # n-terminal acetylation
+    "n[ACETYL]": "ACETYL", # n-terminal acetylation
 }
 
-# TERMINAL_ACETYLATIONS
-MOD_PEPTIDE_ALIASES.update({aa + "[nACETYL]": "nACETYL" for aa in AMINO_ACID})
 # This generages aliases like T[+80]
 int_aliases = [
     {aa + f"[+{str(round(MODIFICATION[k]))}]": k for aa in v}
@@ -153,34 +179,6 @@ MOD_AA_MASSES.update(
         for k, v in MOD_PEPTIDE_ALIASES.items()
     }
 )
-
-# Atomic elements
-PROTON = 1.007276467
-ELECTRON = 0.00054858
-H = 1.007825035
-C = 12.0
-O = 15.99491463
-N = 14.003074
-
-# Tiny molecules
-N_TERMINUS = H
-C_TERMINUS = O + H
-CO = C + O
-CHO = C + H + O
-NH2 = N + H * 2
-H2O = H * 2 + O
-NH3 = N + H * 3
-
-NEUTRAL_LOSS = {"NH3": NH3, "H2O": H2O}
-
-ION_OFFSET = {
-    "a": N_TERMINUS - CHO,
-    "b": N_TERMINUS - H,
-    "c": N_TERMINUS + NH2,
-    "x": C_TERMINUS + CO - H,
-    "y": C_TERMINUS + H,
-    "z": C_TERMINUS - NH2,
-}
 
 
 ION_ENCODING_NESTING = ["CHARGE", "POSITION", "ION_TYPE"]

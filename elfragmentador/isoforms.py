@@ -1,6 +1,7 @@
 import warnings
 from typing import List, Generator, Iterable
 from elfragmentador.annotate import peptide_parser
+from elfragmentador.encoding_decoding import clip_explicit_terminus
 
 
 class _unique_element:
@@ -73,6 +74,7 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
         return [seq]
 
     parsed_seq = list(peptide_parser(seq))
+    parsed_seq = clip_explicit_terminus(parsed_seq)
     stripped_seq = [x.replace(f"[{mod}]", "") for x in parsed_seq]
 
     placeholder_seq = [

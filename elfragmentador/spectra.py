@@ -90,10 +90,6 @@ class Spectrum:
         """
         tolerance, tolerance_unit = constants.TOLERANCE[analyzer]
         parsed_peptide = list(annotate.peptide_parser(sequence, solve_aliases=True))
-        # TODO make the parser actually deal with this case ...
-        if parsed_peptide[0] == "n[43]":
-            parsed_peptide.pop(0)
-            parsed_peptide[0] += "[nACETYL]"
 
         # Makes sure all elements in the sequence are aminoacids
         assert set(parsed_peptide) <= constants.AMINO_ACID_SET.union(
@@ -102,16 +98,16 @@ class Spectrum:
         sequence = "".join(parsed_peptide)
         self.sequence = "".join([x[:1] for x in parsed_peptide])
         self.mod_sequence = sequence
-        self.length = len(parsed_peptide)
+        self.length = len(encoding_decoding.clip_explicit_terminus(parsed_peptide))
         self.charge = charge
         self.parent_mz = parent_mz
         self.modifications = modifications
 
-        amino_acids = annotate.peptide_parser(sequence)
+        amino_acids = list(annotate.peptide_parser(sequence))
+
+        # TODO consider if this masses should be calculated in a lazy manner
         # TODO redefine these with the functions inside annotate
-        self.theoretical_mass = (
-            sum([constants.MOD_AA_MASSES[a] for a in amino_acids]) + constants.H2O
-        )
+        self.theoretical_mass = annotate.get_theoretical_mass(amino_acids)
         self.theoretical_mz = (
             self.theoretical_mass + (charge * constants.PROTON)
         ) / charge
@@ -289,6 +285,9 @@ class Spectrum:
 
         Examples
         --------
+        >>> myspec = Spectrum("AA", charge=1, parent_mz=161.0920, mzs=[101.0713], intensities=[299.0], nce = 27.0, )
+        >>> myspec.precursor_error("ppm")
+        0.42936316076909053
         >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842, mzs=[101.0713, 143.0816, 147.1129], intensities=[299.0, 5772.5, 2537.1], nce = 27.0, )
         >>> myspec.precursor_error("ppm")
         0.06981956539363246
@@ -325,7 +324,7 @@ class Spectrum:
 
     def _calculate_delta_ascore(self) -> None:
         self._delta_ascore = scoring.calc_delta_ascore(
-            seq=self.mod_sequence,
+            seq=encoding_decoding.clip_explicit_terminus(self.mod_sequence),
             mod=list(constants.VARIABLE_MODS.keys()),
             aas=list(constants.VARIABLE_MODS.values()),
             mzs=self.mzs,
@@ -405,7 +404,7 @@ class Spectrum:
         --------
         >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842, mzs=[101.0713, 143.0816, 147.1129], intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
         >>> myspec.encode_sequence()
-        SequencePair(aas=[1, 1, 1, 17, 13, 1, 9, 9, 17, 19, ..., 0], mods=[0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5, ..., 0])
+        SequencePair(aas=[23, 1, 1, 1, 17, 13, 1, 9, 9, 17, 19, ..., 0], mods=[0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5, ..., 0])
         """
         return encoding_decoding.encode_mod_seq(self.mod_sequence)
 
@@ -464,8 +463,9 @@ class Spectrum:
         """
         out = (
             "Spectrum:\n"
-            f"\tSequence: {self.sequence} len:{self.length}\n"
-            f"\tMod.Sequence: {self.mod_sequence}\n"
+            f"\tSequence: {encoding_decoding.clip_explicit_terminus(self.sequence)}"
+            f" len:{self.length}\n"
+            f"\tMod.Sequence: {encoding_decoding.clip_explicit_terminus(self.mod_sequence)}\n"
             f"\tCharge: {self.charge}\n"
             f"\tMZs: {self.mzs[:3]}...{len(self.mzs)}\n"
             f"\tInts: {self.intensities[:3]}...{len(self.intensities)}\n"
@@ -507,8 +507,8 @@ class Spectrum:
             OriginalSpectra: None
         >>> print(myspec.to_sptxt())
         Name: MYPEPT[80]IDEK/2
-        MW: 1301.5250727000002
-        PrecursorMZ: 651.7698128170001
+        MW: 1301.5250727
+        PrecursorMZ: 651.769812817
         FullName: MYPEPT[80]IDEK/2 (HCD)
         Comment: CollisionEnergy=27.0 ...
         Num Peaks: 2

@@ -19,7 +19,7 @@ def encode_mod_seq(seq):
     30
     >>> out = encode_mod_seq(samp_seq)
     >>> out
-    SequencePair(aas=[1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0,..., 0, 0])
+    SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
     >>> len(out)
     2
     >>> [len(x) for x in out]
@@ -44,6 +44,17 @@ def encode_mod_seq(seq):
     return SequencePair(seq_out, mod_out)
 
 
+def clip_explicit_terminus(seq):
+    # Remove explicit terminus
+    if seq[0] == "n" and not seq[1].startswith("["):
+        seq = seq[1:]
+
+    if seq[-1] == "c":
+        seq = seq[:-1]
+
+    return seq
+
+
 def decode_mod_seq(
     seq_encoding: List[int], mod_encoding: Optional[List[int]] = None
 ) -> str:
@@ -60,6 +71,7 @@ def decode_mod_seq(
         if mod_encoding[i] != 0:
             out.append(f"[{constants.MOD_INDICES_S[mod_encoding[i]]}]")
 
+    out = clip_explicit_terminus(out)
     return "".join(out)
 
 

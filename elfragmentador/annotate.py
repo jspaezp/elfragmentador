@@ -13,14 +13,10 @@ import warnings
 import numpy
 from numpy import bool_, float64, ndarray
 
-from elfragmentador import constants
+from elfragmentador import constants, encoding_decoding
 
 
 def solve_alias(x):
-    if x == "n[43]":
-        # There has to be a better way to handle this ...
-        return x
-
     x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
     x = x if len(x) != 3 else x[:1]  # Takes care of C[]
 
@@ -34,11 +30,11 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
     Examples
     ========
     >>> list(peptide_parser("AAACC"))
-    ['A', 'A', 'A', 'C', 'C']
+    ['n', 'A', 'A', 'A', 'C', 'C', 'c']
     >>> list(peptide_parser("AAAM(ox)CC"))
-    ['A', 'A', 'A', 'M(ox)', 'C', 'C']
+    ['n', 'A', 'A', 'A', 'M(ox)', 'C', 'C', 'c']
     >>> list(peptide_parser("AAAM[+16]CC"))
-    ['A', 'A', 'A', 'M[+16]', 'C', 'C']
+    ['n', 'A', 'A', 'A', 'M[+16]', 'C', 'C', 'c']
     """
 
     ANNOTATIONS = "[](){}"
@@ -47,6 +43,11 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
         raise ValueError(f"sequence starts with '{p[0]}'")
     n = len(p)
     i = 0
+
+    # Yield n terminus if its not explicit in the sequence
+    if p[0] != 'n':
+        yield 'n'
+
     while i < n:
         if p[i] == "_":
             i += 1
@@ -60,15 +61,22 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
             j = min(nexts)
             offset = i + j + 3
             out = p[i:offset]
-            yield solve_alias(out) if solve_aliases else out
+            yield_value = solve_alias(out) if solve_aliases else out
             i = offset
         else:
-            yield p[i]
+            yield_value = p[i]
             i += 1
+        
+        yield yield_value
+
+    # Yield c terminus if its not explicit in the sequence
+    if yield_value != 'c':
+        yield 'c'
 
 
 def mass_diff_encode_seq(seq):
     iter = peptide_parser(seq, solve_aliases=True)
+    iter = encoding_decoding.clip_explicit_terminus(list(iter))
     # For some reason skyline detects T[80] but not T[+80] ...
     # And does not detect T[181] as a valid mod ...
     out = "".join([constants.MASS_DIFF_ALIASES_I[x].replace("+", "") for x in iter])
@@ -117,10 +125,10 @@ def get_theoretical_mass(peptide: str):
     Example
     -------
     >>> get_theoretical_mass("MYPEPTIDE")
-    1093.4637787000001
+    1093.4637787
     """
     aas = peptide_parser(peptide)
-    out = sum([constants.MOD_AA_MASSES[a] for a in aas]) + constants.H2O
+    out = sum([constants.MOD_AA_MASSES[a] for a in aas])
     return out
 
 
@@ -132,9 +140,9 @@ def get_precursor_mz(peptide: str, charge: int):
     Example
     -------
     >>> get_precursor_mz("MYPEPTIDE", 1)
-    1094.4710551670003
+    1094.471055167
     >>> get_precursor_mz("MYPEPTIDE", 2)
-    547.7391658170001
+    547.739165817
     """
     return get_mz(get_theoretical_mass(peptide), 0, charge)
 
@@ -147,11 +155,17 @@ def get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
     Examples
     ========
     >>> get_forward_backward("AMC")
-    (array([ 71.037114  , 202.077599  , 362.10824772]), array([160.03064872, 291.07113372, 362.10824772]))
+    (array([  1.00782503,  72.04493903, 203.08542403, 363.11607276,
+           380.11881242]), array([ 17.00273967, 177.03338839, 308.07387339, 379.11098739,
+           380.11881242]))
     >>> get_forward_backward("AM[147]C")
-    (array([ 71.037114  , 218.072509  , 378.10315772]), array([160.03064872, 307.06604372, 378.10315772]))
-    >>> get_forward_backward("AMC")
-    (array([ 71.037114  , 202.077599  , 362.10824772]), array([160.03064872, 291.07113372, 362.10824772]))
+    (array([  1.00782503,  72.04493903, 219.08033403, 379.11098276,
+           396.11372242]), array([ 17.00273967, 177.03338839, 324.06878339, 395.10589739,
+           396.11372242]))
+    >>> get_forward_backward("n[+42]AM[147]C")
+    (array([ 43.01839004, 114.05550404, 261.09089904, 421.12154776,
+           438.12428742]), array([ 17.00273967, 177.03338839, 324.06878339, 395.10589739,
+           438.12428742]))
     """
     amino_acids = peptide_parser(peptide)
     masses = [constants.MOD_AA_MASSES[a] for a in amino_acids]
@@ -166,7 +180,7 @@ def get_mz(sum_: float64, ion_offset: float, charge: int) -> float64:
 
 def get_mzs(cumsum: ndarray, ion_type: str, z: int) -> List[float64]:
     # return (cumsum[:-1] + constants.ION_OFFSET[ion_type] + (z * constants.PROTON))/z
-    return [get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-1]]
+    return [get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-2]][1:]
 
 
 def get_annotation(
@@ -180,9 +194,9 @@ def get_annotation(
     =======
     >>> fw, bw  = get_forward_backward("AMC")
     >>> fw
-    array([ 71.037114  , 202.077599  , 362.10824772])
+    array([  1.00782503,  72.04493903, 203.08542403, 363.11607276, 380.11881242])
     >>> bw
-    array([160.03064872, 291.07113372, 362.10824772])
+    array([ 17.00273967, 177.03338839, 308.07387339, 379.11098739, 380.11881242])
     >>> get_annotation(fw, bw, 3, "y")
     OrderedDict([('y1', 60.354347608199994), ...])
     """

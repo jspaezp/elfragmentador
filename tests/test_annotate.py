@@ -1,3 +1,5 @@
+
+import pytest
 from elfragmentador import annotate
 
 
@@ -12,6 +14,12 @@ def test_peptide_parser():
 def test_getting_ions():
     out = annotate.get_peptide_ions("MPEP")
     print(out)
+
+    with pytest.raises(KeyError) as _:
+        # This makes sure that there is no y4 ion reported for a
+        # peptide of length 4
+        out['z1y4']
+
     rounded_out = [int(x) for x in out.values()]
     expected_mpep = [
         132,
@@ -33,6 +41,7 @@ def test_getting_ions():
         82,
         114,
     ]
+
     assert all([abs(x - y) <= 1 for x, y in zip(expected_mpep, rounded_out)])
 
 
