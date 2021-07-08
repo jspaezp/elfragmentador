@@ -42,6 +42,7 @@ snakemake = "^5.32.2"
 mokapot = "^0.5.1"
 pyteomics = "^4.4.1"
 pytest-codecov = "^0.3.0"
+Flask = "^2.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

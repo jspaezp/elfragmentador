@@ -148,8 +148,8 @@ MOD_PEPTIDE_ALIASES = {
     "K[156]": "FORMYL",  # or "DIMETHYL",
     "P[113]": "OXIDATION",  # aka hydroxilation
     "R[157]": "DEAMIDATED",  # aka citrullinated
-    "n[43]": "ACETYL", # n-terminal acetylation
-    "n[ACETYL]": "ACETYL", # n-terminal acetylation
+    "n[43]": "ACETYL",  # n-terminal acetylation
+    "n[ACETYL]": "ACETYL",  # n-terminal acetylation
 }
 
 # This generages aliases like T[+80]

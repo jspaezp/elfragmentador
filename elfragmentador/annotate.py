@@ -45,8 +45,8 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
     i = 0
 
     # Yield n terminus if its not explicit in the sequence
-    if p[0] != 'n':
-        yield 'n'
+    if p[0] != "n":
+        yield "n"
 
     while i < n:
         if p[i] == "_":
@@ -66,12 +66,12 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
         else:
             yield_value = p[i]
             i += 1
-        
+
         yield yield_value
 
     # Yield c terminus if its not explicit in the sequence
-    if yield_value != 'c':
-        yield 'c'
+    if yield_value != "c":
+        yield "c"
 
 
 def mass_diff_encode_seq(seq):

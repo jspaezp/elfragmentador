@@ -1,0 +1,13 @@
+
+<!doctype html>
+<title>Hello from Flask</title>
+{% if peptide %}
+  <h1>Prediction for {{ peptide }}!</h1>
+  <p>Predicted iRT = {{ irt }}</p>
+  <img src='data:image/png;base64,{{ img_data }}'/>
+  <div>
+      <span style="white-space: pre;">{{ sptxt }}</span>
+  </div>
+{% else %}
+  <h1>Hello, World!</h1>
+{% endif %}

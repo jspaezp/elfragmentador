@@ -5,6 +5,69 @@
 This repository attempts to implement a neural net that leverages the transformer architecture to predict peptide
 properties (retention time and fragmentation).
 
+## Installation
+
+Since the project is currently in development mode, the best way to install is using pip from the cloned repo
+
+```shell
+git clone https://github.com/jspaezp/elfragmentador.git
+cd elfragmentador
+
+# Check the devel branch
+git checkout devel && git pull
+pip install /content/elfragmentador
+```
+
+## Usage
+
+### Training
+
+```shell
+$ wandb login
+```
+
+```shell
+elfragmentador_train \
+     --run_name onecycle_5e_petite_ndl4 \
+     --scheduler onecycle \
+     --max_epochs 5 \
+     --lr_ratio 25 \
+     --terminator_patience 20 \
+     --lr 0.00005 \
+     --gradient_clip_val 1.0 \
+     --dropout 0.1 \
+     --nhead 4 \
+     --nhid 512 \
+     --ninp 224 \
+     --num_decoder_layers 4 \
+     --num_encoder_layers 2 \
+     --batch_size 400 \
+     --accumulate_grad_batches 1 \
+     --precision 16 \
+     --gpus 1 \
+     --progress_bar_refresh_rate 5 \
+     --data_dir  /content/20210217-traindata
+```
+
+### Usage
+
+#### Check performance
+
+```shell
+elfragmentador_evaluate --sptxt {my_sptxt_file} {path_to_my_checkpoint}
+```
+
+#### Predict Spectra
+
+```python
+checkpoint_path = "some/path/to/a/checkpoint"
+model = PepTransformerModel.load_from_checkpoint(checkpoint_path)
+
+# Set the model as evaluation mode
+_ = model.eval()
+model.predict_from_seq("MYPEPTIDEK", charge=2, nce=27.0)
+```
+
 ## Why transformers?
 
 Because we can... Just kidding
@@ -49,6 +112,8 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
   - No
 - Glycosilation ?
   - No
+- Negative Mode ?
+  - No
 - No ?
   - Not really ... I think all of those are interesting questions but
     AS IT IS RIGHT NOW it is not within the scope of the project. If you want
@@ -67,8 +132,10 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 - Train and evaluate using NCE encoding (get data for it ...)
 - Train on PTMs (ox at the very least)
 - Allow training with missing values (done for RT, not for spectra)
-- Add n-terma and c-term token to the encoding (and evaluate if it is better)
+- Add n-terma and c-term token to the encoding
+  - [ ] Evaluate if it is better
 - Migrate training data preparation script to snakemake
+  - In Progress
 
 #### Possible
 

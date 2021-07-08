@@ -291,10 +291,14 @@ class AASequenceEmbedding(torch.nn.Module):
 
         # Positional information additions
         self.fw_position_embed = SeqPositionalEmbed(
-            max_len=constants.MAX_SEQUENCE * 4, dims_add=positional_ninp, inverted=False
+            max_len=constants.MAX_TENSOR_SEQUENCE * 4,
+            dims_add=positional_ninp,
+            inverted=False,
         )
         self.rev_position_embed = SeqPositionalEmbed(
-            max_len=constants.MAX_SEQUENCE * 4, dims_add=positional_ninp, inverted=True
+            max_len=constants.MAX_TENSOR_SEQUENCE * 4,
+            dims_add=positional_ninp,
+            inverted=True,
         )
 
         # Aminoacid embedding

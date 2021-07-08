@@ -388,7 +388,7 @@ class Spectrum:
         encode_sequence returns the encoded sequence of the aminoacids/modifications.
 
         It returns two lists representing the aminoacid and modification sequences, the
-        length of the sequence will correspond to constants.MAX_SEQUENCE.
+        length of the sequence will correspond to constants.MAX_TENSOR_SEQUENCE.
 
         The meaning of each corresponding index comes from constants.ALPHABET and
         constants.MOD_INDICES. Some aliases for modifications are supported, check them
@@ -543,16 +543,24 @@ class Spectrum:
         )
         return out
 
-    def plot(self, mirror: Spectrum = None):
-        if plt is None:
-            raise ImportError(
-                (
-                    "Unable to import matplotlib, please install it "
-                    "to use plotting functions and re-load elfragmentador"
-                )
-            )
+    def plot(self, mirror: Spectrum = None, ax=None):
+        try:
+            plt
+        except UnboundLocalError:
+            import matplotlib.pyplot as plt
 
-        plt.title(self.mod_sequence)
+        if ax is not None:
+            plt = ax
+
+        display_sequence = encoding_decoding.clip_explicit_terminus(self.mod_sequence)
+        display_sequence = f"{display_sequence}/{self.charge}+ NCE={self.nce}"
+        try:
+            plt.title(display_sequence)
+        except TypeError:
+            plt.set_title(display_sequence)
+            plt.set_xlabel("m/z")
+            plt.set_ylabel("Relative Intensity")
+
         plt.vlines(self.mzs, 0, self.intensities, color="blue")
         plt.axhline(0, color="black")
 

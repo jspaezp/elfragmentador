@@ -1,3 +1,5 @@
+import logging
+
 from collections import namedtuple
 import pandas as pd
 from elfragmentador import constants, annotate
@@ -15,18 +17,18 @@ def encode_mod_seq(seq):
     Example
     =======
     >>> samp_seq = "_AAIFVVAR_"
-    >>> print(constants.MAX_SEQUENCE)
-    30
+    >>> print(constants.MAX_TENSOR_SEQUENCE)
+    32
     >>> out = encode_mod_seq(samp_seq)
     >>> out
     SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
     >>> len(out)
     2
     >>> [len(x) for x in out]
-    [30, 30]
+    [32, 32]
     """
-    seq_out = [0] * constants.MAX_SEQUENCE
-    mod_out = [0] * constants.MAX_SEQUENCE
+    seq_out = [0] * constants.MAX_TENSOR_SEQUENCE
+    mod_out = [0] * constants.MAX_TENSOR_SEQUENCE
 
     try:
         split_seq = list(annotate.peptide_parser(seq))
@@ -35,10 +37,17 @@ def encode_mod_seq(seq):
             constants.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq
         ]
         mod_out_i = [constants.MOD_INDICES.get(x, 0) for x in mod_out_i]
+        if len(seq_out_i) > len(seq_out):
+            logging.warning(
+                f"Length of the encoded sequence is more than the allowed one."
+                " Sequence={seq}, the remainder will be clipped"
+            )
+
         seq_out[: len(seq_out_i)] = seq_out_i
         mod_out[: len(mod_out_i)] = mod_out_i
-    except ValueError:
-        print(seq)
+    except ValueError as e:
+        logging.error(seq)
+        logging.error(e)
         raise ValueError
 
     return SequencePair(seq_out, mod_out)
