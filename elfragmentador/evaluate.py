@@ -275,6 +275,14 @@ def polyfit(
     return results
 
 
+def apply_polyfit(x, polynomial):
+    tmp = 0
+    for i, term in enumerate(polynomial[:-1]):
+        tmp = tmp + ((x ** (1 + i)) * term)
+    tmp = tmp + polynomial[-1]
+    return tmp
+
+
 def evaluate_landmark_rt(model: PepTransformerModel):
     """evaluate_landmark_rt Checks the prediction of the model on the iRT peptides
 
@@ -294,5 +302,7 @@ def evaluate_landmark_rt(model: PepTransformerModel):
             out = model.predict_from_seq(seq, 2, 25)
             pred_rt.append(100 * out.irt.numpy())
             real_rt.append(np.array(desc["irt"]))
+
+    # TODO make this return a correlation coefficient
 
     uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())

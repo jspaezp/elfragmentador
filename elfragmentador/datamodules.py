@@ -1,4 +1,7 @@
+
 from __future__ import annotations
+
+import logging
 
 import warnings
 from collections import namedtuple
@@ -40,8 +43,8 @@ def match_lengths(
         f" {max_len},"
         f" found {unique_lengths}"
     )
-    if verbose:
-        print(out_message)
+    
+    logging.info(out_message)
 
     out = [
         x + ([0] * (max_len - len(x))) if len(x) != max_len else x for x in nested_list
@@ -92,7 +95,7 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
         ),
     }
     out = {k: (colnames[v] if v is not None else None) for k, v in out.items()}
-    print(f">>> Mapped column names to the provided dataset {out}")
+    logging.info(f">>> Mapped column names to the provided dataset {out}")
     return out
 
 
@@ -104,16 +107,16 @@ class PeptideDataset(torch.utils.data.Dataset):
         drop_missing_vals=False,
     ) -> None:
         super().__init__()
-        print("\n>>> Initalizing Dataset")
+        logging.info("\n>>> Initalizing Dataset")
         if drop_missing_vals:
             former_len = len(df)
             df.dropna(inplace=True)
-            print(
+            logging.warning(
                 f"\n>>> {former_len}/{len(df)} rows left after dropping missing values"
             )
 
         if max_spec < len(df):
-            print(
+            logging.warning(
                 "\n>>> Filtering out to have "
                 f"{max_spec}, change the 'max_spec' argument if you don't want"
                 "this to happen"
@@ -161,7 +164,8 @@ class PeptideDataset(torch.utils.data.Dataset):
             irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
             self.norm_irts = torch.from_numpy(irts).float().unsqueeze(1)
         except ValueError as e:
-            print(self.df[name_match["iRT"]])
+            logging.error(self.df[name_match["iRT"]])
+            logging.error(e)
             raise e
 
         if name_match["NCE"] is None:
@@ -173,7 +177,8 @@ class PeptideDataset(torch.utils.data.Dataset):
                 nces = np.array(self.df[name_match["NCE"]]).astype("float")
                 nces = torch.from_numpy(nces).float().unsqueeze(1)
             except ValueError as e:
-                print(self.df[name_match["NCE"]])
+                logging.error(self.df[name_match["NCE"]])
+                logging.error(e)
                 raise e
 
         self.nces = nces
@@ -196,7 +201,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         charges = np.array(self.df[name_match["Ch"]]).astype("long")
         self.charges = torch.Tensor(charges).long().unsqueeze(1)
 
-        print(
+        logging.info(
             (
                 f"Dataset Initialized with {len(df)} entries."
                 f" Sequence length: {sequence_lengths}"
@@ -204,7 +209,7 @@ class PeptideDataset(torch.utils.data.Dataset):
                 f"; Average Peaks/spec: {avg_peaks}"
             )
         )
-        print(">>> Done Initializing dataset\n")
+        logging.info(">>> Done Initializing dataset\n")
 
     @staticmethod
     def from_sptxt(
@@ -251,15 +256,15 @@ class PeptideDataset(torch.utils.data.Dataset):
 
 def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     name_match = match_colnames(df)
-    print(list(df))
-    print(f"Removing Large sequences, currently {name}: {len(df)}")
+    logging.info(list(df))
+    logging.warning(f"Removing Large sequences, currently {name}: {len(df)}")
     df = (
         df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in df[name_match["SeqE"]]]]
         .copy()
         .reset_index(drop=True)
     )
 
-    print(f"Left {name}: {len(df)}")
+    logging.warning(f"Left {name}: {len(df)}")
     return df
 
 
