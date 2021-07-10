@@ -39,8 +39,8 @@ def encode_mod_seq(seq):
         mod_out_i = [constants.MOD_INDICES.get(x, 0) for x in mod_out_i]
         if len(seq_out_i) > len(seq_out):
             logging.warning(
-                f"Length of the encoded sequence is more than the allowed one."
-                " Sequence={seq}, the remainder will be clipped"
+                f"Length of the encoded sequence is more than the one allowed {constants.MAX_SEQUENCE}."
+                f" Sequence={seq}, the remainder will be clipped"
             )
 
         seq_out[: len(seq_out_i)] = seq_out_i

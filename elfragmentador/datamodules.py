@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import logging
@@ -43,7 +42,7 @@ def match_lengths(
         f" {max_len},"
         f" found {unique_lengths}"
     )
-    
+
     logging.info(out_message)
 
     out = [

@@ -152,6 +152,14 @@ MOD_PEPTIDE_ALIASES = {
     "n[ACETYL]": "ACETYL",  # n-terminal acetylation
 }
 
+# Adds the cannonical names to the aliases, like K[GG]
+[
+    MOD_PEPTIDE_ALIASES.update(
+        {f"{mod_aa}[{mod_name}]": mod_name for mod_aa in mod_aminoacids}
+    )
+    for mod_name, mod_aminoacids in VARIABLE_MODS.items()
+]
+
 # This generages aliases like T[+80]
 int_aliases = [
     {aa + f"[+{str(round(MODIFICATION[k]))}]": k for aa in v}
