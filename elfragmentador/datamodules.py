@@ -128,7 +128,7 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         sequence_encodings = [eval(x) for x in self.df[name_match["SeqE"]]]
         sequence_encodings = match_lengths(
-            sequence_encodings, constants.MAX_SEQUENCE, "Sequences"
+            sequence_encodings, constants.MAX_TENSOR_SEQUENCE, "Sequences"
         )
         self.sequence_encodings = sequence_encodings.long()
 
@@ -258,7 +258,7 @@ def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     logging.info(list(df))
     logging.warning(f"Removing Large sequences, currently {name}: {len(df)}")
     df = (
-        df[[len(eval(x)) <= constants.MAX_SEQUENCE for x in df[name_match["SeqE"]]]]
+        df[[len(eval(x)) <= constants.MAX_TENSOR_SEQUENCE for x in df[name_match["SeqE"]]]]
         .copy()
         .reset_index(drop=True)
     )
