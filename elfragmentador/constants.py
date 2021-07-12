@@ -160,11 +160,13 @@ MOD_PEPTIDE_ALIASES = {
     for mod_name, mod_aminoacids in VARIABLE_MODS.items()
 ]
 
-# This generages aliases like T[+80]
-int_aliases = [
-    {aa + f"[+{str(round(MODIFICATION[k]))}]": k for aa in v}
-    for k, v in VARIABLE_MODS.items()
-]
+# This generages aliases like T[+80], M[+16.99], M[+16.9999]
+int_aliases = []
+for rounding_term in [0, 2, 4]:
+    for k, v in VARIABLE_MODS.items():
+        int_aliases.append({aa + f"[+{round(MODIFICATION[k], rounding_term):.{rounding_term}f}]": k for aa in v})
+
+# This generates M[80] from M[+80]
 MASS_DIFF_ALIASES = {}
 _ = [MASS_DIFF_ALIASES.update(x) for x in int_aliases[::-1]]
 MASS_DIFF_ALIASES_I = {k[0] + f"[{v}]": k for k, v in MASS_DIFF_ALIASES.items()}
