@@ -5,6 +5,8 @@
 This repository attempts to implement a neural net that leverages the transformer architecture to predict peptide
 properties (retention time and fragmentation).
 
+![](img/schematic.png)
+
 ## Installation
 
 Since the project is currently in development mode, the best way to install is using pip from the cloned repo
@@ -22,7 +24,10 @@ pip install /content/elfragmentador
 
 ### Training
 
+
+
 ```shell
+# Be a good person and keep track of your experiments, use wandb
 $ wandb login
 ```
 
@@ -153,3 +158,9 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 #### If I get time
 
 - Write ablation models and benchmark them (remove parts of the model and see how much worse it gets without it)
+
+## Acknowledgements
+
+1. Purdue Univ for the computational resources for the preparation of the data (Brown Cluster).
+2. Pytorch Lightning Team ... without this being open sourced this would not be posible.
+3. Weights and Biases (same as above).

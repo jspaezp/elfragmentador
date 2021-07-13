@@ -51,7 +51,9 @@ def make_spec_fig(spectrum):
 # export FLASK_CHECKPOINT=blablabla.ckpt export FLASK_APP=app.py ; export FLASK_ENV=development ; flask run
 
 app = Flask(__name__)
-model = PepTransformerModel()
+model = PepTransformerModel.load_from_checkpoint(
+    "onecycle_5e_petite=0_v_l=0.027239_epoch=004.ckpt"
+)
 model.eval()
 
 

@@ -526,11 +526,6 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
 
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
 
-        if len(seq) > constants.MAX_SEQUENCE:
-            raise ValueError(
-                f"Sequence is longer than the maximum allowed of {constants.MAX_SEQUENCE}"
-            )
-
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
         in_charge = torch.Tensor([charge]).unsqueeze(0).long()

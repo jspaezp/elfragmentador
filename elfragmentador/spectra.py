@@ -123,6 +123,7 @@ class Spectrum:
         self.tolerance = tolerance
         self.tolerance_unit = tolerance_unit
 
+        # Dict with ION_NAME: ION MASS
         self._theoretical_peaks = annotate.get_peptide_ions(self.mod_sequence)
 
         self._annotated_peaks = None
@@ -529,7 +530,7 @@ class Spectrum:
 
         comment = " ".join([f"{k}={v}" for k, v in comment.items()])
         peaks = "\n".join(
-            [f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.1]
+            [f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.001]
         )
 
         out = self.__SPTXT_TEMPLATE.format(
@@ -563,6 +564,17 @@ class Spectrum:
 
         plt.vlines(self.mzs, 0, self.intensities, color="blue")
         plt.axhline(0, color="black")
+
+        for ion_name, intensity in self.annotated_peaks.items():
+            if intensity < np.max(self.intensities)*0.01:
+                continue 
+
+            plt.annotate(ion_name,
+                xy=(self._theoretical_peaks[ion_name], intensity),
+                xytext=(1, 1),
+                textcoords="offset points",
+                horizontalalignment="center",
+                verticalalignment="bottom")
 
         if mirror:
             plt.vlines(mirror.mz, 0, mirror.intensities, color="red")

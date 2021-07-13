@@ -223,6 +223,19 @@ def get_annotation(
 
 
 def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
+    """Gets the theoretical masses of fragment ions
+
+    Args:
+        aa_seq (str): Aminoacid sequence with modifications
+
+    Returns:
+        Dict[str, float64]: Keys are ion names and values are the mass
+    
+    Examples:
+    >>> foo = get_peptide_ions("AA")
+    >>> foo
+    {'z1y1': 90.054955167, ...}
+    """
     out = _get_peptide_ions(
         aa_seq,
         charges=range(1, constants.MAX_FRAG_CHARGE + 1),

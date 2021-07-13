@@ -14,6 +14,9 @@ def encode_mod_seq(seq):
     """
     Encodes a peptide sequence to a numeric vector
 
+    Raises:
+        ValueError
+
     Example
     =======
     >>> samp_seq = "_AAIFVVAR_"
@@ -48,7 +51,7 @@ def encode_mod_seq(seq):
     except ValueError as e:
         logging.error(seq)
         logging.error(e)
-        raise ValueError
+        raise ValueError(f"Sequence provided is longer than the supported length of {constants.MAX_SEQUENCE}")
 
     return SequencePair(seq_out, mod_out)
 
