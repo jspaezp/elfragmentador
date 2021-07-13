@@ -100,7 +100,7 @@ def get_callbacks(
         dirpath=".",
         save_last=True,
         mode="min",
-        filename="{complete_run_name}_{v_l:.6f}_{epoch:03d}",
+        filename=complete_run_name + "_{v_l:.6f}_{epoch:03d}",
     )
 
     terminator = pl.callbacks.early_stopping.EarlyStopping(
