@@ -715,6 +715,7 @@ def sptxt_to_csv(filepath, output_path, filter_irt_peptides=True, *args, **kwarg
     df.to_csv(output_path, index=False)
 
 
+# TODO consider if moving this parser to just use another dependency ... pyteomics ??
 def read_sptxt(filepath: str, *args, **kwargs) -> Iterator[Spectrum]:
     """
     read_sptxt reads a spectra library file.
