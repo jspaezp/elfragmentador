@@ -120,7 +120,7 @@ class PeptideDataset(torch.utils.data.Dataset):
                 f"{max_spec}, change the 'max_spec' argument if you don't want"
                 "this to happen"
             )
-            df = df.sample(n=max_spec)
+            df = df.sample(n=int(max_spec))
 
         self.df = df  # TODO remove this for memory ...
 
@@ -213,7 +213,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     @staticmethod
     def from_sptxt(
         filepath: str,
-        max_spec: float = 1e6,
+        max_spec: int = 1e6,
         filter_df: bool = True,
         *args,
         **kwargs,
