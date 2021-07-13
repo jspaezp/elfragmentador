@@ -19,6 +19,7 @@ import pytorch_lightning as pl
 from elfragmentador import constants, spectra
 from argparse import _ArgumentGroup
 from torch import Tensor
+from tqdm.auto import tqdm
 
 TrainBatch = namedtuple(
     "TrainBatch",
@@ -126,30 +127,32 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         name_match = match_colnames(df)
 
-        sequence_encodings = [eval(x) for x in self.df[name_match["SeqE"]]]
+        seq_encoding_iter = tqdm(self.df[name_match["SeqE"]], "Decoding sequence encodings")
+        sequence_encodings = [eval(x) for x in seq_encoding_iter]
         sequence_encodings = match_lengths(
             sequence_encodings, constants.MAX_TENSOR_SEQUENCE, "Sequences"
         )
         self.sequence_encodings = sequence_encodings.long()
 
         if name_match["ModE"] is None:
-            warnings.warn(
+            logging.warning(
                 (
                     "Found missing Modification Encodings,"
                     " Assuming all peptides are unmodified."
                     " Please fix the data for future use,"
                     " since this imputation will be removed in the future"
-                ),
-                FutureWarning,
+                )
             )
             mod_encodings = [[0] * constants.MAX_SEQUENCE for _ in sequence_encodings]
         else:
-            mod_encodings = [eval(x) for x in self.df[name_match["ModE"]]]
+            mod_encodings_iter = tqdm(self.df[name_match["ModE"]], "Decoding Modification encoding")
+            mod_encodings = [eval(x) for x in mod_encodings_iter]
 
         mod_encodings = match_lengths(mod_encodings, constants.MAX_SEQUENCE, "Mods")
         self.mod_encodings = mod_encodings.long()
 
-        spectra_encodings = [eval(x) for x in self.df[name_match["SpecE"]]]
+        spec_encoding_iter = tqdm(self.df[name_match["SpecE"]], "Decoding Spec Encodings")
+        spectra_encodings = [eval(x) for x in spec_encoding_iter]
         spectra_encodings = match_lengths(
             spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
         )
@@ -162,6 +165,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         try:
             irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
             self.norm_irts = torch.from_numpy(irts).float().unsqueeze(1)
+            del irts
         except ValueError as e:
             logging.error(self.df[name_match["iRT"]])
             logging.error(e)
@@ -257,8 +261,11 @@ def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     name_match = match_colnames(df)
     logging.info(list(df))
     logging.warning(f"Removing Large sequences, currently {name}: {len(df)}")
+
+    seq_iterable = tqdm(df[name_match["SeqE"]], desc="Decoding tensor seqs")
+
     df = (
-        df[[len(eval(x)) <= constants.MAX_TENSOR_SEQUENCE for x in df[name_match["SeqE"]]]]
+        df[[len(eval(x)) <= constants.MAX_TENSOR_SEQUENCE for x in seq_iterable]]
         .copy()
         .reset_index(drop=True)
     )
