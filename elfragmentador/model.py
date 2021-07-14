@@ -471,6 +471,34 @@ class PepTransformerModel(pl.LightningModule):
         )
         return out
 
+    def to_torchscript(self):
+        def _fake_input_data_torchscript(): 
+            encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq("MYM[OXIDATION]DIFIEDPEPTYDE") 
+            charge = 3
+            nce = 27.0
+
+            src = torch.Tensor(encoded_seq).unsqueeze(0).long()
+            mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
+            in_charge = torch.Tensor([charge]).unsqueeze(0).long()
+            in_nce = torch.Tensor([nce]).unsqueeze(0).float()
+
+            return tuple([src, in_nce, mods, in_charge])
+
+        bkp_1 = self.decoder.nce_encoder.static_size
+        self.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
+
+        bkp_2 = self.decoder.charge_encoder.static_size
+        self.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
+
+        script = super().to_torchscript(
+            example_inputs=_fake_input_data_torchscript(),
+            method="trace")
+
+        self.decoder.nce_encoder.static_size = bkp_1
+        self.decoder.charge_encoder.static_size = bkp_2
+
+        return script
+
     def predict_from_seq(
         self, seq: str, charge: int, nce: float, as_spectrum=False, debug: bool = False
     ) -> Union[PredictionResults, Spectrum]:

@@ -293,6 +293,11 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     ----------
     model : PepTransformerModel
         A model to test the predictions on
+
+    Returns
+    -------
+    dict : A fit linear regression fit of the theoretical retention time of iRT peptides
+           and their prediction.
     """
     model.eval()
     real_rt = []
@@ -304,5 +309,7 @@ def evaluate_landmark_rt(model: PepTransformerModel):
             real_rt.append(np.array(desc["irt"]))
 
     # TODO make this return a correlation coefficient
-
+    fit = polyfit(np.array(real_rt).flatten(), np.array(pred_rt).flatten())
+    print(fit)
     uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())
+    return fit
