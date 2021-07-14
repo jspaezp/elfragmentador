@@ -230,11 +230,15 @@ def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
 
     Returns:
         Dict[str, float64]: Keys are ion names and values are the mass
-    
+
     Examples:
     >>> foo = get_peptide_ions("AA")
-    >>> foo
-    {'z1y1': 90.054955167, ...}
+    >>> sorted(foo.keys())
+    ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z3b1', 'z3y1']
+    >>> foo['z1y1'] # ground truth from http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
+    90.054955167
+    >>> foo['z1b1']
+    72.044390467
     """
     out = _get_peptide_ions(
         aa_seq,

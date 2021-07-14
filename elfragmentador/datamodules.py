@@ -127,7 +127,9 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         name_match = match_colnames(df)
 
-        seq_encoding_iter = tqdm(self.df[name_match["SeqE"]], "Decoding sequence encodings")
+        seq_encoding_iter = tqdm(
+            self.df[name_match["SeqE"]], "Decoding sequence encodings"
+        )
         sequence_encodings = [eval(x) for x in seq_encoding_iter]
         sequence_encodings = match_lengths(
             sequence_encodings, constants.MAX_TENSOR_SEQUENCE, "Sequences"
@@ -143,15 +145,19 @@ class PeptideDataset(torch.utils.data.Dataset):
                     " since this imputation will be removed in the future"
                 )
             )
-            mod_encodings = [[0] * constants.MAX_SEQUENCE for _ in sequence_encodings]
+            mod_encodings = [[0] * constants.MAX_TENSOR_SEQUENCE for _ in sequence_encodings]
         else:
-            mod_encodings_iter = tqdm(self.df[name_match["ModE"]], "Decoding Modification encoding")
+            mod_encodings_iter = tqdm(
+                self.df[name_match["ModE"]], "Decoding Modification encoding"
+            )
             mod_encodings = [eval(x) for x in mod_encodings_iter]
 
         mod_encodings = match_lengths(mod_encodings, constants.MAX_SEQUENCE, "Mods")
         self.mod_encodings = mod_encodings.long()
 
-        spec_encoding_iter = tqdm(self.df[name_match["SpecE"]], "Decoding Spec Encodings")
+        spec_encoding_iter = tqdm(
+            self.df[name_match["SpecE"]], "Decoding Spec Encodings"
+        )
         spectra_encodings = [eval(x) for x in spec_encoding_iter]
         spectra_encodings = match_lengths(
             spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"

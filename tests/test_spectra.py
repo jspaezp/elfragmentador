@@ -83,8 +83,8 @@ def test_parse_phospho_spectrast():
     assert sum([x > 0 for x in out_encoding]) == 5
     out_encoding = spec.encode_sequence()
     print(out_encoding)
-    assert len(out_encoding.aas) == constants.MAX_SEQUENCE
-    assert len(out_encoding.mods) == constants.MAX_SEQUENCE
+    assert len(out_encoding.aas) == constants.MAX_TENSOR_SEQUENCE
+    assert len(out_encoding.mods) == constants.MAX_TENSOR_SEQUENCE
 
 
 def test_parse_sptxt(shared_datadir):

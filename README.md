@@ -15,15 +15,12 @@ Since the project is currently in development mode, the best way to install is u
 git clone https://github.com/jspaezp/elfragmentador.git
 cd elfragmentador
 
-# Check the devel branch
-git checkout devel && git pull
 pip install /content/elfragmentador
 ```
 
 ## Usage
 
 ### Training
-
 
 
 ```shell
@@ -54,9 +51,13 @@ elfragmentador_train \
      --data_dir  /content/20210217-traindata
 ```
 
-### Usage
+### Prediction
 
 #### Check performance
+
+I have implemented a way to compare the predictions of
+the model with an `.sptxt` file. I generate them by using
+`comet > mokapot > spectrast` but alternatives can be used. 
 
 ```shell
 elfragmentador_evaluate --sptxt {my_sptxt_file} {path_to_my_checkpoint}
@@ -76,8 +77,17 @@ model.predict_from_seq("MYPEPTIDEK", charge=2, nce=27.0)
 ```
 
 If you want to use graphical interface, I am currently working in
-a flask app to visualize the results, check out the readme in the
-repository on the `viz_app` subdirectory.
+a flask app to visualize the results.
+
+It can be run using flask.
+
+```shell
+git clone https://github.com/jspaezp/elfragmentador.git
+cd elfragmentador/viz_app
+
+# Here you can install the dependencies using poetry
+python main.py
+```
 
 ## Why transformers?
 
@@ -138,13 +148,9 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 
 #### Urgent
 
+- Make a better logging output for the training script
 - Complete dosctrings and add documentation website
-- Write usage documentation on the readme
-- Train and evaluate using NCE encoding (get data for it ...)
-- Train on PTMs (ox at the very least)
 - Allow training with missing values (done for RT, not for spectra)
-- Add n-terma and c-term token to the encoding
-  - [ ] Evaluate if it is better
 - Migrate training data preparation script to snakemake
   - In Progress
 

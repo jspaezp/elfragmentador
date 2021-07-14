@@ -23,7 +23,7 @@ def test_aa_encoding(input_sequence, expected_first_10_encoding, expected_output
 
     if expected_first_10_encoding is not None:
         assert out[:10] == expected_first_10_encoding[:10]
-    assert len(out) == constants.MAX_SEQUENCE
+    assert len(out) == constants.MAX_TENSOR_SEQUENCE
     decoded = encoding_decoding.decode_mod_seq(out, mods_out)
     assert decoded == expected_output_sequence
 

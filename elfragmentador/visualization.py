@@ -35,7 +35,7 @@ class SelfAttentionExplorer(torch.no_grad):
     >>> type(out)
     <class 'pandas.core.frame.DataFrame'>
     >>> list(out)
-    ['M1', 'Y2', 'P3', 'E4', 'P5', 'T6', 'I7', 'D8', 'E9', 'K10']
+    ['n1', 'M2', 'Y3', 'P4', 'E5', 'P6', 'T7', 'I8', 'D9', 'E10', 'K11', 'c12']
     >>> out = sea.get_decoder_attn(layer=0, index=0)
     >>> type(out)
     <class 'pandas.core.frame.DataFrame'>
@@ -119,7 +119,10 @@ class SelfAttentionExplorer(torch.no_grad):
         def hook_fn(m, i, o):
             if target.get(m, None) is None:
                 target[m] = []
-            target[m].append(encoding_decoding.decode_mod_seq([int(x) for x in i[0]]))
+            target[m].append(
+                encoding_decoding.decode_mod_seq(
+                    [int(x) for x in i[0]],
+                    clip_explicit_term=False))
 
         return hook_fn
 

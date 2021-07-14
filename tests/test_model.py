@@ -113,7 +113,7 @@ def base_export_torchscript(datadir, keep=False):
     )
 
     print("Exporting to TorchScript")
-    script = mod.to_torchscript(example_inputs=dummy_input, method="trace")
+    script = mod.to_torchscript()
     with torch.no_grad():
         script_out = script(*dummy_input)
         out = mod(*dummy_input)

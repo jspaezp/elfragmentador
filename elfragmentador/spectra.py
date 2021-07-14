@@ -566,15 +566,17 @@ class Spectrum:
         plt.axhline(0, color="black")
 
         for ion_name, intensity in self.annotated_peaks.items():
-            if intensity < np.max(self.intensities)*0.01:
-                continue 
+            if intensity < np.max(self.intensities) * 0.01:
+                continue
 
-            plt.annotate(ion_name,
+            plt.annotate(
+                ion_name,
                 xy=(self._theoretical_peaks[ion_name], intensity),
                 xytext=(1, 1),
                 textcoords="offset points",
                 horizontalalignment="center",
-                verticalalignment="bottom")
+                verticalalignment="bottom",
+            )
 
         if mirror:
             plt.vlines(mirror.mz, 0, mirror.intensities, color="red")

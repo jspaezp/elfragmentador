@@ -19,8 +19,8 @@ def check_lengths(i: NamedTuple):
         ]
     )
     assert expect_names == set(i._fields)
-    assert i.encoded_sequence.shape == torch.Size([constants.MAX_SEQUENCE])
-    assert i.encoded_mods.shape == torch.Size([constants.MAX_SEQUENCE])
+    assert i.encoded_sequence.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
+    assert i.encoded_mods.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
     assert i.encoded_spectra.shape == torch.Size([constants.NUM_FRAG_EMBEDINGS])
     assert i.charge.shape == torch.Size([1])
     assert i.norm_irt.shape == torch.Size([1])

@@ -472,8 +472,10 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     def to_torchscript(self):
-        def _fake_input_data_torchscript(): 
-            encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq("MYM[OXIDATION]DIFIEDPEPTYDE") 
+        def _fake_input_data_torchscript():
+            encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
+                "MYM[OXIDATION]DIFIEDPEPTYDE"
+            )
             charge = 3
             nce = 27.0
 
@@ -491,8 +493,8 @@ class PepTransformerModel(pl.LightningModule):
         self.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
 
         script = super().to_torchscript(
-            example_inputs=_fake_input_data_torchscript(),
-            method="trace")
+            example_inputs=_fake_input_data_torchscript(), method="trace"
+        )
 
         self.decoder.nce_encoder.static_size = bkp_1
         self.decoder.charge_encoder.static_size = bkp_2

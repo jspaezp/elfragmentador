@@ -41,13 +41,21 @@ def get_site_localizing_ions(
     -------
     >>> seq = "MY[PHOSPHO]PTMIDE"
     >>> mods_list = ["PHOSPHO"]
-    >>> aas_list = ["STY"]
-    >>> get_site_localizing_ions(seq, mods_list, aas_list)
-    ({'MY[PHOSPHO]PTMIDE': {'z1b2': ...}, 'MYPT[PHOSPHO]MIDE': {'z1b2': ...}},
-     {'MY[PHOSPHO]PTMIDE': {'z1b1': ...}, 'MYPT[PHOSPHO]MIDE': {'z1b1': ...}})
+    >>> aas_list = ["YST"]
+    >>> sli = get_site_localizing_ions(seq, mods_list, aas_list)
+    >>> sorted(sli[0].keys())
+    ['MYPT[PHOSPHO]MIDE', 'MY[PHOSPHO]PTMIDE']
+    >>> sorted(sli[0]['MYPT[PHOSPHO]MIDE'].keys())
+    ['z1b2', 'z1b3', 'z1y5', 'z1y6', 'z2b2', 'z2b3', 'z2y5', 'z2y6', 'z3b2', 'z3b3', 'z3y5', 'z3y6']
+    >>> sorted(sli[1].keys())
+    ['MYPT[PHOSPHO]MIDE', 'MY[PHOSPHO]PTMIDE']
+    >>> sorted(sli[1]['MYPT[PHOSPHO]MIDE'].keys())
+    ['z1b1', 'z1b2', 'z1b3', ..., 'z1y6', 'z1y7', 'z2b1', 'z2b2', 'z2b3', 'z2b4', 'z2b5', 'z2b6', 'z2b7', 'z2y1', 'z2y2', 'z2y3', 'z2y4', 'z2y5', 'z2y6', 'z2y7', 'z3b1', 'z3b2', 'z3b3', 'z3b4', 'z3b5', 'z3b6', 'z3b7', 'z3y1', 'z3y2', 'z3y3', 'z3y4', 'z3y5', 'z3y6', 'z3y7']
+    >>> sli[1]['MYPT[PHOSPHO]MIDE']['z1y6']
+    785.278700167
     >>> out = get_site_localizing_ions(seq, mods_list, aas_list)
-    >>> [{k: len(v) for k,v in x.items()} for x in out]
-    [{'MY[PHOSPHO]PTMIDE': 12, 'MYPT[PHOSPHO]MIDE': 12}, {'MY[PHOSPHO]PTMIDE': 42, 'MYPT[PHOSPHO]MIDE': 42}]
+    >>> [{k: len(x[k]) for k in sorted(x)} for x in out] # Show the length of every sub-item
+    [{'MYPT[PHOSPHO]MIDE': 12, 'MY[PHOSPHO]PTMIDE': 12}, {'MYPT[PHOSPHO]MIDE': 42, 'MY[PHOSPHO]PTMIDE': 42}]
     """
     mod_isoforms = isoforms.get_mod_isoforms(seq, mod, aas)
     mod_isoform_ions = {k: annotate.get_peptide_ions(k) for k in mod_isoforms}
@@ -66,7 +74,7 @@ def get_site_localizing_ions(
 
     return filtered_out_dict, out_dict
 
-
+# TODO consider if this has to be a public API 
 def calc_ascore(
     seq: str,
     mod: List[str],

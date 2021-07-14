@@ -51,13 +51,32 @@ def encode_mod_seq(seq):
     except ValueError as e:
         logging.error(seq)
         logging.error(e)
-        raise ValueError(f"Sequence provided is longer than the supported length of {constants.MAX_SEQUENCE}")
+        raise ValueError(
+            f"Sequence provided is longer than the supported length of {constants.MAX_SEQUENCE}"
+        )
 
     return SequencePair(seq_out, mod_out)
 
 
 def clip_explicit_terminus(seq):
-    # Remove explicit terminus
+    """Remove explicit terminus
+
+    Args:
+        seq: Sequence to be stripped form eplicit termini
+
+    Returns:
+        Same as sequence input but removing explicit
+        n and c termini
+    
+    Examples:
+    >>> clip_explicit_terminus("PEPTIDEPINK")
+    'PEPTIDEPINK'
+    >>> clip_explicit_terminus("nPEPTIDEPINKc")
+    'PEPTIDEPINK'
+    >>> clip_explicit_terminus("n[ACETYL]PEPTIDEPINKc")
+    'n[ACETYL]PEPTIDEPINK'
+    """
+     
     if seq[0] == "n" and not seq[1].startswith("["):
         seq = seq[1:]
 
@@ -68,7 +87,9 @@ def clip_explicit_terminus(seq):
 
 
 def decode_mod_seq(
-    seq_encoding: List[int], mod_encoding: Optional[List[int]] = None
+    seq_encoding: List[int],
+    mod_encoding: Optional[List[int]] = None,
+    clip_explicit_term=True,
 ) -> str:
     out = []
 
@@ -83,7 +104,8 @@ def decode_mod_seq(
         if mod_encoding[i] != 0:
             out.append(f"[{constants.MOD_INDICES_S[mod_encoding[i]]}]")
 
-    out = clip_explicit_terminus(out)
+    if clip_explicit_term:
+        out = clip_explicit_terminus(out)
     return "".join(out)
 
 

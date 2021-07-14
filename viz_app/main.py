@@ -2,7 +2,8 @@ import logging
 import os
 import torch
 from elfragmentador.model import PepTransformerModel
-from flask import Flask, render_template
+from flask import Flask, render_template, request, url_for, redirect
+
 
 import base64
 from io import BytesIO
@@ -15,23 +16,9 @@ import logging
 logging.basicConfig(
     filename="app.log",
     filemode="w",
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(name)s - %(levelname)s - %(message)s",
 )
-
-
-def make_fig():
-    # Generate the figure **without using pyplot**.
-    fig = Figure(figsize=(15, 6))
-    ax = fig.subplots()
-    ax.plot([1, 2])
-
-    # Save it to a temporary buffer.
-    buf = BytesIO()
-    fig.savefig(buf, format="png", dpi=300)
-    # Embed the result in the html output.
-    data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    return data
 
 
 def make_spec_fig(spectrum):
@@ -52,22 +39,45 @@ def make_spec_fig(spectrum):
 
 app = Flask(__name__)
 model = PepTransformerModel.load_from_checkpoint(
-    "onecycle_5e_petite=0_v_l=0.027239_epoch=004.ckpt"
+    "https://github.com/jspaezp/elfragmentador/releases/download/v0.33.0/0.33.0_onecycle_5e_petite_v_l.0.027061_epoch.004.ckpt"
 )
 model.eval()
 
 
 @app.route("/")
 def hello_world():
-    return "Hello World!"
+    return render_template("index.html")
+
+
+@app.route("/handle_form", methods=["POST", "GET"])
+def handle_form():
+    print(request.method)
+    logging.info(request.method)
+    if request.method == "POST":
+        print(request.form)
+        sequence = request.form["sequence"]
+        charge = request.form["charge"]
+        nce = request.form["nce"]
+        out_url = url_for("showpeptide", peptide=sequence, z=charge, nce=nce)
+        return redirect(out_url)
+    else:
+        print(request.args)
+        sequence = request.args.get("sequence")
+        charge = request.args.get("charge")
+        nce = request.args.get("nce")
+        out_url = url_for("showpeptide", peptide=sequence, z=charge, nce=nce)
+        return redirect(out_url)
 
 
 @app.route("/spec/<peptide>/<z>/<nce>")
 def showpeptide(peptide, z=2, nce=27.0):
     logging.info("Starting prediction for peptide {peptide}")
-    pred = model.predict_from_seq(
-        peptide, charge=int(z), nce=float(nce), as_spectrum=True
-    )
+
+    with torch.no_grad():
+        pred = model.predict_from_seq(
+            peptide, charge=int(z), nce=float(nce), as_spectrum=True
+        )
+
     print(pred)
     fig = make_spec_fig(pred)
     rendered_template = render_template(
@@ -82,4 +92,4 @@ def showpeptide(peptide, z=2, nce=27.0):
 
 
 if __name__ == "__main__":
-    pass
+    app.run(debug=True)
