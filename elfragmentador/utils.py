@@ -44,7 +44,7 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
 
     print(df)
     df = df.sort_values(by=['SpecId', 'ScanNr']).reset_index(drop=True).copy()
-    df.insert(loc = NUM_COLUMNS-3, column = "SpecCorrelation", value = 0)
+    df.insert(loc = NUM_COLUMNS-2, column = "SpecCorrelation", value = 0)
     
     mzml_readers = {}
     scan_id = None
@@ -103,5 +103,5 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
         # append to results
         df["SpecCorrelation"][index] = float(distance)
     
-    df.to_csv(out_pin, index=False)
+    df.to_csv(out_pin, index=False, sep="\t")
     return df
