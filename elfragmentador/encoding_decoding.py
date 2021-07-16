@@ -34,7 +34,7 @@ def encode_mod_seq(seq):
     mod_out = [0] * constants.MAX_TENSOR_SEQUENCE
 
     try:
-        split_seq = list(annotate.peptide_parser(seq))
+        split_seq = list(annotate.peptide_parser(seq, solve_aliases=True))
         seq_out_i = [constants.ALPHABET[x[:1]] for x in split_seq]
         mod_out_i = [
             constants.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq

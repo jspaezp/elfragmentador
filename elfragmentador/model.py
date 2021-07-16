@@ -29,7 +29,6 @@ from elfragmentador.datamodules import TrainBatch
 from elfragmentador.metrics import CosineLoss
 from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
-    PositionalEncoding,
     AASequenceEmbedding,
 )
 from torch.optim.adamw import AdamW

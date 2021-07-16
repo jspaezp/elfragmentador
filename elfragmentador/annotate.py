@@ -17,7 +17,11 @@ from elfragmentador import constants, encoding_decoding
 
 
 def solve_alias(x):
-    x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
+    try:
+        x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
+    except KeyError:
+        x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x.replace('[', '[+')]}]"
+
     x = x if len(x) != 3 else x[:1]  # Takes care of C[]
 
     return x

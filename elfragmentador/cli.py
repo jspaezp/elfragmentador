@@ -5,6 +5,8 @@ from argparse import (
     ArgumentParser,
 )
 
+import elfragmentador
+
 try:
     from argparse import BooleanOptionalAction
 except ImportError:
@@ -19,6 +21,7 @@ import pytorch_lightning as pl
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import sptxt_to_csv
+from elfragmentador.utils import append_preds
 from elfragmentador import datamodules, evaluate, rt
 
 import uniplot
@@ -43,6 +46,42 @@ def calculate_irt():
     files = [x.name for x in args.file]
     df = rt.calculate_multifile_iRT(files)
     df.to_csv(str(args.out))
+
+
+def append_preds():
+    """
+    Appends the cosine similarity between the predicted and actual spectra
+    to a percolator input.
+    """
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--in",
+        type=str,
+        help="Input percolator file",
+    )
+    parser.add_argument(
+        "--out",
+        type=str,
+        help="Input percolator file",
+    )
+    parser.add_argument(
+        "--model_checkpoint",
+        type=str,
+        default=None,
+        help="Model checkpoint to use for the prediction",
+    )
+
+    args = parser.parse_args()
+
+    if args.model_checkpoint is None:
+        model = PepTransformerModel.load_from_checkpoint(elfragmentador.DEFAULT_CHECKPOINT)
+        model.eval()
+    else:
+        model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+        model.eval()
+
+    append_preds(args.in, args.out, model)
+    
 
 
 def convert_sptxt():
