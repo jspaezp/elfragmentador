@@ -48,6 +48,7 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
     
     mzml_readers = {}
     scan_id = None
+    outs = []
     
     for index, row in tqdm(df.iterrows(), total = len(df)):
         row_rawfile = re.sub(regex_file_appendix, "", row.SpecId)
@@ -101,7 +102,8 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
             distance = cosine_similarity(gt_spec, pred_spec)
     
         # append to results
-        df["SpecCorrelation"][index] = float(distance)
+        outs.append(float(distance))
     
+    df["SpecCorrelation"] = outs
     df.to_csv(out_pin, index=False, sep="\t")
     return df
