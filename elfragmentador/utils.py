@@ -19,9 +19,9 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
     """Append cosine similarity to prediction to a percolator input
 
     Args:
-        in_pin ([type]): Input Percolator file location
-        out_pin ([type]): Output percolator file location
-        model ([type]): Transformer model to use
+        in_pin (Union[Path, str]): Input Percolator file location
+        out_pin (Union[Path, str]): Output percolator file location
+        model (PepTransformerModel): Transformer model to use
 
     Returns:
         pd.DataFrame: Pandas data frame with the appended column
@@ -41,6 +41,9 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
         index_col = False,
         usecols=list(range(NUM_COLUMNS)),
     )
+    # TODO fix so the last column remains unchanged, right now it keeps
+    # only the first protein because the field is not quoted in comet
+    # outputs
 
     print(df)
     df = df.sort_values(by=['SpecId', 'ScanNr']).reset_index(drop=True).copy()
