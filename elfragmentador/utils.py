@@ -1,7 +1,7 @@
 
 import re
 from pathlib import Path
-from typing import Union
+from typing import Union, Iterable
 
 from pyteomics import mzml
 import pandas as pd
@@ -14,6 +14,8 @@ from torch.nn.functional import cosine_similarity
 
 import warnings
 
+
+# TODO split addition of metadata and actual predictions to separate functions to 
 
 def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: PepTransformerModel) -> pd.DataFrame:
     """Append cosine similarity to prediction to a percolator input
@@ -46,14 +48,42 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
     # outputs
 
     print(df)
-    df = df.sort_values(by=['SpecId', 'ScanNr']).reset_index(drop=True).copy()
+    """
+    Col names should be:
+        SpecId
+        Label
+        ScanNr
+        ExpMass
+        CalcMass
+        Peptide
+        mokapot score
+        mokapot q-value
+        mokapot PEP
+        Proteins
+    """
+
+    # This would allow skipping several reads on the file (which is fairly quick)
+    # df = df.sort_values(by=['SpecId', 'ScanNr']).reset_index(drop=True).copy()
+    # This would allow skipping several predictions... which right now are fairly slow
+    df = df.sort_values(by=['Peptide', 'CalcMass']).reset_index(drop=True).copy()
     df.insert(loc = NUM_COLUMNS-2, column = "SpecCorrelation", value = 0)
     
     mzml_readers = {}
     scan_id = None
+    last_seq = None
+    last_charge = None
+    last_nce=None
     outs = []
+
+    tqdm_postfix = {
+        'cached_reads': 0,
+        'cached_predictions': 0,
+        'predictions': 0,
+        }
+
+    tqdm_iter = tqdm(df.iterrows(), total = len(df))
     
-    for index, row in tqdm(df.iterrows(), total = len(df)):
+    for index, row in tqdm_iter:
         row_rawfile = re.sub(regex_file_appendix, "", row.SpecId)
         row_appendix = regex_file_appendix.search(row.SpecId)[0]
     
@@ -73,6 +103,10 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
             # read_spectrum
             curr_scan = mzml_readers[str(rawfile_path)].get_by_id(scan_id)
             nce = curr_scan['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['charge state']
+        else:
+
+            tqdm_postfix['cached_reads'] +=1
+            tqdm_iter.set_postfix(tqdm_postfix)
     
         # convert spectrum to model "output"
         curr_spec_object = Spectrum(
@@ -85,12 +119,22 @@ def append_preds(in_pin: Union[Path, str], out_pin: Union[Path, str], model: Pep
     
         # predict spectrum
         with torch.no_grad():
-            pred_irt, pred_spec = model.predict_from_seq(
-                seq = peptide_sequence,
-                charge = curr_charge,
-                nce=nce,
-            )
-            pred_spec = torch.stack([pred_spec])
+            if last_seq != peptide_sequence or last_charge != curr_charge or last_nce != nce:
+                last_seq = peptide_sequence
+                last_charge = curr_charge
+                last_nce = nce
+
+                pred_irt, pred_spec = model.predict_from_seq(
+                    seq = peptide_sequence,
+                    charge = curr_charge,
+                    nce=nce,
+                )
+                pred_spec = torch.stack([pred_spec])
+                tqdm_postfix['predictions'] +=1
+                tqdm_iter.set_postfix(tqdm_postfix)
+            else:
+                tqdm_postfix['cached_predictions'] +=1
+                tqdm_iter.set_postfix(tqdm_postfix)
 
             # Get ground truth spectrum
             try:
