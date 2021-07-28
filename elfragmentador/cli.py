@@ -48,14 +48,14 @@ def calculate_irt():
     df.to_csv(str(args.out))
 
 
-def append_preds():
+def append_predictions():
     """
     Appends the cosine similarity between the predicted and actual spectra
     to a percolator input.
     """
     parser = ArgumentParser()
     parser.add_argument(
-        "--in",
+        "--pin",
         type=str,
         help="Input percolator file",
     )
@@ -68,20 +68,21 @@ def append_preds():
         "--model_checkpoint",
         type=str,
         default=None,
-        help="Model checkpoint to use for the prediction",
+        help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
     )
 
     args = parser.parse_args()
 
     if args.model_checkpoint is None:
-        model = PepTransformerModel.load_from_checkpoint(elfragmentador.DEFAULT_CHECKPOINT)
+        model = PepTransformerModel.load_from_checkpoint(
+            elfragmentador.DEFAULT_CHECKPOINT
+        )
         model.eval()
     else:
         model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
         model.eval()
 
-    append_preds(args.in, args.out, model)
-    
+    return append_preds(in_pin=args.pin, out_pin=args.out, model=model)
 
 
 def convert_sptxt():
@@ -232,15 +233,3 @@ def train():
         del weights_mod
 
     main_train(mod, args)
-
-
-if __name__ == "__main__":
-    model = PepTransformerModel.load_from_checkpoint(
-        "/home/jspaezp/Downloads/0.23.0_onecycle_20e_petite-v_l=0.137555_epoch=014.ckpt"
-    )
-    evaluate.evaluate_on_csv(
-        model,
-        "~/Downloads/holdout_combined_massive_20200212.sptxt.irt.sptxt.csv",
-        batch_size=4,
-        max_spec=5000,
-    )

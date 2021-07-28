@@ -74,7 +74,8 @@ def get_site_localizing_ions(
 
     return filtered_out_dict, out_dict
 
-# TODO consider if this has to be a public API 
+
+# TODO consider if this has to be a public API
 def calc_ascore(
     seq: str,
     mod: List[str],

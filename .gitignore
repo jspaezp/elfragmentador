@@ -2,12 +2,15 @@
 poetry.lock
 *.csv
 *.ckpt
+**.pstats
+**.lprof
 **.pyc
 **.config_ipynb
 dist/**
 lightning_logs/**
 settings.json
 .coverage
+.coverage*
 htmlcov/**
 .tox/**
 wandb/**

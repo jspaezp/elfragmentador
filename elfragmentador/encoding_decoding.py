@@ -67,7 +67,7 @@ def clip_explicit_terminus(seq):
     Returns:
         Same as sequence input but removing explicit
         n and c termini
-    
+
     Examples:
     >>> clip_explicit_terminus("PEPTIDEPINK")
     'PEPTIDEPINK'
@@ -76,7 +76,7 @@ def clip_explicit_terminus(seq):
     >>> clip_explicit_terminus("n[ACETYL]PEPTIDEPINKc")
     'n[ACETYL]PEPTIDEPINK'
     """
-     
+
     if seq[0] == "n" and not seq[1].startswith("["):
         seq = seq[1:]
 

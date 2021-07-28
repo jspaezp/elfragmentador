@@ -121,8 +121,9 @@ class SelfAttentionExplorer(torch.no_grad):
                 target[m] = []
             target[m].append(
                 encoding_decoding.decode_mod_seq(
-                    [int(x) for x in i[0]],
-                    clip_explicit_term=False))
+                    [int(x) for x in i[0]], clip_explicit_term=False
+                )
+            )
 
         return hook_fn
 

@@ -1,4 +1,3 @@
-
 import pytest
 
 import torch
@@ -17,8 +16,14 @@ testdata_aa_encoding = [
     ("KAKY[+80]FG", None, "KAKY[PHOSPHO]FG"),
 ]
 
-@pytest.mark.parametrize("input_sequence,expected_first_10_encoding,expected_output_sequence", testdata_aa_encoding)
-def test_aa_encoding(input_sequence, expected_first_10_encoding, expected_output_sequence):
+
+@pytest.mark.parametrize(
+    "input_sequence,expected_first_10_encoding,expected_output_sequence",
+    testdata_aa_encoding,
+)
+def test_aa_encoding(
+    input_sequence, expected_first_10_encoding, expected_output_sequence
+):
     out, mods_out = encoding_decoding.encode_mod_seq(input_sequence)
 
     if expected_first_10_encoding is not None:

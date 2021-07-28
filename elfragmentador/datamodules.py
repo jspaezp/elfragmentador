@@ -145,7 +145,9 @@ class PeptideDataset(torch.utils.data.Dataset):
                     " since this imputation will be removed in the future"
                 )
             )
-            mod_encodings = [[0] * constants.MAX_TENSOR_SEQUENCE for _ in sequence_encodings]
+            mod_encodings = [
+                [0] * constants.MAX_TENSOR_SEQUENCE for _ in sequence_encodings
+            ]
         else:
             mod_encodings_iter = tqdm(
                 self.df[name_match["ModE"]], "Decoding Modification encoding"
