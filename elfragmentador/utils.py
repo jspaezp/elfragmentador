@@ -5,6 +5,8 @@ from typing import Union, Iterable
 from pyteomics import mzml
 import pandas as pd
 from tqdm.auto import tqdm
+
+import elfragmentador
 from elfragmentador.spectra import Spectrum
 from elfragmentador.model import PepTransformerModel
 
@@ -166,3 +168,50 @@ def append_preds(
     df["SpecCorrelation"] = outs
     df.to_csv(out_pin, index=False, sep="\t")
     return df
+
+
+def predict_csv(df: pd.DataFrame, impute_collision_energy = False, model: PepTransformerModel = None) -> str:
+    """
+    Predicts the spectra from a precursor list as defined by Skyline
+
+    Args:
+        df (pd.DataFrame): 
+          A data frame containing minimum 3 columns
+          modified_sequence ('Modified Sequence'), 
+          collision_energy ('CE'), 
+          precursor_charge ('Precursor Charge')
+        impute_collision_energy (Union[bool, float]):
+          Either False or a collision energy to use
+          predicting the spectra
+    """
+    OPTION_1_NAMES = ["Modified Sequence", "CE", "Precursor Charge"]
+    OPTION_2_NAMES = ["modified_sequence", "collision_energy", "precursor_charge"]
+
+    if OPTION_1_NAMES[0] in list(df):
+        names = OPTION_1_NAMES
+    elif OPTION_2_NAMES[0] in list(df):
+        names = OPTION_2_NAMES
+    else:
+        raise ValueError("Names in the data frame dont match any of the posible options")
+
+    if names[1] not in list(df):
+        if impute_collision_energy:
+            df[names[1]] = impute_collision_energy
+        else:
+            raise ValueError(
+                f"Didn't find a collision enery column with name {names[1]},"
+                " please provide one or a value for `impute_collision_energy`")
+
+    if model is None:
+        model = PepTransformerModel.load_from_checkpoint(elfragmentador.DEFAULT_CHECKPOINT)
+    
+    my_iter = tqdm(zip(df[names[0]], df[names[1]], df[names[2]]))
+    out = []
+
+    for seq, nce, charge in my_iter:
+        pred_spec = model.predict_from_seq(seq = seq, charge=int(charge), nce=nce, as_spectrum=True)
+        out.append(pred_spec.to_sptxt())
+
+    return "\n".join(out)
+    
+
