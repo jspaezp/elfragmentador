@@ -135,6 +135,7 @@ AAS_NUM = len(ALPHABET)
 
 MOD_PEPTIDE_ALIASES = {
     "C[160]": "",  # This makes it so it assumes it is always modified
+    "C[+57]": "",  # This makes it so it assumes it is always modified
     "M(ox)": "OXIDATION",
     "M[OXIDATION]": "OXIDATION",
     "P[OXIDATION]": "OXIDATION",  # Hydroxylation of proline

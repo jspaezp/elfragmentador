@@ -47,6 +47,9 @@ def peptide_parser(p: str, solve_aliases=False) -> Iterator[str]:
 
     ANNOTATIONS = "[](){}"
 
+    # This fixes a bug where passing a list would yield the incorrect results
+    p = "".join(p)
+
     if p[0] in ANNOTATIONS:
         raise ValueError(f"sequence starts with '{p[0]}'")
     n = len(p)
@@ -188,6 +191,7 @@ def get_mz(sum_: float64, ion_offset: float, charge: int) -> float64:
 
 def get_mzs(cumsum: ndarray, ion_type: str, z: int) -> List[float64]:
     # return (cumsum[:-1] + constants.ION_OFFSET[ion_type] + (z * constants.PROTON))/z
+    # TODO this can be vectorized if needed
     return [get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-2]][1:]
 
 

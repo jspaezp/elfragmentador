@@ -170,15 +170,17 @@ def append_preds(
     return df
 
 
-def predict_csv(df: pd.DataFrame, impute_collision_energy = False, model: PepTransformerModel = None) -> str:
+def predict_df(
+    df: pd.DataFrame, impute_collision_energy=False, model: PepTransformerModel = None
+) -> str:
     """
     Predicts the spectra from a precursor list as defined by Skyline
 
     Args:
-        df (pd.DataFrame): 
+        df (pd.DataFrame):
           A data frame containing minimum 3 columns
-          modified_sequence ('Modified Sequence'), 
-          collision_energy ('CE'), 
+          modified_sequence ('Modified Sequence'),
+          collision_energy ('CE'),
           precursor_charge ('Precursor Charge')
         impute_collision_energy (Union[bool, float]):
           Either False or a collision energy to use
@@ -192,7 +194,9 @@ def predict_csv(df: pd.DataFrame, impute_collision_energy = False, model: PepTra
     elif OPTION_2_NAMES[0] in list(df):
         names = OPTION_2_NAMES
     else:
-        raise ValueError("Names in the data frame dont match any of the posible options")
+        raise ValueError(
+            "Names in the data frame dont match any of the posible options"
+        )
 
     if names[1] not in list(df):
         if impute_collision_energy:
@@ -200,18 +204,21 @@ def predict_csv(df: pd.DataFrame, impute_collision_energy = False, model: PepTra
         else:
             raise ValueError(
                 f"Didn't find a collision enery column with name {names[1]},"
-                " please provide one or a value for `impute_collision_energy`")
+                " please provide one or a value for `impute_collision_energy`"
+            )
 
     if model is None:
-        model = PepTransformerModel.load_from_checkpoint(elfragmentador.DEFAULT_CHECKPOINT)
-    
-    my_iter = tqdm(zip(df[names[0]], df[names[1]], df[names[2]]))
+        model = PepTransformerModel.load_from_checkpoint(
+            elfragmentador.DEFAULT_CHECKPOINT
+        )
+
+    my_iter = tqdm(zip(df[names[0]], df[names[1]], df[names[2]]), total=len(df))
     out = []
 
     for seq, nce, charge in my_iter:
-        pred_spec = model.predict_from_seq(seq = seq, charge=int(charge), nce=nce, as_spectrum=True)
+        pred_spec = model.predict_from_seq(
+            seq=seq, charge=int(charge), nce=nce, as_spectrum=True
+        )
         out.append(pred_spec.to_sptxt())
 
     return "\n".join(out)
-    
-

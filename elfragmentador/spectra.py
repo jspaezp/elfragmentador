@@ -49,6 +49,7 @@ class Spectrum:
         instrument: None = None,
         analyzer: str = "FTMS",
         rt: Optional[float] = None,
+        irt: Optional[float] = None,
         raw_spectra: Optional[str] = None,
         nreps: Optional[int] = None,
     ) -> None:
@@ -132,6 +133,7 @@ class Spectrum:
         self.instrument = instrument
         self.analyzer = analyzer
         self.rt = rt
+        self.irt = irt
         self.raw_spectra = raw_spectra
         self.nreps = nreps
 
@@ -528,10 +530,18 @@ class Spectrum:
             "Origin": f"ElFragmentador_v{elfragmentador.__version__}",
         }
 
+        if self.rt is not None:
+            comment.update({"RetentionTime": self.rt})
+
+        if self.irt is not None:
+            comment.update({"iRT": self.irt})
+
         comment = " ".join([f"{k}={v}" for k, v in comment.items()])
-        peaks = "\n".join(
-            [f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.001]
-        )
+        peak_list = [
+            f'{x}\t{y}\t"?"' for x, y in zip(self.mzs, self.intensities) if y > 0.001
+        ]
+
+        peaks = "\n".join(peak_list)
 
         out = self.__SPTXT_TEMPLATE.format(
             name=name,
@@ -539,7 +549,7 @@ class Spectrum:
             precursor_mz=precursor_mz,
             full_name=full_name,
             comment=comment,
-            num_peaks=len(self.mzs),
+            num_peaks=len(peak_list),
             peaks=peaks,
         )
         return out

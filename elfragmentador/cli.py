@@ -17,11 +17,12 @@ except ImportError:
 import warnings
 
 import pytorch_lightning as pl
+import pandas as pd
 
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import sptxt_to_csv
-from elfragmentador.utils import append_preds
+from elfragmentador.utils import append_preds, predict_df
 from elfragmentador import datamodules, evaluate, rt
 
 import uniplot
@@ -83,6 +84,55 @@ def append_predictions():
         model.eval()
 
     return append_preds(in_pin=args.pin, out_pin=args.out, model=model)
+
+
+def predict_csv():
+    """
+    Predicts the peptides in a csv file
+    """
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--csv",
+        type=str,
+        help="Input csv file",
+    )
+    parser.add_argument(
+        "--impute_collision_energy",
+        type=float,
+        default=0,
+        help="Collision energy to use if none is specified in the file",
+    )
+    parser.add_argument(
+        "--out",
+        type=str,
+        help="Output .sptxt file",
+    )
+    parser.add_argument(
+        "--model_checkpoint",
+        type=str,
+        default=None,
+        help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
+    )
+
+    args = parser.parse_args()
+    if args.impute_collision_energy == 0:
+        nce = False
+    else:
+        nce = args.impute_collision_energy
+
+    if args.model_checkpoint is None:
+        model = PepTransformerModel.load_from_checkpoint(
+            elfragmentador.DEFAULT_CHECKPOINT
+        )
+        model.eval()
+    else:
+        model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+        model.eval()
+
+    with open(args.out, "w") as f:
+        f.write(
+            predict_df(pd.read_csv(args.csv), impute_collision_energy=nce, model=model)
+        )
 
 
 def convert_sptxt():

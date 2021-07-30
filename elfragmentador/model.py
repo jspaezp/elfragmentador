@@ -572,6 +572,8 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         out = PredictionResults(*[x.squeeze(0) for x in out])
         logging.debug(out)
 
+        # rt should be in seconds for spectrast ...
+        # irt should be non-dimensional
         if as_spectrum:
             out = Spectrum.from_tensors(
                 sequence_tensor=encoded_seq,
@@ -579,7 +581,8 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
                 mod_tensor=encoded_mods,
                 charge=charge,
                 nce=nce,
-                rt=float(out.irt) * 100,
+                rt=float(out.irt) * 100 * 60,
+                irt=float(out.irt) * 100,
             )
 
         return out
