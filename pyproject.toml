@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elfragmentador"
-version = "0.38.0"
+version = "0.39.0"
 description = "Predicts peptide fragmentations using transformers"
 authors = ["J. Sebastian Paez <jspaezp@gmail.com>"]
 license = "Apache 2.0"
@@ -74,3 +74,4 @@ elfragmentador_evaluate = "elfragmentador.cli:evaluate_checkpoint"
 elfragmentador_convert_sptxt = "elfragmentador.cli:convert_sptxt"
 elfragmentador_calculate_irt = "elfragmentador.cli:calculate_irt"
 elfragmentador_append_pin = "elfragmentador.cli:append_predictions"
+elfragmentador_predict_csv = "elfragmentador.cli:predict_csv"
