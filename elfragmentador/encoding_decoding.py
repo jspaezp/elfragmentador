@@ -172,7 +172,7 @@ def decode_fragment_tensor(
     masses = [fragment_ions.get(k, 0) for k in key_list]
     intensities = [float(x) for x in tensor]
 
-    assert len(intensities) == len(masses), print(
+    assert len(intensities) == len(masses), logging.error(
         f"Int {len(intensities)}: \n{intensities}\n\nmasses {len(masses)}: \n{masses}"
     )
 

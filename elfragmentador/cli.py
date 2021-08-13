@@ -1,5 +1,7 @@
 from pathlib import Path
 import logging
+import logging.config
+
 import argparse
 from argparse import (
     ArgumentDefaultsHelpFormatter,
@@ -28,8 +30,14 @@ from elfragmentador import datamodules, evaluate, rt
 
 import uniplot
 
+DEFAULT_LOGGER_BASIC_CONF = {
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "level": logging.DEBUG,
+}
+
 
 def calculate_irt():
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     parser = ArgumentParser()
     parser.add_argument(
         "file",
@@ -55,6 +63,7 @@ def append_predictions():
     Appends the cosine similarity between the predicted and actual spectra
     to a percolator input.
     """
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     parser = ArgumentParser()
     parser.add_argument(
         "--pin",
@@ -85,6 +94,7 @@ def predict_csv():
     """
     Predicts the peptides in a csv file
     """
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     parser = ArgumentParser()
     parser.add_argument(
         "--csv",
@@ -131,6 +141,7 @@ def convert_sptxt():
     provides a CLI for the sptxt_to_csv function, chek that guy out for the actual
     implementation
     """
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     parser = ArgumentParser()
     parser.add_argument(
         "file",
@@ -201,6 +212,7 @@ def convert_sptxt():
 
 
 def evaluate_checkpoint():
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     pl.seed_everything(2020)
     parser = evaluate.build_evaluate_parser()
     args = parser.parse_args()
@@ -258,19 +270,18 @@ def evaluate_checkpoint():
 
 
 def train():
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     pl.seed_everything(2020)
     parser = build_train_parser()
     args = parser.parse_args()
     dict_args = vars(args)
-    logging.info("\n====== Passed command line args/params =====\n")
+    logging.info("====== Passed command line args/params =====")
     for k, v in dict_args.items():
         logging.info(f">> {k}: {v}")
 
     mod = PepTransformerModel(**dict_args)
     if args.from_checkpoint is not None:
-        logging.info(
-            f"\n>> Resuming training from checkpoint {args.from_checkpoint} <<\n"
-        )
+        logging.info(f">> Resuming training from checkpoint {args.from_checkpoint} <<")
         weights_mod = PepTransformerModel.load_from_checkpoint(args.from_checkpoint)
         mod.load_state_dict(weights_mod.state_dict())
         del weights_mod

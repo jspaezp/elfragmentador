@@ -4,6 +4,7 @@ Contains utilities to represent spectra as well as functions to read them in bul
 """
 
 from __future__ import annotations
+import logging
 
 try:
     import matplotlib.pyplot as plt
@@ -726,8 +727,8 @@ def encode_sptxt(
     if skipped_spec >= 1:
         warnings.warn(f"{skipped_spec}/{i} Spectra were skipped")
 
-    print(list(ret))
-    print(ret)
+    logging.info(list(ret))
+    logging.info(ret)
 
     return ret
 

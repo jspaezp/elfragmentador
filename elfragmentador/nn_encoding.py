@@ -8,6 +8,7 @@ except ImportError:
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
+import logging
 import math
 import torch
 from torch import Tensor, nn
@@ -149,7 +150,7 @@ class ConcatenationEncoder(torch.nn.Module):
         >>> output = encoder(x2, torch.tensor([[7], [4]]))
         """
         if debug:
-            print(f"CE: Shape of inputs val={val.shape} x={x.shape}")
+            logging.debug(f"CE: Shape of inputs val={val.shape} x={x.shape}")
 
         if self.static_size:
             assert self.static_size == x.size(0), (
@@ -165,7 +166,7 @@ class ConcatenationEncoder(torch.nn.Module):
         e = torch.cat([e_sin, e_cos], axis=-1)
 
         if debug:
-            print(f"CE: Making encodings e={e.shape}")
+            logging.debug(f"CE: Making encodings e={e.shape}")
 
         assert (
             e.shape[-1] < self.dims_add + 2
@@ -173,16 +174,16 @@ class ConcatenationEncoder(torch.nn.Module):
         e = e[..., : self.dims_add]
 
         if debug:
-            print(f"CE: clipping encodings e={e.shape}")
+            logging.debug(f"CE: clipping encodings e={e.shape}")
 
         e = torch.cat([e.unsqueeze(0)] * end_position)
 
         if debug:
-            print(f"CE: Shape before concat e={e.shape} x={x.shape}")
+            logging.debug(f"CE: Shape before concat e={e.shape} x={x.shape}")
 
         x = torch.cat((x, e), axis=-1)
         if debug:
-            print(f"CE: Shape after concat x={x.shape}")
+            logging.debug(f"CE: Shape after concat x={x.shape}")
         return self.dropout(x)
 
 
@@ -320,7 +321,7 @@ class AASequenceEmbedding(torch.nn.Module):
 
     def forward(self, src, mods, debug: bool = False):
         if debug:
-            print(f"AAE: Input shapes src={src.shape}, mods={mods.shape}")
+            logging.debug(f"AAE: Input shapes src={src.shape}, mods={mods.shape}")
         fw_pos_emb = self.fw_position_embed(src)
         rev_pos_emb = self.rev_position_embed(src)
 
@@ -331,10 +332,10 @@ class AASequenceEmbedding(torch.nn.Module):
         # TODO consider if this line is needed
         src = src * math.sqrt(self.ninp)
         if debug:
-            print(f"AAE: Shape after embedding {src.shape}")
+            logging.debug(f"AAE: Shape after embedding {src.shape}")
 
         src = torch.cat([src, fw_pos_emb, rev_pos_emb], dim=-1)
         if debug:
-            print(f"AAE: Shape after embedding positions {src.shape}")
+            logging.debug(f"AAE: Shape after embedding positions {src.shape}")
 
         return src

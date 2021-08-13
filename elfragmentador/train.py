@@ -1,4 +1,5 @@
 import math
+import logging
 from argparse import Namespace, ArgumentParser, ArgumentDefaultsHelpFormatter
 
 import torch
@@ -116,7 +117,7 @@ def get_callbacks(
 
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
     # TODO add loggging levela and a more structured logger ...
-    print(model)
+    logging.info(model)
     datamodule = datamodules.PeptideDataModule(
         batch_size=args.batch_size,
         base_dir=args.data_dir,
@@ -124,7 +125,7 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
     )
     datamodule.setup()
     spe = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)
-    print(f">>> TRAIN: Setting steps per epoch to {spe}")
+    logging.info(f">>> TRAIN: Setting steps per epoch to {spe}")
     model.steps_per_epoch = spe
 
     callbacks = get_callbacks(

@@ -44,7 +44,10 @@ def match_lengths(
         f" found {unique_lengths}"
     )
 
-    logging.info(out_message)
+    if len(match_max) == len(nested_list):
+        logging.info(out_message)
+    else:
+        logging.warning(out_message)
 
     out = [
         x + ([0] * (max_len - len(x))) if len(x) != max_len else x for x in nested_list
@@ -154,7 +157,9 @@ class PeptideDataset(torch.utils.data.Dataset):
             )
             mod_encodings = [eval(x) for x in mod_encodings_iter]
 
-        mod_encodings = match_lengths(mod_encodings, constants.MAX_SEQUENCE, "Mods")
+        mod_encodings = match_lengths(
+            mod_encodings, constants.MAX_TENSOR_SEQUENCE, "Mods"
+        )
         self.mod_encodings = mod_encodings.long()
 
         spec_encoding_iter = tqdm(

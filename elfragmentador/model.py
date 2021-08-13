@@ -130,17 +130,17 @@ class _PeptideTransformerEncoder(torch.nn.Module):
     def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
         trans_encoder_mask = ~src.bool()
         if debug:
-            print(f"TE: Shape of mask {trans_encoder_mask.shape}")
+            logging.debug(f"TE: Shape of mask {trans_encoder_mask.shape}")
 
         src = self.aa_encoder.forward(src=src, mods=mods, debug=debug)
         if debug:
-            print(f"TE: Shape after AASequence encoder {src.shape}")
+            logging.debug(f"TE: Shape after AASequence encoder {src.shape}")
 
         trans_encoder_output = self.transformer_encoder.forward(
             src, src_key_padding_mask=trans_encoder_mask
         )
         if debug:
-            print(f"TE: Shape after trans encoder {trans_encoder_output.shape}")
+            logging.debug(f"TE: Shape after trans encoder {trans_encoder_output.shape}")
 
         return trans_encoder_output
 
@@ -198,19 +198,19 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
         trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
         if debug:
-            print(f"TD: Shape of query embedding {trans_decoder_tgt.shape}")
+            logging.debug(f"TD: Shape of query embedding {trans_decoder_tgt.shape}")
 
         spectra_output = self.trans_decoder(memory=src, tgt=trans_decoder_tgt)
         if debug:
-            print(f"TD: Shape of the output spectra {spectra_output.shape}")
+            logging.debug(f"TD: Shape of the output spectra {spectra_output.shape}")
 
         spectra_output = self.peak_decoder(spectra_output)
         if debug:
-            print(f"TD: Shape of the MLP spectra {spectra_output.shape}")
+            logging.debug(f"TD: Shape of the MLP spectra {spectra_output.shape}")
 
         spectra_output = spectra_output.squeeze(-1).permute(1, 0)
         if debug:
-            print(f"TD: Shape of the permuted spectra {spectra_output.shape}")
+            logging.debug(f"TD: Shape of the permuted spectra {spectra_output.shape}")
 
         if self.training:
             spectra_output = nn.functional.leaky_relu(spectra_output)
@@ -369,7 +369,7 @@ class PepTransformerModel(pl.LightningModule):
         charge : Optional[Tensor], optional
             long Tensor with the charges [B, 1], by default None
         debug : bool, optional
-            When set, it will print (a lot) of the shapes of the intermediate
+            When set, it will log (a lot) of the shapes of the intermediate
             tensors inside the model. By default False
 
         Details
@@ -394,7 +394,7 @@ class PepTransformerModel(pl.LightningModule):
             Spectra prediction [B, self.num_queries]
         """
         if debug:
-            print(
+            logging.debug(
                 f"PT: Shape of inputs src={src.shape},"
                 f" mods={mods.shape if mods is not None else None},"
                 f" nce={nce.shape}"
@@ -404,18 +404,18 @@ class PepTransformerModel(pl.LightningModule):
         trans_encoder_output = self.encoder.forward(src=src, mods=mods, debug=debug)
         rt_output = self.rt_decoder.forward(trans_encoder_output)
         if debug:
-            print(f"PT: Shape after RT decoder {rt_output.shape}")
+            logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
         rt_output = rt_output.mean(dim=0)
         if debug:
-            print(f"PT: Shape of RT output {rt_output.shape}")
+            logging.debug(f"PT: Shape of RT output {rt_output.shape}")
 
         spectra_output = self.decoder.forward(
             src=trans_encoder_output, charge=charge, nce=nce, debug=debug
         )
 
         if debug:
-            print(
+            logging.debug(
                 f"PT: Final Outputs of shapes {rt_output.shape}, {spectra_output.shape}"
             )
 
@@ -434,7 +434,7 @@ class PepTransformerModel(pl.LightningModule):
         inputs : TrainBatch
             Named tuple (check the documentation of that object for which names)
         debug : bool, optional
-            When set, it will print (a lot) of the shapes of the intermediate
+            When set, it will log (a lot) of the shapes of the intermediate
             tensors inside the model. By default False
 
         Returns
@@ -447,11 +447,11 @@ class PepTransformerModel(pl.LightningModule):
         def unsqueeze_if_needed(x, dims):
             if len(x.shape) != dims:
                 if debug:
-                    print(f"PT: Unsqueezing tensor of shape {x.shape}")
+                    logging.debug(f"PT: Unsqueezing tensor of shape {x.shape}")
                 x = x.unsqueeze(1)
             else:
                 if debug:
-                    print(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
+                    logging.debug(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
             return x
 
         if isinstance(inputs, list):
@@ -539,7 +539,7 @@ class PepTransformerModel(pl.LightningModule):
         as_spectrum : bool
             Wether to return a Spectrum object instead of the raw tensor predictions
         debug : bool, optional
-            When set, it will print (a lot) of the shapes of the intermediate
+            When set, it will write to logging at a debug level (a lot) of the shapes of the intermediate
             tensors inside the model. By default False
 
         Returns
@@ -567,7 +567,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         in_batch = self.torch_batch_from_seq(seq, nce, charge)
 
         if debug:
-            print(
+            logging.debug(
                 f">>PT: PEPTIDE INPUT Shape of peptide"
                 f" inputs {in_batch.src.shape}, {in_batch.charge.shape}"
             )
@@ -753,7 +753,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
                     opt, mode="min", factor=0.5, patience=2, verbose=True
                 ),
                 "interval": "epoch",
-                "monitor": "v_l",
+                "monitor": "val_l",
             }
         elif self.scheduler == "cosine":
             assert self.lr_ratio > 1
@@ -779,7 +779,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
                 )
                 time.sleep(3)  # just so the user has time to see the message...
             max_lr = self.lr * self.lr_ratio
-            print(
+            logging.info(
                 f">> Scheduler setup: max_lr {max_lr}, "
                 f"Max Epochs: {self.trainer.max_epochs}, "
                 f"Steps per epoch: {self.steps_per_epoch}, "
@@ -803,7 +803,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             )
         # TODO check if using different optimizers for different parts of the
         # model would work better
-        print(f"\n\n>>> Setting up schedulers:\n\n{scheduler_dict}")
+        logging.info(f"\n\n>>> Setting up schedulers:\n\n{scheduler_dict}")
 
         return [opt], [scheduler_dict]
 
@@ -838,7 +838,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             "spec_l": loss_spectra,
         }
 
-        assert not torch.isnan(total_loss), print(
+        assert not torch.isnan(total_loss), logging.error(
             f"Fail at... \n Loss: {total_loss},\n"
             f"\n loss_irt: {loss_irt}\n"
             f"\n loss_spectra: {loss_spectra}\n"
@@ -854,7 +854,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
     ) -> Dict[str, Tensor]:
         """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
-        log_dict = {"t_" + k: v for k, v in step_out.items()}
+        log_dict = {"train_" + k: v for k, v in step_out.items()}
         log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
 
         self.log_dict(
@@ -869,11 +869,11 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
     ) -> None:
         """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
-        log_dict = {"v_" + k: v for k, v in step_out.items()}
+        log_dict = {"val_" + k: v for k, v in step_out.items()}
 
         self.log_dict(
             log_dict,
             prog_bar=True,
         )
 
-    __doc__ += "\n" * 2 + __init__.__doc__ + "\n" * 2 + forward.__doc__
+    __doc__ += "\n\n" + __init__.__doc__ + "\n\n" + forward.__doc__

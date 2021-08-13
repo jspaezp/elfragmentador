@@ -1,4 +1,5 @@
 import time
+import logging
 from typing import Dict, List, Tuple, Union
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
@@ -81,9 +82,9 @@ def evaluate_checkpoint(
         max_spec=max_spec,
     )
     out = pd.DataFrame(out).sort_values(["Spectra_Similarity"]).reset_index()
-    print(summ_out)
+    logging.info(summ_out)
     if out_csv is not None:
-        print(f">>> Saving results to {out_csv}")
+        logging.info(f">>> Saving results to {out_csv}")
         out.to_csv(out_csv, index=False)
 
 
@@ -107,7 +108,7 @@ def evaluate_on_csv(model, filepath, batch_size=4, device="cpu", max_spec=1e6):
 
 def terminal_plot_similarity(similarities, name=""):
     if all([np.isnan(x) for x in similarities]):
-        print("Skipping because all values are missing")
+        logging.warning("Skipping because all values are missing")
         return None
 
     uniplot.histogram(
@@ -147,14 +148,14 @@ def evaluate_on_dataset(
     irt_real = dataset.df["iRT"]
 
     if sum(~np.isnan(np.array(irt_real).astype("float"))) > 1:
-        print("Using iRT instead of RT")
+        logging.warning("Using iRT instead of RT")
         rt_real = irt_real
 
     charges = dataset.df["Charges"]
     spec_results_cs = []
     spec_results_pc = []
 
-    print(">>> Starting Evaluation of the spectra <<<")
+    logging.info(">>> Starting Evaluation of the spectra <<<")
     start_time = time.time()
     with torch.no_grad():
         for b in tqdm(dl):
@@ -188,8 +189,10 @@ def evaluate_on_dataset(
     spec_results_pc = torch.cat(spec_results_pc)
     spec_results_cs = torch.cat(spec_results_cs)
 
-    print(f">> Elapsed time for {len(spec_results_cs)} results was {elapsed_time}.")
-    print(
+    logging.info(
+        f">> Elapsed time for {len(spec_results_cs)} results was {elapsed_time}."
+    )
+    logging.info(
         f">> {len(spec_results_cs) / elapsed_time} results/sec"
         f"; {elapsed_time / len(spec_results_cs)} sec/res"
     )
@@ -207,7 +210,7 @@ def evaluate_on_dataset(
 
     # TODO consider the possibility of stratifying on files before normalizing
     missing_vals = np.isnan(np.array(rt_real).astype("float"))
-    print(
+    logging.warning(
         f"Will remove {sum(missing_vals)}/{len(missing_vals)} "
         "because they have missing iRTs"
     )
@@ -310,6 +313,6 @@ def evaluate_landmark_rt(model: PepTransformerModel):
 
     # TODO make this return a correlation coefficient
     fit = polyfit(np.array(real_rt).flatten(), np.array(pred_rt).flatten())
-    print(fit)
+    logging.info(fit)
     uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())
     return fit
