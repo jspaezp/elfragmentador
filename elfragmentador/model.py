@@ -31,6 +31,7 @@ from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
 )
+from elfragmentador.utils import nanmean
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
@@ -873,6 +874,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         self.log_dict(
             log_dict,
             prog_bar=True,
+            # reduce_fx=nanmean,
         )
 
         return {"loss": step_out["l"]}
@@ -887,6 +889,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         self.log_dict(
             log_dict,
             prog_bar=True,
+            reduce_fx=nanmean
         )
 
     __doc__ += "\n\n" + __init__.__doc__ + "\n\n" + forward.__doc__
