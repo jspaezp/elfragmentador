@@ -12,6 +12,7 @@ settings.json
 .coverage
 .coverage*
 htmlcov/**
+tmp/**
 .tox/**
 wandb/**
 elfragmentador.egg-info/**
