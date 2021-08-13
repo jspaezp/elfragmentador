@@ -1,5 +1,7 @@
 import pytest
 import random
+
+from torch.utils.data import dataloader
 import elfragmentador
 
 from elfragmentador.utils import get_random_peptide
@@ -7,6 +9,8 @@ import tempfile
 from pathlib import Path
 
 import torch
+from torch.utils.data.dataloader import DataLoader
+from torch.utils.data.dataset import TensorDataset
 
 from elfragmentador import model
 from elfragmentador import datamodules
@@ -143,25 +147,45 @@ def get_ts_model_pair():
     return base_mod, script_mod
 
 
-def prepare_input_batches(num=50):
+model_pairs = get_ts_model_pair()
+model_pairs = [
+    pytest.param(model_pairs[0], id="base"),
+    pytest.param(model_pairs[1], id="traced"),
+]
+
+
+def concat_batches(batches):
+    out = []
+    for i, _ in enumerate(batches[0]):
+        out.append(torch.cat([b[i] for b in batches]))
+
+    return tuple(out)
+
+
+def prepare_input_tensors(num=50):
     peps = [
         {
             "nce": 20 + (10 * random.random()),
             "charge": random.randint(1, 5),
             "seq": get_random_peptide(),
         }
-        for x in range(num)
+        for _ in range(num)
     ]
 
-    batches = [model.PepTransformerModel.torch_batch_from_seq(**pep) for pep in peps]
-    return batches
+    tensors = [model.PepTransformerModel.torch_batch_from_seq(**pep) for pep in peps]
+    tensors = TensorDataset(*concat_batches(batches=tensors))
+
+    return tensors
+
+
+input_tensors = prepare_input_tensors(50)
 
 
 def test_ts_and_base_give_same_result():
     # TODO make parametrized
 
     base_mod, script_mod = get_ts_model_pair()
-    batches = prepare_input_batches()
+    batches = DataLoader(input_tensors, batch_size=1)
 
     with torch.no_grad():
         for script_batch in batches:
@@ -172,11 +196,13 @@ def test_ts_and_base_give_same_result():
                 assert torch.all(a == b)
 
 
-@pytest.mark.parametrize("model", list(get_ts_model_pair()))
-@pytest.mark.benchmark(min_rounds=20, disable_gc=True, warmup=False)
-def test_benchmark_inference_speeds(model, benchmark):
+@pytest.mark.parametrize("model", model_pairs)
+@pytest.mark.parametrize("batch_size", [1, 2, 4, 10, 50])
+@pytest.mark.benchmark(min_rounds=10, disable_gc=True, warmup=False)
+def test_benchmark_inference_speeds(model, batch_size, benchmark):
     def inf_model():
-        for b in prepare_input_batches(10):
+        batches = DataLoader(input_tensors, batch_size=batch_size)
+        for b in batches:
             model(*b)
 
     with torch.no_grad():

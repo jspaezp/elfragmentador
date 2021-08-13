@@ -113,6 +113,17 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 - Full implementation of a transformer in pytorch with the explanation of each part: <https://nlp.seas.harvard.edu/2018/04/03/attention.html>
 - Official pytorch implementation of the transformer: <https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html>
 
+## How fast is it?
+
+You can check how fast the model is in you specific system.
+Right now it tests only on CPU, message me if you need GPU inference times
+
+```shell
+poetry run pytest tests/test_model.py --benchmark-histogram 
+```
+
+Currenty the inference time in an Intel i5-7260U is ~7ms, or ~140 predictions per second.
+
 ## "Common" questions
 
 - What scale are the retention times predicted.
