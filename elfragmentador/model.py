@@ -123,7 +123,11 @@ class _PeptideTransformerEncoder(torch.nn.Module):
 
         # Transformer encoder sections
         encoder_layers = nn.TransformerEncoderLayer(
-            ninp, nhead, nhid, dropout, activation="gelu"
+            d_model=ninp,
+            nhead=nhead,
+            dim_feedforward=nhid,
+            dropout=dropout,
+            activation="gelu",
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
@@ -150,6 +154,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         self,
         ninp: int,
         nhead: int,
+        nhid: int,
         layers: int,
         dropout: float,
         charge_dims_pct: float = 0.05,
@@ -157,14 +162,18 @@ class _PeptideTransformerDecoder(torch.nn.Module):
     ) -> None:
         super().__init__()
         logging.info(
-            f"Creating TransformerDecoder ninp={ninp} nhead={nhead} layers={layers}"
+            f"Creating TransformerDecoder nhid=nhid, ninp={ninp} nhead={nhead} layers={layers}"
         )
         charge_dims = math.ceil(ninp * charge_dims_pct)
         nce_dims = math.ceil(ninp * nce_dims_pct)
         n_embeds = ninp - (charge_dims + nce_dims)
 
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model=ninp, nhead=nhead, dropout=dropout, activation="gelu"
+            d_model=ninp,
+            nhead=nhead,
+            dim_feedforward=nhid,
+            dropout=dropout,
+            activation="gelu",
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
         self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
@@ -314,7 +323,11 @@ class PepTransformerModel(pl.LightningModule):
 
         # Peptide decoder
         self.decoder = _PeptideTransformerDecoder(
-            ninp=ninp, nhead=nhead, layers=num_decoder_layers, dropout=dropout
+            ninp=ninp,
+            nhead=nhead,
+            nhid=nhid,
+            layers=num_decoder_layers,
+            dropout=dropout,
         )
 
         # On this implementation, the rt predictor is a simple MLP
