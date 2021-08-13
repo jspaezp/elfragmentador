@@ -1,12 +1,15 @@
 import re
+import random
 from pathlib import Path
 from typing import Union, Iterable
+import logging
 
 from pyteomics import mzml
 import pandas as pd
 from tqdm.auto import tqdm
 
 import elfragmentador
+import elfragmentador.constants as CONSTANTS
 from elfragmentador.spectra import Spectrum
 from elfragmentador.model import PepTransformerModel
 
@@ -32,17 +35,21 @@ def append_preds(
     Returns:
         pd.DataFrame: Pandas data frame with the appended column
     """
+
     warnings.filterwarnings(
         "ignore",
         ".*peaks were annotated for spectra.*",
     )
-    # read pin
+
+    # Read pin
     NUM_COLUMNS = 28
+
     # The appendix is in the form of _SpecNum_Charge_ID
     regex_file_appendix = re.compile("_\d+_\d+_\d+$")
     appendix_charge_regex = re.compile("(?<=_)\d+(?=_)")
     dot_re = re.compile("(?<=\.).*(?=\..*$)")
     template_string = "controllerType=0 controllerNumber=1 scan={SCAN_NUMBER}"
+    in_pin_path = Path(in_pin)
 
     df = pd.read_csv(
         in_pin,
@@ -54,7 +61,8 @@ def append_preds(
     # only the first protein because the field is not quoted in comet
     # outputs
 
-    print(df)
+    logging.info(df)
+
     """
     Col names should be:
         SpecId
@@ -98,7 +106,7 @@ def append_preds(
         curr_charge = int(appendix_charge_regex.search(row_appendix, 2)[0])
         peptide_sequence = dot_re.search(row.Peptide)[0]
 
-        rawfile_path = Path(row_rawfile + ".mzML")
+        rawfile_path = Path(in_pin_path.parent / (row_rawfile + ".mzML"))
         assert rawfile_path.is_file(), f"{rawfile_path} does not exist"
 
         if mzml_readers.get(str(rawfile_path), None) is None:
@@ -222,3 +230,14 @@ def predict_df(
         out.append(pred_spec.to_sptxt())
 
     return "\n".join(out)
+
+
+def get_random_peptide():
+    AAS = [x for x in CONSTANTS.ALPHABET if x.isupper()]
+    len_pep = random.randint(5, CONSTANTS.MAX_SEQUENCE)
+    out_pep = ""
+
+    for _ in range(len_pep):
+        out_pep += "".join(random.sample(AAS, 1))
+
+    return out_pep

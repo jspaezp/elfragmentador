@@ -1,3 +1,8 @@
+import pytest
+import random
+import elfragmentador
+
+from elfragmentador.utils import get_random_peptide
 import tempfile
 from pathlib import Path
 
@@ -125,6 +130,57 @@ def base_export_torchscript(datadir, keep=False):
     print(f">> Shape of torchscript output {[y.shape for y in script_out]}")
     print(f">> Head of base out \n{[y.flatten()[:5] for y in out]}")
     print(f">> Head of torchscript out \n{[y.flatten()[:5] for y in script_out]}")
+
+
+def get_ts_model_pair():
+    base_mod = model.PepTransformerModel.load_from_checkpoint(
+        elfragmentador.DEFAULT_CHECKPOINT
+    )
+    base_mod.eval()
+
+    script_mod = base_mod.to_torchscript()
+
+    return base_mod, script_mod
+
+
+def prepare_input_batches(num=50):
+    peps = [
+        {
+            "nce": 20 + (10 * random.random()),
+            "charge": random.randint(1, 5),
+            "seq": get_random_peptide(),
+        }
+        for x in range(num)
+    ]
+
+    batches = [model.PepTransformerModel.torch_batch_from_seq(**pep) for pep in peps]
+    return batches
+
+
+def test_ts_and_base_give_same_result():
+    # TODO make parametrized
+
+    base_mod, script_mod = get_ts_model_pair()
+    batches = prepare_input_batches()
+
+    with torch.no_grad():
+        for script_batch in batches:
+            base_out = base_mod(*script_batch)
+            script_out = script_mod(*script_batch)
+
+            for a, b in zip(base_out, script_out):
+                assert torch.all(a == b)
+
+
+@pytest.mark.parametrize("model", list(get_ts_model_pair()))
+@pytest.mark.benchmark(min_rounds=20, disable_gc=True, warmup=False)
+def test_benchmark_inference_speeds(model, benchmark):
+    def inf_model():
+        for b in prepare_input_batches(10):
+            model(*b)
+
+    with torch.no_grad():
+        benchmark(inf_model)
 
 
 def model_exports_base(datadir, keep=False):

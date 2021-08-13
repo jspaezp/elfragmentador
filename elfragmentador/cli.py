@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 import argparse
 from argparse import (
     ArgumentDefaultsHelpFormatter,
@@ -68,20 +69,14 @@ def append_predictions():
     parser.add_argument(
         "--model_checkpoint",
         type=str,
-        default=None,
+        default=elfragmentador.DEFAULT_CHECKPOINT,
         help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
     )
 
     args = parser.parse_args()
 
-    if args.model_checkpoint is None:
-        model = PepTransformerModel.load_from_checkpoint(
-            elfragmentador.DEFAULT_CHECKPOINT
-        )
-        model.eval()
-    else:
-        model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
-        model.eval()
+    model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+    model.eval()
 
     return append_preds(in_pin=args.pin, out_pin=args.out, model=model)
 
@@ -110,7 +105,7 @@ def predict_csv():
     parser.add_argument(
         "--model_checkpoint",
         type=str,
-        default=None,
+        default=elfragmentador.DEFAULT_CHECKPOINT,
         help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
     )
 
@@ -120,14 +115,8 @@ def predict_csv():
     else:
         nce = args.impute_collision_energy
 
-    if args.model_checkpoint is None:
-        model = PepTransformerModel.load_from_checkpoint(
-            elfragmentador.DEFAULT_CHECKPOINT
-        )
-        model.eval()
-    else:
-        model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
-        model.eval()
+    model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+    model.eval()
 
     with open(args.out, "w") as f:
         f.write(
@@ -176,7 +165,7 @@ def convert_sptxt():
 
     args = parser.parse_args()
 
-    print([x.name for x in args.file])
+    logging.info([x.name for x in args.file])
 
     # Here we make the partial function that will be used to actually read the data
     converter = lambda fname, outname: sptxt_to_csv(
@@ -190,23 +179,25 @@ def convert_sptxt():
     for f in args.file:
         out_file = f.name + ".csv"
         if Path(out_file).exists():
-            print(
+            logging.info(
                 f"Skipping conversion of '{f.name}' "
                 f"to '{out_file}', "
                 f"because {out_file} exists."
             )
         else:
-            print(f"Converting '{f.name}' to '{out_file}'")
+            logging.info(f"Converting '{f.name}' to '{out_file}'")
             if args.warn:
-                print("Warning stuff ...")
+                logging.warning("Warning stuff ...")
                 converter(f.name, out_file)
             else:
                 with warnings.catch_warnings(record=True) as c:
-                    print("Not Warning stuff ...")
+                    logging.warning("Not Warning stuff ...")
                     converter(f.name, out_file)
 
                 if len(c) > 0:
-                    warnings.warn(f"Last Error Message of {len(c)}: '{c[-1].message}'")
+                    logging.warning(
+                        f"Last Error Message of {len(c)}: '{c[-1].message}'"
+                    )
 
 
 def evaluate_checkpoint():
@@ -214,7 +205,7 @@ def evaluate_checkpoint():
     parser = evaluate.build_evaluate_parser()
     args = parser.parse_args()
     dict_args = vars(args)
-    print(dict_args)
+    logging.info(dict_args)
 
     model = PepTransformerModel.load_from_checkpoint(args.checkpoint_path)
     if dict_args["csv"] is not None:
@@ -242,7 +233,7 @@ def evaluate_checkpoint():
     res_history = []
     for nce in nces:
         if nce:
-            print(f">>>> Starting evaluation of NCE={nce}")
+            logging.info(f">>>> Starting evaluation of NCE={nce}")
         res = evaluate.evaluate_on_dataset(
             model=model,
             dataset=ds,
@@ -259,7 +250,7 @@ def evaluate_checkpoint():
             best_nce = nce
 
     if len(nces) > 1:
-        print(f"Best Nce was {best_nce}")
+        logging.info(f"Best Nce was {best_nce}")
         uniplot.plot(ys=res_history, xs=nces)
 
     if dict_args["out_csv"] is not None:
@@ -271,13 +262,15 @@ def train():
     parser = build_train_parser()
     args = parser.parse_args()
     dict_args = vars(args)
-    print("\n====== Passed command line args/params =====\n")
+    logging.info("\n====== Passed command line args/params =====\n")
     for k, v in dict_args.items():
-        print(f">> {k}: {v}")
+        logging.info(f">> {k}: {v}")
 
     mod = PepTransformerModel(**dict_args)
     if args.from_checkpoint is not None:
-        print(f"\n>> Resuming training from checkpoint {args.from_checkpoint} <<\n")
+        logging.info(
+            f"\n>> Resuming training from checkpoint {args.from_checkpoint} <<\n"
+        )
         weights_mod = PepTransformerModel.load_from_checkpoint(args.from_checkpoint)
         mod.load_state_dict(weights_mod.state_dict())
         del weights_mod

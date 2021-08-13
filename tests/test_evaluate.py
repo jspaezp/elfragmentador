@@ -1,5 +1,6 @@
 from pathlib import Path
 from elfragmentador import model, datamodules, evaluate
+from elfragmentador import DEFAULT_CHECKPOINT
 
 
 def test_evaluation_on_dataset_works(shared_datadir):
@@ -12,6 +13,12 @@ def test_evaluation_on_dataset_works(shared_datadir):
     print(out)
 
 
+def test_irt_evaluation_works():
+    mod = model.PepTransformerModel.load_from_checkpoint(DEFAULT_CHECKPOINT)
+    evaluate.evaluate_landmark_rt(model=mod)
+
+
 if __name__ == "__main__":
     parent_dir = Path(__file__).parent
     test_evaluation_on_dataset_works(str(parent_dir) + "/data/")
+    test_irt_evaluation_works()

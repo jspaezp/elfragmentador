@@ -39,6 +39,7 @@ from torch.optim.lr_scheduler import (
 )
 
 PredictionResults = namedtuple("PredictionResults", "irt spectra")
+ForwardBatch = namedtuple("ForwardBatch", "src nce mods charge")
 
 
 class MLP(nn.Module):
@@ -392,11 +393,6 @@ class PepTransformerModel(pl.LightningModule):
             iRT prediction [B, 1]
             Spectra prediction [B, self.num_queries]
         """
-        if type(src) == dict and charge is None and mods is None:
-            charge = src["charge"]
-            mods = src.get("mods", None)
-            src = src["src"]
-
         if debug:
             print(
                 f"PT: Shape of inputs src={src.shape},"
@@ -470,20 +466,35 @@ class PepTransformerModel(pl.LightningModule):
         )
         return out
 
+    @staticmethod
+    def torch_batch_from_seq(seq: str, nce: float, charge: int):
+        """
+        Generate an input batch for the model from a sequence string.
+
+        Args:
+            seq (str): String describing the sequence to be predicted, e. "PEPT[PHOSOHO]IDEPINK"
+            nce (float): Collision energy to use for the prediction, e. 27.0
+            charge (int): Charge of the precursor to use for the prediction, e. 3
+
+        Examples:
+        >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
+        ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
+        """
+        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
+
+        src = torch.Tensor(encoded_seq).unsqueeze(0).long()
+        mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
+        in_charge = torch.Tensor([charge]).unsqueeze(0).long()
+        in_nce = torch.Tensor([nce]).unsqueeze(0).float()
+
+        # This is a named tuple
+        out = ForwardBatch(src=src, nce=in_nce, mods=mods, charge=in_charge)
+        return out
+
     def to_torchscript(self):
-        def _fake_input_data_torchscript():
-            encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
-                "MYM[OXIDATION]DIFIEDPEPTYDE"
-            )
-            charge = 3
-            nce = 27.0
-
-            src = torch.Tensor(encoded_seq).unsqueeze(0).long()
-            mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
-            in_charge = torch.Tensor([charge]).unsqueeze(0).long()
-            in_nce = torch.Tensor([nce]).unsqueeze(0).float()
-
-            return tuple([src, in_nce, mods, in_charge])
+        _fake_input_data_torchscript = self.torch_batch_from_seq(
+            seq="MYM[OXIDATION]DIFIEDPEPTYDE", charge=3, nce=27.0
+        )
 
         bkp_1 = self.decoder.nce_encoder.static_size
         self.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
@@ -492,7 +503,7 @@ class PepTransformerModel(pl.LightningModule):
         self.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
 
         script = super().to_torchscript(
-            example_inputs=_fake_input_data_torchscript(), method="trace"
+            example_inputs=_fake_input_data_torchscript, method="trace"
         )
 
         self.decoder.nce_encoder.static_size = bkp_1
@@ -553,32 +564,27 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
         """
 
-        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
-
-        src = torch.Tensor(encoded_seq).unsqueeze(0).long()
-        mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
-        in_charge = torch.Tensor([charge]).unsqueeze(0).long()
-        in_nce = torch.Tensor([nce]).unsqueeze(0).float()
+        in_batch = self.torch_batch_from_seq(seq, nce, charge)
 
         if debug:
             print(
                 f">>PT: PEPTIDE INPUT Shape of peptide"
-                f" inputs {src.shape}, {in_charge.shape}"
+                f" inputs {in_batch.src.shape}, {in_batch.charge.shape}"
             )
 
-        out = self.forward(
-            src=src, charge=in_charge, mods=mods, nce=in_nce, debug=debug
-        )
+        # TODO consider if adding GPU inference
+        out = self.forward(debug=debug, **in_batch._asdict())
         out = PredictionResults(*[x.squeeze(0) for x in out])
         logging.debug(out)
 
         # rt should be in seconds for spectrast ...
         # irt should be non-dimensional
         if as_spectrum:
+
             out = Spectrum.from_tensors(
-                sequence_tensor=encoded_seq,
+                sequence_tensor=in_batch.src.squeeze().numpy(),
                 fragment_tensor=out.spectra / out.spectra.max(),
-                mod_tensor=encoded_mods,
+                mod_tensor=in_batch.mods.squeeze().numpy(),
                 charge=charge,
                 nce=nce,
                 rt=float(out.irt) * 100 * 60,
