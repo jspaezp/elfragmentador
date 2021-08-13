@@ -94,7 +94,7 @@ def get_callbacks(
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()
     checkpointer = pl.callbacks.ModelCheckpoint(
-        monitor="v_l",
+        monitor="val_l",
         verbose=True,
         save_top_k=2,
         save_weights_only=True,
@@ -105,7 +105,7 @@ def get_callbacks(
     )
 
     terminator = pl.callbacks.early_stopping.EarlyStopping(
-        monitor="v_l",
+        monitor="val_l",
         min_delta=0.00,
         patience=termination_patience,
         verbose=False,
