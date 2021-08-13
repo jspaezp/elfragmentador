@@ -31,7 +31,7 @@ from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
 )
-from elfragmentador.utils import nanmean
+from elfragmentador.math_utils import nanmean
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
@@ -886,10 +886,6 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"val_" + k: v for k, v in step_out.items()}
 
-        self.log_dict(
-            log_dict,
-            prog_bar=True,
-            reduce_fx=nanmean
-        )
+        self.log_dict(log_dict, prog_bar=True, reduce_fx=nanmean)
 
     __doc__ += "\n\n" + __init__.__doc__ + "\n\n" + forward.__doc__
