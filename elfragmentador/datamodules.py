@@ -27,6 +27,14 @@ TrainBatch = namedtuple(
 )
 
 
+def convert_tensor_column(column, elem_function=float, *args, **kwargs):
+    out = [
+        [elem_function(y) for y in x.strip("[]").replace("'", "").split(", ")]
+        for x in tqdm(column, *args, **kwargs)
+    ]
+    return out
+
+
 def match_lengths(
     nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
     max_len: int,
@@ -130,42 +138,25 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         name_match = match_colnames(df)
 
-        seq_encoding_iter = tqdm(
-            self.df[name_match["SeqE"]], "Decoding sequence encodings"
+        sequence_encodings = convert_tensor_column(
+            self.df[name_match["SeqE"]], int, "Decoding sequence encodings"
         )
-        sequence_encodings = [eval(x) for x in seq_encoding_iter]
         sequence_encodings = match_lengths(
             sequence_encodings, constants.MAX_TENSOR_SEQUENCE, "Sequences"
         )
         self.sequence_encodings = sequence_encodings.long()
 
-        if name_match["ModE"] is None:
-            logging.warning(
-                (
-                    "Found missing Modification Encodings,"
-                    " Assuming all peptides are unmodified."
-                    " Please fix the data for future use,"
-                    " since this imputation will be removed in the future"
-                )
-            )
-            mod_encodings = [
-                [0] * constants.MAX_TENSOR_SEQUENCE for _ in sequence_encodings
-            ]
-        else:
-            mod_encodings_iter = tqdm(
-                self.df[name_match["ModE"]], "Decoding Modification encoding"
-            )
-            mod_encodings = [eval(x) for x in mod_encodings_iter]
-
+        mod_encodings = convert_tensor_column(
+            self.df[name_match["ModE"]], int, "Decoding Modification encoding"
+        )
         mod_encodings = match_lengths(
             mod_encodings, constants.MAX_TENSOR_SEQUENCE, "Mods"
         )
         self.mod_encodings = mod_encodings.long()
 
-        spec_encoding_iter = tqdm(
-            self.df[name_match["SpecE"]], "Decoding Spec Encodings"
+        spectra_encodings = convert_tensor_column(
+            self.df[name_match["SpecE"]], float, "Decoding Spec Encodings"
         )
-        spectra_encodings = [eval(x) for x in spec_encoding_iter]
         spectra_encodings = match_lengths(
             spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
         )
@@ -250,8 +241,6 @@ class PeptideDataset(torch.utils.data.Dataset):
         return len(self.df)
 
     def __getitem__(self, index: int) -> TrainBatch:
-        # encoded_pept = torch.Tensor(eval(self.df.iloc[index].Encoding)).long().T
-        # norm_irt = torch.Tensor([self.df.iloc[index].mIRT / 100]).float()
         encoded_sequence = self.sequence_encodings[index]
         encoded_mods = self.mod_encodings[index]
         encoded_spectra = self.spectra_encodings[index]
@@ -275,10 +264,12 @@ def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     logging.info(list(df))
     logging.warning(f"Removing Large sequences, currently {name}: {len(df)}")
 
-    seq_iterable = tqdm(df[name_match["SeqE"]], desc="Decoding tensor seqs")
+    seq_iterable = convert_tensor_column(
+        df[name_match["SeqE"]], lambda x: x, "Decoding tensor seqs"
+    )
 
     df = (
-        df[[len(eval(x)) <= constants.MAX_TENSOR_SEQUENCE for x in seq_iterable]]
+        df[[len(x) <= constants.MAX_TENSOR_SEQUENCE for x in seq_iterable]]
         .copy()
         .reset_index(drop=True)
     )

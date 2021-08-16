@@ -31,7 +31,7 @@ from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
 )
-from elfragmentador.math_utils import nanmean
+from elfragmentador.math_utils import MissingDataAverager
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
@@ -359,6 +359,9 @@ class PepTransformerModel(pl.LightningModule):
         }
 
         self.make_trainable_sections(trainable_sections)
+        self.irt_metric = MissingDataAverager()
+        self.loss_metric = MissingDataAverager()
+        self.spectra_metric = MissingDataAverager()
 
     def forward(
         self,
@@ -884,12 +887,27 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
     ) -> None:
         """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
-        log_dict = {"val_" + k: v for k, v in step_out.items()}
+
+        self.irt_metric.update(step_out["irt_l"])
+        self.loss_metric.update(step_out["l"])
+        self.spectra_metric.update(step_out["spec_l"])
+
+    def validation_epoch_end(self, outputs) -> None:
+        log_dict = {
+            "val_irt_l": self.irt_metric.compute(),
+            "val_l": self.loss_metric.compute(),
+            "val_spec_l": self.spectra_metric.compute(),
+        }
 
         self.log_dict(
             log_dict,
             prog_bar=True,
-            # reduce_fx=nanmean,
         )
+
+        self.irt_metric.reset()
+        self.loss_metric.reset()
+        self.spectra_metric.reset()
+
+        return super().validation_epoch_end(outputs)
 
     __doc__ += "\n\n" + __init__.__doc__ + "\n\n" + forward.__doc__

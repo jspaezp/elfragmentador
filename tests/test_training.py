@@ -44,7 +44,7 @@ def base_train_works_on_schdulers(datadir):
 
 
 def test_train_works_on_schedulers(shared_datadir):
-    base_train_works_on_schdulers(shared_datadir)
+    base_train_works_on_schdulers(shared_datadir / "train_data_sample")
 
 
 def mod_train_with_missing(datadir):
@@ -61,7 +61,7 @@ def mod_train_with_missing(datadir):
 
 
 def test_model_train(shared_datadir):
-    mod_train_base(shared_datadir)
+    mod_train_base(shared_datadir / "train_data_sample")
 
 
 if __name__ == "__main__":

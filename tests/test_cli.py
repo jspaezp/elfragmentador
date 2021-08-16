@@ -30,7 +30,9 @@ def test_cli_train(shared_datadir):
 
     # Actual cli call
     parser = train.build_train_parser()
-    args = parser.parse_args(["--fast_dev_run", "1", "--data_dir", str(shared_datadir)])
+    args = parser.parse_args(
+        ["--fast_dev_run", "1", "--data_dir", str(shared_datadir / "train_data_sample")]
+    )
     dict_args = vars(args)
     for k, v in dict_args.items():
         print(f">> {k}: {v}")

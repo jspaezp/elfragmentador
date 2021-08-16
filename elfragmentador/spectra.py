@@ -819,14 +819,9 @@ def _parse_spectra_sptxt(
     if rt is not None:
         rt = float(rt.split(",")[0])
 
-    if comment_dict.get("iRT", None) is not None:
-        warnings.warn(
-            (
-                "Noticed the comment dict has iRT values,"
-                " We have not implemented reading them but will do in the future"
-            ),
-            FutureWarning,
-        )
+    irt = comment_dict.get("iRT", None)
+    if irt is not None:
+        irt = float(irt.split(",")[0])
 
     nreps = comment_dict.get("Nreps", None)
     if nreps is not None:
@@ -853,6 +848,7 @@ def _parse_spectra_sptxt(
         instrument=instrument,
         nce=nce,
         rt=rt,
+        irt=irt,
         raw_spectra=raw_spectra,
         nreps=nreps,
         *args,

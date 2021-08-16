@@ -41,7 +41,9 @@ def test_concat_encoder_adds_right_number():
 def mod_forward_base(datadir):
     mod = model.PepTransformerModel(nhead=4, ninp=64)
     print(mod)
-    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
+    datamodule = datamodules.PeptideDataModule(
+        batch_size=5, base_dir=datadir / "train_data_sample"
+    )
     datamodule.setup()
 
     for x in datamodule.val_dataloader():
@@ -74,7 +76,9 @@ def test_model_forward_seq():
 
 def _test_export_onnx(datadir, keep=False):
     mod = model.PepTransformerModel(nhead=4, ninp=64)
-    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
+    datamodule = datamodules.PeptideDataModule(
+        batch_size=5, base_dir=datadir / "train_data_sample"
+    )
     datamodule.setup()
 
     for input_sample in datamodule.val_dataloader():
@@ -109,7 +113,9 @@ def base_export_torchscript(datadir, keep=False):
     mod.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
     mod.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
 
-    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
+    datamodule = datamodules.PeptideDataModule(
+        batch_size=5, base_dir=datadir / "train_data_sample"
+    )
     datamodule.setup()
 
     for input_sample in datamodule.val_dataloader():

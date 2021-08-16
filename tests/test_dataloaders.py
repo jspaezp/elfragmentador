@@ -28,7 +28,7 @@ def check_lengths(i: NamedTuple):
 
 
 def test_dataset_outputs_correct_dims(shared_datadir):
-    df = pd.read_csv(str(shared_datadir) + "/combined_val.csv")
+    df = pd.read_csv(str(shared_datadir) + "/train_data_sample/combined_val.csv")
     df = datamodules.filter_df_on_sequences(df)
     dataset = datamodules.PeptideDataset(df)
     i = dataset[0]
@@ -51,26 +51,6 @@ def test_dataset_from_sptxt_works(shared_datadir):
     for f in infiles:
         ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + f)
         check_lengths(ds[0])
-
-
-def base_dataloader_handles_missing(datadir):
-    df = pd.read_csv(str(datadir) + "/combined_val.csv")
-    df = datamodules.filter_df_on_sequences(df)
-    df.loc[1, "mIRT"] = np.nan
-
-    print(df)
-    ds = datamodules.PeptideDataset(df)
-    print(ds[1].norm_irt)
-    dl = DataLoader(ds, 4)
-    for i in dl:
-        print(i.norm_irt)
-        print(i.norm_irt[~i.norm_irt.isnan()])
-
-    print(i)
-
-
-def test_dataloader_handles_missing(shared_datadir):
-    base_dataloader_handles_missing(shared_datadir)
 
 
 if __name__ == "__main__":
