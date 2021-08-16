@@ -5,4 +5,5 @@ except ModuleNotFoundError:
     import importlib_metadata
 
 __version__ = importlib_metadata.version(__name__)
-DEFAULT_CHECKPOINT = "https://github.com/jspaezp/elfragmentador/releases/download/untagged-46bae796e742dba052eb/0.33.0_onecycle_5e_petite_v_l.0.027061_epoch.004.ckpt"
+
+DEFAULT_CHECKPOINT = "https://github.com/jspaezp/elfragmentador/releases/download/v0.44.0/0.44.0a0_onecycle_5e_B_val_l.0.031175_epoch.004.ckpt"
