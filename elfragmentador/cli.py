@@ -66,6 +66,7 @@ def append_predictions():
     log_conf = DEFAULT_LOGGER_BASIC_CONF.copy()
     log_conf.update({"level": logging.INFO})
     logging.basicConfig(**log_conf)
+    logging.info(f"ElFragmentador version: {elfragmentador.__version__}")
     parser = ArgumentParser()
     parser.add_argument(
         "--pin",

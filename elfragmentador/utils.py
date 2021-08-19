@@ -6,12 +6,14 @@ import logging
 
 from pyteomics import mzml
 import pandas as pd
+import numpy as np
 from tqdm.auto import tqdm
 
 import elfragmentador
 import elfragmentador.constants as CONSTANTS
 from elfragmentador.spectra import Spectrum
 from elfragmentador.model import PepTransformerModel
+from elfragmentador.math_utils import norm
 
 import torch
 from torch.nn.functional import cosine_similarity
@@ -99,6 +101,7 @@ def append_preds(
     # This would allow skipping several predictions... which right now are fairly slow
     df = df.sort_values(by=["Peptide", "CalcMass"]).reset_index(drop=True).copy()
     df.insert(loc=NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
+    df.insert(loc=NUM_COLUMNS -2, column="DiffNormRT", value=100)
 
     mzml_readers = {}
     mzml_files = {}
@@ -106,7 +109,9 @@ def append_preds(
     last_seq = None
     last_charge = None
     last_nce = None
-    outs = []
+    correlation_outs = []
+    raw_rts = []
+    pred_rts = []
 
     tqdm_postfix = {
         "cached_reads": 0,
@@ -144,6 +149,9 @@ def append_preds(
                 curr_scan["precursorList"]["precursor"][0]["activation"][
                     "collision energy"
                 ]
+            )
+            rt = float(
+                curr_scan['scanList']['scan'][0]['scan start time']
             )
         else:
 
@@ -194,9 +202,12 @@ def append_preds(
         distance = cosine_similarity(gt_spec, pred_spec, dim=-1)
 
         # append to results
-        outs.append(float(distance))
+        correlation_outs.append(float(distance))
+        raw_rts.append(rt)
+        pred_rts.append(float(pred_irt))
 
-    df["SpecCorrelation"] = outs
+    df["SpecCorrelation"] = correlation_outs
+    df["DiffNormRT"] = np.abs(norm(np.array(raw_rts))[0] - norm(np.array(pred_rts))[0])
     df.to_csv(out_pin, index=False, sep="\t")
     return df
 
