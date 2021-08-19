@@ -90,7 +90,8 @@ def append_predictions():
     model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
     model.eval()
 
-    return append_preds(in_pin=args.pin, out_pin=args.out, model=model)
+    out_df = append_preds(in_pin=args.pin, out_pin=args.out, model=model)
+    logging.info(out_df)
 
 
 def predict_csv():
