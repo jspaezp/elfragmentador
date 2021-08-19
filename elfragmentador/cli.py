@@ -32,7 +32,7 @@ import uniplot
 
 DEFAULT_LOGGER_BASIC_CONF = {
     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    "level": logging.DEBUG,
+    "level": logging.INFO,
 }
 
 

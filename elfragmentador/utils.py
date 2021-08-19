@@ -22,6 +22,21 @@ import warnings
 # TODO split addition of metadata and actual predictions to separate functions to
 
 
+def _attempt_find_file(row_rawfile, possible_paths):
+    tried_paths = []
+    for pp in possible_paths:
+        rawfile_path = Path(pp / (row_rawfile + ".mzML"))
+        tried_paths.append(rawfile_path)
+
+        if rawfile_path.is_file():
+            return rawfile_path
+        else:
+            logging.debug(f"{rawfile_path}, not found")
+
+    logging.error(f"File not found in any of: {tried_paths}")
+    raise FileNotFoundError(tried_paths)
+
+
 @torch.no_grad()
 def append_preds(
     in_pin: Union[Path, str], out_pin: Union[Path, str], model: PepTransformerModel
@@ -86,6 +101,7 @@ def append_preds(
     df.insert(loc=NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
 
     mzml_readers = {}
+    mzml_files = {}
     scan_id = None
     last_seq = None
     last_charge = None
@@ -108,8 +124,12 @@ def append_preds(
         curr_charge = int(appendix_charge_regex.search(row_appendix, 2)[0])
         peptide_sequence = dot_re.search(row.Peptide)[0]
 
-        rawfile_path = Path(in_pin_path.parent / (row_rawfile + ".mzML"))
-        assert rawfile_path.is_file(), f"{rawfile_path} does not exist"
+        try:
+            rawfile_path = mzml_files[row_rawfile]
+        except KeyError as e:
+            rawfile_path = _attempt_find_file(
+                row_rawfile, [in_pin_path.parent, ".", "../", "../../"]
+            )
 
         if mzml_readers.get(str(rawfile_path), None) is None:
             mzml_readers[str(rawfile_path)] = mzml.PreIndexedMzML(str(rawfile_path))
