@@ -18,6 +18,7 @@ tmp/**
 wandb/**
 elfragmentador.egg-info/**
 **/.snakemake
+benchmark_**
 benchmarking_workflow/comet
 benchmarking_workflow/fasta
 benchmarking_workflow/ind_spectrast

@@ -63,7 +63,9 @@ def append_predictions():
     Appends the cosine similarity between the predicted and actual spectra
     to a percolator input.
     """
-    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
+    log_conf = DEFAULT_LOGGER_BASIC_CONF.copy()
+    log_conf.update({"level": logging.INFO})
+    logging.basicConfig(**log_conf)
     parser = ArgumentParser()
     parser.add_argument(
         "--pin",

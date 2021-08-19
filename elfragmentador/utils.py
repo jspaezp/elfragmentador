@@ -22,6 +22,7 @@ import warnings
 # TODO split addition of metadata and actual predictions to separate functions to
 
 
+@torch.no_grad()
 def append_preds(
     in_pin: Union[Path, str], out_pin: Union[Path, str], model: PepTransformerModel
 ) -> pd.DataFrame:
@@ -43,6 +44,7 @@ def append_preds(
 
     # Read pin
     NUM_COLUMNS = 28
+    compiled_model = model.to_torchscript()
 
     # The appendix is in the form of _SpecNum_Charge_ID
     regex_file_appendix = re.compile("_\d+_\d+_\d+$")
@@ -118,9 +120,11 @@ def append_preds(
         if old_scan_id != scan_id:
             # read_spectrum
             curr_scan = mzml_readers[str(rawfile_path)].get_by_id(scan_id)
-            nce = curr_scan["precursorList"]["precursor"][0]["selectedIonList"][
-                "selectedIon"
-            ][0]["charge state"]
+            nce = float(
+                curr_scan["precursorList"]["precursor"][0]["activation"][
+                    "collision energy"
+                ]
+            )
         else:
 
             tqdm_postfix["cached_reads"] += 1
@@ -137,38 +141,37 @@ def append_preds(
         )
 
         # predict spectrum
-        with torch.no_grad():
-            if (
-                last_seq != peptide_sequence
-                or last_charge != curr_charge
-                or last_nce != nce
-            ):
-                last_seq = peptide_sequence
-                last_charge = curr_charge
-                last_nce = nce
+        if (
+            last_seq != peptide_sequence
+            or last_charge != curr_charge
+            or last_nce != nce
+        ):
+            last_seq = peptide_sequence
+            last_charge = curr_charge
+            last_nce = nce
 
-                pred_irt, pred_spec = model.predict_from_seq(
-                    seq=peptide_sequence,
-                    charge=curr_charge,
-                    nce=nce,
-                )
-                pred_spec = torch.stack([pred_spec])
-                tqdm_postfix["predictions"] += 1
-                tqdm_iter.set_postfix(tqdm_postfix)
-            else:
-                tqdm_postfix["cached_predictions"] += 1
-                tqdm_iter.set_postfix(tqdm_postfix)
+            input_batch = model.torch_batch_from_seq(
+                seq=peptide_sequence,
+                charge=curr_charge,
+                nce=nce,
+            )
+            pred_irt, pred_spec = compiled_model(*input_batch)
+            tqdm_postfix["predictions"] += 1
+            tqdm_iter.set_postfix(tqdm_postfix)
+        else:
+            tqdm_postfix["cached_predictions"] += 1
+            tqdm_iter.set_postfix(tqdm_postfix)
 
-            # Get ground truth spectrum
-            try:
-                gt_spec = torch.stack([torch.Tensor(curr_spec_object.encode_spectra())])
+        # Get ground truth spectrum
+        try:
+            gt_spec = torch.Tensor(curr_spec_object.encode_spectra())
 
-            except AssertionError as e:
-                if "No peaks were annotated in this spectrum" in str(e):
-                    gt_spec = torch.zeros_like(pred_spec)
+        except AssertionError as e:
+            if "No peaks were annotated in this spectrum" in str(e):
+                gt_spec = torch.zeros_like(pred_spec)
 
-            # compare spectra
-            distance = cosine_similarity(gt_spec, pred_spec)
+        # compare spectra
+        distance = cosine_similarity(gt_spec, pred_spec, dim=-1)
 
         # append to results
         outs.append(float(distance))
