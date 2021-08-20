@@ -10,11 +10,11 @@ from pathlib import Path
 
 import torch
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import TensorDataset
 
 from elfragmentador import model
 from elfragmentador import datamodules
 from elfragmentador import constants
+from elfragmentador.utils import prepare_fake_tensor_dataset
 
 
 def test_concat_encoder():
@@ -159,33 +159,7 @@ model_pairs = [
     pytest.param(model_pairs[1], id="traced"),
 ]
 
-
-def concat_batches(batches):
-    out = []
-    for i, _ in enumerate(batches[0]):
-        out.append(torch.cat([b[i] for b in batches]))
-
-    return tuple(out)
-
-
-def prepare_input_tensors(num=50):
-    peps = [
-        {
-            "nce": 20 + (10 * random.random()),
-            "charge": random.randint(1, 5),
-            "seq": get_random_peptide(),
-        }
-        for _ in range(num)
-    ]
-
-    tensors = [model.PepTransformerModel.torch_batch_from_seq(**pep) for pep in peps]
-    tensors = TensorDataset(*concat_batches(batches=tensors))
-
-    return tensors
-
-
-input_tensors = prepare_input_tensors(50)
-
+input_tensors = prepare_fake_tensor_dataset(50)
 
 def test_ts_and_base_give_same_result():
     # TODO make parametrized
