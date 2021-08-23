@@ -1,7 +1,7 @@
 
 poetry.lock
 scratch.py
-*.csv
+./*.csv
 *.ckpt
 **.pstats
 **.lprof

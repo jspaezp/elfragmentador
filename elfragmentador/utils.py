@@ -16,6 +16,7 @@ from elfragmentador.model import PepTransformerModel
 from elfragmentador.math_utils import norm
 
 import torch
+from torch.utils.data.dataset import TensorDataset
 from torch.nn.functional import cosine_similarity
 
 import warnings
@@ -27,7 +28,7 @@ import warnings
 def _attempt_find_file(row_rawfile, possible_paths):
     tried_paths = []
     for pp in possible_paths:
-        rawfile_path = Path(pp / (row_rawfile + ".mzML"))
+        rawfile_path = Path(pp) / (row_rawfile + ".mzML")
         tried_paths.append(rawfile_path)
 
         if rawfile_path.is_file():
@@ -205,11 +206,16 @@ def append_preds(
         pred_rts.append(float(pred_irt))
 
     df["SpecCorrelation"] = correlation_outs
+
+    # TODO consider if i really need to make this an absolute value
+    # making removing it would make it wose on percolater but
+    # probably better on mokapot
     df["DiffNormRT"] = np.abs(norm(np.array(raw_rts))[0] - norm(np.array(pred_rts))[0])
     df.to_csv(out_pin, index=False, sep="\t")
     return df
 
 
+@torch.no_grad()
 def predict_df(
     df: pd.DataFrame, impute_collision_energy=False, model: PepTransformerModel = None
 ) -> str:
@@ -273,3 +279,27 @@ def get_random_peptide():
         out_pep += "".join(random.sample(AAS, 1))
 
     return out_pep
+
+
+def _concat_batches(batches):
+    out = []
+    for i, _ in enumerate(batches[0]):
+        out.append(torch.cat([b[i] for b in batches]))
+
+    return tuple(out)
+
+
+def prepare_fake_tensor_dataset(num=50):
+    peps = [
+        {
+            "nce": 20 + (10 * random.random()),
+            "charge": random.randint(1, 5),
+            "seq": get_random_peptide(),
+        }
+        for _ in range(num)
+    ]
+
+    tensors = [PepTransformerModel.torch_batch_from_seq(**pep) for pep in peps]
+    tensors = TensorDataset(*_concat_batches(batches=tensors))
+
+    return tensors
