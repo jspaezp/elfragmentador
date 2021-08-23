@@ -312,7 +312,7 @@ class Spectrum:
             )
 
     def _annotate_peaks(self) -> None:
-        annots = annotate.annotate_peaks2(
+        annots = annotate.annotate_peaks(
             self._theoretical_peaks,
             self.mzs,
             self.intensities,

@@ -278,7 +278,7 @@ def evaluate_checkpoint():
     pl.seed_everything(2020)
     greeting()
 
-    parser = _evaluate_parser
+    parser = _evaluate_parser()
     args = parser.parse_args()
     dict_args = vars(args)
     logging.info(dict_args)
