@@ -1,5 +1,5 @@
 
-name: CI
+name: CI Testing
 on: pull_request
 
 jobs:
@@ -28,4 +28,3 @@ jobs:
         run: poetry run black . --check
       - name: Pytest
         run: poetry run pytest
-
