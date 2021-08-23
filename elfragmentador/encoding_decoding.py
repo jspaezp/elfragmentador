@@ -17,18 +17,17 @@ def encode_mod_seq(seq):
     Raises:
         ValueError
 
-    Example
-    =======
-    >>> samp_seq = "_AAIFVVAR_"
-    >>> print(constants.MAX_TENSOR_SEQUENCE)
-    32
-    >>> out = encode_mod_seq(samp_seq)
-    >>> out
-    SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
-    >>> len(out)
-    2
-    >>> [len(x) for x in out]
-    [32, 32]
+    Examples:
+        >>> samp_seq = "_AAIFVVAR_"
+        >>> print(constants.MAX_TENSOR_SEQUENCE)
+        32
+        >>> out = encode_mod_seq(samp_seq)
+        >>> out
+        SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
+        >>> len(out)
+        2
+        >>> [len(x) for x in out]
+        [32, 32]
     """
     seq_out = [0] * constants.MAX_TENSOR_SEQUENCE
     mod_out = [0] * constants.MAX_TENSOR_SEQUENCE
@@ -65,16 +64,15 @@ def clip_explicit_terminus(seq):
         seq: Sequence to be stripped form eplicit termini
 
     Returns:
-        Same as sequence input but removing explicit
-        n and c termini
+        Same as sequence input but removing explicit n and c termini
 
     Examples:
-    >>> clip_explicit_terminus("PEPTIDEPINK")
-    'PEPTIDEPINK'
-    >>> clip_explicit_terminus("nPEPTIDEPINKc")
-    'PEPTIDEPINK'
-    >>> clip_explicit_terminus("n[ACETYL]PEPTIDEPINKc")
-    'n[ACETYL]PEPTIDEPINK'
+        >>> clip_explicit_terminus("PEPTIDEPINK")
+        'PEPTIDEPINK'
+        >>> clip_explicit_terminus("nPEPTIDEPINKc")
+        'PEPTIDEPINK'
+        >>> clip_explicit_terminus("n[ACETYL]PEPTIDEPINKc")
+        'n[ACETYL]PEPTIDEPINK'
     """
 
     if seq[0] == "n" and not seq[1].startswith("["):
@@ -115,12 +113,11 @@ def get_fragment_encoding_labels(
     """
     Gets either the laels or an sequence that encodes a spectra
 
-    Examples
-    ========
-    >>> get_fragment_encoding_labels()
-    ['z1b1', 'z1y1',  ..., 'z3b29', 'z3y29']
-    >>> get_fragment_encoding_labels({'z1y2': 100, 'z2y2': 52})
-    [0, 0, 0, 100, ..., 0, 52, ...]
+    Examples:
+        >>> get_fragment_encoding_labels()
+        ['z1b1', 'z1y1',  ..., 'z3b29', 'z3y29']
+        >>> get_fragment_encoding_labels({'z1y2': 100, 'z2y2': 52})
+        [0, 0, 0, 100, ..., 0, 52, ...]
     """
 
     # TODO just redefine this to use the constant keys for fragments ...
@@ -152,20 +149,19 @@ def decode_fragment_tensor(
     Returns a data frame with annotations from sequence
     and a tensor encoding a spectra
 
-    Example
-    =======
-    >>> import torch
-    >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (constants.NUM_FRAG_EMBEDINGS)))
-    >>> foo.head()
-      Fragment        Mass  Intensity
-    0     z1b1   72.044390        0.0
-    1     z1y1  147.112804        1.0
-    2     z1b2  143.081504        2.0
-    3     z1y2  307.143453        3.0
-    4     z1b3  214.118618        4.0
-    >>> # import matplotlib.pyplot as plt
-    >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
-    >>> # plt.show()
+    Examples:
+        >>> import torch
+        >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (constants.NUM_FRAG_EMBEDINGS)))
+        >>> foo.head()
+        Fragment        Mass  Intensity
+        0     z1b1   72.044390        0.0
+        1     z1y1  147.112804        1.0
+        2     z1b2  143.081504        2.0
+        3     z1y2  307.143453        3.0
+        4     z1b3  214.118618        4.0
+        >>> # import matplotlib.pyplot as plt
+        >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
+        >>> # plt.show()
     """
     key_list = constants.FRAG_EMBEDING_LABELS
     fragment_ions = annotate.get_peptide_ions(sequence)

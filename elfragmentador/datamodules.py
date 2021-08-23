@@ -29,6 +29,21 @@ TrainBatch = namedtuple(
 
 
 def convert_tensor_column(column, elem_function=float, *args, **kwargs):
+    """converts a series (column in a pandas dataframe) to a tensor
+
+    Expects a column whose character values actually represent lists of numbers
+    for exmaple "[1,2,3,4]"
+
+    Args:
+      column: Series/list of stirngs
+      elem_function: function to use to convert each substring in a value (Default value = float)
+      *args: Arguments to pass to tqdm
+      **kwargs: Keywords arguments passed to tqdm
+
+    Returns:
+        List: A nested list containing the converted values
+
+    """
     out = [
         [elem_function(y) for y in x.strip("[]").replace("'", "").split(", ")]
         for x in tqdm(column, *args, **kwargs)
@@ -40,8 +55,21 @@ def match_lengths(
     nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
     max_len: int,
     name: str = "items",
-    verbose: bool = True,
 ) -> Tensor:
+    """
+    match_lengths Matches the lengths of all tensors in a list
+
+    Args:
+        nested_list (Union[List[List[Union[int, float]]], List[List[int]]]):
+            A list of lists, where each internal list will represent a tensor of equal length
+        max_len (int): Length to match all tensors to
+        name (str, optional): name to use (just for logging purposes). Defaults to "items".
+
+    Returns:
+        Tensor:
+            Tensor product of stacking all the elements in the input nested list, after
+            equalizing the length of all of them to the specified max_len
+    """
     lengths = [len(x) for x in nested_list]
     unique_lengths = set(lengths)
     match_max = [1 for x in lengths if x == max_len]
@@ -66,7 +94,29 @@ def match_lengths(
 
 
 def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
-    def match_col(string1, string2, colnames, match_mode="in", combine_mode=None):
+    """
+    match_colnames Tries to find aliases for columns names in a data frame
+
+
+    Tries to find the following column aliases:
+
+    "SeqE": Sequence encoding
+    "ModE": Modification Encoding
+    "SpecE": Spectrum encoding
+    "Ch": Charge
+    "iRT": Retention time
+    "NCE": Collision Energy
+
+
+    Args:
+        df (DataFrame): Data frame to find columns for ...
+
+    Returns:
+        Dict[str, Optional[str]]:
+            Dictionary with the aliases (keys are the ones specified in the details section)
+    """
+
+    def _match_col(string1, string2, colnames, match_mode="in", combine_mode=None):
         m = {
             "in": lambda q, t: q in t,
             "startswith": lambda q, t: q.startswith(t) or t.startswith(q),
@@ -97,12 +147,12 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
 
     colnames = list(df)
     out = {
-        "SeqE": match_col("Encoding", "Seq", colnames, combine_mode="intersect"),
-        "ModE": match_col("Encoding", "Mod", colnames, combine_mode="intersect"),
-        "SpecE": match_col("Encoding", "Spec", colnames, combine_mode="intersect"),
-        "Ch": match_col("harg", None, colnames),
-        "iRT": match_col("IRT", "iRT", colnames, combine_mode="union"),
-        "NCE": match_col(
+        "SeqE": _match_col("Encoding", "Seq", colnames, combine_mode="intersect"),
+        "ModE": _match_col("Encoding", "Mod", colnames, combine_mode="intersect"),
+        "SpecE": _match_col("Encoding", "Spec", colnames, combine_mode="intersect"),
+        "Ch": _match_col("harg", None, colnames),
+        "iRT": _match_col("IRT", "iRT", colnames, combine_mode="union"),
+        "NCE": _match_col(
             "nce", "NCE", colnames, combine_mode="union", match_mode="startswith"
         ),
     }
@@ -223,10 +273,13 @@ class PeptideDataset(torch.utils.data.Dataset):
 
     @property
     def mod_sequences(self):
+        """ """
         if not hasattr(self, "_mod_sequences"):
             self._mod_sequences = [
-                decode_mod_seq([int(s) for s in seq], [int(m) for m in mod]) for seq, mod in zip(self.sequence_encodings, self.mod_encodings)]
-        
+                decode_mod_seq([int(s) for s in seq], [int(m) for m in mod])
+                for seq, mod in zip(self.sequence_encodings, self.mod_encodings)
+            ]
+
         return self._mod_sequences
 
     @staticmethod

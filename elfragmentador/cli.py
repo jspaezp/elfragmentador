@@ -35,6 +35,7 @@ DEFAULT_LOGGER_BASIC_CONF = {
     "level": logging.INFO,
 }
 
+
 def _common_checkpoint_args(parser):
     """Adds the common to handle model checkpoints to a parser"""
     parser.add_argument(
@@ -51,9 +52,15 @@ def _common_checkpoint_args(parser):
     )
 
 
-def calculate_irt():
-    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+def greeting():
+    logging.info(f"ElFragmentador version: {elfragmentador.__version__}")
+
+
+def _calculate_irt_parser():
+    parser = ArgumentParser(
+        formatter_class=ArgumentDefaultsHelpFormatter,
+        prog="elfragmentador_calculate_irt",
+    )
     parser.add_argument(
         "file",
         type=argparse.FileType("r"),
@@ -66,6 +73,22 @@ def calculate_irt():
         type=str,
         help="Name of the file where the output will be written (csv)",
     )
+    return parser
+
+
+def _gen_cli_help(parser):
+    def decorate(fun):
+        fun.__doc__ = "```\n" + parser.format_help() + "\n```"
+        return fun
+
+    return decorate
+
+
+@_gen_cli_help(_calculate_irt_parser())
+def calculate_irt():
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
+    greeting()
+    parser = _calculate_irt_parser()
 
     args = parser.parse_args()
     files = [x.name for x in args.file]
@@ -73,16 +96,10 @@ def calculate_irt():
     df.to_csv(str(args.out))
 
 
-def append_predictions():
-    """
-    Appends the cosine similarity between the predicted and actual spectra
-    to a percolator input.
-    """
-    log_conf = DEFAULT_LOGGER_BASIC_CONF.copy()
-    log_conf.update({"level": logging.INFO})
-    logging.basicConfig(**log_conf)
-    logging.info(f"ElFragmentador version: {elfragmentador.__version__}")
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+def _append_prediction_parser():
+    parser = ArgumentParser(
+        prog="elfragmentador_append_pin", formatter_class=ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--pin",
         type=str,
@@ -94,7 +111,20 @@ def append_predictions():
         help="Input percolator file",
     )
     _common_checkpoint_args(parser)
+    return parser
 
+
+@_gen_cli_help(_append_prediction_parser())
+def append_predictions():
+    """Appends the cosine similarity between the predicted and actual spectra
+    to a percolator input.
+    """
+    log_conf = DEFAULT_LOGGER_BASIC_CONF.copy()
+    log_conf.update({"level": logging.INFO})
+    logging.basicConfig(**log_conf)
+    greeting()
+
+    parser = _append_prediction_parser()
     args = parser.parse_args()
 
     model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
@@ -104,12 +134,10 @@ def append_predictions():
     logging.info(out_df)
 
 
-def predict_csv():
-    """
-    Predicts the peptides in a csv file
-    """
-    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+def _predict_csv_parser():
+    parser = ArgumentParser(
+        prog="elfragmentador_predict_csv", formatter_class=ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--csv",
         type=str,
@@ -127,7 +155,16 @@ def predict_csv():
         help="Output .sptxt file",
     )
     _common_checkpoint_args(parser)
+    return parser
 
+
+@_gen_cli_help(_predict_csv_parser())
+def predict_csv():
+    """Predicts the peptides in a csv file"""
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
+    greeting()
+
+    parser = _predict_csv_parser()
     args = parser.parse_args()
     if args.impute_collision_energy == 0:
         nce = False
@@ -143,15 +180,11 @@ def predict_csv():
         )
 
 
-def convert_sptxt():
-    """
-    convert_sptxt Provides a CLI to convert an sptxt to a csv for training
-
-    provides a CLI for the sptxt_to_csv function, chek that guy out for the actual
-    implementation
-    """
-    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+def _convert_sptxt_parser():
+    parser = ArgumentParser(
+        prog="elfragmentador_convert_sptxt",
+        formatter_class=ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "file",
         type=argparse.FileType("r"),
@@ -182,7 +215,20 @@ def convert_sptxt():
         type=int,
         help="Minimum ascore required to keep a spectrum",
     )
+    return parser
 
+
+@_gen_cli_help(_convert_sptxt_parser())
+def convert_sptxt():
+    """convert_sptxt Provides a CLI to convert an sptxt to a csv for training
+
+    provides a CLI for the sptxt_to_csv function, chek that guy out for the actual
+    implementation
+    """
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
+    greeting()
+
+    parser = _convert_sptxt_parser()
     args = parser.parse_args()
 
     logging.info([x.name for x in args.file])
@@ -220,11 +266,19 @@ def convert_sptxt():
                     )
 
 
+def _evaluate_parser():
+    parser = evaluate.build_evaluate_parser()
+    _common_checkpoint_args(parser)
+    return parser
+
+
+@_gen_cli_help(_evaluate_parser())
 def evaluate_checkpoint():
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     pl.seed_everything(2020)
-    parser = evaluate.build_evaluate_parser()
-    _common_checkpoint_args(parser)
+    greeting()
+
+    parser = _evaluate_parser
     args = parser.parse_args()
     dict_args = vars(args)
     logging.info(dict_args)
@@ -279,8 +333,11 @@ def evaluate_checkpoint():
         best_res[0].to_csv(dict_args["out_csv"], index=False)
 
 
+@_gen_cli_help(build_train_parser())
 def train():
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
+    greeting()
+
     pl.seed_everything(2020)
     parser = build_train_parser()
     args = parser.parse_args()

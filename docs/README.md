@@ -5,13 +5,13 @@
 This repository attempts to implement a neural net that leverages the transformer architecture to predict peptide
 properties (retention time and fragmentation).
 
-![](./docs/img/schematic.png)
+![](img/schematic.png)
 
 ## Usage
 
-Please check out [The Quickstart guide](./docs/quickstart.md) for usage instructions.
+Please check out [The Quickstart guide](quickstart.md) for usage instructions.
 
-![](./docs/img/spectrum.png)
+![](img/spectrum.png)
 
 ## Why transformers?
 

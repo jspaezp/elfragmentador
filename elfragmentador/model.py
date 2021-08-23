@@ -40,7 +40,19 @@ from torch.optim.lr_scheduler import (
 )
 
 PredictionResults = namedtuple("PredictionResults", "irt spectra")
+PredictionResults.__doc__ = """Named Tuple that bundles prediction results
+Parameters:
+    irt (Tensor): Tensor containing normalized irt predictions
+    spectra (Tensor): Tensor containing encoded predicted spectra
+"""
 ForwardBatch = namedtuple("ForwardBatch", "src nce mods charge")
+ForwardBatch.__doc__ = """Named Tuple that bundles all tensors needed for a forward pass in the model
+Parameters:
+    src (Tensor): Encoded peptide sequences
+    nce (Tensor): Normalized collision energy
+    mods (Tensor): Modification encodings for the sequence
+    charge (Tensor): Long tensor with the charges
+"""
 
 
 class MLP(nn.Module):
@@ -51,6 +63,11 @@ class MLP(nn.Module):
     (linear > gelu) * (n-1) > linear
 
     Based on: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
+
+    Args:
+
+    Returns:
+
     """
 
     def __init__(
@@ -58,16 +75,15 @@ class MLP(nn.Module):
     ) -> None:
         """__init__ create a new instance of the MLP.
 
-        Parameters
-        ----------
-        input_dim : int
-            Expected dimensions for the input
-        hidden_dim : int
-            Number of dimensions of the hidden layers
-        output_dim : int
-            Output dimensions
-        num_layers : int
-            Number of layers (total)
+        Parameters:
+            input_dim (int):
+                Expected dimensions for the input
+            hidden_dim (int):
+                Number of dimensions of the hidden layers
+            output_dim (int):
+                Output dimensions
+            num_layers (int):
+                Number of layers (total)
         """
         super().__init__()
         self.num_layers = num_layers
@@ -79,11 +95,11 @@ class MLP(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass over the network.
 
-        Parameters:
-            x (Tensor):  Dimensions should match the ones specified instantiating the class
+        Args:
+          x (Tensor):
 
         Returns:
-            Tensor - The dims of this tensor are defined when instantiating the class
+            Tensor
 
         Examples:
             >>> pl.seed_everything(42)
@@ -188,6 +204,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         )
 
     def init_weights(self):
+        """ """
         initrange = 0.1
         nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
 
@@ -264,46 +281,45 @@ class PepTransformerModel(pl.LightningModule):
 
         Generates a new instance of the PepTransformerModel
 
-        Parameters
-        ----------
-        num_decoder_layers : int, optional
-            Number of layers in the transformer decoder, by default 6
-        num_encoder_layers : int, optional
-            Number of laters in the transformer encoder, by default 6
-        nhid : int, optional
-            Number of dimensions used in the feedforward networks inside
-            the transformer encoder and decoders, by default 2024
-        ninp : int, optional
-            Number of features to pass to the transformer encoder.
-            The embedding transforms the input to this input, by default 516
-        nhead : int, optional
-            Number of multi-attention heads in the transformer, by default 4
-        dropout : float, optional
-            dropout, by default 0.1
-        lr : float, optional
-            Learning rate, by default 1e-4
-        scheduler : str, optional
-            What scheduler to use, check the available ones with
-            `PepTransformerModel.accepted_schedulers`, by default "plateau"
-        lr_ratio : Union[float, int], optional
-            For cosine annealing:
-            Ratio of the initial learning rate to use with cosine annealing for
-            instance a lr or 1 and a ratio of 10 would have a minimum learning
-            rate of 0.1.
+        Parameters:
+            num_decoder_layers : int, optional
+                Number of layers in the transformer decoder, by default 6
+            num_encoder_layers : int, optional
+                Number of laters in the transformer encoder, by default 6
+            nhid : int, optional
+                Number of dimensions used in the feedforward networks inside
+                the transformer encoder and decoders, by default 2024
+            ninp : int, optional
+                Number of features to pass to the transformer encoder.
+                The embedding transforms the input to this input, by default 516
+            nhead : int, optional
+                Number of multi-attention heads in the transformer, by default 4
+            dropout : float, optional
+                dropout, by default 0.1
+            lr : float, optional
+                Learning rate, by default 1e-4
+            scheduler : str, optional
+                What scheduler to use, check the available ones with
+                `PepTransformerModel.accepted_schedulers`, by default "plateau"
+            lr_ratio : Union[float, int], optional
+                For cosine annealing:
+                Ratio of the initial learning rate to use with cosine annealing for
+                instance a lr or 1 and a ratio of 10 would have a minimum learning
+                rate of 0.1.
 
-            For onecycle:
-            Ratio of the initial lr and and maximum one,
-            for instance if lr is 0.1 and ratio is 10, the max learn rate
-            would be 1.0.
+                For onecycle:
+                Ratio of the initial lr and and maximum one,
+                for instance if lr is 0.1 and ratio is 10, the max learn rate
+                would be 1.0.
 
-            by default 200
-        steps_per_epoch : None, optional
-            expected number of steps per epoch, used internally to calculate
-            learning rates when using the oncecycle scheduler, by default None
-        loss_ratio: float, optional
-            The ratio of the spectrum to retention time loss to use when adding
-            before passing to the optimizer. Higher values mean more weight to
-            spectra with respect to the retention time. By default 5
+                by default 200
+            steps_per_epoch : None, optional
+                expected number of steps per epoch, used internally to calculate
+                learning rates when using the oncecycle scheduler, by default None
+            loss_ratio: float, optional
+                The ratio of the spectrum to retention time loss to use when adding
+                before passing to the optimizer. Higher values mean more weight to
+                spectra with respect to the retention time. By default 5
         """
         super().__init__()
         self.save_hyperparameters()
@@ -370,22 +386,16 @@ class PepTransformerModel(pl.LightningModule):
 
         Privides the function for the forward pass to the model.
 
-        Parameters
-        ----------
-        src : Tensor
-            Encoded pepide sequence [B, L] (view details)
-        nce : Tensor
-            float Tensor with the charges [B, 1]
-        mods : Optional[Tensor], optional
-            Encoded modification sequence [B, L], by default None
-        charge : Optional[Tensor], optional
-            long Tensor with the charges [B, 1], by default None
-        debug : bool, optional
-            When set, it will log (a lot) of the shapes of the intermediate
-            tensors inside the model. By default False
+        Parameters:
+            src (Tensor): Encoded pepide sequence [B, L] (view details)
+            nce (Tensor): float Tensor with the charges [B, 1]
+            mods (Optional[Tensor]): Encoded modification sequence [B, L], by default None
+            charge (Optional[Tensor]): long Tensor with the charges [B, 1], by default None
+            debug (bool):
+                When set, it will log (a lot) of the shapes of the intermediate
+                tensors inside the model. By default False
 
-        Details
-        -------
+        Details:
             src:
                 The peptide is encoded as integers for the aminoacid.
                 "AAA" encoded for a max length of 5 would be
@@ -398,12 +408,6 @@ class PepTransformerModel(pl.LightningModule):
             mods:
                 Modifications encoded as integers
 
-        Returns
-        -------
-        PredictionResults
-            A named tuple with two named results; irt and spectra
-            iRT prediction [B, 1]
-            Spectra prediction [B, self.num_queries]
         """
         if debug:
             logging.debug(
@@ -441,22 +445,27 @@ class PepTransformerModel(pl.LightningModule):
         This function is a wrapper around forward but takes a named tuple as an
         input instead of the positional/keword arguments.
 
-        Parameters
-        ----------
-        inputs : TrainBatch
+        Args:
+          inputs (TrainBatch):
             Named tuple (check the documentation of that object for which names)
-        debug : bool, optional
-            When set, it will log (a lot) of the shapes of the intermediate
-            tensors inside the model. By default False
+          debug (bool):
+            When set, it will log (a lot) of the shapes of the intermediate tensors
+            inside the model. By default False
 
-        Returns
-        -------
-        PredictionResults
-            A named tuple with two named results; irt and spectra
-
+        Returns:
+            PredictionResults
         """
 
-        def unsqueeze_if_needed(x, dims):
+        def unsqueeze_if_needed(x: Tensor, dims: int):
+            """
+            Args:
+              x:
+              dims: needed dimensions
+
+            Returns:
+                Tensor
+
+            """
             if len(x.shape) != dims:
                 if debug:
                     logging.debug(f"PT: Unsqueezing tensor of shape {x.shape}")
@@ -480,17 +489,19 @@ class PepTransformerModel(pl.LightningModule):
 
     @staticmethod
     def torch_batch_from_seq(seq: str, nce: float, charge: int):
-        """
-        Generate an input batch for the model from a sequence string.
+        """Generate an input batch for the model from a sequence string.
 
-        Args:
-            seq (str): String describing the sequence to be predicted, e. "PEPT[PHOSOHO]IDEPINK"
-            nce (float): Collision energy to use for the prediction, e. 27.0
-            charge (int): Charge of the precursor to use for the prediction, e. 3
+        Parameters:
+          seq (str): String describing the sequence to be predicted, e. "PEPT[PHOSOHO]IDEPINK"
+          nce (float): Collision energy to use for the prediction, e. 27.0
+          charge (int): Charge of the precursor to use for the prediction, e. 3
+
+        Returns:
+            ForwardBatch: Named tuple with the tensors to use as a forward batch
 
         Examples:
-        >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
-        ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
+            >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
+            ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
         """
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
 
@@ -504,6 +515,7 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     def to_torchscript(self):
+        """ """
         _fake_input_data_torchscript = self.torch_batch_from_seq(
             seq="MYM[OXIDATION]DIFIEDPEPTYDE", charge=3, nce=27.0
         )
@@ -527,53 +539,49 @@ class PepTransformerModel(pl.LightningModule):
         self, seq: str, charge: int, nce: float, as_spectrum=False, debug: bool = False
     ) -> Union[PredictionResults, Spectrum]:
         """predict_from_seq Predicts spectra from a sequence as a string.
-
+        
         Utility method that gets a sequence as a string, encodes it internally
         to the correct input form and outputs the predicted spectra.
-
+        
         Note that the spectra is not decoded as an output, please check
         `elfragmentador.encoding_decoding.decode_fragment_tensor` for the
         decoding.
-
+        
         The irt is scaled by 100 and is in the Biognosys scale.
-
+        
         TODO: consider if the output should be decoded ...
-
-        Parameters
-        ----------
-        seq : str
-            Sequence to use for prediction, supports modifications in the form
-            of S[PHOSPHO], S[+80] and T[181]
-        charge : int
-            Precursor charge to be assumed during the fragmentation
-        nce : float
-            Normalized collision energy to use during the prediction
-        as_spectrum : bool
-            Wether to return a Spectrum object instead of the raw tensor predictions
-        debug : bool, optional
-            When set, it will write to logging at a debug level (a lot) of the shapes of the intermediate
-            tensors inside the model. By default False
-
-        Returns
-        -------
-        PredictionResults
-            A named tuple with two named results; irt and spectra
-        Spectrum
-            A spectrum object with the predicted spectrum
-
-        Examples
-        --------
-        >>> pl.seed_everything(42)
-        42
-        >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
-        >>> _ = my_model.eval()
-        >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
-        PredictionResults(irt=tensor([...], grad_fn=<SqueezeBackward1>), \
-spectra=tensor([...], grad_fn=<SqueezeBackward1>))
-        >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, as_spectrum=True)
-        >>> type(out)
-        <class 'elfragmentador.spectra.Spectrum'>
-        >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
+        
+        Parameters:
+            seq (str): 
+                Sequence to use for prediction, supports modifications in the form
+                of S[PHOSPHO], S[+80] and T[181]
+            charge (int): 
+                Precursor charge to be assumed during the fragmentation
+            nce (float):
+                Normalized collision energy to use during the prediction
+            as_spectrum (bool, optional):
+                Wether to return a Spectrum object instead of the raw tensor predictions
+                (Default value = False)
+            debug (bool, optional):
+                When set, it will write to logging at a debug level (a lot) of the shapes
+                of the intermediate tensors inside the model. By default False
+        
+        Returns:
+          PredictionResults: A named tuple with two named results; irt and spectra
+          Spectrum: A spectrum object with the predicted spectrum
+        
+        Examples:
+            >>> pl.seed_everything(42)
+            42
+            >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
+            >>> _ = my_model.eval()
+            >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
+            PredictionResults(irt=tensor([...], grad_fn=<SqueezeBackward1>), \
+            spectra=tensor([...], grad_fn=<SqueezeBackward1>))
+            >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, as_spectrum=True)
+            >>> type(out)
+            <class 'elfragmentador.spectra.Spectrum'>
+            >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
         """
 
         in_batch = self.torch_batch_from_seq(seq, nce, charge)
@@ -612,16 +620,14 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         It is used to add the command line arguments for the training/generation
         of the model.
 
-        Parameters
-        ----------
-        parser : _ArgumentGroup
-            An argparser parser (anything that has the `.add_argument` method)
-            to which the arguments will be added
+        Args:
+            parser(_ArgumentGroup):
+                An argparser parser (anything that has the `.add_argument` method) to
+                which the arguments will be added
 
-        Returns
-        -------
-        _ArgumentGroup
-            Same parser with the added arguments
+        Returns:
+            _ArgumentGroup, the same parser with the added arguments
+
         """
         parser.add_argument(
             "--num_queries",
@@ -707,7 +713,15 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
 
     def make_trainable_sections(self, sections: List) -> None:
         def set_grad_section(model_section, trainable=True):
-            """Freezes or unfreezes a model section"""
+            """Freezes or unfreezes a model section
+
+            Args:
+              model_section:
+              trainable: (Default value = True)
+
+            Returns:
+
+            """
             for param in model_section.parameters():
                 param.requires_grad = trainable
 
@@ -737,22 +751,8 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         Check the pytorch_lightning documentation to see how this is used in the
         training loop
 
-        Returns
-        -------
-        Union[
-            Tuple[List[AdamW], List[Dict[str, Union[ReduceLROnPlateau, str]]]],
-            Tuple[List[AdamW], List[Dict[str, Union[CosineAnnealingWarmRestarts, str]]]],
-            Tuple[List[AdamW], List[Dict[str, Union[OneCycleLR, str]]]],
-        ]
-            Two lists, one containing the optimizer and another contining the
-            scheduler.
-
-        Raises
-        ------
-        ValueError
-            Raised when a scheduler that is not supported is requested.
-            If you want to use another one, please over-write this method
-            or make a subclass with the modification. (PRs are also welcome)
+        Returns:
+          Two lists, one containing the optimizer and another contining the scheduler.
 
         """
         opt = torch.optim.AdamW(
@@ -888,6 +888,7 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         self.spectra_metric.update(step_out["spec_l"])
 
     def validation_epoch_end(self, outputs) -> None:
+        """See pytorch lightning documentation """
         log_dict = {
             "val_irt_l": self.irt_metric.compute(),
             "val_l": self.loss_metric.compute(),
@@ -904,5 +905,3 @@ spectra=tensor([...], grad_fn=<SqueezeBackward1>))
         self.spectra_metric.reset()
 
         return super().validation_epoch_end(outputs)
-
-    __doc__ += "\n\n" + __init__.__doc__ + "\n\n" + forward.__doc__

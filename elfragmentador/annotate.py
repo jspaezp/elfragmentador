@@ -46,7 +46,7 @@ def _solve_alias(x: str) -> str:
     return x
 
 
-def peptide_parser(p: str, solve_aliases: bool =False) -> Iterator[str]:
+def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
     """
     peptide_parser Parses peptides in a string to an iterable
 
@@ -56,13 +56,12 @@ def peptide_parser(p: str, solve_aliases: bool =False) -> Iterator[str]:
 
     Raises:
         ValueError:
-            Raises an error when the sequence cannot be correcly parsed 
+            Raises an error when the sequence cannot be correcly parsed
             (starts with a special chatacter for instance)
 
     Yields:
         Iterator[str]: Every element in the peptide sequence
-    """    
-    
+    """
 
     pass
     """Parses peptide sequences as strings
@@ -130,7 +129,7 @@ def mass_diff_encode_seq(seq):
     """
 
     Args:
-      seq: 
+      seq:
 
     Returns:
 
@@ -145,7 +144,7 @@ def mass_diff_encode_seq(seq):
 
 def canonicalize_seq(seq: str, robust: bool = False) -> str:
     """canonicalize_seq Solves all modification aliases in a sequence.
-    
+
     Given a sequence, converts al supported modification aliases to the
     "canonical" version of them and returns the new version.
 
@@ -175,7 +174,7 @@ def canonicalize_seq(seq: str, robust: bool = False) -> str:
 
 def get_theoretical_mass(peptide: str):
     """Calculates the theoretical mass of a peptide
-    
+
     Examples:
         >>> get_theoretical_mass("MYPEPTIDE")
         1093.4637787
@@ -188,7 +187,7 @@ def get_theoretical_mass(peptide: str):
 def get_precursor_mz(peptide: str, charge: int):
     """Calculates the theoretical mass/charge of a precursor peptide
     (assumes positive mode)
-    
+
     Args:
       peptide (str): Peptide string
       charge (int): charge of the peptide (positive integet)
@@ -205,7 +204,7 @@ def get_precursor_mz(peptide: str, charge: int):
 def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
     """Calculates masses forward and backwards from aminoacid
     sequences
-    
+
     Examples:
         >>> _get_forward_backward("AMC")
         (array([  1.00782503,  72.04493903, 203.08542403, 363.11607276,
@@ -250,7 +249,7 @@ def _get_annotation(
 ) -> OrderedDict:
     """Calculates the ion annotations based on the forward
     and backward cumulative masses
-    
+
 
     Args:
       forward (ndarray): Forward cumulative mass
@@ -299,7 +298,7 @@ def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
 
     Returns:
       Dict[str, float64]: Keys are ion names and values are the mass
-      Examples: 
+      Examples:
 
     Examples:
         >>> foo = get_peptide_ions("AA")
@@ -350,7 +349,7 @@ def _get_peptide_ions(
 
 
 def get_tolerance(
-    theoretical: float64, tolerance: Union[float,int] = 25.0, unit: str = "ppm"
+    theoretical: float64, tolerance: Union[float, int] = 25.0, unit: str = "ppm"
 ) -> float64:
     """Calculates the toleranc in daltons from either a dalton tolerance or a ppm tolerance
 
@@ -410,7 +409,7 @@ def is_sorted(
 
     Returns:
         bool: Wether at least 1 element is out of order
-    
+
     Examples:
         >>> is_sorted([1,2,3,4])
         True
@@ -462,16 +461,16 @@ def annotate_peaks(
     annotate_peaks Assigns m/z peaks to annotations
 
     Args:
-        theoretical_peaks (Dict[str, float64]): 
+        theoretical_peaks (Dict[str, float64]):
             Dictionary specifying the names and masses of theoretical peaks
         mzs (Union[List[float64], List[float]]):
             Array of the masses to be annotated.
         intensities (Union[List[float], List[int]]):
             Array of the intensities that match the masses provided
-        tolerance (int, optional): 
+        tolerance (int, optional):
             Tolerance to be used to count an observed and a theoretical m/z as a match.
             Defaults to 25.
-        unit (str, optional): 
+        unit (str, optional):
             The unit of the formerly specified tolerance (da or ppm).
             Defaults to "ppm".
 

@@ -1,5 +1,6 @@
 import time
 import logging
+from pathlib import Path
 from typing import Dict, List, Tuple, Union
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
@@ -81,7 +82,13 @@ def evaluate_checkpoint(
 
 
 def evaluate_on_sptxt(
-    model, filepath, batch_size=4, device="cpu", max_spec=1e6, *args, **kwargs
+    model: PepTransformerModel,
+    filepath: Union[Path, str],
+    batch_size=4,
+    device="cpu",
+    max_spec=1e6,
+    *args,
+    **kwargs,
 ):
     ds = PeptideDataset.from_sptxt(
         filepath=filepath, max_spec=max_spec, *args, **kwargs
@@ -91,7 +98,13 @@ def evaluate_on_sptxt(
     )
 
 
-def evaluate_on_csv(model, filepath, batch_size=4, device="cpu", max_spec=1e6):
+def evaluate_on_csv(
+    model: PepTransformerModel,
+    filepath: Union[Path, str],
+    batch_size: int = 4,
+    device: str = "cpu",
+    max_spec: int = 1e6,
+):
     ds = PeptideDataset.from_csv(filepath=filepath, max_spec=max_spec)
     return evaluate_on_dataset(
         model=model, dataset=ds, batch_size=batch_size, device=device
@@ -239,10 +252,6 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     model : PepTransformerModel
         A model to test the predictions on
 
-    Returns
-    -------
-    dict : A fit linear regression fit of the theoretical retention time of iRT peptides
-           and their prediction.
     """
     model.eval()
     real_rt = []
