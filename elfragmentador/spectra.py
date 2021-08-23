@@ -15,12 +15,16 @@ import warnings
 from typing import Iterator, Dict, Optional, List, Sequence, Union
 from pathlib import Path
 
-from elfragmentador import constants, annotate, encoding_decoding, scoring
+from elfragmentador import constants as CONSTANTS
+from elfragmentador import annotate, encoding_decoding, scoring
 import elfragmentador
 from elfragmentador.encoding_decoding import get_fragment_encoding_labels, SequencePair
 
 from pandas.core.frame import DataFrame
 import numpy as np
+import spectrum_utils.plot as sup
+import spectrum_utils.spectrum as sus
+
 from tqdm.auto import tqdm
 
 
@@ -90,12 +94,12 @@ class Spectrum:
         nreps : int, optional
             Integer describing how many spectra were used to generate this concensus spectrum
         """
-        tolerance, tolerance_unit = constants.TOLERANCE[analyzer]
+        tolerance, tolerance_unit = CONSTANTS.TOLERANCE[analyzer]
         parsed_peptide = list(annotate.peptide_parser(sequence, solve_aliases=True))
 
         # Makes sure all elements in the sequence are aminoacids
-        assert set(parsed_peptide) <= constants.AMINO_ACID_SET.union(
-            constants.MOD_PEPTIDE_ALIASES
+        assert set(parsed_peptide) <= CONSTANTS.AMINO_ACID_SET.union(
+            CONSTANTS.MOD_PEPTIDE_ALIASES
         ), f"Assertion of supported modifications failed for {sequence}: {parsed_peptide}"
         sequence = "".join(parsed_peptide)
         self.sequence = "".join([x[:1] for x in parsed_peptide])
@@ -111,7 +115,7 @@ class Spectrum:
         # TODO redefine these with the functions inside annotate
         self.theoretical_mass = annotate.get_theoretical_mass(amino_acids)
         self.theoretical_mz = (
-            self.theoretical_mass + (charge * constants.PROTON)
+            self.theoretical_mass + (charge * CONSTANTS.PROTON)
         ) / charge
 
         assert len(mzs) == len(intensities)
@@ -236,7 +240,7 @@ class Spectrum:
 
         Examples
         --------
-        >>> Spectrum.from_tensors([1, 1, 2, 3, 0, 0, 0, 0, 0, 0], [0]*constants.NUM_FRAG_EMBEDINGS)
+        >>> Spectrum.from_tensors([1, 1, 2, 3, 0, 0, 0, 0, 0, 0], [0]*CONSTANTS.NUM_FRAG_EMBEDINGS)
         Spectrum:
             Sequence: AACD len:4
             Mod.Sequence: AACD
@@ -329,8 +333,8 @@ class Spectrum:
     def _calculate_delta_ascore(self) -> None:
         self._delta_ascore = scoring.calc_delta_ascore(
             seq=encoding_decoding.clip_explicit_terminus(self.mod_sequence),
-            mod=list(constants.VARIABLE_MODS.keys()),
-            aas=list(constants.VARIABLE_MODS.values()),
+            mod=list(CONSTANTS.VARIABLE_MODS.keys()),
+            aas=list(CONSTANTS.VARIABLE_MODS.values()),
             mzs=self.mzs,
             ints=self.intensities,
         )
@@ -349,7 +353,7 @@ class Spectrum:
         encode_spectra Produce encoded sequences from your spectrum object.
 
         It produces a list of integers that represents the spectrum, the labels correspond
-        to the ones in constants.FRAG_EMBEDING_LABELS, but can also be acquired using the
+        to the ones in CONSTANTS.FRAG_EMBEDING_LABELS, but can also be acquired using the
         argument dry=True
 
         Parameters
@@ -392,10 +396,10 @@ class Spectrum:
         encode_sequence returns the encoded sequence of the aminoacids/modifications.
 
         It returns two lists representing the aminoacid and modification sequences, the
-        length of the sequence will correspond to constants.MAX_TENSOR_SEQUENCE.
+        length of the sequence will correspond to CONSTANTS.MAX_TENSOR_SEQUENCE.
 
-        The meaning of each corresponding index comes from constants.ALPHABET and
-        constants.MOD_INDICES. Some aliases for modifications are supported, check them
+        The meaning of each corresponding index comes from CONSTANTS.ALPHABET and
+        CONSTANTS.MOD_INDICES. Some aliases for modifications are supported, check them
         at constans.MOD_PEPTIDE_ALIASES
 
         Returns
@@ -555,46 +559,75 @@ class Spectrum:
         )
         return out
 
-    def plot(self, mirror: Spectrum = None, ax=None):
-        try:
-            plt
-        except UnboundLocalError:
-            import matplotlib.pyplot as plt
+    @property
+    def sus_msms_spec(self) -> sus.MsmsSpectrum:
+        if not hasattr(self, "_sus_msms_spec"):
+            self._sus_msms_spec = self._to_spectrum_utils()
 
-        if ax is not None:
-            plt = ax
+        return self._sus_msms_spec
 
-        display_sequence = encoding_decoding.clip_explicit_terminus(self.mod_sequence)
-        display_sequence = f"{display_sequence}/{self.charge}+ NCE={self.nce}"
-        try:
-            plt.title(display_sequence)
-        except TypeError:
-            plt.set_title(display_sequence)
-            plt.set_xlabel("m/z")
-            plt.set_ylabel("Relative Intensity")
+    def _to_spectrum_utils(self):
+        aas, mods = self.encode_sequence()
+        TERM_ALIAS_DICT = {
+            CONSTANTS.ALPHABET["c"]: "C-term",
+            CONSTANTS.ALPHABET["n"]: "N-term",
+        }
 
-        plt.vlines(self.mzs, 0, self.intensities, color="blue")
-        plt.axhline(0, color="black")
+        modifications = {
+            (
+                (i - 1) if aa not in TERM_ALIAS_DICT else TERM_ALIAS_DICT[aa]
+            ): CONSTANTS.MODIFICATION[CONSTANTS.MOD_INDICES_S[m]]
+            for i, (m, aa) in enumerate(zip(mods, aas))
+            if m != 0
+        }
 
-        for ion_name, intensity in self.annotated_peaks.items():
-            if intensity < np.max(self.intensities) * 0.01:
-                continue
+        modifications.update(
+            {
+                i - 1: CONSTANTS.MODIFICATION["CARBAMIDOMETHYL"]
+                for i, (m, aa) in enumerate(zip(mods, aas))
+                if aa == CONSTANTS.ALPHABET["C"] and m == 0
+            }
+        )
 
-            plt.annotate(
-                ion_name,
-                xy=(self._theoretical_peaks[ion_name], intensity),
-                xytext=(1, 1),
-                textcoords="offset points",
-                horizontalalignment="center",
-                verticalalignment="bottom",
-            )
+        stripped_sequence = encoding_decoding.clip_explicit_terminus(self.sequence)
+        # TODO consider if this is needed ...
+        # and (sus._aa_mass["C"] - 103.00919) < 0.0001
+        spectrum = sus.MsmsSpectrum(
+            identifier=stripped_sequence,
+            precursor_mz=self.parent_mz,
+            precursor_charge=self.charge,
+            mz=self.mzs,
+            intensity=self.intensities,
+            retention_time=self.rt,
+            peptide=stripped_sequence,
+            modifications=modifications,
+        )
 
-        if mirror:
-            plt.vlines(mirror.mz, 0, mirror.intensities, color="red")
-            plt.vlines(0, -1, 1, color="gray")
+        # Process the MS/MS spectrum.
+        tolerance, tolerance_unit = CONSTANTS.TOLERANCE[self.analyzer]
+        spectrum = spectrum.filter_intensity(
+            min_intensity=0.005
+        ).annotate_peptide_fragments(
+            tolerance,
+            tolerance_unit,
+            ion_types=CONSTANTS.ION_TYPES,
+            max_ion_charge=self.charge,
+        )
+
+        return spectrum
+
+    def plot(self, mirror: Union[Spectrum, sus.MsmsSpectrum] = None, ax=None, **kwargs):
+        if mirror is None:
+            sup.spectrum(self.sus_msms_spec, ax=ax, **kwargs)
         else:
-            plt.vlines(0, 0, 1, color="gray")
-        # plt.show()
+            if isinstance(mirror, Spectrum):
+                mirror = mirror.sus_msms_spec
+            sup.mirror(
+                spec_top=self.sus_msms_spec,
+                spec_bottom=mirror,
+                spectrum_kws=kwargs,
+                ax=ax,
+            )
 
 
 def encode_sptxt(
@@ -736,7 +769,7 @@ def encode_sptxt(
 def sptxt_to_csv(filepath, output_path, filter_irt_peptides=True, *args, **kwargs):
     df = encode_sptxt(filepath=filepath, *args, **kwargs)
     if filter_irt_peptides:
-        df = df[[x not in constants.IRT_PEPTIDES for x in df["Sequences"]]]
+        df = df[[x not in CONSTANTS.IRT_PEPTIDES for x in df["Sequences"]]]
     df.to_csv(output_path, index=False)
 
 
