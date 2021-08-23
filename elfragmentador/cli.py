@@ -35,10 +35,25 @@ DEFAULT_LOGGER_BASIC_CONF = {
     "level": logging.INFO,
 }
 
+def _common_checkpoint_args(parser):
+    """Adds the common to handle model checkpoints to a parser"""
+    parser.add_argument(
+        "--model_checkpoint",
+        type=str,
+        default=elfragmentador.DEFAULT_CHECKPOINT,
+        help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
+    )
+    parser.add_argument(
+        "--device",
+        default="cpu",
+        type=str,
+        help="Device to move the model to during the evaluation",
+    )
+
 
 def calculate_irt():
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "file",
         type=argparse.FileType("r"),
@@ -67,7 +82,7 @@ def append_predictions():
     log_conf.update({"level": logging.INFO})
     logging.basicConfig(**log_conf)
     logging.info(f"ElFragmentador version: {elfragmentador.__version__}")
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "--pin",
         type=str,
@@ -78,12 +93,7 @@ def append_predictions():
         type=str,
         help="Input percolator file",
     )
-    parser.add_argument(
-        "--model_checkpoint",
-        type=str,
-        default=elfragmentador.DEFAULT_CHECKPOINT,
-        help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
-    )
+    _common_checkpoint_args(parser)
 
     args = parser.parse_args()
 
@@ -99,7 +109,7 @@ def predict_csv():
     Predicts the peptides in a csv file
     """
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "--csv",
         type=str,
@@ -116,12 +126,7 @@ def predict_csv():
         type=str,
         help="Output .sptxt file",
     )
-    parser.add_argument(
-        "--model_checkpoint",
-        type=str,
-        default=elfragmentador.DEFAULT_CHECKPOINT,
-        help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
-    )
+    _common_checkpoint_args(parser)
 
     args = parser.parse_args()
     if args.impute_collision_energy == 0:
@@ -146,7 +151,7 @@ def convert_sptxt():
     implementation
     """
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "file",
         type=argparse.FileType("r"),
@@ -219,6 +224,7 @@ def evaluate_checkpoint():
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     pl.seed_everything(2020)
     parser = evaluate.build_evaluate_parser()
+    _common_checkpoint_args(parser)
     args = parser.parse_args()
     dict_args = vars(args)
     logging.info(dict_args)

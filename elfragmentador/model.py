@@ -79,30 +79,25 @@ class MLP(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass over the network.
 
-        Parameters
-        ----------
-        x : Tensor
-            Dimensions should match the ones specified instantiating the class
+        Parameters:
+            x (Tensor):  Dimensions should match the ones specified instantiating the class
 
-        Returns
-        -------
-        Tensor
-            The dims of this tensor are defined when instantiating the class
+        Returns:
+            Tensor - The dims of this tensor are defined when instantiating the class
 
-        Examples
-        --------
-        >>> pl.seed_everything(42)
-        42
-        >>> net = MLP(1000, 512, 2, 10)
-        >>> out = net.forward(torch.rand([5, 1000]))
-        >>> out
-        tensor([[-0.0061, -0.0219],
-                [-0.0061, -0.0219],
-                [-0.0061, -0.0220],
-                [-0.0061, -0.0220],
-                [-0.0061, -0.0219]], grad_fn=<AddmmBackward>)
-        >>> out.shape
-        torch.Size([5, 2])
+        Examples:
+            >>> pl.seed_everything(42)
+            42
+            >>> net = MLP(1000, 512, 2, 10)
+            >>> out = net.forward(torch.rand([5, 1000]))
+            >>> out
+            tensor([[-0.0061, -0.0219],
+                    [-0.0061, -0.0219],
+                    [-0.0061, -0.0220],
+                    [-0.0061, -0.0220],
+                    [-0.0061, -0.0219]], grad_fn=<AddmmBackward>)
+            >>> out.shape
+            torch.Size([5, 2])
         """
         for i, layer in enumerate(self.layers):
             x = (

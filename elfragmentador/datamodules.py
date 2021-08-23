@@ -1,4 +1,5 @@
 from __future__ import annotations
+from elfragmentador.encoding_decoding import decode_mod_seq, encode_mod_seq
 
 import logging
 
@@ -219,6 +220,14 @@ class PeptideDataset(torch.utils.data.Dataset):
         )
         logging.info(">>> Done Initializing dataset\n")
         del self.df
+
+    @property
+    def mod_sequences(self):
+        if not hasattr(self, "_mod_sequences"):
+            self._mod_sequences = [
+                decode_mod_seq([int(s) for s in seq], [int(m) for m in mod]) for seq, mod in zip(self.sequence_encodings, self.mod_encodings)]
+        
+        return self._mod_sequences
 
     @staticmethod
     def from_sptxt(
