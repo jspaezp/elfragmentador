@@ -11,52 +11,44 @@ properties (retention time and fragmentation).
 
 Since the project is currently in development mode, the best way to install is using pip from the cloned repo
 
-```shell
-git clone https://github.com/jspaezp/elfragmentador.git
-cd elfragmentador
-
-pip install /content/elfragmentador
-```
-
-Nontheless, there is also a pipy installable version
+User Install:
 
 ```shell
 pip install elfragmentador
 ```
 
+Development install:
+
+```shell
+git clone https://github.com/jspaezp/elfragmentador.git
+cd elfragmentador
+
+pip install /content/elfragmentador
+# Can also use `poetry install` if you are familiar with poetry environments
+```
+
 ## Usage
 
-### Training
-
-```shell
-# Be a good person and keep track of your experiments, use wandb
-$ wandb login
-```
-
-```shell
-elfragmentador_train \
-     --run_name onecycle_5e_petite_ndl4 \
-     --scheduler onecycle \
-     --max_epochs 5 \
-     --lr_ratio 25 \
-     --terminator_patience 20 \
-     --lr 0.00005 \
-     --gradient_clip_val 1.0 \
-     --dropout 0.1 \
-     --nhead 4 \
-     --nhid 512 \
-     --ninp 224 \
-     --num_decoder_layers 4 \
-     --num_encoder_layers 2 \
-     --batch_size 400 \
-     --accumulate_grad_batches 1 \
-     --precision 16 \
-     --gpus 1 \
-     --progress_bar_refresh_rate 5 \
-     --data_dir  /content/20210217-traindata
-```
-
 ### Prediction
+
+I have implemented various ways to get predictions from the models.
+
+If you want to generate an in-silico spectral library, you can use
+a csv file with the columns 'Modified Sequence', 'CE' (collision energy),
+and 'Precursor Charge'.
+
+The output file is a `.sptxt` file, as specified by spectrast.
+
+```shell
+elfragmentador_predict_csv --csv {input csv file} --out {output .sptxt file}
+```
+
+If you want to append the cosine similarity with predictions and
+error with respect to a predicted retention time to a percolator input file (.pin) file:
+
+```
+elfragmentador_append_pin --pin {input .pin} --out {output .pin}
+```
 
 #### Check performance
 
@@ -92,6 +84,36 @@ cd elfragmentador/viz_app
 
 # Here you can install the dependencies using poetry
 python main.py
+```
+
+### Training
+
+```shell
+# Be a good person and keep track of your experiments, use wandb
+$ wandb login
+```
+
+```shell
+elfragmentador_train \
+     --run_name onecycle_5e_petite_ndl4 \
+     --scheduler onecycle \
+     --max_epochs 5 \
+     --lr_ratio 25 \
+     --terminator_patience 20 \
+     --lr 0.00005 \
+     --gradient_clip_val 1.0 \
+     --dropout 0.1 \
+     --nhead 4 \
+     --nhid 512 \
+     --ninp 224 \
+     --num_decoder_layers 4 \
+     --num_encoder_layers 2 \
+     --batch_size 400 \
+     --accumulate_grad_batches 1 \
+     --precision 16 \
+     --gpus 1 \
+     --progress_bar_refresh_rate 5 \
+     --data_dir  /content/20210217-traindata
 ```
 
 ## Why transformers?

@@ -111,6 +111,7 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
 
 
 class PeptideDataset(torch.utils.data.Dataset):
+    @torch.no_grad()
     def __init__(
         self,
         df: DataFrame,
@@ -217,6 +218,7 @@ class PeptideDataset(torch.utils.data.Dataset):
             )
         )
         logging.info(">>> Done Initializing dataset\n")
+        del self.df
 
     @staticmethod
     def from_sptxt(
@@ -238,7 +240,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         return PeptideDataset(df, max_spec=max_spec)
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.sequence_encodings)
 
     def __getitem__(self, index: int) -> TrainBatch:
         encoded_sequence = self.sequence_encodings[index]
@@ -303,6 +305,7 @@ class PeptideDataModule(pl.LightningDataModule):
         val_df = pd.concat([pd.read_csv(str(x)) for x in val_path])
         val_df = filter_df_on_sequences(val_df)
 
+        # TODO reconsider if storing this dataframe as is is required
         self.train_df = train_df
         self.val_df = val_df
 

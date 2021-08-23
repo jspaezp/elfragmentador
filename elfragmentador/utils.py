@@ -217,6 +217,7 @@ def append_preds(
     return df
 
 
+@torch.no_grad()
 def predict_df(
     df: pd.DataFrame, impute_collision_energy=False, model: PepTransformerModel = None
 ) -> str:
