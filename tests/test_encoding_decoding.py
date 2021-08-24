@@ -34,8 +34,7 @@ def test_aa_encoding(
 
 
 def test_fragment_encoding_decoding():
-    encoding_decoding.get_fragment_encoding_labels()
-    encoding_decoding.get_fragment_encoding_labels({"z1y2": 100, "z2y2": 52})
+    encoding_decoding.encode_fragments({"z1y2": 100, "z2y2": 52})
     encoding_decoding.decode_fragment_tensor(
         "AAACK", torch.rand((constants.NUM_FRAG_EMBEDINGS))
     )
