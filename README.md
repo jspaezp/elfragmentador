@@ -192,17 +192,15 @@ I have explored many variations on the model but currently the one distributed i
 - Decouple to a different package with less dependencies
   the inference side of things
 - Make a better logging output for the training script
-- Complete dosctrings and add documentation website
+- Complete dosctrings and add those to documentation website
 - Allow training with missing values (done for RT, not for spectra)
-- Migrate training data preparation script to snakemake
-  - In Progress
 
 #### Possible
 
 - Add neutral losses specific to some PTMs
 - consider if using pyteomics as  a backend for most ms-related tasks
-- Translate annotation functions (getting ions) to numpy/torch
-- Add weights during training so psms that are more likel to be false positives weight less
+- Translate annotation functions (getting ions) to numpy/torch (if 3k/seconds is too slow ...)
+- Add weights during training so psms that are more likely to be false positives weight less (singletons or high Q-val)
 
 #### If I get time
 
