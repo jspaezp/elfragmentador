@@ -170,7 +170,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         drop_missing_vals=False,
     ) -> None:
         super().__init__()
-        logging.info("\n>>> Initalizing Dataset")
+        logging.info(">>> Initalizing Dataset")
         if drop_missing_vals:
             former_len = len(df)
             df.dropna(inplace=True)
@@ -180,7 +180,7 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         if max_spec < len(df):
             logging.warning(
-                "\n>>> Filtering out to have "
+                ">>> Filtering out to have "
                 f"{max_spec}, change the 'max_spec' argument if you don't want"
                 "this to happen"
             )
@@ -350,18 +350,18 @@ class PeptideDataModule(pl.LightningDataModule):
         drop_missing_vals: bool = False,
     ) -> None:
         super().__init__()
+        logging.info("Initializing DataModule")
         self.batch_size = batch_size
         self.drop_missing_vals = drop_missing_vals
         base_dir = Path(base_dir)
 
-        train_path = list(base_dir.glob("*train*.csv"))
-        val_path = list(base_dir.glob("*val*.csv"))
+        train_path = list(base_dir.glob("*train*.csv*"))
+        val_path = list(base_dir.glob("*val*.csv*"))
 
-        assert (
-            len(train_path) > 0
-        ), f"Train File '{train_path}' not found in '{base_dir}'"
-        assert len(val_path) > 0, f"Val File '{val_path}' not found in '{base_dir}'"
+        assert len(train_path) > 0, f"Train File not found in '{base_dir}'"
+        assert len(val_path) > 0, f"Val File not found in '{base_dir}'"
 
+        logging.info("Starting loading of the data")
         train_df = pd.concat([pd.read_csv(str(x)) for x in train_path])
         train_df = filter_df_on_sequences(train_df)
         val_df = pd.concat([pd.read_csv(str(x)) for x in val_path])

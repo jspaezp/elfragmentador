@@ -64,6 +64,10 @@ def test_model_train(shared_datadir):
     mod_train_base(shared_datadir / "train_data_sample")
 
 
+def test_model_train_on_compressed(shared_datadir):
+    mod_train_base(shared_datadir / "train_data_sample_compressed")
+
+
 if __name__ == "__main__":
     parent_dir = Path(__file__).parent
     datadir = str(parent_dir) + "/data/"

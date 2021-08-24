@@ -1,4 +1,4 @@
-from elfragmentador.train import main
+from elfragmentador.cli import train
 
 if __name__ == "__main__":
-    main()
+    train()
