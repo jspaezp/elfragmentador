@@ -169,7 +169,7 @@ def _calculate_scores_dict(
     for isoform, theo_peaks_isoform in ions_dict.items():
         num_tot_peaks = len(theo_peaks_isoform)
         matched_peaks = sum(
-            annotate.annotate_peaks2(
+            annotate.annotate_peaks(
                 theo_peaks_isoform,
                 mzs=mzs,
                 intensities=ints,

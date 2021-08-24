@@ -1,5 +1,6 @@
 import time
 import logging
+from pathlib import Path
 from typing import Dict, List, Tuple, Union
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
@@ -22,18 +23,9 @@ import uniplot
 
 def build_evaluate_parser() -> ArgumentParser:
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        "checkpoint_path", type=str, help="Checkpoint to use for the testing"
-    )
     input_group = parser.add_mutually_exclusive_group()
     input_group.add_argument("--sptxt", type=str, help="Sptxt file to use for testing")
     input_group.add_argument("--csv", type=str, help="Sptxt file to use for testing")
-    parser.add_argument(
-        "--device",
-        default="cpu",
-        type=str,
-        help="Device to move the model to during the evaluation",
-    )
     parser.add_argument(
         "--batch_size",
         default=4,
@@ -90,7 +82,13 @@ def evaluate_checkpoint(
 
 
 def evaluate_on_sptxt(
-    model, filepath, batch_size=4, device="cpu", max_spec=1e6, *args, **kwargs
+    model: PepTransformerModel,
+    filepath: Union[Path, str],
+    batch_size=4,
+    device="cpu",
+    max_spec=1e6,
+    *args,
+    **kwargs,
 ):
     ds = PeptideDataset.from_sptxt(
         filepath=filepath, max_spec=max_spec, *args, **kwargs
@@ -100,7 +98,13 @@ def evaluate_on_sptxt(
     )
 
 
-def evaluate_on_csv(model, filepath, batch_size=4, device="cpu", max_spec=1e6):
+def evaluate_on_csv(
+    model: PepTransformerModel,
+    filepath: Union[Path, str],
+    batch_size: int = 4,
+    device: str = "cpu",
+    max_spec: int = 1e6,
+):
     ds = PeptideDataset.from_csv(filepath=filepath, max_spec=max_spec)
     return evaluate_on_dataset(
         model=model, dataset=ds, batch_size=batch_size, device=device
@@ -144,15 +148,7 @@ def evaluate_on_dataset(
     model.eval()
     model.to(device)
     rt_results = []
-    mod_sequences = dataset.df["ModSequences"]
-    rt_real = dataset.df["RTs"]
-    irt_real = dataset.df["iRT"]
 
-    if sum(~np.isnan(np.array(irt_real).astype("float"))) > 1:
-        logging.warning("Using iRT instead of RT")
-        rt_real = irt_real
-
-    charges = dataset.df["Charges"]
     spec_results_cs = []
     spec_results_pc = []
 
@@ -198,10 +194,10 @@ def evaluate_on_dataset(
         f"; {elapsed_time / len(spec_results_cs)} sec/res"
     )
     out = {
-        "ModSequence": mod_sequences,
-        "Charges": charges,
+        "ModSequence": dataset.mod_sequences,
+        "Charges": dataset.charges.numpy().flatten(),
         "Predicted_iRT": rt_results.numpy().flatten(),
-        "Real_RT": rt_real.to_numpy().flatten(),
+        "Real_RT": dataset.norm_irts.numpy().astype("float").flatten() * 100,
         "Spectra_Similarity_Cosine": spec_results_cs.numpy().flatten(),
         "Spectra_Similarity_Pearson": spec_results_pc.numpy().flatten(),
     }
@@ -210,11 +206,12 @@ def evaluate_on_dataset(
     terminal_plot_similarity(out["Spectra_Similarity_Cosine"], "Cosine Similarity")
 
     # TODO consider the possibility of stratifying on files before normalizing
-    missing_vals = np.isnan(np.array(rt_real).astype("float"))
-    logging.warning(
-        f"Will remove {sum(missing_vals)}/{len(missing_vals)} "
-        "because they have missing iRTs"
-    )
+    missing_vals = np.isnan(out["Real_RT"])
+    if sum(missing_vals) > 0:
+        logging.warning(
+            f"Will remove {sum(missing_vals)}/{len(missing_vals)} "
+            "because they have missing iRTs"
+        )
     norm_p_irt, rev_p_irt = norm(out["Predicted_iRT"])
     norm_r_irt, rev_r_irt = norm(out["Real_RT"])
 
@@ -255,10 +252,6 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     model : PepTransformerModel
         A model to test the predictions on
 
-    Returns
-    -------
-    dict : A fit linear regression fit of the theoretical retention time of iRT peptides
-           and their prediction.
     """
     model.eval()
     real_rt = []

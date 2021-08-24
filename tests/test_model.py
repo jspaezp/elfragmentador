@@ -161,6 +161,7 @@ model_pairs = [
 
 input_tensors = prepare_fake_tensor_dataset(50)
 
+
 def test_ts_and_base_give_same_result():
     # TODO make parametrized
 

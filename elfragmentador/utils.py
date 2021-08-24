@@ -102,7 +102,7 @@ def append_preds(
     # This would allow skipping several predictions... which right now are fairly slow
     df = df.sort_values(by=["Peptide", "CalcMass"]).reset_index(drop=True).copy()
     df.insert(loc=NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
-    df.insert(loc=NUM_COLUMNS -2, column="DiffNormRT", value=100)
+    df.insert(loc=NUM_COLUMNS - 2, column="DiffNormRT", value=100)
 
     mzml_readers = {}
     mzml_files = {}
@@ -151,9 +151,7 @@ def append_preds(
                     "collision energy"
                 ]
             )
-            rt = float(
-                curr_scan['scanList']['scan'][0]['scan start time']
-            )
+            rt = float(curr_scan["scanList"]["scan"][0]["scan start time"])
         else:
 
             tqdm_postfix["cached_reads"] += 1

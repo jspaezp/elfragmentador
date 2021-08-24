@@ -1,6 +1,7 @@
 import logging
 import os
 import torch
+import elfragmentador as ef
 from elfragmentador.model import PepTransformerModel
 from flask import Flask, render_template, request, url_for, redirect
 
@@ -38,9 +39,7 @@ def make_spec_fig(spectrum):
 # export FLASK_CHECKPOINT=blablabla.ckpt export FLASK_APP=app.py ; export FLASK_ENV=development ; flask run
 
 app = Flask(__name__)
-model = PepTransformerModel.load_from_checkpoint(
-    "https://github.com/jspaezp/elfragmentador/releases/download/v0.33.0/0.33.0_onecycle_5e_petite_v_l.0.027061_epoch.004.ckpt"
-)
+model = PepTransformerModel.load_from_checkpoint(ef.DEFAULT_CHECKPOINT)
 model.eval()
 
 
