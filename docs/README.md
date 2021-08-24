@@ -82,29 +82,6 @@ I have explored many variations on the model but currently the one distributed i
 
 - When setting `--max_spec` on `elfragmentador_evaluate --sptxt`, the retention time accuracy is not calculated correctly because the retention times are scaled within the selected range. Since the spectra are subset in their import order, therefore only the first-eluting peptides are used.
 
-### TODO list
-
-#### Urgent
-
-- Decouple to a different package with less dependencies
-  the inference side of things
-- Make a better logging output for the training script
-- Complete dosctrings and add documentation website
-- Allow training with missing values (done for RT, not for spectra)
-- Migrate training data preparation script to snakemake
-  - In Progress
-
-#### Possible
-
-- Add neutral losses specific to some PTMs
-- consider if using pyteomics as  a backend for most ms-related tasks
-- Translate annotation functions (getting ions) to numpy/torch
-- Add weights during training so psms that are more likel to be false positives weight less
-
-#### If I get time
-
-- Write ablation models and benchmark them (remove parts of the model and see how much worse it gets without it)
-
 ## Acknowledgements
 
 1. Purdue Univ for the computational resources for the preparation of the data (Brown Cluster).

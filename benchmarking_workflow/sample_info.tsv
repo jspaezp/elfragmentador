@@ -1,4 +1,0 @@
-sample	experiment	comet_params	enzyme_regex	fasta	server
-20161213_NGHF_DBJ_SA_Exp3A_HeLa_1ug_30min_15000_01	Human_Hela	comet_params/comet.params.high_high	[KR]	fasta/human_contam.decoy.fasta	ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2017/11/PXD006932
-20200708_EXPL5_nLC3_DS_SA_HeLa_ProAlanase_IS_02	HelaProalanase	comet_params/comet.params.proalanase.high_high	[AP]	fasta/human_contam.decoy.fasta	ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2020/10/PXD021191
-QE1_150318_OPL4023_JC_TiOx_testis_phospho_0059_A	HumanTestisPhospho	comet_params/comet_phospho.params.high_high	[KR]	fasta/human_contam.decoy.fasta	ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2019/02/PXD010246
