@@ -1,8 +1,7 @@
 """
-Greatly inspired/copied from:
-https://github.com/kusterlab/prosit/blob/master/prosit
-
-And released under an Apache 2.0 license
+> Greatly inspired/copied from:
+> https://github.com/kusterlab/prosit/blob/master/prosit
+> And released under an Apache 2.0 license
 """
 
 import collections
@@ -51,30 +50,17 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
     peptide_parser Parses peptides in a string to an iterable
 
     Args:
-        p (str): Peptide sequence in a single string
-        solve_aliases (bool, optional): Wether to solve aliases for modifications. Defaults to False.
+        p (str):
+            Peptide sequence in a single string
+        solve_aliases (bool, optional):
+            Wether to solve aliases for modifications. Defaults to False.
 
     Raises:
-        ValueError:
-            Raises an error when the sequence cannot be correcly parsed
-            (starts with a special chatacter for instance)
+        ValueError: Raises an error when the sequence cannot be correcly
+            parsed (starts with a special chatacter for instance)
 
     Yields:
         Iterator[str]: Every element in the peptide sequence
-    """
-
-    pass
-    """Parses peptide sequences as strings
-    
-
-
-    Args:
-        p (str): Peptide string to be parsed
-        solve_aliases (bool):  (Default value = False)
-
-    Returns:
-
-      
 
     Examples:
         >>> list(peptide_parser("AAACC"))
@@ -125,13 +111,18 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
         yield "c"
 
 
-def mass_diff_encode_seq(seq):
+def mass_diff_encode_seq(seq: str) -> str:
     """
+    Solve peptide string so modifications are expressed as mass
+    difference without the +
+
+    "T[+80]" > "T[80]"
 
     Args:
-      seq:
+       seq (str): Sequence to convert
 
     Returns:
+       str, Sequence with solved aliases
 
     """
     iter = peptide_parser(seq, solve_aliases=True)
@@ -149,8 +140,8 @@ def canonicalize_seq(seq: str, robust: bool = False) -> str:
     "canonical" version of them and returns the new version.
 
     Args:
-      seq(str): Modified peptide sequence, for example "PEPTIDE[+23]TIDE")
-      robust(bool): Wether you want error to be silent and return none when they happen, by default False
+      seq (str): Modified peptide sequence, for example "PEPTIDE[+23]TIDE")
+      robust (bool): Wether you want error to be silent and return none when they happen, by default False
 
     Returns:
       str: Same sequence as input but with all mod aliases replaced for the primary
@@ -249,7 +240,6 @@ def _get_annotation(
 ) -> OrderedDict:
     """Calculates the ion annotations based on the forward
     and backward cumulative masses
-
 
     Args:
       forward (ndarray): Forward cumulative mass

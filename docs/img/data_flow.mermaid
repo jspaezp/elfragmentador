@@ -1,0 +1,46 @@
+
+graph LR
+  PeptideString ==> encode_mod_seq(encode_mod_seq) ;
+  encode_mod_seq==> AminoacidTensor;
+  PeptideString ==> encode_mod_seq ;
+  encode_mod_seq ==> ModificationsTensor;
+
+  style encode_mod_seq fill:#eeeeee,stroke:#666666,stroke-width:4px
+
+  AminoacidTensor ==> decode_mod_seq;
+  decode_mod_seq==> PeptideString;
+  ModificationsTensor ==> decode_mod_seq;
+
+  style decode_mod_seq fill:#eeeeee,stroke:#666666,stroke-width:4px
+
+  PeptideString ==> get_peptide_ions ;
+  get_peptide_ions ==> theoretical_peak_masses
+
+  style get_peptide_ions fill:#eeeeee,stroke:#666666,stroke-width:4px
+
+  theoretical_peak_masses ==> annotate_peaks
+  observed_mzs ==> annotate_peaks
+  observed_intensities ==> annotate_peaks
+
+  style annotate_peaks fill:#eeeeee,stroke:#666666,stroke-width:4px
+
+  annotate_peaks ==> annotated_peaks
+  annotated_peaks ==> encode_fragments
+  encode_fragments ==> FragmentTensor
+
+  style encode_fragments fill:#eeeeee,stroke:#666666,stroke-width:4px
+
+  FragmentTensor ==>  decode_fragment_tensor 
+  PeptideString ==>  decode_fragment_tensor
+  decode_fragment_tensor ==> annotated_peaks
+  decode_fragment_tensor ==> observed_intensities
+  decode_fragment_tensor ==> theoretical_peak_masses
+
+  style decode_fragment_tensor fill:#eeeeee,stroke:#666666,stroke-width:4px
+
+  style AminoacidTensor fill:#ffeeee,stroke:#ff6666,stroke-width:4px
+  style ModificationsTensor fill:#ffeeee,stroke:#ff6666,stroke-width:4px
+  style FragmentTensor fill:#ffeeee,stroke:#ff6666,stroke-width:4px
+
+  style PeptideString fill:#eeffee,stroke:#66ff66,stroke-width:4px
+  style observed_mzs fill:#eeffee,stroke:#66ff66,stroke-width:4px

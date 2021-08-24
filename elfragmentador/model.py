@@ -56,24 +56,16 @@ Parameters:
 
 
 class MLP(nn.Module):
-    """MLP implements a very simple multi-layer perceptron (also called FFN).
-
-    Concatenates hidden linear layers with activations for n layers.
-    This implementation uses gelu instead of relu
-    (linear > gelu) * (n-1) > linear
-
-    Based on: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
-
-    Args:
-
-    Returns:
-
-    """
-
     def __init__(
         self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int
     ) -> None:
-        """__init__ create a new instance of the MLP.
+        """MLP implements a very simple multi-layer perceptron (also called FFN).
+
+        Concatenates hidden linear layers with activations for n layers.
+        This implementation uses gelu instead of relu
+        (linear > gelu) * (n-1) > linear
+
+        Based on: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
 
         Parameters:
             input_dim (int):
@@ -621,7 +613,7 @@ class PepTransformerModel(pl.LightningModule):
         of the model.
 
         Args:
-            parser(_ArgumentGroup):
+            parser (_ArgumentGroup):
                 An argparser parser (anything that has the `.add_argument` method) to
                 which the arguments will be added
 
@@ -711,7 +703,16 @@ class PepTransformerModel(pl.LightningModule):
 
         return parser
 
-    def make_trainable_sections(self, sections: List) -> None:
+    def make_trainable_sections(self, sections: List[str] = _model_sections) -> None:
+        """Makes sections of the model trainable
+
+        It freezes the whole model and makes the specified sections trainable
+
+        Args:
+            sections (List[str]):
+                A list containing the model sections that should be set as trainable
+        """
+
         def set_grad_section(model_section, trainable=True):
             """Freezes or unfreezes a model section
 

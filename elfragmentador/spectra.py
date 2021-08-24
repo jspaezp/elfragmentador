@@ -18,7 +18,7 @@ from pathlib import Path
 from elfragmentador import constants as CONSTANTS
 from elfragmentador import annotate, encoding_decoding, scoring
 import elfragmentador
-from elfragmentador.encoding_decoding import get_fragment_encoding_labels, SequencePair
+from elfragmentador.encoding_decoding import encode_fragments, SequencePair
 
 from pandas.core.frame import DataFrame
 import numpy as np
@@ -386,10 +386,10 @@ class Spectrum:
 
         if dry:
             peak_annot = None
+            return CONSTANTS.FRAG_EMBEDING_LABELS.copy()
         else:
             peak_annot = self.annotated_peaks
-
-        return get_fragment_encoding_labels(annotated_peaks=peak_annot)
+            return encode_fragments(annotated_peaks=peak_annot)
 
     def encode_sequence(self) -> SequencePair:
         """

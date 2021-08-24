@@ -79,34 +79,7 @@ class SeqPositionalEmbed(torch.nn.Module):
 
 
 class ConcatenationEncoder(torch.nn.Module):
-    """ConcatenationEncoder concatenates information into the embedding.
-
-    Adds information on continuous variables into an embedding by concatenating an n number
-    of dimensions to it.
-
-    It is meant to add different information to every element in a batch, but the same
-    information (number of dimensions) to every element of a sequence inside an element
-    of the batch. \(x[i_1,j,-y:] = x[i_2,j,-y:]\) ; being \(y\) the number of added
-    dimensions.
-
-    Args:
-        dims_add (int): Number of dimensions to add as an encoding
-        dropout (float, optional): dropout, by default 0.1
-        max_val (float, optional): maximum expected value of the variable that will be encoded, by default 200.0
-        static_size (Union[Literal[False], float], optional):
-            Optional ingeter to pass in order to make the size deterministic.
-            This is only required if you want to export your model to torchscript, by default False
-
-    Examples:
-        >>> x1 = torch.zeros((5, 1, 20))
-        >>> x2 = torch.zeros((5, 2, 20))
-        >>> encoder = ConcatenationEncoder(10, 0.1, 10)
-        >>> output = encoder(x1, torch.tensor([[7]]))
-        >>> output = encoder(x2, torch.tensor([[7], [4]]))
-    """
-
     # TODO evaluate if fropout is actually useful here ...
-
     def __init__(
         self,
         dims_add: int,
@@ -114,6 +87,31 @@ class ConcatenationEncoder(torch.nn.Module):
         max_val: Union[float, int] = 200.0,
         static_size: bool = False,
     ) -> None:
+        """ConcatenationEncoder concatenates information into the embedding.
+
+        Adds information on continuous variables into an embedding by concatenating an n number
+        of dimensions to it.
+
+        It is meant to add different information to every element in a batch, but the same
+        information (number of dimensions) to every element of a sequence inside an element
+        of the batch. \(x[i_1,j,-y:] = x[i_2,j,-y:]\) ; being \(y\) the number of added
+        dimensions.
+
+        Args:
+            dims_add (int): Number of dimensions to add as an encoding
+            dropout (float, optional): dropout, by default 0.1
+            max_val (float, optional): maximum expected value of the variable that will be encoded, by default 200.0
+            static_size (Union[Literal[False], float], optional):
+                Optional ingeter to pass in order to make the size deterministic.
+                This is only required if you want to export your model to torchscript, by default False
+
+        Examples:
+            >>> x1 = torch.zeros((5, 1, 20))
+            >>> x2 = torch.zeros((5, 2, 20))
+            >>> encoder = ConcatenationEncoder(10, 0.1, 10)
+            >>> output = encoder(x1, torch.tensor([[7]]))
+            >>> output = encoder(x2, torch.tensor([[7], [4]]))
+        """
         super().__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
 
@@ -191,42 +189,6 @@ class ConcatenationEncoder(torch.nn.Module):
 
 
 class PositionalEncoding(torch.nn.Module):
-    r"""PositionalEncoding adds positional information to tensors.
-
-    Inject some information about the relative or absolute position of the tokens
-    in the sequence. The positional encodings have the same dimension as
-    the embeddings, so that the two can be summed. Here, we use sine and cosine
-    functions of different frequencies.
-
-    \({PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model)\)
-    \({PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))\)
-
-    where pos is the word position and i is the embed idx)
-
-    Args:
-        d_model (int):
-            the embed dim (required), must be even.
-        dropout (float):
-            the dropout value (default=0.1).
-        max_len (int):
-            the max. length of the incoming sequence (default=5000).
-        static_size (Union[LiteralFalse, int], optional):
-            If it is an integer it is the size of the inputs that will
-            be given, it is used only when tracing the model for torchscript
-            (since torchscript needs fixed length inputs), by default False
-
-    Note:
-        Therefore encoding are **(seq_length, batch, encodings)**
-
-    Examples:
-        >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
-        >>> x = torch.ones((2,1,20)).float()
-        >>> x.shape
-        torch.Size([2, 1, 20])
-        >>> posencoder(x).shape
-        torch.Size([2, 1, 20])
-    """
-
     def __init__(
         self,
         d_model: int,
@@ -234,7 +196,41 @@ class PositionalEncoding(torch.nn.Module):
         max_len: int = 5000,
         static_size: Union[LiteralFalse, int] = False,
     ) -> None:
-        """__init__ Creates a new instance."""
+        r"""PositionalEncoding adds positional information to tensors.
+
+        Inject some information about the relative or absolute position of the tokens
+        in the sequence. The positional encodings have the same dimension as
+        the embeddings, so that the two can be summed. Here, we use sine and cosine
+        functions of different frequencies.
+
+        \({PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model)\)
+        \({PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))\)
+
+        where pos is the word position and i is the embed idx)
+
+        Args:
+            d_model (int):
+                the embed dim (required), must be even.
+            dropout (float):
+                the dropout value (default=0.1).
+            max_len (int):
+                the max. length of the incoming sequence (default=5000).
+            static_size (Union[LiteralFalse, int], optional):
+                If it is an integer it is the size of the inputs that will
+                be given, it is used only when tracing the model for torchscript
+                (since torchscript needs fixed length inputs), by default False
+
+        Note:
+            Therefore encoding are **(seq_length, batch, encodings)**
+
+        Examples:
+            >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
+            >>> x = torch.ones((2,1,20)).float()
+            >>> x.shape
+            torch.Size([2, 1, 20])
+            >>> posencoder(x).shape
+            torch.Size([2, 1, 20])
+        """
         super(PositionalEncoding, self).__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
 

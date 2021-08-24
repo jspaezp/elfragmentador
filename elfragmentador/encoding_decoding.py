@@ -2,24 +2,35 @@ import logging
 
 from collections import namedtuple
 import pandas as pd
-from elfragmentador import constants, annotate
+from elfragmentador import annotate
+import elfragmentador.constants as CONSTANTS
 from pandas.core.frame import DataFrame
 from torch import Tensor
 from typing import Dict, List, Optional, Sequence, Union
 
 SequencePair = namedtuple("SequencePair", "aas, mods")
+SequencePair.__doc__ = """
+Named Tuple that bundles aminoacid tensor encodings and its corresponding modifications.
+
+Example for the following sequence `_AAIFVVAR_`:
+> SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
+"""
 
 
-def encode_mod_seq(seq):
+def encode_mod_seq(seq: str) -> SequencePair:
     """
     Encodes a peptide sequence to a numeric vector
 
+    Args:
+        seq (str): Modified sequence to encode
+
     Raises:
-        ValueError
+        ValueError: Raises this error if the provided sequence
+            is longer than the maximum allowed for the model.
 
     Examples:
         >>> samp_seq = "_AAIFVVAR_"
-        >>> print(constants.MAX_TENSOR_SEQUENCE)
+        >>> print(CONSTANTS.MAX_TENSOR_SEQUENCE)
         32
         >>> out = encode_mod_seq(samp_seq)
         >>> out
@@ -29,19 +40,20 @@ def encode_mod_seq(seq):
         >>> [len(x) for x in out]
         [32, 32]
     """
-    seq_out = [0] * constants.MAX_TENSOR_SEQUENCE
-    mod_out = [0] * constants.MAX_TENSOR_SEQUENCE
+    seq_out = [0] * CONSTANTS.MAX_TENSOR_SEQUENCE
+    mod_out = [0] * CONSTANTS.MAX_TENSOR_SEQUENCE
 
     try:
         split_seq = list(annotate.peptide_parser(seq, solve_aliases=True))
-        seq_out_i = [constants.ALPHABET[x[:1]] for x in split_seq]
+        seq_out_i = [CONSTANTS.ALPHABET[x[:1]] for x in split_seq]
         mod_out_i = [
-            constants.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq
+            CONSTANTS.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq
         ]
-        mod_out_i = [constants.MOD_INDICES.get(x, 0) for x in mod_out_i]
+        mod_out_i = [CONSTANTS.MOD_INDICES.get(x, 0) for x in mod_out_i]
         if len(seq_out_i) > len(seq_out):
             logging.warning(
-                f"Length of the encoded sequence is more than the one allowed {constants.MAX_SEQUENCE}."
+                f"Length of the encoded sequence"
+                f" is more than the one allowed {CONSTANTS.MAX_SEQUENCE}."
                 f" Sequence={seq}, the remainder will be clipped"
             )
 
@@ -51,20 +63,20 @@ def encode_mod_seq(seq):
         logging.error(seq)
         logging.error(e)
         raise ValueError(
-            f"Sequence provided is longer than the supported length of {constants.MAX_SEQUENCE}"
+            f"Sequence provided is longer than the supported length of {CONSTANTS.MAX_SEQUENCE}"
         )
 
     return SequencePair(seq_out, mod_out)
 
 
-def clip_explicit_terminus(seq):
+def clip_explicit_terminus(seq: Union[str, List]):
     """Remove explicit terminus
 
     Args:
-        seq: Sequence to be stripped form eplicit termini
+        seq (Union[str, List]): Sequence to be stripped form eplicit termini
 
     Returns:
-        Same as sequence input but removing explicit n and c termini
+        Sequence (Union[str, List]): Same as sequence input but removing explicit n and c termini
 
     Examples:
         >>> clip_explicit_terminus("PEPTIDEPINK")
@@ -89,6 +101,23 @@ def decode_mod_seq(
     mod_encoding: Optional[List[int]] = None,
     clip_explicit_term=True,
 ) -> str:
+    """Decode a pair of encoded sequences to a string representation
+
+    Args:
+        seq_encoding (List[int]):
+            List of integers encoding a peptide sequence
+        mod_encoding (Optional[List[int]], optional):
+            List of integers representing the modifications on the sequence. Defaults to None.
+        clip_explicit_term (bool, optional):
+            Wether the explicit n and c terminus should be included. Defaults to True.
+
+    Returns:
+        str: String sequence with the peptide
+
+    Examples:
+        >>> decode_mod_seq(seq_encoding=[1,1,1], mod_encoding=[0,1,0])
+        'AA[CARBAMIDOMETHYL]A'
+    """
     out = []
 
     if mod_encoding is None:
@@ -98,45 +127,29 @@ def decode_mod_seq(
         if s == 0:
             break
 
-        out.append(constants.ALPHABET_S[s])
+        out.append(CONSTANTS.ALPHABET_S[s])
         if mod_encoding[i] != 0:
-            out.append(f"[{constants.MOD_INDICES_S[mod_encoding[i]]}]")
+            out.append(f"[{CONSTANTS.MOD_INDICES_S[mod_encoding[i]]}]")
 
     if clip_explicit_term:
         out = clip_explicit_terminus(out)
     return "".join(out)
 
 
-def get_fragment_encoding_labels(
-    annotated_peaks: Optional[Union[Dict[str, int], Dict[str, float]]] = None
-) -> Union[List[Union[int, float]], List[int], List[str]]:
+def encode_fragments(
+    annotated_peaks: Optional[Union[Dict[str, int], Dict[str, float]]]
+) -> Union[List[float], List[int]]:
     """
-    Gets either the laels or an sequence that encodes a spectra
+    Gets either the labels or an sequence that encodes a spectra
+    # TODO split this into different functions ...
 
     Examples:
-        >>> get_fragment_encoding_labels()
-        ['z1b1', 'z1y1',  ..., 'z3b29', 'z3y29']
         >>> get_fragment_encoding_labels({'z1y2': 100, 'z2y2': 52})
         [0, 0, 0, 100, ..., 0, 52, ...]
     """
 
-    # TODO just redefine this to use the constant keys for fragments ...
-    encoding = []
-    ion_encoding_iterables = {
-        "ION_TYPE": "".join(sorted(constants.ION_TYPES)),
-        "CHARGE": [f"z{z}" for z in range(1, constants.MAX_FRAG_CHARGE + 1)],
-        "POSITION": list(range(1, constants.MAX_ION + 1)),
-    }
-
     # TODO implement neutral losses ...  if needed
-    for charge in ion_encoding_iterables[constants.ION_ENCODING_NESTING[0]]:
-        for pos in ion_encoding_iterables[constants.ION_ENCODING_NESTING[1]]:
-            for ion in ion_encoding_iterables[constants.ION_ENCODING_NESTING[2]]:
-                key = f"{charge}{ion}{pos}"
-                if annotated_peaks is None:
-                    encoding.append(key)
-                else:
-                    encoding.append(annotated_peaks.get(key, 0))
+    encoding = [annotated_peaks.get(key, 0) for key in CONSTANTS.FRAG_EMBEDING_LABELS]
 
     return encoding
 
@@ -163,7 +176,7 @@ def decode_fragment_tensor(
         >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
         >>> # plt.show()
     """
-    key_list = constants.FRAG_EMBEDING_LABELS
+    key_list = CONSTANTS.FRAG_EMBEDING_LABELS
     fragment_ions = annotate.get_peptide_ions(sequence)
     masses = [fragment_ions.get(k, 0) for k in key_list]
     intensities = [float(x) for x in tensor]
