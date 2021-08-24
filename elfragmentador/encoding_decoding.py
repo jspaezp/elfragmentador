@@ -144,7 +144,7 @@ def encode_fragments(
     # TODO split this into different functions ...
 
     Examples:
-        >>> get_fragment_encoding_labels({'z1y2': 100, 'z2y2': 52})
+        >>> encode_fragments({'z1y2': 100, 'z2y2': 52})
         [0, 0, 0, 100, ..., 0, 52, ...]
     """
 
@@ -164,7 +164,7 @@ def decode_fragment_tensor(
 
     Examples:
         >>> import torch
-        >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (constants.NUM_FRAG_EMBEDINGS)))
+        >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (CONSTANTS.NUM_FRAG_EMBEDINGS)))
         >>> foo.head()
         Fragment        Mass  Intensity
         0     z1b1   72.044390        0.0
