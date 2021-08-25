@@ -1,8 +1,10 @@
+from os import PathLike
 import re
 import random
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Union, Iterable, Tuple
 import logging
+from pandas.core.frame import DataFrame
 
 from pyteomics import mzml
 import pandas as pd
@@ -12,11 +14,11 @@ from tqdm.auto import tqdm
 import elfragmentador
 import elfragmentador.constants as CONSTANTS
 from elfragmentador.spectra import Spectrum
-from elfragmentador.model import PepTransformerModel
+from elfragmentador.model import ForwardBatch, PepTransformerModel, PredictionResults
 from elfragmentador.math_utils import norm
 
 import torch
-from torch.utils.data.dataset import TensorDataset
+from torch.utils.data.dataset import IterableDataset, TensorDataset
 from torch.nn.functional import cosine_similarity
 
 import warnings
@@ -40,6 +42,156 @@ def _attempt_find_file(row_rawfile, possible_paths):
     raise FileNotFoundError(tried_paths)
 
 
+class PinDataset(IterableDataset):
+    NUM_COLUMNS = 28
+    REGEX_FILE_APPENDIX = re.compile("_\d+_\d+_\d+$")
+    APPENDIX_CHARGE_REGEX = re.compile("(?<=_)\d+(?=_)")
+    DOT_RE = re.compile("(?<=\.).*(?=\..*$)")
+    TEMPLATE_STRING = "controllerType=0 controllerNumber=1 scan={SCAN_NUMBER}"
+
+    def __init__(self, df: DataFrame, in_pin_path: PathLike, nce_offset: float=0):
+        logging.info("Starting Percolator input dataset")
+        logging.info(df)
+        self.in_pin_path = Path(in_pin_path)
+
+        logging.info("Sorting input")
+        df = df.sort_values(by=["Peptide", "CalcMass"]).reset_index(drop=True).copy()
+        self.df = df
+
+        self.mzml_readers = {}
+        self.mzml_files = {}
+        self.nce_offset = nce_offset
+
+        # The appendix is in the form of _SpecNum_Charge_ID
+    
+    def top_n_subset(self, n: int, column: str, ascending=False):
+        df = self.df.sort_values(column, ascending = ascending).head(n)
+        return PinDataset(df, self.in_pin_path, nce_offset=self.nce_offset)
+
+    @staticmethod
+    def from_path(in_pin, nce_offset=0):
+        """
+        Col names should be:
+            SpecId
+            Label
+            ScanNr
+            ExpMass
+            CalcMass
+            Peptide
+            mokapot score
+            mokapot q-value
+            mokapot PEP
+            Proteins
+        """
+        in_pin_path = Path(in_pin)
+        # TODO fix so the last column remains unchanged, right now it keeps
+        # only the first protein because the field is not quoted in comet
+        # outputs
+        df = pd.read_csv(
+            in_pin_path,
+            sep="\t",
+            index_col=False,
+            usecols=list(range(PinDataset.NUM_COLUMNS)),
+        )
+        return PinDataset(df, in_pin_path=in_pin_path, nce_offset=nce_offset)
+
+    def generate_elements(self) -> Tuple[ForwardBatch, PredictionResults]:
+        scan_id = None
+        last_seq = None
+        last_charge = None
+        last_nce = None
+
+
+        cached_reads = 0
+        cached_batch_inputs = 0
+
+        # TODO check if batching would improve inference speed
+        for num_spec, (index, row) in enumerate(self.df.iterrows()):
+            row_rawfile = re.sub(self.REGEX_FILE_APPENDIX, "", row.SpecId)
+            row_appendix = self.REGEX_FILE_APPENDIX.search(row.SpecId)[0]
+
+            curr_charge = int(self.APPENDIX_CHARGE_REGEX.search(row_appendix, 2)[0])
+            peptide_sequence = self.DOT_RE.search(row.Peptide)[0]
+
+            try:
+                rawfile_path = self.mzml_files[row_rawfile]
+            except KeyError as e:
+                rawfile_path = _attempt_find_file(
+                    row_rawfile, [self.in_pin_path.parent, ".", "../", "../../"]
+                )
+
+            if self.mzml_readers.get(str(rawfile_path), None) is None:
+                self.mzml_readers[str(rawfile_path)] = mzml.PreIndexedMzML(str(rawfile_path))
+
+            old_scan_id = scan_id
+            scan_id = self.TEMPLATE_STRING.format(SCAN_NUMBER=row.ScanNr)
+
+            if old_scan_id != scan_id:
+                # read_spectrum
+                curr_scan = self.mzml_readers[str(rawfile_path)].get_by_id(scan_id)
+                nce = float(
+                    curr_scan["precursorList"]["precursor"][0]["activation"][
+                        "collision energy"
+                    ]
+                ) + self.nce_offset
+                rt = float(curr_scan["scanList"]["scan"][0]["scan start time"])
+            else:
+                cached_reads += 1
+
+            # convert spectrum to model "output"
+            curr_spec_object = Spectrum(
+                sequence=peptide_sequence,
+                parent_mz=row.ExpMass,
+                charge=curr_charge,
+                mzs=curr_scan["m/z array"],
+                intensities=curr_scan["intensity array"],
+                nce=nce,
+            )
+
+            # predict spectrum
+            if (
+                last_seq != peptide_sequence
+                or last_charge != curr_charge
+                or last_nce != nce
+            ):
+                last_seq = peptide_sequence
+                last_charge = curr_charge
+                last_nce = nce
+
+                input_batch = PepTransformerModel.torch_batch_from_seq(
+                    seq=peptide_sequence,
+                    charge=curr_charge,
+                    nce=nce,
+                )
+            else:
+                cached_batch_inputs += 1
+
+            # Get ground truth spectrum
+            try:
+                gt_spec = torch.Tensor(curr_spec_object.encode_spectra())
+            except AssertionError as e:
+                if "No peaks were annotated in this spectrum" in str(e):
+                    gt_spec = torch.tensor([0 for _ in range(CONSTANTS.NUM_FRAG_EMBEDINGS)])
+                else:
+                    raise AssertionError(e)
+
+            yield input_batch, PredictionResults(irt=torch.tensor(rt), spectra=gt_spec)
+
+        logging.info((
+            f"{num_spec} Spectra Yielded,"
+            f" {cached_batch_inputs} Cached inputs,"
+            f" {cached_reads} Cached Spectrum reads"
+        ))
+
+    def __iter__(self):
+        return self.generate_elements()
+        # Returns ForwardBatch, PredictionResults
+
+    def __len__(self):
+        return len(self.df)
+
+
+
 @torch.no_grad()
 def append_preds(
     in_pin: Union[Path, str], out_pin: Union[Path, str], model: PepTransformerModel
@@ -60,149 +212,49 @@ def append_preds(
         ".*peaks were annotated for spectra.*",
     )
 
-    # Read pin
-    NUM_COLUMNS = 28
     compiled_model = model.to_torchscript()
 
-    # The appendix is in the form of _SpecNum_Charge_ID
-    regex_file_appendix = re.compile("_\d+_\d+_\d+$")
-    appendix_charge_regex = re.compile("(?<=_)\d+(?=_)")
-    dot_re = re.compile("(?<=\.).*(?=\..*$)")
-    template_string = "controllerType=0 controllerNumber=1 scan={SCAN_NUMBER}"
-    in_pin_path = Path(in_pin)
+    perc_inputs = PinDataset.from_path(in_pin)
 
-    df = pd.read_csv(
-        in_pin,
-        sep="\t",
-        index_col=False,
-        usecols=list(range(NUM_COLUMNS)),
-    )
-    # TODO fix so the last column remains unchanged, right now it keeps
-    # only the first protein because the field is not quoted in comet
-    # outputs
+    df = perc_inputs.df.copy()
+    df.insert(loc=PinDataset.NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
+    df.insert(loc=PinDataset.NUM_COLUMNS - 2, column="DiffNormRT", value=100)
 
-    logging.info(df)
-
-    """
-    Col names should be:
-        SpecId
-        Label
-        ScanNr
-        ExpMass
-        CalcMass
-        Peptide
-        mokapot score
-        mokapot q-value
-        mokapot PEP
-        Proteins
-    """
-
-    # This would allow skipping several reads on the file (which is fairly quick)
-    # df = df.sort_values(by=['SpecId', 'ScanNr']).reset_index(drop=True).copy()
-    # This would allow skipping several predictions... which right now are fairly slow
-    df = df.sort_values(by=["Peptide", "CalcMass"]).reset_index(drop=True).copy()
-    df.insert(loc=NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
-    df.insert(loc=NUM_COLUMNS - 2, column="DiffNormRT", value=100)
-
-    mzml_readers = {}
-    mzml_files = {}
-    scan_id = None
-    last_seq = None
-    last_charge = None
-    last_nce = None
     correlation_outs = []
-    raw_rts = []
+    gt_rts = []
     pred_rts = []
+    last_fw_batch = ForwardBatch(
+        torch.tensor(0).long(),
+        torch.tensor(0).float(),
+        torch.tensor(0).long(),
+        torch.tensor(0).long(),
+    )
 
+    tqdm_iter = tqdm(perc_inputs, total=len(perc_inputs))
     tqdm_postfix = {
-        "cached_reads": 0,
-        "cached_predictions": 0,
-        "predictions": 0,
+        "predictions" : 0,
+        "cached_predictions" : 0,
     }
 
-    tqdm_iter = tqdm(df.iterrows(), total=len(df))
-
     # TODO check if batching would improve inference speed
-    for index, row in tqdm_iter:
-        row_rawfile = re.sub(regex_file_appendix, "", row.SpecId)
-        row_appendix = regex_file_appendix.search(row.SpecId)[0]
-
-        curr_charge = int(appendix_charge_regex.search(row_appendix, 2)[0])
-        peptide_sequence = dot_re.search(row.Peptide)[0]
-
-        try:
-            rawfile_path = mzml_files[row_rawfile]
-        except KeyError as e:
-            rawfile_path = _attempt_find_file(
-                row_rawfile, [in_pin_path.parent, ".", "../", "../../"]
-            )
-
-        if mzml_readers.get(str(rawfile_path), None) is None:
-            mzml_readers[str(rawfile_path)] = mzml.PreIndexedMzML(str(rawfile_path))
-
-        old_scan_id = scan_id
-        scan_id = template_string.format(SCAN_NUMBER=row.ScanNr)
-
-        if old_scan_id != scan_id:
-            # read_spectrum
-            curr_scan = mzml_readers[str(rawfile_path)].get_by_id(scan_id)
-            nce = float(
-                curr_scan["precursorList"]["precursor"][0]["activation"][
-                    "collision energy"
-                ]
-            )
-            rt = float(curr_scan["scanList"]["scan"][0]["scan start time"])
-        else:
-
-            tqdm_postfix["cached_reads"] += 1
-            tqdm_iter.set_postfix(tqdm_postfix)
-
-        # convert spectrum to model "output"
-        curr_spec_object = Spectrum(
-            sequence=peptide_sequence,
-            parent_mz=row.ExpMass,
-            charge=curr_charge,
-            mzs=curr_scan["m/z array"],
-            intensities=curr_scan["intensity array"],
-            nce=nce,
-        )
-
+    for forward_batch, gt_batch in tqdm_iter:
         # predict spectrum
-        if (
-            last_seq != peptide_sequence
-            or last_charge != curr_charge
-            or last_nce != nce
-        ):
-            last_seq = peptide_sequence
-            last_charge = curr_charge
-            last_nce = nce
+        if not all([torch.equal(x,y) for x, y in zip(last_fw_batch, forward_batch)]):
+            last_fw_batch = forward_batch
+            pred_irt, pred_spec = compiled_model(*forward_batch)
 
-            input_batch = model.torch_batch_from_seq(
-                seq=peptide_sequence,
-                charge=curr_charge,
-                nce=nce,
-            )
-            pred_irt, pred_spec = compiled_model(*input_batch)
             tqdm_postfix["predictions"] += 1
             tqdm_iter.set_postfix(tqdm_postfix)
         else:
             tqdm_postfix["cached_predictions"] += 1
             tqdm_iter.set_postfix(tqdm_postfix)
 
-        # Get ground truth spectrum
-        try:
-            gt_spec = torch.Tensor(curr_spec_object.encode_spectra())
-
-        except AssertionError as e:
-            if "No peaks were annotated in this spectrum" in str(e):
-                gt_spec = torch.zeros_like(pred_spec)
-
         # compare spectra
-        distance = cosine_similarity(gt_spec, pred_spec, dim=-1)
+        distance = cosine_similarity(gt_batch.spectra, pred_spec, dim=-1)
 
         # append to results
         correlation_outs.append(float(distance))
-        raw_rts.append(rt)
+        gt_rts.append(float(gt_batch.irt))
         pred_rts.append(float(pred_irt))
 
     df["SpecCorrelation"] = correlation_outs
@@ -210,7 +262,7 @@ def append_preds(
     # TODO consider if i really need to make this an absolute value
     # making removing it would make it wose on percolater but
     # probably better on mokapot
-    df["DiffNormRT"] = np.abs(norm(np.array(raw_rts))[0] - norm(np.array(pred_rts))[0])
+    df["DiffNormRT"] = np.abs(norm(np.array(gt_rts))[0] - norm(np.array(pred_rts))[0])
     df.to_csv(out_pin, index=False, sep="\t")
     return df
 
