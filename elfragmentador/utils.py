@@ -216,14 +216,14 @@ class PinDataset(IterableDataset):
 
         logging.info(
             (
-                f"{num_spec} Spectra Yielded,"
+                f"{num_spec + 1} Spectra Yielded,"
                 f" {cached_batch_inputs} Cached inputs,"
                 f" {cached_reads} Cached Spectrum reads"
             )
         )
 
     def optimize_nce(
-        self, scripted_model, offsets=range(-10, 10, 6), n=2000
+        self, scripted_model, offsets=range(-10, 10, 6), n=500
     ):
         offsets = [0] + list(offsets)
         logging.info(f"Finding best nce offset from {offsets}")

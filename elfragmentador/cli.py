@@ -19,6 +19,7 @@ except ImportError:
 
 import warnings
 
+import torch
 import pytorch_lightning as pl
 import pandas as pd
 
@@ -50,6 +51,25 @@ def _common_checkpoint_args(parser):
         type=str,
         help="Device to move the model to during the evaluation",
     )
+    parser.add_argument(
+        "--threads",
+        default=2,
+        type=int,
+        help="Number of threads to use during inference",
+    )
+
+
+def _setup_model(args):
+    torch.set_num_threads(args.threads)
+    model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+    model.eval()
+
+    if args.device != "cpu":
+        logging.warning((
+            "Only cpu inference is implemented at the moment."
+            " If you want it implemented please open an issue"))
+
+    return model
 
 
 def greeting():
@@ -126,9 +146,7 @@ def append_predictions():
 
     parser = _append_prediction_parser()
     args = parser.parse_args()
-
-    model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
-    model.eval()
+    model = _setup_model(args)
 
     out_df = append_preds(in_pin=args.pin, out_pin=args.out, model=model)
     logging.info(out_df)
@@ -176,8 +194,7 @@ def predict_csv():
     else:
         nce = args.impute_collision_energy
 
-    model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
-    model.eval()
+    model = _setup_model(args)
 
     with open(args.out, "w") as f:
         f.write(
@@ -288,7 +305,7 @@ def evaluate_checkpoint():
     dict_args = vars(args)
     logging.info(dict_args)
 
-    model = PepTransformerModel.load_from_checkpoint(args.checkpoint_path)
+    model = _setup_model(args)
     if dict_args["csv"] is not None:
         ds = datamodules.PeptideDataset.from_csv(
             args.csv,
