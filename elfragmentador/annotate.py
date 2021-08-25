@@ -69,12 +69,18 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
         ['n', 'A', 'A', 'A', 'M(ox)', 'C', 'C', 'c']
         >>> list(peptide_parser("AAAM[+16]CC"))
         ['n', 'A', 'A', 'A', 'M[+16]', 'C', 'C', 'c']
+        >>> list(peptide_parser("K.AAAM[+16]CC.K"))
+        ['n', 'A', 'A', 'A', 'M[+16]', 'C', 'C', 'c']
     """
 
     ANNOTATIONS = "[](){}"
 
     # This fixes a bug where passing a list would yield the incorrect results
     p = "".join(p)
+
+    if p[1] == "." and p[-2] == ".":
+        p = p[2:-2]
+        
 
     if p[0] in ANNOTATIONS:
         raise ValueError(f"sequence starts with '{p[0]}'")

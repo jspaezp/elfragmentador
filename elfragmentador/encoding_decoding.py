@@ -43,6 +43,8 @@ def encode_mod_seq(seq: str) -> SequencePair:
     seq_out = [0] * CONSTANTS.MAX_TENSOR_SEQUENCE
     mod_out = [0] * CONSTANTS.MAX_TENSOR_SEQUENCE
 
+    seq = annotate.canonicalize_seq(seq)
+
     try:
         split_seq = list(annotate.peptide_parser(seq, solve_aliases=True))
         seq_out_i = [CONSTANTS.ALPHABET[x[:1]] for x in split_seq]
