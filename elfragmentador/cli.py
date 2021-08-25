@@ -146,7 +146,7 @@ def _predict_csv_parser():
             " Expects the csv to have the columns"
             " modified_sequence, collision_energy, precursor_charge OR"
             " 'Modified Sequence', 'CE', 'Precursor Charge'"
-            )
+        ),
     )
     parser.add_argument(
         "--impute_collision_energy",
