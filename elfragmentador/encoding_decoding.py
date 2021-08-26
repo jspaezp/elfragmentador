@@ -17,12 +17,15 @@ Example for the following sequence `_AAIFVVAR_`:
 """
 
 
-def encode_mod_seq(seq: str) -> SequencePair:
+def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePair:
     """
     Encodes a peptide sequence to a numeric vector
 
     Args:
         seq (str): Modified sequence to encode
+        enforce_length (bool):
+            Wether to assure if the length of the tensors returned
+            match the supported sequence outputs.
 
     Raises:
         ValueError: Raises this error if the provided sequence
@@ -39,34 +42,40 @@ def encode_mod_seq(seq: str) -> SequencePair:
         2
         >>> [len(x) for x in out]
         [32, 32]
+        >>> [len(x) for x in encode_mod_seq("A" * 200)]
+        [32, 32]
+        >>> [len(x) for x in encode_mod_seq("A" * 200, enforce_length=False)]
+        [202, 202]
+        >>> [len(x) for x in encode_mod_seq("A" * 5, pad_zeros=False)]
+        [7, 7]
     """
-    seq_out = [0] * CONSTANTS.MAX_TENSOR_SEQUENCE
-    mod_out = [0] * CONSTANTS.MAX_TENSOR_SEQUENCE
-
     seq = annotate.canonicalize_seq(seq)
+    split_seq = list(annotate.peptide_parser(seq, solve_aliases=True))
+
+    seq_out = [0] * (CONSTANTS.MAX_TENSOR_SEQUENCE if pad_zeros else len(split_seq))
+    mod_out = seq_out.copy()
+
+    seq_out_i = [CONSTANTS.ALPHABET[x[:1]] for x in split_seq]
+    mod_out_i = [
+        CONSTANTS.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq
+    ]
+    mod_out_i = [CONSTANTS.MOD_INDICES.get(x, 0) for x in mod_out_i]
 
     try:
-        split_seq = list(annotate.peptide_parser(seq, solve_aliases=True))
-        seq_out_i = [CONSTANTS.ALPHABET[x[:1]] for x in split_seq]
-        mod_out_i = [
-            CONSTANTS.MOD_PEPTIDE_ALIASES[x] if len(x) > 1 else 0 for x in split_seq
-        ]
-        mod_out_i = [CONSTANTS.MOD_INDICES.get(x, 0) for x in mod_out_i]
-        if len(seq_out_i) > len(seq_out):
+        if len(seq_out_i) > len(seq_out) and enforce_length:
             logging.warning(
                 f"Length of the encoded sequence"
                 f" is more than the one allowed {CONSTANTS.MAX_SEQUENCE}."
                 f" Sequence={seq}, the remainder will be clipped"
             )
+            seq_out_i = seq_out_i[: CONSTANTS.MAX_TENSOR_SEQUENCE]
+            mod_out_i = mod_out_i[: CONSTANTS.MAX_TENSOR_SEQUENCE]
 
         seq_out[: len(seq_out_i)] = seq_out_i
         mod_out[: len(mod_out_i)] = mod_out_i
     except ValueError as e:
-        logging.error(seq)
-        logging.error(e)
-        raise ValueError(
-            f"Sequence provided is longer than the supported length of {CONSTANTS.MAX_SEQUENCE}"
-        )
+        logging.error(f"Handling error '{e}' on sequence={seq}")
+        raise ValueError(e)
 
     return SequencePair(seq_out, mod_out)
 

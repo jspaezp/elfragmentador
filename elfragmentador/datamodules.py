@@ -1,5 +1,4 @@
 from __future__ import annotations
-from elfragmentador.encoding_decoding import decode_mod_seq, encode_mod_seq
 
 import logging
 
@@ -18,6 +17,7 @@ from torch.utils.data.dataloader import DataLoader
 import pytorch_lightning as pl
 
 from elfragmentador import constants, spectra
+from elfragmentador.encoding_decoding import decode_mod_seq
 from argparse import _ArgumentGroup
 from torch import Tensor
 from tqdm.auto import tqdm

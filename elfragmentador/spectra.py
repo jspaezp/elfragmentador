@@ -391,7 +391,7 @@ class Spectrum:
             peak_annot = self.annotated_peaks
             return encode_fragments(annotated_peaks=peak_annot)
 
-    def encode_sequence(self) -> SequencePair:
+    def encode_sequence(self, enforce_length=True, pad_zeros=True) -> SequencePair:
         """
         encode_sequence returns the encoded sequence of the aminoacids/modifications.
 
@@ -414,7 +414,7 @@ class Spectrum:
         >>> myspec.encode_sequence()
         SequencePair(aas=[23, 1, 1, 1, 17, 13, 1, 9, 9, 17, 19, ..., 0], mods=[0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5, ..., 0])
         """
-        return encoding_decoding.encode_mod_seq(self.mod_sequence)
+        return encoding_decoding.encode_mod_seq(self.mod_sequence, enforce_length=enforce_length, pad_zeros=pad_zeros)
 
     @property
     def annotated_peaks(self) -> Dict[str, float]:
@@ -566,8 +566,8 @@ class Spectrum:
 
         return self._sus_msms_spec
 
-    def _to_spectrum_utils(self):
-        aas, mods = self.encode_sequence()
+    def _to_spectrum_utils(self, enforce_length):
+        aas, mods = self.encode_sequence(enforce_length=enforce_length, pad_zeros=False)
         TERM_ALIAS_DICT = {
             CONSTANTS.ALPHABET["c"]: "C-term",
             CONSTANTS.ALPHABET["n"]: "N-term",
@@ -636,6 +636,8 @@ def encode_sptxt(
     min_peaks: int = 3,
     min_delta_ascore: int = 20,
     irt_fun: None = None,
+    enforce_length=True,
+    pad_zeros=True,
     *args,
     **kwargs,
 ) -> DataFrame:
@@ -692,7 +694,7 @@ def encode_sptxt(
             break
 
         # TODO add offset to skip the first x sequences and a way to make the selection random
-        seq_encode, mod_encode = spec.encode_sequence()
+        seq_encode, mod_encode = spec.encode_sequence(enforce_length=enforce_length, pad_zeros=pad_zeros)
         seq_encode, mod_encode = str(seq_encode), str(mod_encode)
 
         try:

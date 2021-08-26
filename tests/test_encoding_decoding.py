@@ -14,7 +14,11 @@ testdata_aa_encoding = [
     ("KAKT[181]AA", None, "KAKT[PHOSPHO]AA"),
     ("KAKY[243]FG", None, "KAKY[PHOSPHO]FG"),
     ("KAKY[+80]FG", None, "KAKY[PHOSPHO]FG"),
-    ("R.S[79.9663]PS[79.9663]PAPAPAPAAAAGPPTR.K", None, "S[PHOSPHO]PS[PHOSPHO]PAPAPAPAAAAGPPTR"),
+    (
+        "R.S[79.9663]PS[79.9663]PAPAPAPAAAAGPPTR.K",
+        None,
+        "S[PHOSPHO]PS[PHOSPHO]PAPAPAPAAAAGPPTR",
+    ),
 ]
 
 

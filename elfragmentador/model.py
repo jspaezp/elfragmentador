@@ -116,6 +116,32 @@ class MLP(nn.Module):
         return x
 
 
+class _IRTDecoder(nn.TransformerDecoderLayer):
+    def __init__(
+        self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="gelu"
+    ):
+        super().__init__(
+            d_model,
+            nhead,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
+            activation=activation,
+        )
+        self.targets = nn.Embedding(1, d_model)
+        self.out_linear = nn.Linear(in_features=d_model, out_features=1)
+
+    def forward(self, src, memory_key_padding_mask=None):
+        # SNE, 1NE
+        decoder_target = self.targets(torch.zeros([1, src.size(1)], dtype=torch.long))
+        out = super().forward(
+            memory=src,
+            tgt=decoder_target,
+            memory_key_padding_mask=memory_key_padding_mask,
+        )
+        out = self.out_linear(out)
+        return out
+
+
 class _PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
         self, ninp: int, dropout: float, nhead: int, nhid: int, layers: int
@@ -136,21 +162,36 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
     def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
-        trans_encoder_mask = ~src.bool()
+        # If a BoolTensor is provided, positions with True are not allowed
+        # to attend while False values will be unchanged <- form the pytorch docs
+
+        # [1,1,0]
+        # bool [True, True, False]
+        # ~    [False, False, True]
+        # [Attend, Attend, Dont Attend]
+        # trans_encoder_mask = ~ src.bool()
+
+        trans_encoder_mask = torch.zeros_like(src, dtype=torch.float)
+        trans_encoder_mask = trans_encoder_mask.masked_fill(
+            src <= 0, float("-inf")
+        ).masked_fill(src > 0, float(0.0))
+
         if debug:
-            logging.debug(f"TE: Shape of mask {trans_encoder_mask.shape}")
+            logging.debug(f"PTE: Shape of mask {trans_encoder_mask.shape}")
 
         src = self.aa_encoder.forward(src=src, mods=mods, debug=debug)
         if debug:
-            logging.debug(f"TE: Shape after AASequence encoder {src.shape}")
+            logging.debug(f"PTE: Shape after AASequence encoder {src.shape}")
 
         trans_encoder_output = self.transformer_encoder.forward(
             src, src_key_padding_mask=trans_encoder_mask
         )
         if debug:
-            logging.debug(f"TE: Shape after trans encoder {trans_encoder_output.shape}")
+            logging.debug(
+                f"PTE: Shape after trans encoder {trans_encoder_output.shape}"
+            )
 
-        return trans_encoder_output
+        return trans_encoder_output, trans_encoder_mask
 
 
 class _PeptideTransformerDecoder(torch.nn.Module):
@@ -166,7 +207,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
     ) -> None:
         super().__init__()
         logging.info(
-            f"Creating TransformerDecoder nhid=nhid, ninp={ninp} nhead={nhead} layers={layers}"
+            f"Creating TransformerDecoder nhid={nhid}, ninp={ninp} nhead={nhead} layers={layers}"
         )
         charge_dims = math.ceil(ninp * charge_dims_pct)
         nce_dims = math.ceil(ninp * nce_dims_pct)
@@ -205,6 +246,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         src: Tensor,
         charge: Tensor,
         nce: Tensor,
+        memory_mask: Tensor,
         debug: bool = False,
     ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
@@ -212,19 +254,21 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
         trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
         if debug:
-            logging.debug(f"TD: Shape of query embedding {trans_decoder_tgt.shape}")
+            logging.debug(f"PTD: Shape of query embedding {trans_decoder_tgt.shape}")
 
-        spectra_output = self.trans_decoder(memory=src, tgt=trans_decoder_tgt)
+        spectra_output = self.trans_decoder.forward(
+            memory=src, tgt=trans_decoder_tgt, memory_key_padding_mask=memory_mask
+        )
         if debug:
-            logging.debug(f"TD: Shape of the output spectra {spectra_output.shape}")
+            logging.debug(f"PTD: Shape of the output spectra {spectra_output.shape}")
 
         spectra_output = self.peak_decoder(spectra_output)
         if debug:
-            logging.debug(f"TD: Shape of the MLP spectra {spectra_output.shape}")
+            logging.debug(f"PTD: Shape of the MLP spectra {spectra_output.shape}")
 
         spectra_output = spectra_output.squeeze(-1).permute(1, 0)
         if debug:
-            logging.debug(f"TD: Shape of the permuted spectra {spectra_output.shape}")
+            logging.debug(f"PTD: Shape of the permuted spectra {spectra_output.shape}")
 
         if self.training:
             spectra_output = nn.functional.leaky_relu(spectra_output)
@@ -336,7 +380,14 @@ class PepTransformerModel(pl.LightningModule):
 
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
-        self.rt_decoder = MLP(ninp, ninp, output_dim=1, num_layers=4)
+
+        self.rt_decoder = _IRTDecoder(
+            d_model=ninp,
+            nhead=2,
+            dim_feedforward=nhid,
+            dropout=dropout,
+            activation="gelu",
+        )
 
         # Training related things
         self.mse_loss = nn.MSELoss()
@@ -409,8 +460,12 @@ class PepTransformerModel(pl.LightningModule):
                 f" charge={charge.shape}"
             )
 
-        trans_encoder_output = self.encoder.forward(src=src, mods=mods, debug=debug)
-        rt_output = self.rt_decoder.forward(trans_encoder_output)
+        trans_encoder_output, mem_mask = self.encoder.forward(
+            src=src, mods=mods, debug=debug
+        )
+        rt_output = self.rt_decoder.forward(
+            trans_encoder_output, memory_key_padding_mask=mem_mask
+        )
         if debug:
             logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
@@ -419,7 +474,11 @@ class PepTransformerModel(pl.LightningModule):
             logging.debug(f"PT: Shape of RT output {rt_output.shape}")
 
         spectra_output = self.decoder.forward(
-            src=trans_encoder_output, charge=charge, nce=nce, debug=debug
+            src=trans_encoder_output,
+            charge=charge,
+            nce=nce,
+            debug=debug,
+            memory_mask=mem_mask,
         )
 
         if debug:
@@ -461,7 +520,7 @@ class PepTransformerModel(pl.LightningModule):
             if len(x.shape) != dims:
                 if debug:
                     logging.debug(f"PT: Unsqueezing tensor of shape {x.shape}")
-                x = x.unsqueeze(1)
+                x = x.unsqueeze(0)
             else:
                 if debug:
                     logging.debug(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
@@ -480,7 +539,7 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def torch_batch_from_seq(seq: str, nce: float, charge: int):
+    def torch_batch_from_seq(seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True):
         """Generate an input batch for the model from a sequence string.
 
         Parameters:
@@ -495,7 +554,7 @@ class PepTransformerModel(pl.LightningModule):
             >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
             ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
         """
-        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq)
+        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq, enforce_length=enforce_length, pad_zeros=pad_zeros)
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()

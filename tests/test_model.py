@@ -144,7 +144,7 @@ def base_export_torchscript(datadir, keep=False):
 
 def get_ts_model_pair():
     base_mod = model.PepTransformerModel.load_from_checkpoint(
-        elfragmentador.DEFAULT_CHECKPOINT
+        elfragmentador.DEFAULT_CHECKPOINT, strict=False
     )
     base_mod.eval()
 

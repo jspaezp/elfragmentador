@@ -80,7 +80,6 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
 
     if p[1] == "." and p[-2] == ".":
         p = p[2:-2]
-        
 
     if p[0] in ANNOTATIONS:
         raise ValueError(f"sequence starts with '{p[0]}'")

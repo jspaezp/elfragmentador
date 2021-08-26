@@ -65,9 +65,12 @@ def _setup_model(args):
     model.eval()
 
     if args.device != "cpu":
-        logging.warning((
-            "Only cpu inference is implemented at the moment."
-            " If you want it implemented please open an issue"))
+        logging.warning(
+            (
+                "Only cpu inference is implemented at the moment."
+                " If you want it implemented please open an issue"
+            )
+        )
 
     return model
 

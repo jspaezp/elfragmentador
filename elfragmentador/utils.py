@@ -119,7 +119,7 @@ class PinDataset(IterableDataset):
 
         Yields:
             Generator[Tuple[ForwardBatch, PredictionResults]]: [description]
-        """        
+        """
         scan_id = None
         last_seq = None
         last_charge = None
@@ -222,9 +222,7 @@ class PinDataset(IterableDataset):
             )
         )
 
-    def optimize_nce(
-        self, scripted_model, offsets=range(-10, 10, 6), n=500
-    ):
+    def optimize_nce(self, scripted_model, offsets=range(-10, 10, 6), n=500):
         offsets = [0] + list(offsets)
         logging.info(f"Finding best nce offset from {offsets}")
         best = 0

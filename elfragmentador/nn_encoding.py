@@ -51,12 +51,14 @@ class SeqPositionalEmbed(torch.nn.Module):
 
         Examples:
             >>> encoder = SeqPositionalEmbed(6, 50, inverted=True)
+            >>> encoder2 = SeqPositionalEmbed(6, 50, inverted=False)
             >>> x = torch.cat([torch.ones(1,2), torch.ones(1,2)*2, torch.zeros((1,2))], dim = -1).long()
             >>> x[0]
             tensor([1, 1, 2, 2, 0, 0])
             >>> x.shape
             torch.Size([1, 6])
             >>> out = encoder(x)
+            >>> out2 = encoder2(x)
             >>> out.shape
             torch.Size([6, 1, 6])
             >>> out
@@ -66,6 +68,13 @@ class SeqPositionalEmbed(torch.nn.Module):
                 [[ 0.8415,  0.5403,  0.3363,  0.9418,  0.1174,  0.9931]],
                 [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
                 [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]])
+            >>> out2
+            tensor([[[ 0.8415,  0.5403,  0.3363,  0.9418,  0.1174,  0.9931]],
+                [[ 0.9093, -0.4161,  0.6334,  0.7738,  0.2331,  0.9725]],
+                [[ 0.1411, -0.9900,  0.8567,  0.5158,  0.3456,  0.9384]],
+                [[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]],
+                [[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]],
+                [[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]]])
         """
         vals = x.bool().long()
         if self.inverted:
