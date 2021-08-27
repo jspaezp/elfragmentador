@@ -61,7 +61,24 @@ def _common_checkpoint_args(parser):
 
 def _setup_model(args):
     torch.set_num_threads(args.threads)
-    model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+    try:
+        model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+    except RuntimeError as e:
+        if "Missing key(s) in state_dict":
+            logging.error(e)
+            logging.error(
+                (
+                    "Attempting to go though with a bad model,"
+                    " DO NOT TRUST THESE RESULTS, "
+                    "try to change the checkpoint"
+                )
+            )
+            model = PepTransformerModel.load_from_checkpoint(
+                args.model_checkpoint, strict=False
+            )
+        else:
+            raise RuntimeError(e)
+
     model.eval()
 
     if args.device != "cpu":

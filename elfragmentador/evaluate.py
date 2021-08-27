@@ -258,7 +258,7 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     pred_rt = []
     for seq, desc in constants.IRT_PEPTIDES.items():
         with torch.no_grad():
-            out = model.predict_from_seq(seq, 2, 25)
+            out = model.predict_from_seq(seq, 2, 25, enforce_length=False)
             pred_rt.append(100 * out.irt.numpy())
             real_rt.append(np.array(desc["irt"]))
 

@@ -128,17 +128,21 @@ class _IRTDecoder(nn.TransformerDecoderLayer):
             activation=activation,
         )
         self.targets = nn.Embedding(1, d_model)
-        self.out_linear = nn.Linear(in_features=d_model, out_features=1)
+        self.out_mlp = MLP(
+            input_dim=d_model, hidden_dim=d_model, output_dim=1, num_layers=3
+        )
 
     def forward(self, src, memory_key_padding_mask=None):
-        # SNE, 1NE
-        decoder_target = self.targets(torch.zeros([1, src.size(1)], dtype=torch.long, device=src.device))
+        # TODO add static sizing
+        decoder_target = self.targets(
+            torch.zeros([1, src.size(1)], dtype=torch.long, device=src.device)
+        )
         out = super().forward(
             memory=src,
             tgt=decoder_target,
             memory_key_padding_mask=memory_key_padding_mask,
         )
-        out = self.out_linear(out)
+        out = self.out_mlp(out)
         return out
 
 
@@ -539,7 +543,9 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def torch_batch_from_seq(seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True):
+    def torch_batch_from_seq(
+        seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True
+    ):
         """Generate an input batch for the model from a sequence string.
 
         Parameters:
@@ -554,7 +560,9 @@ class PepTransformerModel(pl.LightningModule):
             >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
             ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
         """
-        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq, enforce_length=enforce_length, pad_zeros=pad_zeros)
+        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
+            seq, enforce_length=enforce_length, pad_zeros=pad_zeros
+        )
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
@@ -587,7 +595,13 @@ class PepTransformerModel(pl.LightningModule):
         return script
 
     def predict_from_seq(
-        self, seq: str, charge: int, nce: float, as_spectrum=False, debug: bool = False
+        self,
+        seq: str,
+        charge: int,
+        nce: float,
+        as_spectrum=False,
+        enforce_length=True,
+        debug: bool = False,
     ) -> Union[PredictionResults, Spectrum]:
         """predict_from_seq Predicts spectra from a sequence as a string.
         
@@ -635,7 +649,9 @@ class PepTransformerModel(pl.LightningModule):
             >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
         """
 
-        in_batch = self.torch_batch_from_seq(seq, nce, charge)
+        in_batch = self.torch_batch_from_seq(
+            seq, nce, charge, enforce_length=enforce_length
+        )
 
         if debug:
             logging.debug(

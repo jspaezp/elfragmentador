@@ -78,6 +78,17 @@ MODIFICATION = {
     "BIOTINYL": 226.077598,  #  Biotinilation
 }
 
+# Currently unsupported proteometools modifications
+# "Kmod_Butyryl": {"AA": "K", "MASS": 70.041865},
+# "Kmod_Crotonyl": {"AA": "K", "MASS": 68.026215},
+# "Kmod_Glutaryl": {"AA": "K", "MASS": 114.031694},
+# "Kmod_Hydroxyisobutyryl": {"AA": "K", "MASS": 86.036779},
+# "Kmod_Malonyl": {"AA": "K", "MASS": 86.000394},
+# "Kmod_Propionyl": {"AA": "K", "MASS": 56.026215},
+# "Kmod_Succinyl": {"AA": "K", "MASS": 100.016044},
+# # Oxidation ... "Pmod_Hydroxyproline": {"AA": "P", "MASS": 15.994915},
+# # Deamidation ... "Rmod_Citrullin": {"AA": "R", "MASS": 0.984016},
+
 VARIABLE_MODS = {
     "ACETYL": "Kn",  # Acetylation
     "BIOTINYL": "K",  # Biotinilation

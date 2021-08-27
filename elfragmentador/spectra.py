@@ -414,7 +414,9 @@ class Spectrum:
         >>> myspec.encode_sequence()
         SequencePair(aas=[23, 1, 1, 1, 17, 13, 1, 9, 9, 17, 19, ..., 0], mods=[0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5, ..., 0])
         """
-        return encoding_decoding.encode_mod_seq(self.mod_sequence, enforce_length=enforce_length, pad_zeros=pad_zeros)
+        return encoding_decoding.encode_mod_seq(
+            self.mod_sequence, enforce_length=enforce_length, pad_zeros=pad_zeros
+        )
 
     @property
     def annotated_peaks(self) -> Dict[str, float]:
@@ -694,7 +696,9 @@ def encode_sptxt(
             break
 
         # TODO add offset to skip the first x sequences and a way to make the selection random
-        seq_encode, mod_encode = spec.encode_sequence(enforce_length=enforce_length, pad_zeros=pad_zeros)
+        seq_encode, mod_encode = spec.encode_sequence(
+            enforce_length=enforce_length, pad_zeros=pad_zeros
+        )
         seq_encode, mod_encode = str(seq_encode), str(mod_encode)
 
         try:

@@ -199,6 +199,8 @@ class PinDataset(IterableDataset):
                     seq=peptide_sequence,
                     charge=curr_charge,
                     nce=nce,
+                    enforce_length=False,
+                    pad_zeros=False,
                 )
             else:
                 cached_batch_inputs += 1
@@ -415,7 +417,7 @@ def predict_df(
 
     for seq, nce, charge in my_iter:
         pred_spec = model.predict_from_seq(
-            seq=seq, charge=int(charge), nce=nce, as_spectrum=True
+            seq=seq, charge=int(charge), nce=nce, as_spectrum=True, enforce_length=False
         )
         out.append(pred_spec.to_sptxt())
 

@@ -30,15 +30,18 @@ def _solve_alias(x: str) -> str:
         'M[OXIDATION]'
         >>> _solve_alias("M[+16]")
         'M[OXIDATION]'
+        >>> _solve_alias("C[+57]")
+        'C'
     """
     try:
         x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
-    except KeyError:
-        x = (
-            x
-            if len(x) == 1
-            else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x.replace('[', '[+')]}]"
-        )
+    except KeyError as e:
+        if len(x) > 1 and x[1] == "[" and x[2] in "1234567890":
+            x = x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x.replace('[', '[+')]}]"
+        elif len(x) == 3:
+            pass
+        else:
+            raise KeyError(e)
 
     x = x if len(x) != 3 else x[:1]  # Takes care of C[]
 

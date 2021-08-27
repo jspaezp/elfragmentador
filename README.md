@@ -34,6 +34,7 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 ## Resources on transformers
 
 - An amazing illustrated guide to understand the transformer architecture: <http://jalammar.github.io/illustrated-transformer/>
+- Another amazing guide in video format exlpaining the architecture "Illustrated Guide to Transformers Neural Network: A step by step explanation": <https://www.youtube.com/watch?v=4Bdc55j80l8>
 - Full implementation of a transformer in pytorch with the explanation of each part: <https://nlp.seas.harvard.edu/2018/04/03/attention.html>
 - Official pytorch implementation of the transformer: <https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html>
 
