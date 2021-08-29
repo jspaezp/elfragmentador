@@ -70,7 +70,7 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
     # mod = "PHOSPHO"
     # seq = "S[PHOSPHO]AS"
     # aas = "STY"
-    if mod not in seq:
+    if f"[{mod}]" not in seq:
         return [seq]
 
     parsed_seq = list(peptide_parser(seq))
