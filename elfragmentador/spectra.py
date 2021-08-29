@@ -855,7 +855,9 @@ class SptxtReader:
 
         i = 0
         skipped_spec = 0
-        for spec in tqdm(self):
+        iter = tqdm(self)
+        for spec in iter:
+            iter.set_postfix({'skipped': skipped_spec})
             i += 1
             if i >= max_spec:
                 break
@@ -929,7 +931,7 @@ class SptxtReader:
             ret["iRT"] = np.nan
 
         if skipped_spec >= 1:
-            warnings.warn(f"{skipped_spec}/{i} Spectra were skipped")
+            warnings.warn(f"{skipped_spec}/{i} ({100*skipped_spec/i:.03f} %) Spectra were skipped")
 
         logging.info(list(ret))
         logging.info(ret)
