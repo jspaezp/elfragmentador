@@ -25,7 +25,7 @@ import pandas as pd
 
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
-from elfragmentador.spectra import sptxt_to_csv
+from elfragmentador.spectra import SptxtReader
 from elfragmentador.utils import append_preds, predict_df
 from elfragmentador import datamodules, evaluate, rt
 
@@ -259,8 +259,7 @@ def convert_sptxt():
     logging.info([x.name for x in args.file])
 
     # Here we make the partial function that will be used to actually read the data
-    converter = lambda fname, outname: sptxt_to_csv(
-        fname,
+    converter = lambda fname, outname: SptxtReader(fname).to_csv(
         outname,
         filter_irt_peptides=args.keep_irts,
         min_delta_ascore=args.min_delta_ascore,

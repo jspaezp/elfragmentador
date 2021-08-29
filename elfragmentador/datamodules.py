@@ -290,7 +290,7 @@ class PeptideDataset(torch.utils.data.Dataset):
         *args,
         **kwargs,
     ) -> PeptideDataset:
-        df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
+        df = spectra.SptxtReader(str(filepath), *args, **kwargs).to_df(max_spec=max_spec)
         if filter_df:
             df = filter_df_on_sequences(df)
 

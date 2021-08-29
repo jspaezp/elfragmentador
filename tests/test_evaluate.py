@@ -1,13 +1,10 @@
 from pathlib import Path
 import elfragmentador as ef
-from elfragmentador import model, datamodules, evaluate
-from elfragmentador import DEFAULT_CHECKPOINT
+from elfragmentador import datamodules, evaluate
 
 
-def test_evaluation_on_dataset_works(shared_datadir):
-    mod = model.PepTransformerModel.load_from_checkpoint(
-        ef.DEFAULT_CHECKPOINT, strict=False
-    )
+def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
+    mod = tiny_model
     mod.eval()
     ds = datamodules.PeptideDataset.from_sptxt(
         str(shared_datadir) + "/small_phospho_spectrast.sptxt"
@@ -16,11 +13,8 @@ def test_evaluation_on_dataset_works(shared_datadir):
     print(out)
 
 
-def test_irt_evaluation_works():
-    mod = model.PepTransformerModel.load_from_checkpoint(
-        DEFAULT_CHECKPOINT, strict=False
-    )
-    evaluate.evaluate_landmark_rt(model=mod)
+def test_irt_evaluation_works(tiny_model):
+    evaluate.evaluate_landmark_rt(model=tiny_model)
 
 
 if __name__ == "__main__":

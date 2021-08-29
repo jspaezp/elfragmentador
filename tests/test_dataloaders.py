@@ -52,7 +52,3 @@ def test_dataset_from_sptxt_works(shared_datadir):
         ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + f)
         check_lengths(ds[0])
 
-
-if __name__ == "__main__":
-    parent_dir = Path(__file__).parent
-    base_dataloader_handles_missing(str(parent_dir) + "/data/")
