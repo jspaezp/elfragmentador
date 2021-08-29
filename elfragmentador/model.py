@@ -132,7 +132,9 @@ class _IRTDecoder(nn.TransformerDecoderLayer):
 
     def forward(self, src, memory_key_padding_mask=None):
         # SNE, 1NE
-        decoder_target = self.targets(torch.zeros([1, src.size(1)], dtype=torch.long, device=src.device))
+        decoder_target = self.targets(
+            torch.zeros([1, src.size(1)], dtype=torch.long, device=src.device)
+        )
         out = super().forward(
             memory=src,
             tgt=decoder_target,
@@ -539,7 +541,9 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def torch_batch_from_seq(seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True):
+    def torch_batch_from_seq(
+        seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True
+    ):
         """Generate an input batch for the model from a sequence string.
 
         Parameters:
@@ -554,7 +558,9 @@ class PepTransformerModel(pl.LightningModule):
             >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
             ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
         """
-        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(seq, enforce_length=enforce_length, pad_zeros=pad_zeros)
+        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
+            seq, enforce_length=enforce_length, pad_zeros=pad_zeros
+        )
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()

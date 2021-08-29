@@ -76,6 +76,7 @@ MODIFICATION = {
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
     "NITRO": 44.985078,  #  Oxidation to nitro
     "BIOTINYL": 226.077598,  #  Biotinilation
+    "TMT6PLEX": 229.162932,  #  TMT6
 }
 
 VARIABLE_MODS = {
@@ -90,6 +91,7 @@ VARIABLE_MODS = {
     "FORMYL": "K",  # Formylation
     "GG": "K",  # GlyGly ubiquitinylation residue
     "NITRO": "Y",  #  Oxidation to nitro
+    "TMT6PLEX": "Kn",  # TMT 6 plex
 }
 
 MOD_INDICES = {v: i + 1 for i, v in enumerate(MODIFICATION)}

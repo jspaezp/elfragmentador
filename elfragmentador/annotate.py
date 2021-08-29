@@ -34,11 +34,7 @@ def _solve_alias(x: str) -> str:
     try:
         x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
     except KeyError:
-        x = (
-            x
-            if len(x) == 1
-            else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x.replace('[', '[+')]}]"
-        )
+        x = x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x.replace('[', '[+')]}]"
 
     x = x if len(x) != 3 else x[:1]  # Takes care of C[]
 
@@ -103,7 +99,11 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
             j = min(nexts)
             offset = i + j + 3
             out = p[i:offset]
-            yield_value = _solve_alias(out) if solve_aliases else out
+            try:
+                yield_value = _solve_alias(out) if solve_aliases else out
+            except KeyError as e:
+                raise ValueError(f"Unable to Solve alias for {out}, in peptide {p}")
+
             i = offset
         else:
             yield_value = p[i]
