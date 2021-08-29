@@ -948,15 +948,12 @@ class SptxtReader:
         pad_zeros=True,
     ):
         df = self.to_df(
-            filepath=self.filepath,
             max_spec=max_spec,
             min_peaks=min_peaks,
             min_delta_ascore=min_delta_ascore,
             irt_fun=irt_fun,
             enforce_length=enforce_length,
             pad_zeros=pad_zeros,
-            *self.spectrum_args,
-            **self.spectrum_kwargs,
         )
         if filter_irt_peptides:
             df = df[[x not in CONSTANTS.IRT_PEPTIDES for x in df["Sequences"]]]
