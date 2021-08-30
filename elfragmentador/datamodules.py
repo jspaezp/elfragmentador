@@ -48,7 +48,9 @@ def convert_tensor_column(column, elem_function=float, *args, **kwargs):
         [array([2., 2.]), array([3., 3.])]
     """
 
-    if isinstance(column[0], str):
+    # next(col.__iter__()) is the equivalent of col[0] but works for some
+    # series where the index 0 does not exist
+    if isinstance(next(iter(column)), str):
         out = [
             np.array(
                 [
@@ -59,7 +61,7 @@ def convert_tensor_column(column, elem_function=float, *args, **kwargs):
             for x in tqdm(column, *args, **kwargs)
         ]
 
-    elif isinstance(column[0], list) or isinstance(column[0], tuple):
+    elif isinstance(next(iter(column)), list) or isinstance(next(iter(column)), tuple):
         out = [
             np.array([elem_function(y) for y in x])
             for x in tqdm(column, *args, **kwargs)
