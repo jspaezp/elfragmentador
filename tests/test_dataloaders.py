@@ -51,4 +51,3 @@ def test_dataset_from_sptxt_works(shared_datadir):
     for f in infiles:
         ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + f)
         check_lengths(ds[0])
-
