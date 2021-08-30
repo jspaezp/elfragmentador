@@ -104,7 +104,6 @@ class PinDataset(IterableDataset):
             PinDataset: Subsetted percolator dataset
         """
         df = self.df
-        df = df[df["PepLen"] < CONSTANTS.MAX_SEQUENCE]
         df = df.sort_values(column, ascending=ascending).head(n)
         return PinDataset(
             df=df, in_pin_path=self.in_pin_path, nce_offset=self.nce_offset
@@ -224,13 +223,13 @@ class PinDataset(IterableDataset):
             )
         )
 
-    def optimize_nce(self, scripted_model, offsets=range(-10, 10, 6), n=500):
+    def optimize_nce(self, scripted_model, offsets=range(-10, 10, 2), n=200):
         offsets = [0] + list(offsets)
         logging.info(f"Finding best nce offset from {offsets}")
         best = 0
         best_score = 0
 
-        tmp_ds = self.top_n_subset(n=n, column="Xcorr")
+        tmp_ds = self.top_n_subset(n=max(len(self), n), column="Xcorr")
         tmp_ds.greedify()
         for i, offset in enumerate(offsets):
             tmp_ds.nce_offset = offset
