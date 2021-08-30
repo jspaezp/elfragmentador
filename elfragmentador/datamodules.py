@@ -5,7 +5,7 @@ import logging
 import warnings
 from collections import namedtuple
 from pathlib import PosixPath, Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -35,19 +35,42 @@ def convert_tensor_column(column, elem_function=float, *args, **kwargs):
     for exmaple "[1,2,3,4]"
 
     Args:
-      column: Series/list of stirngs
-      elem_function: function to use to convert each substring in a value (Default value = float)
-      *args: Arguments to pass to tqdm
-      **kwargs: Keywords arguments passed to tqdm
+        column: Series/list of stirngs
+        elem_function: function to use to convert each substring in a value (Default value = float)
+        *args: Arguments to pass to tqdm
+        **kwargs: Keywords arguments passed to tqdm
 
     Returns:
         List: A nested list containing the converted values
 
+    Examples:
+        >>> convert_tensor_column(["[2,2]", "[3,3]"], elem_function=float)
+        [array([2., 2.]), array([3., 3.])]
     """
-    out = [
-        [elem_function(y) for y in x.strip("[]").replace("'", "").split(", ")]
-        for x in tqdm(column, *args, **kwargs)
-    ]
+
+    # next(col.__iter__()) is the equivalent of col[0] but works for some
+    # series where the index 0 does not exist
+    if isinstance(next(iter(column)), str):
+        out = [
+            np.array(
+                [
+                    elem_function(y.strip())
+                    for y in x.strip("[]").replace("'", "").split(",")
+                ]
+            )
+            for x in tqdm(column, *args, **kwargs)
+        ]
+
+    elif isinstance(next(iter(column)), list) or isinstance(next(iter(column)), tuple):
+        out = [
+            np.array([elem_function(y) for y in x])
+            for x in tqdm(column, *args, **kwargs)
+        ]
+
+    else:
+        logging.warning("Passed column is not a string, skipping conversion")
+        out = column
+
     return out
 
 
@@ -60,8 +83,8 @@ def match_lengths(
     match_lengths Matches the lengths of all tensors in a list
 
     Args:
-        nested_list (Union[List[List[Union[int, float]]], List[List[int]]]):
-            A list of lists, where each internal list will represent a tensor of equal length
+        nested_list (List[np.ndarray]):
+            A list of numpy arrays
         max_len (int): Length to match all tensors to
         name (str, optional): name to use (just for logging purposes). Defaults to "items".
 
@@ -69,10 +92,21 @@ def match_lengths(
         Tensor:
             Tensor product of stacking all the elements in the input nested list, after
             equalizing the length of all of them to the specified max_len
+
+    Examples:
+        >>> out = match_lengths([np.array([3, 3]), np.array([1, 2])], 2, "")
+        >>> out
+        tensor([[3, 3],
+                [1, 2]])
+        >>> out[0]
+        tensor([3, 3])
+        >>> match_lengths([np.array([1]), np.array([1, 2])], 2, "")
+        tensor([[1, 0],
+                [1, 2]])
     """
-    lengths = [len(x) for x in nested_list]
+    lengths = np.array([len(x) for x in nested_list])
     unique_lengths = set(lengths)
-    match_max = [1 for x in lengths if x == max_len]
+    match_max = lengths == max_len
 
     out_message = (
         f"{len(match_max)}/{len(nested_list)} "
@@ -81,15 +115,19 @@ def match_lengths(
         f" found {unique_lengths}"
     )
 
-    if len(match_max) == len(nested_list):
+    if (len(unique_lengths) == 1) and (max_len in unique_lengths):
         logging.info(out_message)
+        out = torch.stack([torch.from_numpy(x) for x in nested_list], dim=0)
     else:
         logging.warning(out_message)
+        out = [
+            np.concatenate([x, np.zeros(max_len - len(x), dtype=x.dtype)])
+            if len(x) != max_len
+            else x
+            for x in nested_list
+        ]
+        out = torch.stack([torch.from_numpy(x) for x in out], dim=0)
 
-    out = [
-        x + ([0] * (max_len - len(x))) if len(x) != max_len else x for x in nested_list
-    ]
-    out = torch.stack([torch.Tensor(x).T for x in out])
     return out
 
 
@@ -166,7 +204,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         df: DataFrame,
-        max_spec: int = 1e6,
+        max_spec: int = 2e6,
         drop_missing_vals=False,
     ) -> None:
         super().__init__()
@@ -290,7 +328,9 @@ class PeptideDataset(torch.utils.data.Dataset):
         *args,
         **kwargs,
     ) -> PeptideDataset:
-        df = spectra.encode_sptxt(str(filepath), max_spec=max_spec, *args, **kwargs)
+        df = spectra.SptxtReader(str(filepath), *args, **kwargs).to_df(
+            max_spec=max_spec
+        )
         if filter_df:
             df = filter_df_on_sequences(df)
 
@@ -324,19 +364,29 @@ class PeptideDataset(torch.utils.data.Dataset):
 
 
 def filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
+    """
+    filter_df_on_sequences Filters a ataframe for the peptides that correctly match the expected lengths
+
+    Args:
+        df (DataFrame): A DataFrame to filter
+        name (str, optional): Only used for debugging purposes. Defaults to "".
+
+    Returns:
+        DataFrame: The filtered dataframe
+    """
     name_match = match_colnames(df)
     logging.info(list(df))
     logging.warning(f"Removing Large sequences, currently {name}: {len(df)}")
 
     seq_iterable = convert_tensor_column(
-        df[name_match["SeqE"]], lambda x: x, "Decoding tensor seqs"
+        df[name_match["SeqE"]], int, "Decoding tensor seqs"
     )
+    df[name_match["SeqE"]] = seq_iterable
+    seq_len_matching = [len(x) <= constants.MAX_TENSOR_SEQUENCE for x in seq_iterable]
+    if sum(seq_len_matching) == 0:
+        warnings.warn("No sequences have the expected length")
 
-    df = (
-        df[[len(x) <= constants.MAX_TENSOR_SEQUENCE for x in seq_iterable]]
-        .copy()
-        .reset_index(drop=True)
-    )
+    df = df[seq_len_matching].copy().reset_index(drop=True)
 
     logging.warning(f"Left {name}: {len(df)}")
     return df
@@ -348,11 +398,13 @@ class PeptideDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         base_dir: Union[str, PosixPath] = ".",
         drop_missing_vals: bool = False,
+        max_spec=2_000_000,
     ) -> None:
         super().__init__()
         logging.info("Initializing DataModule")
         self.batch_size = batch_size
         self.drop_missing_vals = drop_missing_vals
+        self.max_spec = max_spec
         base_dir = Path(base_dir)
 
         train_path = list(base_dir.glob("*train*.csv*"))
@@ -363,9 +415,7 @@ class PeptideDataModule(pl.LightningDataModule):
 
         logging.info("Starting loading of the data")
         train_df = pd.concat([pd.read_csv(str(x)) for x in train_path])
-        train_df = filter_df_on_sequences(train_df)
         val_df = pd.concat([pd.read_csv(str(x)) for x in val_path])
-        val_df = filter_df_on_sequences(val_df)
 
         # TODO reconsider if storing this dataframe as is is required
         self.train_df = train_df
@@ -376,14 +426,19 @@ class PeptideDataModule(pl.LightningDataModule):
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
         parser.add_argument("--drop_missing_vals", type=bool, default=False)
+        parser.add_argument("--max_spec", type=int, default=2000000)
         return parser
 
     def setup(self) -> None:
         self.train_dataset = PeptideDataset(
-            self.train_df, drop_missing_vals=self.drop_missing_vals
+            self.train_df,
+            drop_missing_vals=self.drop_missing_vals,
+            max_spec=self.max_spec,
         )
         self.val_dataset = PeptideDataset(
-            self.val_df, drop_missing_vals=self.drop_missing_vals
+            self.val_df,
+            drop_missing_vals=self.drop_missing_vals,
+            max_spec=self.max_spec,
         )
 
     def train_dataloader(self) -> DataLoader:
@@ -392,4 +447,4 @@ class PeptideDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.val_dataset, batch_size=self.batch_size)
+        return DataLoader(self.val_dataset, num_workers=0, batch_size=self.batch_size)

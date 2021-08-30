@@ -122,6 +122,7 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         batch_size=args.batch_size,
         base_dir=args.data_dir,
         drop_missing_vals=args.drop_missing_vals,
+        max_spec=args.max_spec,
     )
     datamodule.setup()
     spe = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)

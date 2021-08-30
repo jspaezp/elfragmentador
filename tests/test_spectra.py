@@ -1,4 +1,5 @@
 from elfragmentador import spectra, constants, annotate
+import pandas as pd
 
 
 def test_parse_spec():
@@ -11,7 +12,7 @@ def test_parse_spec():
         '467.2710876464844       2084.733731525135       "?"',
     ]
 
-    spec = spectra._parse_spectra_sptxt(sample_spec)
+    spec = spectra.SptxtReader._parse_spectra_sptxt(sample_spec)
     spec.annotated_peaks
     out_encoding = spec.encode_spectra()
     print(spec)
@@ -46,7 +47,7 @@ def test_parse_spectrast():
         "490.1970\t109.1\t?\t",
         "490.2626\t3638.8\ty4/0.001\t",
     ]
-    spec = spectra._parse_spectra_sptxt(sample_spec)
+    spec = spectra.SptxtReader._parse_spectra_sptxt(sample_spec)
     spec.annotated_peaks
     out_encoding = spec.encode_spectra()
     print(spec)
@@ -73,7 +74,7 @@ def test_parse_phospho_spectrast():
         "824.4262\t405.8\ty7/-0.002\t",
         "952.5225\t271.0\ty8/-0.000\t",
     ]
-    spec = spectra._parse_spectra_sptxt(sample_spec)
+    spec = spectra.SptxtReader._parse_spectra_sptxt(sample_spec)
     spec.annotated_peaks
     print(spec)
     out_encoding = spec.encode_spectra()
@@ -89,24 +90,24 @@ def test_parse_phospho_spectrast():
 
 def test_parse_sptxt(shared_datadir):
     in_path = str(shared_datadir / "sample.sptxt")
-    print(list(spectra.read_sptxt(in_path)))
+    print(list(spectra.SptxtReader(in_path)))
 
 
 def test_parse_spectrast_sptxt(shared_datadir):
     in_path = str(shared_datadir / "small_proteome_spectrast.sptxt")
-    print(list(spectra.read_sptxt(in_path)))
+    print(list(spectra.SptxtReader(in_path)))
 
 
 def test_parse_phospho_spectrast_sptxt(shared_datadir):
     in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")
-    print(list(spectra.read_sptxt(in_path)))
+    print(list(spectra.SptxtReader(in_path)))
 
 
 def test_benchmark_spectra_parsing(shared_datadir, benchmark):
     in_path = str(shared_datadir / "single_spectrum.txt")
     with open(in_path, "r") as f:
         spec_chunk = list(f)
-    spec = spectra._parse_spectra_sptxt(spec_chunk)
+    spec = spectra.SptxtReader._parse_spectra_sptxt(spec_chunk)
     out = benchmark(
         annotate.annotate_peaks, spec._theoretical_peaks, spec.mzs, spec.intensities
     )
@@ -129,7 +130,9 @@ def test_spectrum_works_on_term_acetyl():
 
 def test_sptxt_to_pd(shared_datadir):
     in_path = str(shared_datadir / "small_phospho_spectrast.sptxt")
-    print(spectra.encode_sptxt(in_path))
+    df = spectra.SptxtReader(in_path).to_df()
+
+    assert isinstance(df, pd.DataFrame)
 
 
 if __name__ == "__main__":

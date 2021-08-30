@@ -4,7 +4,9 @@ Contains utilities to represent spectra as well as functions to read them in bul
 """
 
 from __future__ import annotations
+from collections import defaultdict
 import logging
+from os import PathLike
 
 try:
     import matplotlib.pyplot as plt
@@ -331,10 +333,15 @@ class Spectrum:
         self._annotated_peaks = annots
 
     def _calculate_delta_ascore(self) -> None:
+        if hasattr(self, "variable_mods"):
+            variable_mods = self.variable_mods
+        else:
+            variable_mods = CONSTANTS.VARIABLE_MODS
+
         self._delta_ascore = scoring.calc_delta_ascore(
             seq=encoding_decoding.clip_explicit_terminus(self.mod_sequence),
-            mod=list(CONSTANTS.VARIABLE_MODS.keys()),
-            aas=list(CONSTANTS.VARIABLE_MODS.values()),
+            mod=list(variable_mods.keys()),
+            aas=list(variable_mods.values()),
             mzs=self.mzs,
             ints=self.intensities,
         )
@@ -632,266 +639,326 @@ class Spectrum:
             )
 
 
-def encode_sptxt(
-    filepath: Union[str, Path],
-    max_spec: float = 1e9,
-    min_peaks: int = 3,
-    min_delta_ascore: int = 20,
-    irt_fun: None = None,
-    enforce_length=True,
-    pad_zeros=True,
-    *args,
-    **kwargs,
-) -> DataFrame:
-    """
-    encode_sptxt Convert an sptxt file to a dataframe containing encodings.
+class SptxtReader:
+    def __init__(self, filepath: PathLike, *args, **kwargs):
+        self.filepath = filepath
+        self.spectrum_args = args
+        self.spectrum_kwargs = kwargs
 
-    Converts the spectra contained in a .sptxt file to a pandas DataFrame that
-    contains the relevant fields required to train the main model.
+        self.mods, self.length = self._get_sptxt_data()
 
-    Parameters
-    ----------
-    filepath : Path or str
-        Path of the .sptxt file to read
-    max_spec : int, optional
-        Maximum number of spectra to read, by default 1e9
-    min_peaks : int
-        Minimum number of annotated peaks for a spectrum to be added
-    irt_fun : [type], optional
-        Not yet implemented but would take a callable that converts
-        the retention times to iRTs, by default None
+    def __len__(self):
+        return self.length
 
-    Returns
-    -------
-    DataFrame
-        DataFrame containing the data required to train the model
-        and would be taken by the PeptideDataset
-        # TODO specify the columns
+    def __iter__(self):
+        return self.read()
 
-    Raises
-    ------
-    NotImplementedError
-        Raises this error when an iRT converter function is passed
-        because I have not implemented it....
-    """
-    iter = read_sptxt(filepath, *args, **kwargs)
+    def _get_sptxt_data(self):
+        """Goes through the file and gets the number of spectra and the modifications present"""
+        ptms = set()
+        length = 0
+        with open(self.filepath, "r") as f:
+            for line in f:
+                if line.startswith("Name:"):
+                    length += 1
+                    seq = line.split(":")[1].strip().split("/")[0]
+                    ptms |= set(
+                        x
+                        for x in annotate.peptide_parser(seq, solve_aliases=True)
+                        if "[" in x
+                    )
 
-    sequences = []
-    mod_sequences = []
-    seq_encodings = []
-    mod_encodings = []
-    spectra_encodings = []
-    charges = []
-    rts = []
-    nces = []
-    orig = []
-    d_ascores = []
-    nreps = []
+        mods = defaultdict(lambda: "")
+        for x in ptms:
+            mods[x[2:-1]] += x[0]
 
-    i = 0
-    skipped_spec = 0
-    for spec in tqdm(iter):
-        i += 1
-        if i >= max_spec:
-            break
+        return dict(mods), length
 
-        # TODO add offset to skip the first x sequences and a way to make the selection random
-        seq_encode, mod_encode = spec.encode_sequence(
-            enforce_length=enforce_length, pad_zeros=pad_zeros
-        )
-        seq_encode, mod_encode = str(seq_encode), str(mod_encode)
+    # TODO consider if moving this parser to just use another dependency ... pyteomics ??
+    def _chunk_sptxt(self) -> Iterator[List[str]]:
+        """Reads an .sptxt and returns chunks of strings with each spectrum section"""
+        with open(self.filepath, "r") as f:
+            spectrum_section = []
+            for line in f:
+                if line.startswith("#"):
+                    continue
+                stripped_line = line.strip()
+                if len(stripped_line) == 0:
+                    if len(spectrum_section) > 0:
+                        try:
+                            yield spectrum_section
+                        except AssertionError as e:
+                            warnings.warn(f"Skipping spectra with assertion error: {e}")
+                            pass
+                        spectrum_section = []
+                else:
+                    spectrum_section.append(stripped_line)
 
-        try:
-            spec_encode = spec.encode_spectra()
-            spec_encode = [round(x, 5) for x in spec_encode]
-            spec_encode = str(spec_encode)
-        except AssertionError as e:
-            warnings.warn(f"Skipping because of error: {e}")
-            skipped_spec += 1
-            continue
+            if len(spectrum_section) > 0:
+                try:
+                    yield spectrum_section
+                except AssertionError as e:
+                    warnings.warn(f"Skipping spectra with assertion error: {e}")
 
-        if min_peaks is not None and spec.num_matching_peaks < min_peaks:
-            warnings.warn(
-                f"Skipping peptide due few peaks being annotated {spec.mod_sequence}"
-            )
-            skipped_spec += 1
-            continue
-
-        if min_delta_ascore is not None and spec.delta_ascore < min_delta_ascore:
-            warnings.warn(
-                f"Skipping peptide due low ascore '{spec.delta_ascore}' {spec.mod_sequence}"
-            )
-            skipped_spec += 1
-            continue
-
-        spectra_encodings.append(spec_encode)
-        seq_encodings.append(seq_encode)
-        mod_encodings.append(mod_encode)
-        charges.append(spec.charge)
-        sequences.append(spec.sequence)
-        mod_sequences.append(spec.mod_sequence)
-        rts.append(spec.rt)
-        nces.append(spec.nce)
-        orig.append(spec.raw_spectra)
-        d_ascores.append(spec.delta_ascore)
-        nreps.append(spec.nreps)
-
-    ret = DataFrame(
-        {
-            "Sequences": sequences,
-            "ModSequences": mod_sequences,
-            "Charges": charges,
-            "NCEs": nces,
-            "RTs": rts,
-            "SpectraEncodings": spectra_encodings,
-            "ModEncodings": mod_encodings,
-            "SeqEncodings": seq_encodings,
-            "OrigSpectra": orig,
-            "DeltaAscore": d_ascores,
-            "Nreps": nreps,
-        }
-    )
-
-    if irt_fun is not None:
-        raise NotImplementedError
-    else:
+    def read(self) -> Iterator[Spectrum]:
         """
-        warnings.warn(
-            "No calculation function passed for iRT,"
-            " will replace the column with missing"
-        )
+        read_sptxt reads a spectra library file.
+
+        reads a spectral library file into a list of spectra objects
+
+        Parameters
+        ----------
+        filepath : Path or str
+            The path to the spectral library, extension .sptxt
+        *args
+            Passed onto Spectrum
+        **kwargs
+            Passed onto Spectrum
+
+        Yields
+        ------
+        Spectrum objects
         """
-        ret["iRT"] = np.nan
 
-    if skipped_spec >= 1:
-        warnings.warn(f"{skipped_spec}/{i} Spectra were skipped")
+        for spectrum_chunk in self._chunk_sptxt():
+            spec = self._parse_spectra_sptxt(
+                spectrum_chunk, *self.spectrum_args, **self.spectrum_kwargs
+            )
+            spec.variable_mods = self.mods
+            yield spec
 
-    logging.info(list(ret))
-    logging.info(ret)
+    @staticmethod
+    def _parse_spectra_sptxt(
+        x: List[str], instrument: None = None, analyzer: str = "FTMS", *args, **kwargs
+    ) -> Spectrum:
+        """
+        Parse a single spectra into an object.
 
-    return ret
+        Meant for internal use
+        """
+        digits = [str(v) for v in range(10)]
 
+        # Header Handling
+        named_params = [v for v in x if v[:1].isalpha() and ":" in v]
+        named_params_dict = {}
+        for v in named_params:
+            tmp = v.split(":")
+            named_params_dict[tmp[0].strip()] = ":".join(tmp[1:])
 
-def sptxt_to_csv(filepath, output_path, filter_irt_peptides=True, *args, **kwargs):
-    df = encode_sptxt(filepath=filepath, *args, **kwargs)
-    if filter_irt_peptides:
-        df = df[[x not in CONSTANTS.IRT_PEPTIDES for x in df["Sequences"]]]
-    df.to_csv(output_path, index=False)
+        fragmentation = named_params_dict.get("FullName", None)
+        if fragmentation is not None:
+            fragmentation = fragmentation[fragmentation.index("(") + 1 : -1]
 
+        comment_sec = [
+            v.split("=") for v in named_params_dict["Comment"].strip().split(" ")
+        ]
+        comment_dict = {v[0]: v[1] for v in comment_sec}
+        sequence, charge = named_params_dict["Name"].split("/")
 
-# TODO consider if moving this parser to just use another dependency ... pyteomics ??
-def read_sptxt(filepath: str, *args, **kwargs) -> Iterator[Spectrum]:
-    """
-    read_sptxt reads a spectra library file.
+        nce = comment_dict.get("CollisionEnergy", None)
+        if nce is not None:
+            nce = float(nce)
 
-    reads a spectral library file into a list of spectra objects
+        rt = comment_dict.get("RetentionTime", None)
+        if rt is not None:
+            rt = float(rt.split(",")[0])
 
-    Parameters
-    ----------
-    filepath : Path or str
-        The path to the spectral library, extension .sptxt
-    *args
-        Passed onto Spectrum
-    **kwargs
-        Passed onto Spectrum
+        irt = comment_dict.get("iRT", None)
+        if irt is not None:
+            irt = float(irt.split(",")[0])
 
-    Yields
-    ------
-    Spectrum objects
-    """
-    with open(filepath, "r") as f:
-        spectrum_section = []
-        for line in f:
-            if line.startswith("#"):
-                continue
-            stripped_line = line.strip()
-            if len(stripped_line) == 0:
-                if len(spectrum_section) > 0:
-                    try:
-                        yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
-                    except AssertionError as e:
-                        warnings.warn(f"Skipping spectra with assertion error: {e}")
-                        pass
-                    spectrum_section = []
-            else:
-                spectrum_section.append(stripped_line)
+        nreps = comment_dict.get("Nreps", None)
+        if nreps is not None:
+            nreps = int(nreps.split("/")[0])
 
-        if len(spectrum_section) > 0:
+        raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get(
+            "BestRawSpectrum", None
+        )
+
+        # Peaks Handling
+        peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]
+        peaks_sec = [l.strip().split() for l in peaks_sec if "." in l]
+        mz = [float(l[0]) for l in peaks_sec]
+        intensity = [float(l[1]) for l in peaks_sec]
+
+        out_spec = Spectrum(
+            sequence=sequence.strip(),
+            charge=int(charge),
+            parent_mz=float(comment_dict["Parent"]),
+            intensities=intensity,
+            mzs=mz,
+            modifications=comment_dict["Mods"],
+            analyzer=analyzer,
+            instrument=instrument,
+            nce=nce,
+            rt=rt,
+            irt=irt,
+            raw_spectra=raw_spectra,
+            nreps=nreps,
+            *args,
+            **kwargs,
+        )
+
+        return out_spec
+
+    def to_df(
+        self,
+        max_spec: float = 1e9,
+        min_peaks: int = 3,
+        min_delta_ascore: int = 20,
+        irt_fun: None = None,
+        enforce_length=True,
+        pad_zeros=True,
+    ) -> DataFrame:
+        """
+        Convert an sptxt file to a dataframe containing encodings.
+
+        Converts the spectra contained in a .sptxt file to a pandas DataFrame that
+        contains the relevant fields required to train the main model.
+
+        Parameters
+        ----------
+        filepath : Path or str
+            Path of the .sptxt file to read
+        max_spec : int, optional
+            Maximum number of spectra to read, by default 1e9
+        min_peaks : int
+            Minimum number of annotated peaks for a spectrum to be added
+        irt_fun : [type], optional
+            Not yet implemented but would take a callable that converts
+            the retention times to iRTs, by default None
+
+        Returns
+        -------
+        DataFrame
+            DataFrame containing the data required to train the model
+            and would be taken by the PeptideDataset
+            # TODO specify the columns
+
+        Raises
+        ------
+        NotImplementedError
+            Raises this error when an iRT converter function is passed
+            because I have not implemented it....
+        """
+        sequences = []
+        mod_sequences = []
+        seq_encodings = []
+        mod_encodings = []
+        spectra_encodings = []
+        charges = []
+        rts = []
+        nces = []
+        orig = []
+        d_ascores = []
+        nreps = []
+
+        i = 0
+        skipped_spec = 0
+        iter = tqdm(self)
+        for spec in iter:
+            iter.set_postfix({"skipped": skipped_spec})
+            i += 1
+            if i >= max_spec:
+                break
+
+            # TODO add offset to skip the first x sequences and a way to make the selection random
+            seq_encode, mod_encode = spec.encode_sequence(
+                enforce_length=enforce_length, pad_zeros=pad_zeros
+            )
+            seq_encode, mod_encode = str(seq_encode), str(mod_encode)
+
             try:
-                yield _parse_spectra_sptxt(spectrum_section, *args, **kwargs)
+                spec_encode = spec.encode_spectra()
+                spec_encode = [round(x, 5) for x in spec_encode]
+                spec_encode = str(spec_encode)
             except AssertionError as e:
-                warnings.warn(f"Skipping spectra with assertion error: {e}")
+                warnings.warn(f"Skipping because of error: {e}")
+                skipped_spec += 1
+                continue
 
+            if min_peaks is not None and spec.num_matching_peaks < min_peaks:
+                warnings.warn(
+                    f"Skipping peptide due few peaks being annotated {spec.mod_sequence}"
+                )
+                skipped_spec += 1
+                continue
 
-def _parse_spectra_sptxt(
-    x: List[str], instrument: None = None, analyzer: str = "FTMS", *args, **kwargs
-) -> Spectrum:
-    """
-    Parse a single spectra into an object.
+            if min_delta_ascore is not None and spec.delta_ascore < min_delta_ascore:
+                warnings.warn(
+                    f"Skipping peptide due low ascore '{spec.delta_ascore}' {spec.mod_sequence}"
+                )
+                skipped_spec += 1
+                continue
 
-    Meant for internal use
-    """
-    digits = [str(v) for v in range(10)]
+            spectra_encodings.append(spec_encode)
+            seq_encodings.append(seq_encode)
+            mod_encodings.append(mod_encode)
+            charges.append(spec.charge)
+            sequences.append(spec.sequence)
+            mod_sequences.append(spec.mod_sequence)
+            rts.append(spec.rt)
+            nces.append(spec.nce)
+            orig.append(spec.raw_spectra)
+            d_ascores.append(spec.delta_ascore)
+            nreps.append(spec.nreps)
 
-    # Header Handling
-    named_params = [v for v in x if v[:1].isalpha() and ":" in v]
-    named_params_dict = {}
-    for v in named_params:
-        tmp = v.split(":")
-        named_params_dict[tmp[0].strip()] = ":".join(tmp[1:])
+        ret = DataFrame(
+            {
+                "Sequences": sequences,
+                "ModSequences": mod_sequences,
+                "Charges": charges,
+                "NCEs": nces,
+                "RTs": rts,
+                "SpectraEncodings": spectra_encodings,
+                "ModEncodings": mod_encodings,
+                "SeqEncodings": seq_encodings,
+                "OrigSpectra": orig,
+                "DeltaAscore": d_ascores,
+                "Nreps": nreps,
+            }
+        )
 
-    fragmentation = named_params_dict.get("FullName", None)
-    if fragmentation is not None:
-        fragmentation = fragmentation[fragmentation.index("(") + 1 : -1]
+        if irt_fun is not None:
+            raise NotImplementedError
+        else:
+            """
+            warnings.warn(
+                "No calculation function passed for iRT,"
+                " will replace the column with missing"
+            )
+            """
+            ret["iRT"] = np.nan
 
-    comment_sec = [
-        v.split("=") for v in named_params_dict["Comment"].strip().split(" ")
-    ]
-    comment_dict = {v[0]: v[1] for v in comment_sec}
-    sequence, charge = named_params_dict["Name"].split("/")
+        if skipped_spec >= 1:
+            warnings.warn(
+                f"{skipped_spec}/{i} ({100*skipped_spec/i:.03f} %) Spectra were skipped"
+            )
 
-    nce = comment_dict.get("CollisionEnergy", None)
-    if nce is not None:
-        nce = float(nce)
+        logging.info(list(ret))
+        logging.info(ret)
 
-    rt = comment_dict.get("RetentionTime", None)
-    if rt is not None:
-        rt = float(rt.split(",")[0])
+        return ret
 
-    irt = comment_dict.get("iRT", None)
-    if irt is not None:
-        irt = float(irt.split(",")[0])
-
-    nreps = comment_dict.get("Nreps", None)
-    if nreps is not None:
-        nreps = int(nreps.split("/")[0])
-
-    raw_spectra = comment_dict.get("RawSpectrum", None) or comment_dict.get(
-        "BestRawSpectrum", None
-    )
-
-    # Peaks Handling
-    peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]
-    peaks_sec = [l.strip().split() for l in peaks_sec if "." in l]
-    mz = [float(l[0]) for l in peaks_sec]
-    intensity = [float(l[1]) for l in peaks_sec]
-
-    out_spec = Spectrum(
-        sequence=sequence.strip(),
-        charge=int(charge),
-        parent_mz=float(comment_dict["Parent"]),
-        intensities=intensity,
-        mzs=mz,
-        modifications=comment_dict["Mods"],
-        analyzer=analyzer,
-        instrument=instrument,
-        nce=nce,
-        rt=rt,
-        irt=irt,
-        raw_spectra=raw_spectra,
-        nreps=nreps,
-        *args,
-        **kwargs,
-    )
-
-    return out_spec
+    def to_csv(
+        self,
+        output_path,
+        filter_irt_peptides=True,
+        max_spec: float = 1e9,
+        min_peaks: int = 3,
+        min_delta_ascore: int = 20,
+        irt_fun: None = None,
+        enforce_length=True,
+        pad_zeros=True,
+    ):
+        df = self.to_df(
+            max_spec=max_spec,
+            min_peaks=min_peaks,
+            min_delta_ascore=min_delta_ascore,
+            irt_fun=irt_fun,
+            enforce_length=enforce_length,
+            pad_zeros=pad_zeros,
+        )
+        if filter_irt_peptides:
+            df = df[[x not in CONSTANTS.IRT_PEPTIDES for x in df["Sequences"]]]
+        df.to_csv(output_path, index=False)

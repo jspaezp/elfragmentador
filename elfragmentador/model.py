@@ -134,6 +134,7 @@ class _IRTDecoder(nn.TransformerDecoderLayer):
 
     def forward(self, src, memory_key_padding_mask=None):
         # TODO add static sizing
+        # SNE, 1NE
         decoder_target = self.targets(
             torch.zeros([1, src.size(1)], dtype=torch.long, device=src.device)
         )

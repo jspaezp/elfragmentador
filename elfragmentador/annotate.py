@@ -106,7 +106,11 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
             j = min(nexts)
             offset = i + j + 3
             out = p[i:offset]
-            yield_value = _solve_alias(out) if solve_aliases else out
+            try:
+                yield_value = _solve_alias(out) if solve_aliases else out
+            except KeyError as e:
+                raise ValueError(f"Unable to Solve alias for {out}, in peptide {p}")
+
             i = offset
         else:
             yield_value = p[i]
