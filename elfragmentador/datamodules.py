@@ -202,7 +202,7 @@ class PeptideDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         df: DataFrame,
-        max_spec: int = 1e6,
+        max_spec: int = 2e6,
         drop_missing_vals=False,
     ) -> None:
         super().__init__()
@@ -396,11 +396,13 @@ class PeptideDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         base_dir: Union[str, PosixPath] = ".",
         drop_missing_vals: bool = False,
+        max_spec = 2_000_000,
     ) -> None:
         super().__init__()
         logging.info("Initializing DataModule")
         self.batch_size = batch_size
         self.drop_missing_vals = drop_missing_vals
+        self.max_spec = max_spec
         base_dir = Path(base_dir)
 
         train_path = list(base_dir.glob("*train*.csv*"))
@@ -422,14 +424,15 @@ class PeptideDataModule(pl.LightningDataModule):
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
         parser.add_argument("--drop_missing_vals", type=bool, default=False)
+        parser.add_argument("--max_spec", type=int, default=2000000)
         return parser
 
     def setup(self) -> None:
         self.train_dataset = PeptideDataset(
-            self.train_df, drop_missing_vals=self.drop_missing_vals
+            self.train_df, drop_missing_vals=self.drop_missing_vals, max_spec=self.max_spec
         )
         self.val_dataset = PeptideDataset(
-            self.val_df, drop_missing_vals=self.drop_missing_vals
+            self.val_df, drop_missing_vals=self.drop_missing_vals, max_spec=self.max_spec
         )
 
     def train_dataloader(self) -> DataLoader:
