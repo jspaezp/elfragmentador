@@ -6,4 +6,4 @@ except ModuleNotFoundError:
 
 __version__ = importlib_metadata.version("elfragmentador")
 
-DEFAULT_CHECKPOINT = "https://github.com/jspaezp/elfragmentador/releases/download/v0.49.1/0.49.1_onecycle_5e_C_val_l.0.029633_epoch.004.ckpt"
+DEFAULT_CHECKPOINT = "https://github.com/jspaezp/elfragmentador-modelzoo/raw/main/0.50.0a5_onecycle_5e_C_val_l%3D0.038469_epoch%3D004.ckpt"

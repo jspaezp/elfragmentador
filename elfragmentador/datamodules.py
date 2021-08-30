@@ -396,7 +396,7 @@ class PeptideDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         base_dir: Union[str, PosixPath] = ".",
         drop_missing_vals: bool = False,
-        max_spec = 2_000_000,
+        max_spec=2_000_000,
     ) -> None:
         super().__init__()
         logging.info("Initializing DataModule")
@@ -429,10 +429,14 @@ class PeptideDataModule(pl.LightningDataModule):
 
     def setup(self) -> None:
         self.train_dataset = PeptideDataset(
-            self.train_df, drop_missing_vals=self.drop_missing_vals, max_spec=self.max_spec
+            self.train_df,
+            drop_missing_vals=self.drop_missing_vals,
+            max_spec=self.max_spec,
         )
         self.val_dataset = PeptideDataset(
-            self.val_df, drop_missing_vals=self.drop_missing_vals, max_spec=self.max_spec
+            self.val_df,
+            drop_missing_vals=self.drop_missing_vals,
+            max_spec=self.max_spec,
         )
 
     def train_dataloader(self) -> DataLoader:
