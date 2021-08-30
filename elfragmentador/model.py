@@ -290,7 +290,7 @@ _model_sections = [
     "MODEmbedding",
     "FragmentEmbedding",
     "FragmentFFN",
-    "RTFFN",
+    "IrtDecoder",
 ]
 
 
@@ -386,9 +386,9 @@ class PepTransformerModel(pl.LightningModule):
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
 
-        self.rt_decoder = _IRTDecoder(
+        self.irt_decoder = _IRTDecoder(
             d_model=ninp,
-            nhead=2,
+            nhead=nhead,
             dim_feedforward=nhid,
             dropout=dropout,
             activation="gelu",
@@ -414,7 +414,7 @@ class PepTransformerModel(pl.LightningModule):
             "MODEmbedding": self.encoder.aa_encoder.mod_encoder,
             "FragmentEmbedding": self.decoder.trans_decoder_embedding,
             "FragmentFFN": self.decoder.peak_decoder,
-            "RTFFN": self.rt_decoder,
+            "IrtDecoder": self.irt_decoder,
         }
 
         self.make_trainable_sections(trainable_sections)
@@ -468,7 +468,7 @@ class PepTransformerModel(pl.LightningModule):
         trans_encoder_output, mem_mask = self.encoder.forward(
             src=src, mods=mods, debug=debug
         )
-        rt_output = self.rt_decoder.forward(
+        rt_output = self.irt_decoder.forward(
             trans_encoder_output, memory_key_padding_mask=mem_mask
         )
         if debug:
@@ -807,7 +807,15 @@ class PepTransformerModel(pl.LightningModule):
 
         for section in sections:
             logging.warning(f"Unfreezing {section}")
-            set_grad_section(self.model_sections[section], trainable=True)
+            try:
+                set_grad_section(self.model_sections[section], trainable=True)
+            except KeyError as e:
+                logging.error(
+                    (
+                        f"{e} not found, please provide to the trainable"
+                        " sections one of {_model_sections}"
+                    )
+                )
 
     def configure_optimizers(
         self,

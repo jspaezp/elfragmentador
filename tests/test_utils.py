@@ -1,4 +1,3 @@
-from elfragmentador import DEFAULT_CHECKPOINT
 from elfragmentador.utils import append_preds
 
 

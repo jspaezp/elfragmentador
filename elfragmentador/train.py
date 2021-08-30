@@ -137,10 +137,10 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
 
     callbacks["logger"].watch(model.encoder)
     callbacks["logger"].watch(model.decoder)
+    callbacks["logger"].watch(model.irt_decoder)
 
     trainer = pl.Trainer.from_argparse_args(
         args,
-        profiler="simple",
         logger=callbacks["logger"],
         callbacks=callbacks["callbacks"],
     )

@@ -62,6 +62,7 @@ def _common_checkpoint_args(parser):
 def _setup_model(args):
     torch.set_num_threads(args.threads)
     try:
+        logging.info(f"Loading model from {args.model_checkpoint}")
         model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
     except RuntimeError as e:
         if "Missing key(s) in state_dict":
@@ -73,8 +74,12 @@ def _setup_model(args):
                     "try to change the checkpoint"
                 )
             )
-            model = PepTransformerModel.load_from_checkpoint(
-                args.model_checkpoint, strict=False
+            raise RuntimeError(
+                (
+                    "The provided checkpoint does not match the version of"
+                    " the library, make sure you use a compatible checkpoint"
+                    " or you update/downgrade the library"
+                )
             )
         else:
             raise RuntimeError(e)
@@ -388,6 +393,8 @@ def train():
         logging.info(f">> {k}: {v}")
 
     mod = PepTransformerModel(**dict_args)
+
+    logging.info(mod.__repr__().replace("\n", "\t\n"))
     if args.from_checkpoint is not None:
         logging.info(f">> Resuming training from checkpoint {args.from_checkpoint} <<")
         weights_mod = PepTransformerModel.load_from_checkpoint(args.from_checkpoint)

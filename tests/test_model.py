@@ -1,10 +1,8 @@
 import pytest
 import random
 
-from torch.utils.data import dataloader
 import elfragmentador
 
-from elfragmentador.utils import get_random_peptide
 import tempfile
 from pathlib import Path
 
@@ -14,7 +12,6 @@ from torch.utils.data.dataloader import DataLoader
 from elfragmentador import model
 from elfragmentador import datamodules
 from elfragmentador import constants
-from elfragmentador.utils import prepare_fake_tensor_dataset
 
 
 def test_concat_encoder():
@@ -142,31 +139,11 @@ def base_export_torchscript(datadir, keep=False):
     print(f">> Head of torchscript out \n{[y.flatten()[:5] for y in script_out]}")
 
 
-def get_ts_model_pair():
-    base_mod = model.PepTransformerModel.load_from_checkpoint(
-        elfragmentador.DEFAULT_CHECKPOINT, strict=False
-    )
-    base_mod.eval()
-
-    script_mod = base_mod.to_torchscript()
-
-    return base_mod, script_mod
-
-
-model_pairs = get_ts_model_pair()
-model_pairs = [
-    pytest.param(model_pairs[0], id="base"),
-    pytest.param(model_pairs[1], id="traced"),
-]
-
-input_tensors = prepare_fake_tensor_dataset(50)
-
-
-def test_ts_and_base_give_same_result():
+def test_ts_and_base_give_same_result(fake_tensors, tiny_model, tiny_model_ts):
     # TODO make parametrized
 
-    base_mod, script_mod = get_ts_model_pair()
-    batches = DataLoader(input_tensors, batch_size=1)
+    base_mod, script_mod = tiny_model, tiny_model_ts
+    batches = DataLoader(fake_tensors, batch_size=1)
 
     with torch.no_grad():
         for script_batch in batches:
@@ -177,12 +154,16 @@ def test_ts_and_base_give_same_result():
                 assert torch.all(a == b)
 
 
-@pytest.mark.parametrize("model", model_pairs)
+@pytest.mark.parametrize("model", ["base", "traced"])
 @pytest.mark.parametrize("batch_size", [1, 2, 4, 10, 50])
 @pytest.mark.benchmark(min_rounds=10, disable_gc=True, warmup=False)
-def test_benchmark_inference_speeds(model, batch_size, benchmark):
+def test_benchmark_inference_speeds(
+    model, batch_size, fake_tensors, model_pair, benchmark
+):
+    model = model_pair[model]
+
     def inf_model():
-        batches = DataLoader(input_tensors, batch_size=batch_size)
+        batches = DataLoader(fake_tensors, batch_size=batch_size)
         for b in batches:
             model(*b)
 
@@ -191,11 +172,11 @@ def test_benchmark_inference_speeds(model, batch_size, benchmark):
 
 
 def model_exports_base(datadir, keep=False):
+    # Disabled for now
     # test_export_onnx(datadir, keep)
     base_export_torchscript(datadir, keep)
 
 
-# Disabled for now
 def test_model_export(shared_datadir):
     model_exports_base(shared_datadir, keep=False)
 
