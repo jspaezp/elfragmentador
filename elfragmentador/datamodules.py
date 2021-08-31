@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from os import PathLike
 
 import warnings
 from collections import namedtuple
@@ -199,6 +200,17 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     return out
 
 
+def _convert_tensor_columns_df(df):
+    name_match = match_colnames(df)
+
+    parsable_cols = [("SeqE", int), ("ModE", int), ("SpecE", float)]
+
+    for col, fun in parsable_cols:
+        df[name_match[col]] = convert_tensor_column(df[name_match[col]], fun)
+    
+    return df
+
+
 class PeptideDataset(torch.utils.data.Dataset):
     @torch.no_grad()
     def __init__(
@@ -226,57 +238,36 @@ class PeptideDataset(torch.utils.data.Dataset):
 
         self.df = df  # TODO remove this for memory ...
 
+        df = _convert_tensor_columns_df(df)
         name_match = match_colnames(df)
 
-        sequence_encodings = convert_tensor_column(
-            self.df[name_match["SeqE"]], int, "Decoding sequence encodings"
-        )
-        sequence_encodings = match_lengths(
-            sequence_encodings, constants.MAX_TENSOR_SEQUENCE, "Sequences"
-        )
-        self.sequence_encodings = sequence_encodings.long()
+        self.sequence_encodings = match_lengths(
+            self.df[name_match["SeqE"]], constants.MAX_TENSOR_SEQUENCE, "Sequences"
+        ).long()
 
-        mod_encodings = convert_tensor_column(
-            self.df[name_match["ModE"]], int, "Decoding Modification encoding"
-        )
-        mod_encodings = match_lengths(
-            mod_encodings, constants.MAX_TENSOR_SEQUENCE, "Mods"
-        )
-        self.mod_encodings = mod_encodings.long()
+        self.mod_encodings = match_lengths(
+            self.df[name_match["ModE"]], constants.MAX_TENSOR_SEQUENCE, "Mods"
+        ).long()
 
-        spectra_encodings = convert_tensor_column(
-            self.df[name_match["SpecE"]], float, "Decoding Spec Encodings"
-        )
-        spectra_encodings = match_lengths(
-            spectra_encodings, constants.NUM_FRAG_EMBEDINGS, "Spectra"
-        )
-        self.spectra_encodings = spectra_encodings.float()
-        avg_peaks = torch.sum(spectra_encodings > 0.01, axis=1).float().mean()
+        self.spectra_encodings = match_lengths(
+            self.df[name_match["SpecE"]], constants.NUM_FRAG_EMBEDINGS, "Spectra"
+        ).float()
 
+        avg_peaks = torch.sum(self.spectra_encodings > 0.001, axis=1).float().mean()
         spectra_lengths = len(self.spectra_encodings[0])
         sequence_lengths = len(self.sequence_encodings[0])
 
-        try:
-            irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
-            self.norm_irts = torch.from_numpy(irts).float().unsqueeze(1)
-            del irts
-        except ValueError as e:
-            logging.error(self.df[name_match["iRT"]])
-            logging.error(e)
-            raise e
+        irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
+        self.norm_irts = torch.from_numpy(irts).float().unsqueeze(1)
+        del irts
 
         if name_match["NCE"] is None:
             nces = (
                 torch.Tensor([float("nan")] * len(self.norm_irts)).float().unsqueeze(1)
             )
         else:
-            try:
-                nces = np.array(self.df[name_match["NCE"]]).astype("float")
-                nces = torch.from_numpy(nces).float().unsqueeze(1)
-            except ValueError as e:
-                logging.error(self.df[name_match["NCE"]])
-                logging.error(e)
-                raise e
+            nces = np.array(self.df[name_match["NCE"]]).astype("float")
+            nces = torch.from_numpy(nces).float().unsqueeze(1)
 
         self.nces = nces
 
@@ -340,6 +331,12 @@ class PeptideDataset(torch.utils.data.Dataset):
     def from_csv(filepath: Union[str, Path], max_spec: int = 1e6):
         df = filter_df_on_sequences(pd.read_csv(str(filepath)))
         return PeptideDataset(df, max_spec=max_spec)
+
+    @staticmethod
+    def from_feather(filepath: PathLike, max_spec: int = 2e6):
+        df = filter_df_on_sequences(pd.read_feather(str(filepath)))
+        return PeptideDataset(df, max_spec=max_spec)
+
 
     def __len__(self) -> int:
         return len(self.sequence_encodings)
@@ -407,15 +404,22 @@ class PeptideDataModule(pl.LightningDataModule):
         self.max_spec = max_spec
         base_dir = Path(base_dir)
 
-        train_path = list(base_dir.glob("*train*.csv*"))
-        val_path = list(base_dir.glob("*val*.csv*"))
+        if len(list(base_dir.glob("*.feather"))) > 0:
+            reader = pd.read_feather
+            glob_str = "feather"
+        else:
+            reader = pd.read_csv
+            glob_str = "csv"
 
-        assert len(train_path) > 0, f"Train File not found in '{base_dir}'"
-        assert len(val_path) > 0, f"Val File not found in '{base_dir}'"
+        train_path = list(base_dir.glob(f"*train*.{glob_str}*"))
+        val_path = list(base_dir.glob(f"*val*.{glob_str}*"))
+
+        assert len(train_path) > 0, f"Train File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
+        assert len(val_path) > 0, f"Val File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
 
         logging.info("Starting loading of the data")
-        train_df = pd.concat([pd.read_csv(str(x)) for x in train_path])
-        val_df = pd.concat([pd.read_csv(str(x)) for x in val_path])
+        train_df = pd.concat([_convert_tensor_columns_df(reader(str(x))) for x in train_path])
+        val_df = pd.concat([_convert_tensor_columns_df(reader(str(x))) for x in val_path])
 
         # TODO reconsider if storing this dataframe as is is required
         self.train_df = train_df

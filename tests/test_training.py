@@ -1,3 +1,5 @@
+import pytest
+
 import math
 from pathlib import Path
 
@@ -8,14 +10,18 @@ import pytorch_lightning as pl
 from elfragmentador import datamodules, model
 
 
-def get_datamodule(datadir):
-    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
+@pytest.fixture(params=["csv", "csv.gz"])
+def datamodule(shared_datadir, request):
+    path = {
+        "csv": shared_datadir / "train_data_sample", 
+        "csv.gz": shared_datadir / "train_data_sample_compressed"
+    }
+    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=path[request.param])
     datamodule.setup()
     return datamodule
 
 
-def mod_train_base(datadir):
-    datamodule = get_datamodule(datadir)
+def test_mod_train_base(datamodule):
     mod = model.PepTransformerModel(nhead=4, ninp=64)
 
     trainer = pl.Trainer(fast_dev_run=True)
@@ -25,26 +31,20 @@ def mod_train_base(datadir):
     trainer.fit(mod, datamodule)
 
 
-def base_train_works_on_schdulers(datadir):
-    datamodule = get_datamodule(datadir)
-
-    for sch in model.PepTransformerModel.accepted_schedulers[::-1]:
-        print(f"\n\n\n>>>>>>>>>>>>>>>>> {sch} \n\n\n")
-        lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(
-            logging_interval="step"
-        )
-        trainer = pl.Trainer(
-            max_epochs=10, callbacks=[lr_monitor], limit_train_batches=1
-        )
-        mod = model.PepTransformerModel(nhead=4, ninp=64, scheduler=sch)
-        mod.steps_per_epoch = math.ceil(
-            len(datamodule.train_dataset) / datamodule.batch_size
-        )
-        trainer.fit(mod, datamodule)
-
-
-def test_train_works_on_schedulers(shared_datadir):
-    base_train_works_on_schdulers(shared_datadir / "train_data_sample")
+@pytest.mark.parametrize("scheduler", model.PepTransformerModel.accepted_schedulers[::-1])
+def test_base_train_works_on_schdulers(datamodule, scheduler, tiny_model):
+    print(f"\n\n\n>>>>>>>>>>>>>>>>> {scheduler} \n\n\n")
+    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(
+        logging_interval="step"
+    )
+    trainer = pl.Trainer(
+        max_epochs=10, callbacks=[lr_monitor], limit_train_batches=1
+    )
+    mod = tiny_model
+    mod.steps_per_epoch = math.ceil(
+        len(datamodule.train_dataset) / datamodule.batch_size
+    )
+    trainer.fit(mod, datamodule)
 
 
 def mod_train_with_missing(datadir):
@@ -58,14 +58,6 @@ def mod_train_with_missing(datadir):
 
     trainer = pl.Trainer(max_epochs=2)
     trainer.fit(mod, datamodule)
-
-
-def test_model_train(shared_datadir):
-    mod_train_base(shared_datadir / "train_data_sample")
-
-
-def test_model_train_on_compressed(shared_datadir):
-    mod_train_base(shared_datadir / "train_data_sample_compressed")
 
 
 if __name__ == "__main__":
