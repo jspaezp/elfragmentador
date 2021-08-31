@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elfragmentador"
-version = "0.50.0-beta.4"
+version = "0.50.0-beta.5"
 description = "Predicts peptide fragmentations using transformers"
 authors = ["J. Sebastian Paez <jspaezp@gmail.com>"]
 license = "Apache 2.0"
@@ -15,7 +15,7 @@ importlib-metadata = {version = ">1.0", python = "<3.8"}
 future-annotations = "^1.0.0"
 pandas = "^1.0.0"
 numpy = "^1.19.0"
-torch = "^1.7.0"
+torch = "^1.9.0"
 pytorch-lightning = "^1.2.0"
 wandb = "^0.10.13"
 uniplot = "^0.3.5"

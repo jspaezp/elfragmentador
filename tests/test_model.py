@@ -12,6 +12,10 @@ from torch.utils.data.dataloader import DataLoader
 from elfragmentador import model
 from elfragmentador import datamodules
 from elfragmentador import constants
+from elfragmentador.model import ForwardBatch
+
+from elfragmentador import utils as efu
+from elfragmentador import encoding_decoding as efe
 
 
 def test_concat_encoder():
@@ -185,9 +189,74 @@ def test_model_forward(shared_datadir):
     mod_forward_base(shared_datadir)
 
 
-if __name__ == "__main__":
-    parent_dir = Path(__file__).parent
-    mod_forward_base(str(parent_dir) + "/data/")
-    test_model_forward_seq()
-    # unable to export right now ...
-    base_export_torchscript(str(parent_dir) + "/data/")
+@pytest.fixture
+def setup_model(tiny_model):
+    mod = tiny_model.eval()
+
+    # TODO make this a test ...
+    seqs = [efu.get_random_peptide() for _ in range(100)]
+    charges = [torch.tensor([[random.randint(2, 6)]]).long() for _ in seqs]
+    nces = [torch.tensor([[random.uniform(20, 40)]]).float() for _ in seqs]
+
+    return tiny_model, seqs, charges, nces
+
+
+def test_variable_length_has_same_results(setup_model):
+    mod, seqs, charges, nces = setup_model
+    with torch.no_grad():
+        for s, c, n in zip(seqs, charges, nces):
+            batch1 = efe.encode_mod_seq(seq=s, pad_zeros=True)
+            batch2 = efe.encode_mod_seq(seq=s, pad_zeros=False)
+
+            batch1 = ForwardBatch(
+                src=torch.unsqueeze(torch.tensor(batch1.aas), 0),
+                nce=n,
+                mods=torch.unsqueeze(torch.tensor(batch1.mods), 0),
+                charge=c,
+            )
+
+            batch2 = ForwardBatch(
+                src=torch.unsqueeze(torch.tensor(batch2.aas), 0),
+                nce=n,
+                mods=torch.unsqueeze(torch.tensor(batch2.mods), 0),
+                charge=c,
+            )
+
+            assert torch.all(
+                (
+                    mod.forward(*batch1, debug=True).spectra
+                    - mod.forward(*batch2, debug=True).spectra
+                )
+                < 1e-5
+            )
+
+
+@pytest.mark.parametrize("variable_length", [True, False])
+def test_variable_length(benchmark, variable_length, setup_model):
+    # No zero padding means variable length ...
+    mod, seqs, charges, nces = setup_model
+
+    @torch.no_grad()
+    def setup_batches(seqs, charges, nces, pad_zeros):
+        batches = []
+        for s, c, n in zip(seqs, charges, nces):
+            batch = efe.encode_mod_seq(seq=s, pad_zeros=pad_zeros)
+            batch = ForwardBatch(
+                src=torch.unsqueeze(torch.tensor(batch.aas), 0),
+                nce=n,
+                mods=torch.unsqueeze(torch.tensor(batch.mods), 0),
+                charge=c,
+            )
+            batches.append(batch)
+
+        return batches
+
+    @torch.no_grad()
+    def main():
+        for batch in batches:
+            mod.forward(*batch)
+
+    batches = setup_batches(
+        seqs=seqs, charges=charges, nces=nces, pad_zeros=not variable_length
+    )
+    benchmark(main)

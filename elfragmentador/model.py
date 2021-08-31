@@ -116,34 +116,65 @@ class MLP(nn.Module):
         return x
 
 
-class _IRTDecoder(nn.TransformerDecoderLayer):
-    def __init__(
-        self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="gelu"
-    ):
-        super().__init__(
-            d_model,
-            nhead,
-            dim_feedforward=dim_feedforward,
-            dropout=dropout,
-            activation=activation,
+class _IRTDecoder(nn.Module):
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1):
+        """Decode iRTs
+
+        Args:
+            d_model (int): Number of dimensions to expect as input
+            nhead (int): Number of heads in the attention layers that decode the input
+            dim_feedforward (int, optional): Number of hidden dimensions in the FFN that decodes the sequence. Defaults to 2048.
+            dropout (float, optional): dropout to use in the multihead attention. Defaults to 0.1.
+        """
+        super().__init__()
+        self.multihead_attn = nn.MultiheadAttention(
+            embed_dim=d_model, num_heads=nhead, dropout=dropout
         )
         self.targets = nn.Embedding(1, d_model)
         self.out_mlp = MLP(
-            input_dim=d_model, hidden_dim=d_model, output_dim=1, num_layers=3
+            input_dim=d_model, hidden_dim=dim_feedforward, output_dim=1, num_layers=3
         )
 
-    def forward(self, src, memory_key_padding_mask=None):
+    def forward(self, memory, memory_key_padding_mask):
+        """Decode transformer encoder inputs to iRT
+
+        Args:
+            memory (Tensor): Output from transformer encoder. Shape *[SequenceLength, Batch, d_model]*
+            memory_key_padding_mask (Tensor, optional): 
+                Mask to use over the mask, usually covers the padding of the sequence. 
+                Shape should be *[Batch, SequenceLength]*, Defaults to None.
+
+        Returns:
+            Tensor: of shape *[Batch, d_model]*
+
+        Examples:
+            >>> dim_model = 64
+            >>> decoder = _IRTDecoder(d_model = dim_model, nhead = 2, dim_feedforward = 224)
+            >>> out = decoder.forward(torch.rand(22, 55, dim_model), torch.zeros(55, 22))
+            >>> out.shape
+            torch.Size([55, 1])
+            >>> out = decoder.forward(torch.rand(22, 55, dim_model), torch.zeros(55, 22))
+            >>> out.shape
+            torch.Size([55, 1])
+        """
         # TODO add static sizing
-        # SNE, 1NE
-        decoder_target = self.targets(
-            torch.zeros([1, src.size(1)], dtype=torch.long, device=src.device)
-        )
-        out = super().forward(
-            memory=src,
-            tgt=decoder_target,
-            memory_key_padding_mask=memory_key_padding_mask,
-        )
+
+        decoder_target = self.targets.weight.unsqueeze(0).expand(-1, memory.size(1), -1)
+        # Shape [1, B, E]
+
+        out = self.multihead_attn.forward(
+            query=decoder_target,  # [1, B, E]
+            key=memory,  # [S, B, E]
+            value=memory,  # [S, B, E]
+            key_padding_mask=memory_key_padding_mask,  # [B, S]
+            attn_mask=None,
+        )[0]
+        # Shape [1,B,E]
+
+        out = torch.einsum("ijk -> jk", out)
+        # Shape [B, E]
         out = self.out_mlp(out)
+        # Shape [B, 1]
         return out
 
 
@@ -167,6 +198,7 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
     def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
+        # For the mask ....
         # If a BoolTensor is provided, positions with True are not allowed
         # to attend while False values will be unchanged <- form the pytorch docs
 
@@ -174,8 +206,8 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         # bool [True, True, False]
         # ~    [False, False, True]
         # [Attend, Attend, Dont Attend]
-        # trans_encoder_mask = ~ src.bool()
 
+        # src shape [N, S]
         trans_encoder_mask = torch.zeros_like(src, dtype=torch.float)
         trans_encoder_mask = trans_encoder_mask.masked_fill(
             src <= 0, float("-inf")
@@ -185,12 +217,16 @@ class _PeptideTransformerEncoder(torch.nn.Module):
             logging.debug(f"PTE: Shape of mask {trans_encoder_mask.shape}")
 
         src = self.aa_encoder.forward(src=src, mods=mods, debug=debug)
+        # src shape [S, N, ninp]
+
         if debug:
             logging.debug(f"PTE: Shape after AASequence encoder {src.shape}")
 
         trans_encoder_output = self.transformer_encoder.forward(
             src, src_key_padding_mask=trans_encoder_mask
         )
+        # trans_encoder_output shape [S, N, ninp]
+
         if debug:
             logging.debug(
                 f"PTE: Shape after trans encoder {trans_encoder_output.shape}"
@@ -251,7 +287,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         src: Tensor,
         charge: Tensor,
         nce: Tensor,
-        memory_mask: Tensor,
+        memory_key_padding_mask: Tensor,
         debug: bool = False,
     ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
@@ -262,7 +298,9 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             logging.debug(f"PTD: Shape of query embedding {trans_decoder_tgt.shape}")
 
         spectra_output = self.trans_decoder.forward(
-            memory=src, tgt=trans_decoder_tgt, memory_key_padding_mask=memory_mask
+            memory=src,
+            tgt=trans_decoder_tgt,
+            memory_key_padding_mask=memory_key_padding_mask,
         )
         if debug:
             logging.debug(f"PTD: Shape of the output spectra {spectra_output.shape}")
@@ -391,7 +429,6 @@ class PepTransformerModel(pl.LightningModule):
             nhead=nhead,
             dim_feedforward=nhid,
             dropout=dropout,
-            activation="gelu",
         )
 
         # Training related things
@@ -474,16 +511,12 @@ class PepTransformerModel(pl.LightningModule):
         if debug:
             logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
-        rt_output = rt_output.mean(dim=0)
-        if debug:
-            logging.debug(f"PT: Shape of RT output {rt_output.shape}")
-
         spectra_output = self.decoder.forward(
             src=trans_encoder_output,
             charge=charge,
             nce=nce,
             debug=debug,
-            memory_mask=mem_mask,
+            memory_key_padding_mask=mem_mask,
         )
 
         if debug:
@@ -567,8 +600,8 @@ class PepTransformerModel(pl.LightningModule):
 
         src = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
-        in_charge = torch.Tensor([charge]).unsqueeze(0).long()
-        in_nce = torch.Tensor([nce]).unsqueeze(0).float()
+        in_charge = torch.Tensor([[charge]]).long()
+        in_nce = torch.Tensor([[nce]]).float()
 
         # This is a named tuple
         out = ForwardBatch(src=src, nce=in_nce, mods=mods, charge=in_charge)
@@ -642,7 +675,7 @@ class PepTransformerModel(pl.LightningModule):
             >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
             >>> _ = my_model.eval()
             >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
-            PredictionResults(irt=tensor([...], grad_fn=<SqueezeBackward1>), \
+            PredictionResults(irt=tensor(..., grad_fn=<SqueezeBackward1>), \
             spectra=tensor([...], grad_fn=<SqueezeBackward1>))
             >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, as_spectrum=True)
             >>> type(out)

@@ -175,7 +175,7 @@ def evaluate_on_dataset(
 
             spec_results_cs.append(cs(out_spec, b.encoded_spectra))
             spec_results_pc.append(pc(out_spec, b.encoded_spectra))
-            rt_results.append(outs.irt.cpu().clone().flatten())
+            rt_results.append(outs.irt.cpu().clone())
             del b
             del outs
 
@@ -215,7 +215,7 @@ def evaluate_on_dataset(
     norm_p_irt, rev_p_irt = norm(out["Predicted_iRT"])
     norm_r_irt, rev_r_irt = norm(out["Real_RT"])
 
-    if sum(missing_vals) == len(norm_p_irt):
+    if all(missing_vals):
         rt_fit = {"determination": None}
     else:
         rt_fit = polyfit(norm_p_irt[~missing_vals], norm_r_irt[~missing_vals])
