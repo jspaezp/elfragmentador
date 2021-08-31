@@ -117,7 +117,7 @@ class MLP(nn.Module):
 
 
 class _IRTDecoder(nn.Module):
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1):
+    def __init__(self, d_model, nhead, dropout=0.1):
         """Decode iRTs
 
         Args:
@@ -132,7 +132,7 @@ class _IRTDecoder(nn.Module):
         )
         self.targets = nn.Embedding(1, d_model)
         self.out_mlp = MLP(
-            input_dim=d_model, hidden_dim=dim_feedforward, output_dim=1, num_layers=3
+            input_dim=d_model, hidden_dim=d_model, output_dim=1, num_layers=3
         )
 
     def forward(self, memory, memory_key_padding_mask):
@@ -302,14 +302,17 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             tgt=trans_decoder_tgt,
             memory_key_padding_mask=memory_key_padding_mask,
         )
+        # Shape is [NumFragments, Batch, NumEmbed]
         if debug:
             logging.debug(f"PTD: Shape of the output spectra {spectra_output.shape}")
 
         spectra_output = self.peak_decoder(spectra_output)
+        # Shape is [NumFragments, Batch, 1]
         if debug:
             logging.debug(f"PTD: Shape of the MLP spectra {spectra_output.shape}")
 
         spectra_output = spectra_output.squeeze(-1).permute(1, 0)
+        # Shape is [Batch, NumFragments]
         if debug:
             logging.debug(f"PTD: Shape of the permuted spectra {spectra_output.shape}")
 
@@ -427,7 +430,6 @@ class PepTransformerModel(pl.LightningModule):
         self.irt_decoder = _IRTDecoder(
             d_model=ninp,
             nhead=nhead,
-            dim_feedforward=nhid,
             dropout=dropout,
         )
 
