@@ -961,7 +961,7 @@ class PepTransformerModel(pl.LightningModule):
         loss_angle = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
         loss_cosine = self.cosine_loss(yhat_spectra, batch.encoded_spectra).mean()
 
-        total_loss = (loss_angle + loss_cosine)
+        total_loss = loss_angle + loss_cosine
         if len(norm_irt.data) != 0:
             total_loss = loss_irt + total_loss * self.loss_ratio
             total_loss = total_loss / (self.loss_ratio + 1)

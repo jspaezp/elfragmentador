@@ -98,6 +98,7 @@ class SpectralAngle(torch.nn.CosineSimilarity):
 
         return out
 
+
 class SpectralAngleLoss(SpectralAngle):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -139,6 +140,7 @@ class SpectralAngleLoss(SpectralAngle):
             tensor([[0.000, 0.2902]])
         """
         return 1 - super().forward(truth, prediction)
+
 
 class PearsonCorrelation(torch.nn.Module):
     """PearsonCorrelation Implements a simple pearson correlation."""

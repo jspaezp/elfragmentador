@@ -206,7 +206,9 @@ def _convert_tensor_columns_df(df, verbose=True):
     parsable_cols = [("SeqE", int), ("ModE", int), ("SpecE", float)]
 
     for col, fun in parsable_cols:
-        df[name_match[col]] = convert_tensor_column(df[name_match[col]], fun, verbose=verbose)
+        df[name_match[col]] = convert_tensor_column(
+            df[name_match[col]], fun, verbose=verbose
+        )
 
     return df
 
