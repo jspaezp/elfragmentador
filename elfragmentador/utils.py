@@ -229,7 +229,7 @@ class PinDataset(IterableDataset):
         best = 0
         best_score = 0
 
-        tmp_ds = self.top_n_subset(n=max(len(self), n), column="Xcorr")
+        tmp_ds = self.top_n_subset(n=min(len(self), n), column="Xcorr")
         tmp_ds.greedify()
         for i, offset in enumerate(offsets):
             tmp_ds.nce_offset = offset

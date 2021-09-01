@@ -1028,5 +1028,6 @@ class PepTransformerModel(pl.LightningModule):
         self.irt_metric.reset()
         self.loss_metric.reset()
         self.spectra_metric.reset()
+        self.spectra_metric2.reset()
 
         return super().validation_epoch_end(outputs)
