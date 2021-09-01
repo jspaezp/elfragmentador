@@ -575,8 +575,8 @@ class Spectrum:
 
         return self._sus_msms_spec
 
-    def _to_spectrum_utils(self, enforce_length):
-        aas, mods = self.encode_sequence(enforce_length=enforce_length, pad_zeros=False)
+    def _to_spectrum_utils(self):
+        aas, mods = self.encode_sequence(enforce_length=False, pad_zeros=False)
         TERM_ALIAS_DICT = {
             CONSTANTS.ALPHABET["c"]: "C-term",
             CONSTANTS.ALPHABET["n"]: "N-term",
