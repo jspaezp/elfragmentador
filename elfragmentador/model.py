@@ -26,7 +26,7 @@ from elfragmentador import constants
 from elfragmentador import encoding_decoding
 from elfragmentador.spectra import Spectrum
 from elfragmentador.datamodules import TrainBatch
-from elfragmentador.metrics import CosineLoss
+from elfragmentador.metrics import CosineLoss, SpectralAngleLoss
 from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
@@ -140,8 +140,8 @@ class _IRTDecoder(nn.Module):
 
         Args:
             memory (Tensor): Output from transformer encoder. Shape *[SequenceLength, Batch, d_model]*
-            memory_key_padding_mask (Tensor, optional): 
-                Mask to use over the mask, usually covers the padding of the sequence. 
+            memory_key_padding_mask (Tensor, optional):
+                Mask to use over the mask, usually covers the padding of the sequence.
                 Shape should be *[Batch, SequenceLength]*, Defaults to None.
 
         Returns:
@@ -149,7 +149,7 @@ class _IRTDecoder(nn.Module):
 
         Examples:
             >>> dim_model = 64
-            >>> decoder = _IRTDecoder(d_model = dim_model, nhead = 2, dim_feedforward = 224)
+            >>> decoder = _IRTDecoder(d_model = dim_model, nhead = 2)
             >>> out = decoder.forward(torch.rand(22, 55, dim_model), torch.zeros(55, 22))
             >>> out.shape
             torch.Size([55, 1])
@@ -262,7 +262,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             activation="gelu",
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
-        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
+        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=2)
 
         logging.info(
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
@@ -435,7 +435,8 @@ class PepTransformerModel(pl.LightningModule):
 
         # Training related things
         self.mse_loss = nn.MSELoss()
-        self.angle_loss = CosineLoss(dim=1, eps=1e-4)
+        self.cosine_loss = CosineLoss(dim=1, eps=1e-4)
+        self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-4)
         self.lr = lr
 
         assert (
@@ -460,6 +461,7 @@ class PepTransformerModel(pl.LightningModule):
         self.irt_metric = MissingDataAverager()
         self.loss_metric = MissingDataAverager()
         self.spectra_metric = MissingDataAverager()
+        self.spectra_metric2 = MissingDataAverager()
 
     def forward(
         self,
@@ -956,24 +958,25 @@ class PepTransformerModel(pl.LightningModule):
         norm_irt = batch.norm_irt[~batch.norm_irt.isnan()]
 
         loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
-        loss_spectra = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
+        loss_angle = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
+        loss_cosine = self.cosine_loss(yhat_spectra, batch.encoded_spectra).mean()
 
-        if len(norm_irt.data) == 0:
-            total_loss = loss_spectra
-        else:
-            total_loss = loss_irt + loss_spectra * self.loss_ratio
+        total_loss = (loss_angle + loss_cosine)
+        if len(norm_irt.data) != 0:
+            total_loss = loss_irt + total_loss * self.loss_ratio
             total_loss = total_loss / (self.loss_ratio + 1)
 
         out = {
             "l": total_loss,
             "irt_l": loss_irt,
-            "spec_l": loss_spectra,
+            "spec_l": loss_cosine,
+            "spec_l2": loss_angle,
         }
 
         assert not torch.isnan(total_loss), logging.error(
             f"Fail at... \n Loss: {total_loss},\n"
             f"\n loss_irt: {loss_irt}\n"
-            f"\n loss_spectra: {loss_spectra}\n"
+            f"\n loss_spectra: {loss_cosine}\n"
             f"\n yhat_spec: {yhat_spectra},\n"
             f"\n y_spec: {batch.encoded_spectra}\n"
             f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
@@ -1006,6 +1009,7 @@ class PepTransformerModel(pl.LightningModule):
         self.irt_metric.update(step_out["irt_l"])
         self.loss_metric.update(step_out["l"])
         self.spectra_metric.update(step_out["spec_l"])
+        self.spectra_metric2.update(step_out["spec_l2"])
 
     def validation_epoch_end(self, outputs) -> None:
         """See pytorch lightning documentation """
@@ -1013,6 +1017,7 @@ class PepTransformerModel(pl.LightningModule):
             "val_irt_l": self.irt_metric.compute(),
             "val_l": self.loss_metric.compute(),
             "val_spec_l": self.spectra_metric.compute(),
+            "val_spec_l2": self.spectra_metric2.compute(),
         }
 
         self.log_dict(

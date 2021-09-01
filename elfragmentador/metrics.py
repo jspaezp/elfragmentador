@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+from math import pi as PI
 
 
 class CosineLoss(torch.nn.CosineSimilarity):
@@ -15,29 +16,129 @@ class CosineLoss(torch.nn.CosineSimilarity):
     def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
         """Forward calculates the loss.
 
-        Parameters
-        ----------
-        truth : Tensor
-        prediction : Tensor
+        Parameters:
+            truth : Tensor
+            prediction : Tensor
 
-        Returns
-        -------
-        Tensor
+        Returns:
+            Tensor
 
-        Examples
-        --------
-        >>> loss = CosineLoss(dim=1, eps=1e-4)
-        >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-        tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.ones([1,2,5]), 5*torch.zeros([1,2,5]))
-        tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
-        tensor([[0., 0., 0., 0., 0.]])
+        Examples:
+            >>> loss = CosineLoss(dim=1, eps=1e-4)
+            >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
+            >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
+            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[0., 0., 0., 0., 0.]])
+            >>> loss = CosineLoss(dim=2, eps=1e-4)
+            >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
+            >>> torch.tensor(x).shape
+            torch.Size([1, 2, 3])
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0.0085, 0.0000]])
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0.0000, 0.4909]])
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
+            >>> # The first tensor is a scaled version, and the second
+            >>> # has a missmatch
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0.000, 0.1021]])
         """
         out = super().forward(truth, prediction)
         out = 1 - out
         return out
 
+
+class SpectralAngle(torch.nn.CosineSimilarity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def forward(self, truth, prediction):
+        """Forward calculates the loss.
+
+        Parameters:
+            truth : Tensor
+            prediction : Tensor
+
+        Returns:
+            Tensor
+
+        Examples:
+            >>> loss = SpectralAngle(dim=1, eps=1e-4)
+            >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
+            >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
+            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[0., 0., 0., 0., 0.]])
+            >>> loss = SpectralAngle(dim=2, eps=1e-4)
+            >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
+            >>> torch.tensor(x).shape
+            torch.Size([1, 2, 3])
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0.9169, 1.0000]])
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.1]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[1.000, 1.000]])
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.0]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[1.000, 0.9378]])
+        """
+        out = super().forward(truth, prediction)
+        out = 2 * (torch.acos(out) / PI)
+        out = 1 - out
+
+        return out
+
+class SpectralAngleLoss(SpectralAngle):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def forward(self, truth, prediction):
+        """Forward calculates the loss.
+
+        Parameters:
+            truth : Tensor
+            prediction : Tensor
+
+        Returns:
+            Tensor
+
+        Examples:
+            >>> loss = SpectralAngleLoss(dim=1, eps=1e-4)
+            >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
+            >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
+            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[0., 0., 0., 0., 0.]])
+            >>> loss = SpectralAngleLoss(dim=2, eps=1e-4)
+            >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
+            >>> torch.tensor(x).shape
+            torch.Size([1, 2, 3])
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0.0831, 0.0000]])
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.1]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0., 0.]])
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
+            >>> # The first tensor is a scaled version, and the second
+            >>> # has a missmatch
+            >>> loss(torch.tensor(x), torch.tensor(y))
+            tensor([[0.000, 0.2902]])
+        """
+        return 1 - super().forward(truth, prediction)
 
 class PearsonCorrelation(torch.nn.Module):
     """PearsonCorrelation Implements a simple pearson correlation."""
@@ -78,7 +179,7 @@ class PearsonCorrelation(torch.nn.Module):
         >>> loss = PearsonCorrelation(axis=1, eps=1e-4)
         >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
         tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.ones([1,2,5]), 5*torch.zeros([1,2,5]))
+        >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
         tensor([[1., 1., 1., 1., 1.]])
         >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
         tensor([[0., 0., 0., 0., 0.]])

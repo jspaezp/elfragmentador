@@ -13,10 +13,12 @@ from elfragmentador import datamodules, model
 @pytest.fixture(params=["csv", "csv.gz"])
 def datamodule(shared_datadir, request):
     path = {
-        "csv": shared_datadir / "train_data_sample", 
-        "csv.gz": shared_datadir / "train_data_sample_compressed"
+        "csv": shared_datadir / "train_data_sample",
+        "csv.gz": shared_datadir / "train_data_sample_compressed",
     }
-    datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=path[request.param])
+    datamodule = datamodules.PeptideDataModule(
+        batch_size=5, base_dir=path[request.param]
+    )
     datamodule.setup()
     return datamodule
 
@@ -31,15 +33,13 @@ def test_mod_train_base(datamodule):
     trainer.fit(mod, datamodule)
 
 
-@pytest.mark.parametrize("scheduler", model.PepTransformerModel.accepted_schedulers[::-1])
+@pytest.mark.parametrize(
+    "scheduler", model.PepTransformerModel.accepted_schedulers[::-1]
+)
 def test_base_train_works_on_schdulers(datamodule, scheduler, tiny_model):
     print(f"\n\n\n>>>>>>>>>>>>>>>>> {scheduler} \n\n\n")
-    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(
-        logging_interval="step"
-    )
-    trainer = pl.Trainer(
-        max_epochs=10, callbacks=[lr_monitor], limit_train_batches=1
-    )
+    lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="step")
+    trainer = pl.Trainer(max_epochs=10, callbacks=[lr_monitor], limit_train_batches=1)
     mod = tiny_model
     mod.steps_per_epoch = math.ceil(
         len(datamodule.train_dataset) / datamodule.batch_size

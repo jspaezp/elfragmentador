@@ -134,6 +134,7 @@ def terminal_plot_similarity(similarities, name=""):
     uniplot.plot(xs=similarity_quantiles, ys=qs, lines=True, title=title)
 
 
+# TODO make this a function
 def evaluate_on_dataset(
     model: PepTransformerModel,
     dataset: PeptideDataset,
@@ -141,7 +142,7 @@ def evaluate_on_dataset(
     device: str = "cpu",
     overwrite_nce: Union[float, bool] = False,
 ) -> Tuple[pd.DataFrame, Dict[str, Union[float64, float32]]]:
-    dl = torch.utils.data.DataLoader(dataset, batch_size)
+    dl = dataset.as_dataloader(batch_size=batch_size, shuffle=False)
     cs = torch.nn.CosineSimilarity()
     pc = PearsonCorrelation()
 
@@ -154,6 +155,7 @@ def evaluate_on_dataset(
 
     logging.info(">>> Starting Evaluation of the spectra <<<")
     start_time = time.time()
+    # TODO migrate this to Trainer.Predict() syntax ...
     with torch.no_grad():
         for b in tqdm(dl):
             if overwrite_nce:
@@ -181,6 +183,8 @@ def evaluate_on_dataset(
 
     end_time = time.time()
     elapsed_time = end_time - start_time
+
+    # TODO migrate this to a separate function
 
     rt_results = torch.cat(rt_results) * 100
     spec_results_pc = torch.cat(spec_results_pc)

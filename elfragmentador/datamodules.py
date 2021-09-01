@@ -29,7 +29,7 @@ TrainBatch = namedtuple(
 )
 
 
-def convert_tensor_column(column, elem_function=float, *args, **kwargs):
+def convert_tensor_column(column, elem_function=float, verbose=True, *args, **kwargs):
     """converts a series (column in a pandas dataframe) to a tensor
 
     Expects a column whose character values actually represent lists of numbers
@@ -59,13 +59,13 @@ def convert_tensor_column(column, elem_function=float, *args, **kwargs):
                     for y in x.strip("[]").replace("'", "").split(",")
                 ]
             )
-            for x in tqdm(column, *args, **kwargs)
+            for x in tqdm(column, disable=not verbose, *args, **kwargs)
         ]
 
     elif isinstance(next(iter(column)), list) or isinstance(next(iter(column)), tuple):
         out = [
             np.array([elem_function(y) for y in x])
-            for x in tqdm(column, *args, **kwargs)
+            for x in tqdm(column, disable=not verbose, *args, **kwargs)
         ]
 
     else:
@@ -200,14 +200,14 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     return out
 
 
-def _convert_tensor_columns_df(df):
+def _convert_tensor_columns_df(df, verbose=True):
     name_match = match_colnames(df)
 
     parsable_cols = [("SeqE", int), ("ModE", int), ("SpecE", float)]
 
     for col, fun in parsable_cols:
-        df[name_match[col]] = convert_tensor_column(df[name_match[col]], fun)
-    
+        df[name_match[col]] = convert_tensor_column(df[name_match[col]], fun, verbose=verbose)
+
     return df
 
 
@@ -337,6 +337,15 @@ class PeptideDataset(torch.utils.data.Dataset):
         df = filter_df_on_sequences(pd.read_feather(str(filepath)))
         return PeptideDataset(df, max_spec=max_spec)
 
+    def as_dataloader(self, batch_size, shuffle, num_workers=0, *args, **kwargs):
+        return DataLoader(
+            dataset=self,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            *args,
+            **kwargs,
+        )
 
     def __len__(self) -> int:
         return len(self.sequence_encodings)
@@ -414,12 +423,20 @@ class PeptideDataModule(pl.LightningDataModule):
         train_path = list(base_dir.glob(f"*train*.{glob_str}*"))
         val_path = list(base_dir.glob(f"*val*.{glob_str}*"))
 
-        assert len(train_path) > 0, f"Train File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
-        assert len(val_path) > 0, f"Val File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
+        assert (
+            len(train_path) > 0
+        ), f"Train File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
+        assert (
+            len(val_path) > 0
+        ), f"Val File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
 
         logging.info("Starting loading of the data")
-        train_df = pd.concat([_convert_tensor_columns_df(reader(str(x))) for x in train_path])
-        val_df = pd.concat([_convert_tensor_columns_df(reader(str(x))) for x in val_path])
+        train_df = pd.concat(
+            [_convert_tensor_columns_df(reader(str(x))) for x in train_path]
+        )
+        val_df = pd.concat(
+            [_convert_tensor_columns_df(reader(str(x))) for x in val_path]
+        )
 
         # TODO reconsider if storing this dataframe as is is required
         self.train_df = train_df
@@ -446,9 +463,11 @@ class PeptideDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.train_dataset, num_workers=0, batch_size=self.batch_size, shuffle=True
+        return self.train_dataset.as_dataloader(
+            num_workers=0, batch_size=self.batch_size, shuffle=True
         )
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.val_dataset, num_workers=0, batch_size=self.batch_size)
+        return self.val_dataset.as_dataloader(
+            num_workers=0, batch_size=self.batch_size, shuffle=False
+        )
