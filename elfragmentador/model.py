@@ -117,7 +117,7 @@ class MLP(nn.Module):
 
 
 class _IRTDecoder(nn.Module):
-    def __init__(self, d_model, nhead, dropout=0.1):
+    def __init__(self, d_model):
         """Decode iRTs
 
         Args:
@@ -127,54 +127,27 @@ class _IRTDecoder(nn.Module):
             dropout (float, optional): dropout to use in the multihead attention. Defaults to 0.1.
         """
         super().__init__()
-        self.multihead_attn = nn.MultiheadAttention(
-            embed_dim=d_model, num_heads=nhead, dropout=dropout
-        )
-        self.targets = nn.Embedding(1, d_model)
         self.out_mlp = MLP(
             input_dim=d_model, hidden_dim=d_model, output_dim=1, num_layers=3
         )
 
-    def forward(self, memory, memory_key_padding_mask):
+    def forward(self, memory):
         """Decode transformer encoder inputs to iRT
 
         Args:
             memory (Tensor): Output from transformer encoder. Shape *[SequenceLength, Batch, d_model]*
-            memory_key_padding_mask (Tensor, optional):
-                Mask to use over the mask, usually covers the padding of the sequence.
-                Shape should be *[Batch, SequenceLength]*, Defaults to None.
 
         Returns:
             Tensor: of shape *[Batch, d_model]*
 
         Examples:
             >>> dim_model = 64
-            >>> decoder = _IRTDecoder(d_model = dim_model, nhead = 2)
-            >>> out = decoder.forward(torch.rand(22, 55, dim_model), torch.zeros(55, 22))
-            >>> out.shape
-            torch.Size([55, 1])
-            >>> out = decoder.forward(torch.rand(22, 55, dim_model), torch.zeros(55, 22))
+            >>> decoder = _IRTDecoder(d_model = dim_model)
+            >>> out = decoder.forward(torch.rand(22, 55, dim_model))
             >>> out.shape
             torch.Size([55, 1])
         """
-        # TODO add static sizing
-
-        decoder_target = self.targets.weight.unsqueeze(0).expand(-1, memory.size(1), -1)
-        # Shape [1, B, E]
-
-        out = self.multihead_attn.forward(
-            query=decoder_target,  # [1, B, E]
-            key=memory,  # [S, B, E]
-            value=memory,  # [S, B, E]
-            key_padding_mask=memory_key_padding_mask,  # [B, S]
-            attn_mask=None,
-        )[0]
-        # Shape [1,B,E]
-
-        out = torch.einsum("ijk -> jk", out)
-        # Shape [B, E]
-        out = self.out_mlp(out)
-        # Shape [B, 1]
+        out = self.out_mlp(memory).mean(axis=0).permute(0, 1)  # [S,B,1] > [B,1] > [1,B]
         return out
 
 
@@ -262,7 +235,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             activation="gelu",
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
-        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=2)
+        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
 
         logging.info(
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
@@ -427,11 +400,7 @@ class PepTransformerModel(pl.LightningModule):
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
 
-        self.irt_decoder = _IRTDecoder(
-            d_model=ninp,
-            nhead=nhead,
-            dropout=dropout,
-        )
+        self.irt_decoder = _IRTDecoder(d_model=ninp)
 
         # Training related things
         self.mse_loss = nn.MSELoss()
@@ -509,9 +478,7 @@ class PepTransformerModel(pl.LightningModule):
         trans_encoder_output, mem_mask = self.encoder.forward(
             src=src, mods=mods, debug=debug
         )
-        rt_output = self.irt_decoder.forward(
-            trans_encoder_output, memory_key_padding_mask=mem_mask
-        )
+        rt_output = self.irt_decoder.forward(trans_encoder_output)
         if debug:
             logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
@@ -961,9 +928,9 @@ class PepTransformerModel(pl.LightningModule):
         loss_angle = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
         loss_cosine = self.cosine_loss(yhat_spectra, batch.encoded_spectra).mean()
 
-        total_loss = loss_angle + loss_cosine
+        total_loss = loss_cosine + loss_angle
         if len(norm_irt.data) != 0:
-            total_loss = loss_irt + total_loss * self.loss_ratio
+            total_loss = loss_irt + (total_loss * self.loss_ratio)
             total_loss = total_loss / (self.loss_ratio + 1)
 
         out = {
@@ -998,7 +965,7 @@ class PepTransformerModel(pl.LightningModule):
             # reduce_fx=nanmean,
         )
 
-        return {"loss": step_out["l"]}
+        return step_out["l"]
 
     def validation_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None

@@ -10,19 +10,6 @@ import pytorch_lightning as pl
 from elfragmentador import datamodules, model
 
 
-@pytest.fixture(params=["csv", "csv.gz"])
-def datamodule(shared_datadir, request):
-    path = {
-        "csv": shared_datadir / "train_data_sample",
-        "csv.gz": shared_datadir / "train_data_sample_compressed",
-    }
-    datamodule = datamodules.PeptideDataModule(
-        batch_size=5, base_dir=path[request.param]
-    )
-    datamodule.setup()
-    return datamodule
-
-
 def test_mod_train_base(datamodule):
     mod = model.PepTransformerModel(nhead=4, ninp=64)
 
@@ -31,6 +18,13 @@ def test_mod_train_base(datamodule):
 
     trainer = pl.Trainer(max_epochs=2)
     trainer.fit(mod, datamodule)
+
+
+def test_mod_can_overfit(datamodule, tiny_model):
+    tiny_model.train()
+    trainer = pl.Trainer(overfit_batches=1, max_epochs=200, gradient_clip_val=50.0)
+    tiny_model.steps_per_epoch = 1
+    trainer.fit(tiny_model, datamodule.val_dataloader())
 
 
 @pytest.mark.parametrize(
