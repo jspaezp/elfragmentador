@@ -235,7 +235,8 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             activation="gelu",
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
-        self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=3)
+        # self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=2)
+        self.peak_decoder = nn.Linear(ninp, 1)
 
         logging.info(
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
@@ -288,11 +289,6 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         # Shape is [Batch, NumFragments]
         if debug:
             logging.debug(f"PTD: Shape of the permuted spectra {spectra_output.shape}")
-
-        if self.training:
-            spectra_output = nn.functional.leaky_relu(spectra_output)
-        else:
-            spectra_output = nn.functional.relu(spectra_output)
 
         return spectra_output
 
@@ -928,7 +924,7 @@ class PepTransformerModel(pl.LightningModule):
         loss_angle = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
         loss_cosine = self.cosine_loss(yhat_spectra, batch.encoded_spectra).mean()
 
-        total_loss = loss_cosine + loss_angle
+        total_loss =  loss_angle # + loss_cosine
         if len(norm_irt.data) != 0:
             total_loss = loss_irt + (total_loss * self.loss_ratio)
             total_loss = total_loss / (self.loss_ratio + 1)
