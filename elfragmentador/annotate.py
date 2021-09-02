@@ -182,7 +182,7 @@ def get_theoretical_mass(peptide: str):
         >>> get_theoretical_mass("MYPEPTIDE")
         1093.4637787
     """
-    aas = peptide_parser(peptide)
+    aas = peptide_parser(peptide, solve_aliases=True)
     out = sum([constants.MOD_AA_MASSES[a] for a in aas])
     return out
 
