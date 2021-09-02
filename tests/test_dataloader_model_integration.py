@@ -5,7 +5,7 @@ from torch.utils.data.dataloader import DataLoader
 
 
 def test_dataset_input_works_on_model(shared_datadir):
-    mod = model.PepTransformerModel(nhead=4, ninp=64)
+    mod = model.PepTransformerModel(nhead=4, d_model=64)
     mod.eval()
     ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + "/sample.sptxt")
     dl = DataLoader(ds, 4)

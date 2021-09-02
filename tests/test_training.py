@@ -11,7 +11,7 @@ from elfragmentador import datamodules, model
 
 
 def test_mod_train_base(datamodule):
-    mod = model.PepTransformerModel(nhead=4, ninp=64)
+    mod = model.PepTransformerModel(nhead=4, d_model=64)
 
     trainer = pl.Trainer(fast_dev_run=True)
     trainer.fit(mod, datamodule)
@@ -42,7 +42,7 @@ def test_base_train_works_on_schdulers(datamodule, scheduler, tiny_model):
 
 
 def mod_train_with_missing(datadir):
-    mod = model.PepTransformerModel(nhead=4, ninp=64)
+    mod = model.PepTransformerModel(nhead=4, d_model=64)
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
     datamodule.train_df.loc[
         [x for x in range(len(datamodule.train_df))], "mIRT"

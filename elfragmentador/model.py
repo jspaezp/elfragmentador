@@ -153,16 +153,16 @@ class _IRTDecoder(nn.Module):
 
 class _PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
-        self, ninp: int, dropout: float, nhead: int, nhid: int, layers: int
+        self, d_model: int, dropout: float, nhead: int, nhid: int, layers: int
     ) -> None:
         super().__init__()
 
         # Aminoacid embedding
-        self.aa_encoder = AASequenceEmbedding(ninp=ninp, position_ratio=0.1)
+        self.aa_encoder = AASequenceEmbedding(d_model=d_model)
 
         # Transformer encoder sections
         encoder_layers = nn.TransformerEncoderLayer(
-            d_model=ninp,
+            d_model=d_model,
             nhead=nhead,
             dim_feedforward=nhid,
             dropout=dropout,
@@ -189,16 +189,16 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         if debug:
             logging.debug(f"PTE: Shape of mask {trans_encoder_mask.shape}")
 
-        src = self.aa_encoder.forward(src=src, mods=mods, debug=debug)
-        # src shape [S, N, ninp]
+        src = self.aa_encoder(src=src, mods=mods, debug=debug)
+        # src shape [S, N, d_model]
 
         if debug:
             logging.debug(f"PTE: Shape after AASequence encoder {src.shape}")
 
-        trans_encoder_output = self.transformer_encoder.forward(
+        trans_encoder_output = self.transformer_encoder(
             src, src_key_padding_mask=trans_encoder_mask
         )
-        # trans_encoder_output shape [S, N, ninp]
+        # trans_encoder_output shape [S, N, d_model]
 
         if debug:
             logging.debug(
@@ -211,7 +211,7 @@ class _PeptideTransformerEncoder(torch.nn.Module):
 class _PeptideTransformerDecoder(torch.nn.Module):
     def __init__(
         self,
-        ninp: int,
+        d_model: int,
         nhead: int,
         nhid: int,
         layers: int,
@@ -221,22 +221,22 @@ class _PeptideTransformerDecoder(torch.nn.Module):
     ) -> None:
         super().__init__()
         logging.info(
-            f"Creating TransformerDecoder nhid={nhid}, ninp={ninp} nhead={nhead} layers={layers}"
+            f"Creating TransformerDecoder nhid={nhid}, d_model={d_model} nhead={nhead} layers={layers}"
         )
-        charge_dims = math.ceil(ninp * charge_dims_pct)
-        nce_dims = math.ceil(ninp * nce_dims_pct)
-        n_embeds = ninp - (charge_dims + nce_dims)
+        charge_dims = math.ceil(d_model * charge_dims_pct)
+        nce_dims = math.ceil(d_model * nce_dims_pct)
+        n_embeds = d_model - (charge_dims + nce_dims)
 
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model=ninp,
+            d_model=d_model,
             nhead=nhead,
             dim_feedforward=nhid,
             dropout=dropout,
             activation="gelu",
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
-        # self.peak_decoder = MLP(ninp, ninp, output_dim=1, num_layers=2)
-        self.peak_decoder = nn.Linear(ninp, 1)
+        # self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
+        self.peak_decoder = nn.Linear(d_model, 1)
 
         logging.info(
             f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
@@ -244,12 +244,8 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         self.trans_decoder_embedding = nn.Embedding(
             constants.NUM_FRAG_EMBEDINGS, n_embeds
         )
-        self.charge_encoder = ConcatenationEncoder(
-            dims_add=charge_dims, dropout=dropout, max_val=10.0
-        )
-        self.nce_encoder = ConcatenationEncoder(
-            dims_add=nce_dims, dropout=dropout, max_val=100.0
-        )
+        self.charge_encoder = ConcatenationEncoder(dims_add=charge_dims, max_val=10.0)
+        self.nce_encoder = ConcatenationEncoder(dims_add=nce_dims, max_val=100.0)
 
     def init_weights(self):
         """ """
@@ -265,13 +261,21 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         debug: bool = False,
     ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        trans_decoder_tgt = trans_decoder_tgt.repeat(1, charge.size(0), 1)
+        trans_decoder_tgt = trans_decoder_tgt * math.sqrt(
+            self.trans_decoder_embedding.num_embeddings
+        )
+        # [T, E2] > [T, 1, E2]
+        trans_decoder_tgt = trans_decoder_tgt.expand(-1, charge.size(0), -1)
+        # [T, B, E2]
         trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
-        trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
+        # [T, B, E1]
+        trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce, debug=debug)
+        # [T, B, E]
+
         if debug:
             logging.debug(f"PTD: Shape of query embedding {trans_decoder_tgt.shape}")
 
-        spectra_output = self.trans_decoder.forward(
+        spectra_output = self.trans_decoder(
             memory=src,
             tgt=trans_decoder_tgt,
             memory_key_padding_mask=memory_key_padding_mask,
@@ -316,7 +320,7 @@ class PepTransformerModel(pl.LightningModule):
         num_decoder_layers: int = 6,
         num_encoder_layers: int = 6,
         nhid: int = 2024,
-        ninp: int = 516,
+        d_model: int = 516,
         nhead: int = 4,
         dropout: float = 0.1,
         lr: float = 1e-4,
@@ -340,7 +344,7 @@ class PepTransformerModel(pl.LightningModule):
             nhid : int, optional
                 Number of dimensions used in the feedforward networks inside
                 the transformer encoder and decoders, by default 2024
-            ninp : int, optional
+            d_model : int, optional
                 Number of features to pass to the transformer encoder.
                 The embedding transforms the input to this input, by default 516
             nhead : int, optional
@@ -377,7 +381,7 @@ class PepTransformerModel(pl.LightningModule):
 
         # Peptide encoder
         self.encoder = _PeptideTransformerEncoder(
-            ninp=ninp,
+            d_model=d_model,
             dropout=dropout,
             nhead=nhead,
             nhid=nhid,
@@ -386,7 +390,7 @@ class PepTransformerModel(pl.LightningModule):
 
         # Peptide decoder
         self.decoder = _PeptideTransformerDecoder(
-            ninp=ninp,
+            d_model=d_model,
             nhead=nhead,
             nhid=nhid,
             layers=num_decoder_layers,
@@ -396,7 +400,7 @@ class PepTransformerModel(pl.LightningModule):
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
 
-        self.irt_decoder = _IRTDecoder(d_model=ninp)
+        self.irt_decoder = _IRTDecoder(d_model=d_model)
 
         # Training related things
         self.mse_loss = nn.MSELoss()
@@ -471,14 +475,12 @@ class PepTransformerModel(pl.LightningModule):
                 f" charge={charge.shape}"
             )
 
-        trans_encoder_output, mem_mask = self.encoder.forward(
-            src=src, mods=mods, debug=debug
-        )
-        rt_output = self.irt_decoder.forward(trans_encoder_output)
+        trans_encoder_output, mem_mask = self.encoder(src=src, mods=mods, debug=debug)
+        rt_output = self.irt_decoder(trans_encoder_output)
         if debug:
             logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
-        spectra_output = self.decoder.forward(
+        spectra_output = self.decoder(
             src=trans_encoder_output,
             charge=charge,
             nce=nce,
@@ -722,7 +724,7 @@ class PepTransformerModel(pl.LightningModule):
             help="Dimension of the feedforward networks",
         )
         parser.add_argument(
-            "--ninp",
+            "--d_model",
             default=516,
             type=int,
             help="Number of input features to the transformer encoder",
@@ -841,7 +843,9 @@ class PepTransformerModel(pl.LightningModule):
 
         """
         opt = torch.optim.AdamW(
-            filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr
+            filter(lambda p: p.requires_grad, self.parameters()),
+            lr=self.lr,
+            betas=(0.9, 0.98),
         )
 
         if self.scheduler == "plateau":
@@ -883,11 +887,15 @@ class PepTransformerModel(pl.LightningModule):
                 f"Accumulate Batches {self.trainer.accumulate_grad_batches}"
             )
             spe = self.steps_per_epoch // self.trainer.accumulate_grad_batches
+            # 4k warmup steps / total number of steps
+            pct_start = 4000 / (spe * self.trainer.max_epochs)
+
             scheduler_dict = {
                 "scheduler": torch.optim.lr_scheduler.OneCycleLR(
-                    opt,
-                    max_lr,
+                    optimizer=opt,
+                    max_lr=max_lr,
                     epochs=self.trainer.max_epochs,
+                    pct_start=pct_start,
                     steps_per_epoch=spe,
                 ),
                 "interval": "step",
@@ -924,7 +932,7 @@ class PepTransformerModel(pl.LightningModule):
         loss_angle = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
         loss_cosine = self.cosine_loss(yhat_spectra, batch.encoded_spectra).mean()
 
-        total_loss =  loss_angle # + loss_cosine
+        total_loss = loss_angle  # + loss_cosine
         if len(norm_irt.data) != 0:
             total_loss = loss_irt + (total_loss * self.loss_ratio)
             total_loss = total_loss / (self.loss_ratio + 1)

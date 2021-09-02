@@ -20,6 +20,8 @@ from torch import Tensor, nn
 from elfragmentador import constants
 import pytorch_lightning as pl
 
+import pandas as pd
+
 
 class SeqPositionalEmbed(torch.nn.Module):
     def __init__(self, dims_add: int = 10, max_len: int = 30, inverted=True):
@@ -92,7 +94,6 @@ class ConcatenationEncoder(torch.nn.Module):
     def __init__(
         self,
         dims_add: int,
-        dropout: float = 0.1,
         max_val: Union[float, int] = 200.0,
         static_size: bool = False,
     ) -> None:
@@ -117,12 +118,11 @@ class ConcatenationEncoder(torch.nn.Module):
         Examples:
             >>> x1 = torch.zeros((5, 1, 20))
             >>> x2 = torch.zeros((5, 2, 20))
-            >>> encoder = ConcatenationEncoder(10, 0.1, 10)
+            >>> encoder = ConcatenationEncoder(dims_add = 10, max_val=10)
             >>> output = encoder(x1, torch.tensor([[7]]))
             >>> output = encoder(x2, torch.tensor([[7], [4]]))
         """
         super().__init__()
-        self.dropout = torch.nn.Dropout(p=dropout)
 
         # pos would be a variable ...
         div_term = torch.exp(
@@ -151,7 +151,7 @@ class ConcatenationEncoder(torch.nn.Module):
         Examples:
             >>> x1 = torch.zeros((5, 1, 20))
             >>> x2 = torch.cat([x1, x1+1], axis = 1)
-            >>> encoder = ConcatenationEncoder(10, dropout = 0, max_val = 10)
+            >>> encoder = ConcatenationEncoder(10, max_val = 10)
             >>> output = encoder(x1, torch.tensor([[7]]))
             >>> output.shape
             torch.Size([5, 1, 30])
@@ -159,15 +159,6 @@ class ConcatenationEncoder(torch.nn.Module):
         """
         if debug:
             logging.debug(f"CE: Shape of inputs val={val.shape} x={x.shape}")
-
-        if self.static_size:
-            assert self.static_size == x.size(0), (
-                f"Size of the first dimension ({x.size(0)}) "
-                f"does not match the expected value ({self.static_size})"
-            )
-            end_position = self.static_size
-        else:
-            end_position = x.size(0)
 
         e_sin = torch.sin(val * self.div_term)
         e_cos = torch.cos(val * self.div_term)
@@ -184,7 +175,7 @@ class ConcatenationEncoder(torch.nn.Module):
         if debug:
             logging.debug(f"CE: clipping encodings e={e.shape}")
 
-        e = torch.cat([e.unsqueeze(0)] * end_position)
+        e = e.unsqueeze(0).expand(x.size(0), -1, -1)
 
         if debug:
             logging.debug(f"CE: Shape before concat e={e.shape} x={x.shape}")
@@ -193,15 +184,13 @@ class ConcatenationEncoder(torch.nn.Module):
         if debug:
             logging.debug(f"CE: Shape after concat x={x.shape}")
 
-        # TODO: Do I really need dropout here??
-        return self.dropout(x)
+        return x
 
 
 class PositionalEncoding(torch.nn.Module):
     def __init__(
         self,
         d_model: int,
-        dropout: float = 0.1,
         max_len: int = 5000,
         static_size: Union[LiteralFalse, int] = False,
     ) -> None:
@@ -233,7 +222,7 @@ class PositionalEncoding(torch.nn.Module):
             Therefore encoding are **(seq_length, batch, encodings)**
 
         Examples:
-            >>> posencoder = PositionalEncoding(20, 0.1, max_len=20)
+            >>> posencoder = PositionalEncoding(20, max_len=20)
             >>> x = torch.ones((2,1,20)).float()
             >>> x.shape
             torch.Size([2, 1, 20])
@@ -241,16 +230,17 @@ class PositionalEncoding(torch.nn.Module):
             torch.Size([2, 1, 20])
         """
         super(PositionalEncoding, self).__init__()
-        self.dropout = torch.nn.Dropout(p=dropout)
 
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
+            torch.arange(0, d_model, 2, dtype=torch.float)
+            * (-math.log(10000.0) / d_model)
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
+        # Pe has [shape max_len, 1, d_model]
         self.register_buffer("pe", pe)
         self.static_size = static_size
 
@@ -268,16 +258,16 @@ class PositionalEncoding(torch.nn.Module):
         Examples:
             >>> pl.seed_everything(42)
             42
-            >>> x = torch.ones((1,4,6)).float()
-            >>> pos_encoder = PositionalEncoding(6, 0.1, max_len=10)
+            >>> x = torch.ones((4,1,6)).float()
+            >>> pos_encoder = PositionalEncoding(6, max_len=10)
             >>> output = pos_encoder(x)
             >>> output.shape
-            torch.Size([1, 4, 6])
+            torch.Size([4, 1, 6])
             >>> output
-            tensor([[[1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222],
-                [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222],
-                [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 0.0000],
-                [1.1111, 2.2222, 1.1111, 2.2222, 1.1111, 2.2222]]])
+            tensor([[[1.0000, 2.0000, 1.0000, 2.0000, 1.0000, 2.0000]],
+                [[1.8415, 1.5403, 1.0464, 1.9989, 1.0022, 2.0000]],
+                [[1.9093, 0.5839, 1.0927, 1.9957, 1.0043, 2.0000]],
+                [[1.1411, 0.0100, 1.1388, 1.9903, 1.0065, 2.0000]]])
         """
         if self.static_size:
             end_position = self.static_size
@@ -285,39 +275,27 @@ class PositionalEncoding(torch.nn.Module):
             end_position = x.size(0)
 
         x = x + self.pe[:end_position, :]
-        return self.dropout(x)
+        return x
 
 
 class AASequenceEmbedding(torch.nn.Module):
-    def __init__(self, ninp, position_ratio=0.1):
+    def __init__(self, d_model):
         super().__init__()
-        positional_ninp = int((ninp / 2) * position_ratio)
-        if positional_ninp % 2:
-            positional_ninp += 1
-        ninp_embed = int(ninp - (2 * positional_ninp))
-
         # Positional information additions
-        self.fw_position_embed = SeqPositionalEmbed(
+        self.position_embed = PositionalEncoding(
+            d_model=d_model,
             max_len=constants.MAX_TENSOR_SEQUENCE * 4,
-            dims_add=positional_ninp,
-            inverted=False,
-        )
-        self.rev_position_embed = SeqPositionalEmbed(
-            max_len=constants.MAX_TENSOR_SEQUENCE * 4,
-            dims_add=positional_ninp,
-            inverted=True,
         )
 
         # Aminoacid embedding
-        self.aa_encoder = nn.Embedding(constants.AAS_NUM + 1, ninp_embed, padding_idx=0)
+        self.aa_encoder = nn.Embedding(constants.AAS_NUM + 1, d_model, padding_idx=0)
         # PTM embedding
         self.mod_encoder = nn.Embedding(
-            len(constants.MODIFICATION) + 1, ninp_embed, padding_idx=0
+            len(constants.MODIFICATION) + 1, d_model, padding_idx=0
         )
 
         # Weight Initialization
         self.init_weights()
-        self.ninp = ninp_embed
 
     def init_weights(self) -> None:
         initrange = 0.1
@@ -328,20 +306,28 @@ class AASequenceEmbedding(torch.nn.Module):
     def forward(self, src, mods, debug: bool = False):
         if debug:
             logging.debug(f"AAE: Input shapes src={src.shape}, mods={mods.shape}")
-        fw_pos_emb = self.fw_position_embed(src)
-        rev_pos_emb = self.rev_position_embed(src)
-
         src = self.aa_encoder(src.permute(1, 0))
         mods = self.mod_encoder(mods.permute(1, 0))
         src = src + mods
 
-        # TODO consider if this line is needed
-        src = src * math.sqrt(self.ninp)
+        # TODO consider if this line is needed, it is used in attention is all you need
+        src = src * math.sqrt(self.aa_encoder.num_embeddings)
         if debug:
             logging.debug(f"AAE: Shape after embedding {src.shape}")
 
-        src = torch.cat([src, fw_pos_emb, rev_pos_emb], dim=-1)
+        src = self.position_embed(src)
         if debug:
             logging.debug(f"AAE: Shape after embedding positions {src.shape}")
 
         return src
+
+    def as_DataFrames(self):
+        df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
+        df_aa.columns = ["EMPTY"] + list(constants.AMINO_ACID)
+
+        df_mod = pd.DataFrame(
+            data=self.aa_encoder.mod_encoder.weight.detach().cpu().numpy().T
+        )
+        df_mod.columns = ["EMPTY"] + list(constants.MODIFICATION)
+
+        return df_aa, df_mod

@@ -29,7 +29,7 @@ def tiny_model():
         num_decoder_layers=3,
         num_encoder_layers=2,
         nhid=112,
-        ninp=112,
+        d_model=112,
         nhead=2,
         dropout=0,
         lr=1e-4,

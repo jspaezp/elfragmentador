@@ -29,8 +29,8 @@ class SelfAttentionExplorer(torch.no_grad):
     >>> model = PepTransformerModel() # Or load the model from a checkpoint
     >>> _ = model.eval()
     >>> with SelfAttentionExplorer(model) as sea:
-    ...     _ = model.predict_from_seq("MYPEPTIDEK", 2, 30)
-    ...     _ = model.predict_from_seq("MY[PHOSPHO]PEPTIDEK", 2, 30)
+    ...     _ = model.predict_from_seq(seq="MYPEPTIDEK",charge= 2, nce=30)
+    ...     _ = model.predict_from_seq(seq="MY[PHOSPHO]PEPTIDEK", charge=2, nce=30)
     >>> out = sea.get_encoder_attn(layer=0, index=0)
     >>> type(out)
     <class 'pandas.core.frame.DataFrame'>
