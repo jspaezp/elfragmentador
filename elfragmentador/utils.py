@@ -223,7 +223,7 @@ class PinDataset(IterableDataset):
             )
         )
 
-    def optimize_nce(self, scripted_model, offsets=range(-10, 10, 2), n=200):
+    def optimize_nce(self, scripted_model, offsets=range(-10, 10, 2), n=500):
         offsets = [0] + list(offsets)
         logging.info(f"Finding best nce offset from {offsets}")
         best = 0

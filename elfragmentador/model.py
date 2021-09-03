@@ -135,6 +135,30 @@ class _IRTDecoder(nn.Module):
         out = self.out_mlp(memory).mean(axis=0).permute(0, 1)  # [S,B,1] > [B,1] > [1,B]
         return out
 
+class _IRTDecoderV2(nn.Module):
+    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3):
+        super().__init__()
+
+        self.aa_embed = AASequenceEmbedding(d_model=d_model)
+        encoder_layers = nn.TransformerEncoderLayer(
+            d_model = d_model, nhead = nhead, dim_feedforward=dim_feedforward, dropout=0,
+            activation="gelu"
+        )
+        self.encoder = nn.TransformerEncoder(encoder_layer=encoder_layers, num_layers=n_layers)
+        self.linear_out = nn.Linear(in_features=d_model, out_features=1)
+
+    def forward(self, seq, mods):
+        # seq [N, S], mods [N, S]
+        trans_encoder_mask = torch.zeros_like(seq, dtype=torch.float)
+        trans_encoder_mask = trans_encoder_mask.masked_fill(
+            seq <= 0, float("-inf")
+        ).masked_fill(seq > 0, float(0.0))
+        # mask [N, S]
+
+        embed_seq = self.aa_embed(seq = seq, mods=mods) # [S, N, d_model]
+        memory = self.encoder(embed_seq, src_key_padding_mask=trans_encoder_mask)
+        out = self.linear_out(memory).mean(axis=0).permute(0,1)
+        return out
 
 class _PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
@@ -385,7 +409,12 @@ class PepTransformerModel(pl.LightningModule):
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
 
-        self.irt_decoder = _IRTDecoder(d_model=d_model)
+        # self.irt_decoder = _IRTDecoder(d_model=d_model)
+        self.irt_decoder = _IRTDecoderV2(
+            d_model=d_model,
+            dim_feedforward=nhid,
+            nhead=nhead,
+            n_layers=num_encoder_layers)
 
         # Training related things
         self.mse_loss = nn.MSELoss(reduction='none')
@@ -461,7 +490,8 @@ class PepTransformerModel(pl.LightningModule):
             )
 
         trans_encoder_output, mem_mask = self.encoder(seq=seq, mods=mods, debug=debug)
-        rt_output = self.irt_decoder(trans_encoder_output)
+        # rt_output = self.irt_decoder(trans_encoder_output)
+        rt_output = self.irt_decoder(seq=seq, mods=mods)
         if debug:
             logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
@@ -926,9 +956,10 @@ class PepTransformerModel(pl.LightningModule):
         loss_cosine = loss_cosine.mean() / batch.weight.mean()
 
         total_loss = loss_angle  # + loss_cosine
-        # if len(norm_irt.data) != 0:
-        #     total_loss = loss_irt + (total_loss * self.loss_ratio)
-        #     total_loss = total_loss / (self.loss_ratio + 1)
+        if len(norm_irt.data) != 0:
+            # total_loss = loss_irt + (total_loss * self.loss_ratio)
+            # total_loss = total_loss / (self.loss_ratio + 1)
+            total_loss = loss_irt + total_loss
 
         out = {
             "l": total_loss,
