@@ -917,18 +917,15 @@ class PepTransformerModel(pl.LightningModule):
         norm_irt = batch.irt[~batch.irt.isnan()]
 
         loss_irt = self.mse_loss(yhat_irt, norm_irt.float()) * batch.weight[~batch.irt.isnan()]
-        loss_irt = loss_irt / batch.weight[~batch.irt.isnan()].sum()
-        loss_irt = loss_irt.mean()
+        loss_irt = loss_irt.mean() / batch.weight[~batch.irt.isnan()].mean()
 
         loss_angle = self.angle_loss(yhat_spectra, batch.spectra) * batch.weight
-        loss_angle = loss_angle / batch.weight.sum()
-        loss_angle = loss_angle.mean()
+        loss_angle = loss_angle.mean() / batch.weight.mean()
 
         loss_cosine = self.cosine_loss(yhat_spectra, batch.spectra) * batch.weight
-        loss_cosine = loss_cosine / batch.weight.sum()
-        loss_cosine = loss_cosine.mean()
+        loss_cosine = loss_cosine.mean() / batch.weight.mean()
 
-        total_loss = loss_angle.mean()  # + loss_cosine
+        total_loss = loss_angle  # + loss_cosine
         # if len(norm_irt.data) != 0:
         #     total_loss = loss_irt + (total_loss * self.loss_ratio)
         #     total_loss = total_loss / (self.loss_ratio + 1)
