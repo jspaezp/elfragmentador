@@ -10,21 +10,23 @@ import numpy as np
 def check_lengths(i: NamedTuple):
     expect_names = set(
         [
-            "encoded_sequence",
-            "encoded_mods",
-            "encoded_spectra",
+            "seq",
+            "mods",
+            "spectra",
             "charge",
-            "norm_irt",
+            "irt",
             "nce",
+            "weight",
         ]
     )
     assert expect_names == set(i._fields)
-    assert i.encoded_sequence.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
-    assert i.encoded_mods.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
-    assert i.encoded_spectra.shape == torch.Size([constants.NUM_FRAG_EMBEDINGS])
+    assert i.seq.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
+    assert i.mods.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
+    assert i.spectra.shape == torch.Size([constants.NUM_FRAG_EMBEDINGS])
     assert i.charge.shape == torch.Size([1])
-    assert i.norm_irt.shape == torch.Size([1])
+    assert i.irt.shape == torch.Size([1])
     assert i.nce.shape == torch.Size([1])
+    assert i.weight.shape == torch.Size([1])
 
 
 def test_dataset_outputs_correct_dims(shared_datadir):

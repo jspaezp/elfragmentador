@@ -1,5 +1,7 @@
 import logging
 
+from torch.nn.modules import loss
+
 try:
     from typing import Dict, List, Tuple, Optional, Union, Literal
 
@@ -13,7 +15,6 @@ except ImportError:
 import warnings
 import math
 import time
-from collections import namedtuple
 
 import torch
 from torch import Tensor, nn
@@ -25,7 +26,7 @@ import elfragmentador
 from elfragmentador import constants
 from elfragmentador import encoding_decoding
 from elfragmentador.spectra import Spectrum
-from elfragmentador.datamodules import TrainBatch
+from elfragmentador.named_batches import ForwardBatch, PredictionResults, TrainBatch
 from elfragmentador.metrics import CosineLoss, SpectralAngleLoss
 from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
@@ -38,22 +39,6 @@ from torch.optim.lr_scheduler import (
     OneCycleLR,
     ReduceLROnPlateau,
 )
-
-PredictionResults = namedtuple("PredictionResults", "irt spectra")
-PredictionResults.__doc__ = """Named Tuple that bundles prediction results
-Parameters:
-    irt (Tensor): Tensor containing normalized irt predictions
-    spectra (Tensor): Tensor containing encoded predicted spectra
-"""
-ForwardBatch = namedtuple("ForwardBatch", "src nce mods charge")
-ForwardBatch.__doc__ = """Named Tuple that bundles all tensors needed for a forward pass in the model
-Parameters:
-    src (Tensor): Encoded peptide sequences
-    nce (Tensor): Normalized collision energy
-    mods (Tensor): Modification encodings for the sequence
-    charge (Tensor): Long tensor with the charges
-"""
-
 
 class MLP(nn.Module):
     def __init__(
@@ -170,7 +155,7 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
-    def forward(self, src: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
+    def forward(self, seq: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
         # For the mask ....
         # If a BoolTensor is provided, positions with True are not allowed
         # to attend while False values will be unchanged <- form the pytorch docs
@@ -180,23 +165,23 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         # ~    [False, False, True]
         # [Attend, Attend, Dont Attend]
 
-        # src shape [N, S]
-        trans_encoder_mask = torch.zeros_like(src, dtype=torch.float)
+        # seq shape [N, S]
+        trans_encoder_mask = torch.zeros_like(seq, dtype=torch.float)
         trans_encoder_mask = trans_encoder_mask.masked_fill(
-            src <= 0, float("-inf")
-        ).masked_fill(src > 0, float(0.0))
+            seq <= 0, float("-inf")
+        ).masked_fill(seq > 0, float(0.0))
 
         if debug:
             logging.debug(f"PTE: Shape of mask {trans_encoder_mask.shape}")
 
-        src = self.aa_encoder(src=src, mods=mods, debug=debug)
-        # src shape [S, N, d_model]
+        x = self.aa_encoder(seq=seq, mods=mods, debug=debug)
+        # x shape [S, N, d_model]
 
         if debug:
-            logging.debug(f"PTE: Shape after AASequence encoder {src.shape}")
+            logging.debug(f"PTE: Shape after AASequence encoder {x.shape}")
 
         trans_encoder_output = self.transformer_encoder(
-            src, src_key_padding_mask=trans_encoder_mask
+            x, src_key_padding_mask=trans_encoder_mask
         )
         # trans_encoder_output shape [S, N, d_model]
 
@@ -254,7 +239,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
 
     def forward(
         self,
-        src: Tensor,
+        memory: Tensor,
         charge: Tensor,
         nce: Tensor,
         memory_key_padding_mask: Tensor,
@@ -276,7 +261,7 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             logging.debug(f"PTD: Shape of query embedding {trans_decoder_tgt.shape}")
 
         spectra_output = self.trans_decoder(
-            memory=src,
+            memory=memory,
             tgt=trans_decoder_tgt,
             memory_key_padding_mask=memory_key_padding_mask,
         )
@@ -403,7 +388,7 @@ class PepTransformerModel(pl.LightningModule):
         self.irt_decoder = _IRTDecoder(d_model=d_model)
 
         # Training related things
-        self.mse_loss = nn.MSELoss()
+        self.mse_loss = nn.MSELoss(reduction='none')
         self.cosine_loss = CosineLoss(dim=1, eps=1e-4)
         self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-4)
         self.lr = lr
@@ -434,10 +419,10 @@ class PepTransformerModel(pl.LightningModule):
 
     def forward(
         self,
-        src: Tensor,
+        seq: Tensor,
+        mods: Tensor,
+        charge: Tensor,
         nce: Tensor,
-        mods: Optional[Tensor] = None,
-        charge: Optional[Tensor] = None,
         debug: bool = False,
     ) -> PredictionResults:
         """Forward Generate predictions.
@@ -445,16 +430,16 @@ class PepTransformerModel(pl.LightningModule):
         Privides the function for the forward pass to the model.
 
         Parameters:
-            src (Tensor): Encoded pepide sequence [B, L] (view details)
+            seq (Tensor): Encoded pepide sequence [B, L] (view details)
+            mods (Tensor): Encoded modification sequence [B, L], by default None
             nce (Tensor): float Tensor with the charges [B, 1]
-            mods (Optional[Tensor]): Encoded modification sequence [B, L], by default None
-            charge (Optional[Tensor]): long Tensor with the charges [B, 1], by default None
+            charge (Tensor): long Tensor with the charges [B, 1], by default None
             debug (bool):
                 When set, it will log (a lot) of the shapes of the intermediate
                 tensors inside the model. By default False
 
         Details:
-            src:
+            seq:
                 The peptide is encoded as integers for the aminoacid.
                 "AAA" encoded for a max length of 5 would be
                 torch.Tensor([ 1,  1,  1,  0,  0]).long()
@@ -469,19 +454,19 @@ class PepTransformerModel(pl.LightningModule):
         """
         if debug:
             logging.debug(
-                f"PT: Shape of inputs src={src.shape},"
+                f"PT: Shape of inputs seq={seq.shape},"
                 f" mods={mods.shape if mods is not None else None},"
                 f" nce={nce.shape}"
                 f" charge={charge.shape}"
             )
 
-        trans_encoder_output, mem_mask = self.encoder(src=src, mods=mods, debug=debug)
+        trans_encoder_output, mem_mask = self.encoder(seq=seq, mods=mods, debug=debug)
         rt_output = self.irt_decoder(trans_encoder_output)
         if debug:
             logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
         spectra_output = self.decoder(
-            src=trans_encoder_output,
+            memory=trans_encoder_output,
             charge=charge,
             nce=nce,
             debug=debug,
@@ -493,7 +478,7 @@ class PepTransformerModel(pl.LightningModule):
                 f"PT: Final Outputs of shapes {rt_output.shape}, {spectra_output.shape}"
             )
 
-        return PredictionResults(rt_output, spectra_output)
+        return PredictionResults(irt=rt_output, spectra=spectra_output)
 
     def batch_forward(
         self, inputs: TrainBatch, debug: bool = False
@@ -537,8 +522,8 @@ class PepTransformerModel(pl.LightningModule):
             inputs = TrainBatch(*inputs)
 
         out = self.forward(
-            src=unsqueeze_if_needed(inputs.encoded_sequence, 2),
-            mods=unsqueeze_if_needed(inputs.encoded_mods, 2),
+            seq=unsqueeze_if_needed(inputs.seq, 2),
+            mods=unsqueeze_if_needed(inputs.mods, 2),
             nce=unsqueeze_if_needed(inputs.nce, 2),
             charge=unsqueeze_if_needed(inputs.charge, 2),
             debug=debug,
@@ -561,19 +546,19 @@ class PepTransformerModel(pl.LightningModule):
 
         Examples:
             >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
-            ForwardBatch(src=tensor([[23, 13,  4, 13, 17,  ...]]), nce=tensor([[27.]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]))
+            ForwardBatch(seq=tensor([[23, 13,  4, 13, 17,  ...]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]), nce=tensor([[27.]]))
         """
         encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
             seq, enforce_length=enforce_length, pad_zeros=pad_zeros
         )
 
-        src = torch.Tensor(encoded_seq).unsqueeze(0).long()
+        seq = torch.Tensor(encoded_seq).unsqueeze(0).long()
         mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
         in_charge = torch.Tensor([[charge]]).long()
         in_nce = torch.Tensor([[nce]]).float()
 
         # This is a named tuple
-        out = ForwardBatch(src=src, nce=in_nce, mods=mods, charge=in_charge)
+        out = ForwardBatch(seq=seq, mods=mods, nce=in_nce, charge=in_charge)
         return out
 
     def to_torchscript(self):
@@ -659,12 +644,12 @@ class PepTransformerModel(pl.LightningModule):
         if debug:
             logging.debug(
                 f">>PT: PEPTIDE INPUT Shape of peptide"
-                f" inputs {in_batch.src.shape}, {in_batch.charge.shape}"
+                f" inputs {in_batch.seq.shape}, {in_batch.charge.shape}"
             )
 
         # TODO consider if adding GPU inference
         out = self.forward(debug=debug, **in_batch._asdict())
-        out = PredictionResults(*[x.squeeze(0) for x in out])
+        out = PredictionResults(**{ k:x.squeeze(0) for k,x in out._asdict().items() })
         logging.debug(out)
 
         # rt should be in seconds for spectrast ...
@@ -672,7 +657,7 @@ class PepTransformerModel(pl.LightningModule):
         if as_spectrum:
 
             out = Spectrum.from_tensors(
-                sequence_tensor=in_batch.src.squeeze().numpy(),
+                sequence_tensor=in_batch.seq.squeeze().numpy(),
                 fragment_tensor=out.spectra / out.spectra.max(),
                 mod_tensor=in_batch.mods.squeeze().numpy(),
                 charge=charge,
@@ -880,15 +865,18 @@ class PepTransformerModel(pl.LightningModule):
                 )
                 time.sleep(3)  # just so the user has time to see the message...
             max_lr = self.lr * self.lr_ratio
+            spe = self.steps_per_epoch // self.trainer.accumulate_grad_batches
+            # 4k warmup steps / total number of steps
+            pct_start = 4000 / (spe * self.trainer.max_epochs)
+
             logging.info(
                 f">> Scheduler setup: max_lr {max_lr}, "
                 f"Max Epochs: {self.trainer.max_epochs}, "
                 f"Steps per epoch: {self.steps_per_epoch}, "
-                f"Accumulate Batches {self.trainer.accumulate_grad_batches}"
+                f"SPE (after accum grad batches) {spe}, "
+                f"Percent Warmup {pct_start}, "
+                f"Accumulate Batches {self.trainer.accumulate_grad_batches}, "
             )
-            spe = self.steps_per_epoch // self.trainer.accumulate_grad_batches
-            # 4k warmup steps / total number of steps
-            pct_start = 4000 / (spe * self.trainer.max_epochs)
 
             scheduler_dict = {
                 "scheduler": torch.optim.lr_scheduler.OneCycleLR(
@@ -925,17 +913,25 @@ class PepTransformerModel(pl.LightningModule):
             batch = TrainBatch(*batch)
 
         yhat_irt, yhat_spectra = self.batch_forward(batch)
-        yhat_irt = yhat_irt[~batch.norm_irt.isnan()]
-        norm_irt = batch.norm_irt[~batch.norm_irt.isnan()]
+        yhat_irt = yhat_irt[~batch.irt.isnan()]
+        norm_irt = batch.irt[~batch.irt.isnan()]
 
-        loss_irt = self.mse_loss(yhat_irt, norm_irt.float())
-        loss_angle = self.angle_loss(yhat_spectra, batch.encoded_spectra).mean()
-        loss_cosine = self.cosine_loss(yhat_spectra, batch.encoded_spectra).mean()
+        loss_irt = self.mse_loss(yhat_irt, norm_irt.float()) * batch.weight[~batch.irt.isnan()]
+        loss_irt = loss_irt / batch.weight[~batch.irt.isnan()].sum()
+        loss_irt = loss_irt.mean()
 
-        total_loss = loss_angle  # + loss_cosine
-        if len(norm_irt.data) != 0:
-            total_loss = loss_irt + (total_loss * self.loss_ratio)
-            total_loss = total_loss / (self.loss_ratio + 1)
+        loss_angle = self.angle_loss(yhat_spectra, batch.spectra) * batch.weight
+        loss_angle = loss_angle / batch.weight.sum()
+        loss_angle = loss_angle.mean()
+
+        loss_cosine = self.cosine_loss(yhat_spectra, batch.spectra) * batch.weight
+        loss_cosine = loss_cosine / batch.weight.sum()
+        loss_cosine = loss_cosine.mean()
+
+        total_loss = loss_angle.mean()  # + loss_cosine
+        # if len(norm_irt.data) != 0:
+        #     total_loss = loss_irt + (total_loss * self.loss_ratio)
+        #     total_loss = total_loss / (self.loss_ratio + 1)
 
         out = {
             "l": total_loss,

@@ -303,23 +303,23 @@ class AASequenceEmbedding(torch.nn.Module):
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
         torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
 
-    def forward(self, src, mods, debug: bool = False):
+    def forward(self, seq, mods, debug: bool = False):
         if debug:
-            logging.debug(f"AAE: Input shapes src={src.shape}, mods={mods.shape}")
-        src = self.aa_encoder(src.permute(1, 0))
+            logging.debug(f"AAE: Input shapes seq={seq.shape}, mods={mods.shape}")
+        seq = self.aa_encoder(seq.permute(1, 0))
         mods = self.mod_encoder(mods.permute(1, 0))
-        src = src + mods
+        seq = seq + mods
 
         # TODO consider if this line is needed, it is used in attention is all you need
-        src = src * math.sqrt(self.aa_encoder.num_embeddings)
+        seq = seq * math.sqrt(self.aa_encoder.num_embeddings)
         if debug:
-            logging.debug(f"AAE: Shape after embedding {src.shape}")
+            logging.debug(f"AAE: Shape after embedding {seq.shape}")
 
-        src = self.position_embed(src)
+        seq = self.position_embed(seq)
         if debug:
-            logging.debug(f"AAE: Shape after embedding positions {src.shape}")
+            logging.debug(f"AAE: Shape after embedding positions {seq.shape}")
 
-        return src
+        return seq
 
     def as_DataFrames(self):
         df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)

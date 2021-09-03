@@ -4,7 +4,6 @@ import logging
 from os import PathLike
 
 import warnings
-from collections import namedtuple
 from pathlib import PosixPath, Path
 from typing import Dict, Iterable, List, Optional, Union
 
@@ -19,14 +18,11 @@ import pytorch_lightning as pl
 
 from elfragmentador import constants, spectra
 from elfragmentador.encoding_decoding import decode_mod_seq
+from elfragmentador.named_batches import TrainBatch
 from argparse import _ArgumentGroup
 from torch import Tensor
 from tqdm.auto import tqdm
 
-TrainBatch = namedtuple(
-    "TrainBatch",
-    "encoded_sequence, encoded_mods, charge, nce, encoded_spectra, norm_irt",
-)
 
 
 def convert_tensor_column(column, elem_function=float, verbose=True, *args, **kwargs):
@@ -145,6 +141,7 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     "Ch": Charge
     "iRT": Retention time
     "NCE": Collision Energy
+    "Weight": Weight of each spectrum (will default to use Weight or reps columns)
 
 
     Args:
@@ -194,6 +191,7 @@ def match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
         "NCE": _match_col(
             "nce", "NCE", colnames, combine_mode="union", match_mode="startswith"
         ),
+        "Weight": _match_col("Weight", "reps", colnames, match_mode="in", combine_mode="union"),
     }
     out = {k: (colnames[v] if v is not None else None) for k, v in out.items()}
     logging.info(f">>> Mapped column names to the provided dataset {out}")
@@ -259,19 +257,9 @@ class PeptideDataset(torch.utils.data.Dataset):
         spectra_lengths = len(self.spectra_encodings[0])
         sequence_lengths = len(self.sequence_encodings[0])
 
-        irts = np.array(self.df[name_match["iRT"]]).astype("float") / 100
-        self.norm_irts = torch.from_numpy(irts).float().unsqueeze(1)
-        del irts
+        self.norm_irts = torch.from_numpy(np.array(self.df[name_match["iRT"]]).astype("float") / 100).float().unsqueeze(1)
+        self.nces = torch.from_numpy(np.array(self.df[name_match["NCE"]]).astype("float")).float().unsqueeze(1)
 
-        if name_match["NCE"] is None:
-            nces = (
-                torch.Tensor([float("nan")] * len(self.norm_irts)).float().unsqueeze(1)
-            )
-        else:
-            nces = np.array(self.df[name_match["NCE"]]).astype("float")
-            nces = torch.from_numpy(nces).float().unsqueeze(1)
-
-        self.nces = nces
 
         if torch.any(self.nces.isnan()):
             # TODO decide if here should be the place to impute NCEs ... and warn ...
@@ -288,8 +276,9 @@ class PeptideDataset(torch.utils.data.Dataset):
             # This syntax is compatible in torch +1.8, will change when colab migrates to it
             # self.nces = torch.nan_to_num(self.nces, nan=30.0)
 
-        charges = np.array(self.df[name_match["Ch"]]).astype("long")
-        self.charges = torch.Tensor(charges).long().unsqueeze(1)
+        self.charges = torch.from_numpy(np.array(self.df[name_match["Ch"]]).astype("long")).long().unsqueeze(1)
+        self.weights = torch.from_numpy(np.array(self.df[name_match["Weight"]]).astype("float")).long().unsqueeze(1)
+        self.weights = torch.sqrt(self.weights)
 
         logging.info(
             (
@@ -359,14 +348,16 @@ class PeptideDataset(torch.utils.data.Dataset):
         norm_irt = self.norm_irts[index]
         charge = self.charges[index]
         nce = self.nces[index]
+        weight = self.weights[index]
 
         out = TrainBatch(
-            encoded_sequence=encoded_sequence,
-            encoded_mods=encoded_mods,
+            seq=encoded_sequence,
+            mods=encoded_mods,
             charge=charge,
             nce=nce,
-            encoded_spectra=encoded_spectra,
-            norm_irt=norm_irt,
+            spectra=encoded_spectra,
+            irt=norm_irt,
+            weight=weight
         )
         return out
 

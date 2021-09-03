@@ -55,9 +55,9 @@ def mod_forward_base(datadir):
 
     with torch.no_grad():
         yhat_irt, yhat_spectra = mod.forward(
-            src=x.encoded_sequence,
+            seq=x.seq,
             charge=x.charge,
-            mods=x.encoded_mods,
+            mods=x.mods,
             nce=x.nce,
             debug=True,
         )
@@ -93,10 +93,10 @@ def _test_export_onnx(datadir, keep=False):
 
         print("Exporting to onnx")
         # https://github.com/pytorch/pytorch/issues/22488#issuecomment-630140460
-        dummy_input = {"src": input_sample[0], "charge": input_sample[1]}
+        dummy_input = input_sample._asdict()
         print(dummy_input)
 
-        input_names = ["src", "charge"]
+        input_names = ["seq", "mods", "charge", "nce"]
         output_names = ["irt", "spectrum"]
 
         mod.to_onnx(
@@ -124,10 +124,10 @@ def base_export_torchscript(datadir, keep=False):
 
     dummy_input = tuple(
         [
-            input_sample.encoded_sequence,
-            input_sample.nce,
-            input_sample.encoded_mods,
+            input_sample.seq,
+            input_sample.mods,
             input_sample.charge,
+            input_sample.nce,
         ]
     )
 
@@ -209,14 +209,14 @@ def test_variable_length_has_same_results(setup_model):
             batch2 = efe.encode_mod_seq(seq=s, pad_zeros=False)
 
             batch1 = ForwardBatch(
-                src=torch.unsqueeze(torch.tensor(batch1.aas), 0),
+                seq=torch.unsqueeze(torch.tensor(batch1.aas), 0),
                 nce=n,
                 mods=torch.unsqueeze(torch.tensor(batch1.mods), 0),
                 charge=c,
             )
 
             batch2 = ForwardBatch(
-                src=torch.unsqueeze(torch.tensor(batch2.aas), 0),
+                seq=torch.unsqueeze(torch.tensor(batch2.aas), 0),
                 nce=n,
                 mods=torch.unsqueeze(torch.tensor(batch2.mods), 0),
                 charge=c,
@@ -224,8 +224,8 @@ def test_variable_length_has_same_results(setup_model):
 
             assert torch.all(
                 (
-                    mod.forward(*batch1, debug=True).spectra
-                    - mod.forward(*batch2, debug=True).spectra
+                    mod.forward(**batch1._asdict(), debug=True).spectra
+                    - mod.forward(**batch2._asdict(), debug=True).spectra
                 )
                 < 1e-5
             )
@@ -242,7 +242,7 @@ def test_variable_length(benchmark, variable_length, setup_model):
         for s, c, n in zip(seqs, charges, nces):
             batch = efe.encode_mod_seq(seq=s, pad_zeros=pad_zeros)
             batch = ForwardBatch(
-                src=torch.unsqueeze(torch.tensor(batch.aas), 0),
+                seq=torch.unsqueeze(torch.tensor(batch.aas), 0),
                 nce=n,
                 mods=torch.unsqueeze(torch.tensor(batch.mods), 0),
                 charge=c,

@@ -166,17 +166,17 @@ def evaluate_on_dataset(
                 nce = b.nce
 
             outs = model.forward(
-                src=b.encoded_sequence.clone().to(device),
+                seq=b.seq.clone().to(device),
                 charge=b.charge.clone().to(device),
-                mods=b.encoded_mods.clone().to(device),
+                mods=b.mods.clone().to(device),
                 nce=nce.clone().to(device),
             )
 
             out_spec = outs.spectra.cpu().clone()
             out_spec = out_spec / out_spec.max(axis=1).values.unsqueeze(0).T
 
-            spec_results_cs.append(cs(out_spec, b.encoded_spectra))
-            spec_results_pc.append(pc(out_spec, b.encoded_spectra))
+            spec_results_cs.append(cs(out_spec, b.spectra))
+            spec_results_pc.append(pc(out_spec, b.spectra))
             rt_results.append(outs.irt.cpu().clone())
             del b
             del outs

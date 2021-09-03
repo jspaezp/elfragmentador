@@ -257,10 +257,10 @@ class PinDataset(IterableDataset):
         gt_rts = []
         pred_rts = []
         last_fw_batch = ForwardBatch(
-            torch.tensor(0).long(),
-            torch.tensor(0).float(),
-            torch.tensor(0).long(),
-            torch.tensor(0).long(),
+            seq = torch.tensor(0).long(),
+            mods = torch.tensor(0).long(),
+            charge = torch.tensor(0).long(),
+            nce = torch.tensor(0).float(),
         )
 
         tqdm_iter = tqdm(self, total=len(self), disable=not verbose)
@@ -310,7 +310,7 @@ class PinDataset(IterableDataset):
     def greedy_iter(self):
         for input_batch, gt_batch in self.greedy_cache:
             input_batch = ForwardBatch(
-                src=input_batch.src,
+                seq=input_batch.seq,
                 charge=input_batch.charge,
                 mods=input_batch.mods,
                 nce=input_batch.nce + self.nce_offset,
