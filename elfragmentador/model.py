@@ -945,7 +945,7 @@ class PepTransformerModel(pl.LightningModule):
             f"\n loss_irt: {loss_irt}\n"
             f"\n loss_spectra: {loss_cosine}\n"
             f"\n yhat_spec: {yhat_spectra},\n"
-            f"\n y_spec: {batch.encoded_spectra}\n"
+            f"\n y_spec: {batch.spectra}\n"
             f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
         )
 
