@@ -4,7 +4,7 @@ from elfragmentador import datamodules
 from elfragmentador.utils import prepare_fake_tensor_dataset
 
 from pytorch_lightning import Trainer
-
+import torch
 
 
 @pytest.fixture(params=["csv", "csv.gz"])
@@ -59,8 +59,9 @@ def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
 
 @pytest.fixture(scope="session")
 def tiny_model_ts(tiny_model):
-    ts = tiny_model.to_torchscript()
-    ts.eval()
+    with torch.no_grad():
+        ts = tiny_model.to_torchscript()
+        ts.eval()
     return ts
 
 
