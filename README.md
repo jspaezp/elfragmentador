@@ -88,9 +88,8 @@ I have explored many variations on the model but currently the one distributed i
 #### Urgent
 
 - Decouple to a different package with less dependencies for the inference side of things
-- Make a better logging output for the training script
 - Complete dosctrings and add those to documentation website
-- Allow training with missing values (done for RT, not for spectra)
+- Refactor the package so the hierarchy makes more sense
 
 #### Possible
 

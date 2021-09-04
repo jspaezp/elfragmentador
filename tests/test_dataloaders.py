@@ -31,8 +31,7 @@ def check_lengths(i: NamedTuple):
 
 def test_dataset_outputs_correct_dims(shared_datadir):
     df = pd.read_csv(str(shared_datadir) + "/train_data_sample/combined_val.csv")
-    df = datamodules.filter_df_on_sequences(df)
-    dataset = datamodules.PeptideDataset(df)
+    dataset = datamodules.PeptideDataset(df, filter_df=True)
     i = dataset[0]
     for x in i:
         print(">>>")

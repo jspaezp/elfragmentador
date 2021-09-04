@@ -3,6 +3,9 @@ from elfragmentador.model import PepTransformerModel
 from elfragmentador import datamodules
 from elfragmentador.utils import prepare_fake_tensor_dataset
 
+from pytorch_lightning import Trainer
+
+
 
 @pytest.fixture(params=["csv", "csv.gz"])
 def datamodule(shared_datadir, request):
@@ -40,6 +43,19 @@ def tiny_model():
     mod.eval()
     return mod
 
+@pytest.fixture
+def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
+    datamodule = datamodules.PeptideDataModule(
+        batch_size=2, base_dir= shared_datadir / "train_data_sample"
+    )
+    datamodule.setup()
+    out = tmp_path_factory.mktemp("data")/"ckpt.ckpt"
+    trainer = Trainer(max_epochs=1)
+    trainer.fit(tiny_model, datamodule)
+
+    trainer.save_checkpoint(out)
+    return out
+
 
 @pytest.fixture(scope="session")
 def tiny_model_ts(tiny_model):
@@ -52,9 +68,3 @@ def tiny_model_ts(tiny_model):
 def model_pair(tiny_model, tiny_model_ts):
     return {"base": tiny_model, "traced": tiny_model_ts}
 
-
-@pytest.fixture(scope="session")
-def tiny_model_chekcpoint(tiny_model, tempdir):
-    out_file = tempdir / "out.ckpt"
-    tiny_model.save_checkpoint(tempdir, out_file)
-    return out_file

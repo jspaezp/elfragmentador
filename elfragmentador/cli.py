@@ -26,8 +26,10 @@ import pandas as pd
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import SptxtReader
-from elfragmentador.utils import append_preds, predict_df
+from elfragmentador.datasets.percolator import append_preds
 from elfragmentador import datamodules, evaluate, rt
+from elfragmentador.predictor import Predictor
+from elfragmentador.datasets.sequence_dataset import SequenceDataset
 
 import uniplot
 
@@ -44,12 +46,6 @@ def _common_checkpoint_args(parser):
         type=str,
         default=elfragmentador.DEFAULT_CHECKPOINT,
         help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
-    )
-    parser.add_argument(
-        "--device",
-        default="cpu",
-        type=str,
-        help="Device to move the model to during the evaluation",
     )
     parser.add_argument(
         "--threads",
@@ -85,15 +81,6 @@ def _setup_model(args):
             raise RuntimeError(e)
 
     model.eval()
-
-    if args.device != "cpu":
-        logging.warning(
-            (
-                "Only cpu inference is implemented at the moment."
-                " If you want it implemented please open an issue"
-            )
-        )
-
     return model
 
 
@@ -156,6 +143,7 @@ def _append_prediction_parser():
         help="Input percolator file",
     )
     _common_checkpoint_args(parser)
+    Predictor.add_predictor_args(parser)
     return parser
 
 
@@ -172,8 +160,11 @@ def append_predictions():
     parser = _append_prediction_parser()
     args = parser.parse_args()
     model = _setup_model(args)
+    predictor = Predictor.from_argparse_args(args)
 
-    out_df = append_preds(in_pin=args.pin, out_pin=args.out, model=model)
+    out_df = append_preds(
+        in_pin=args.pin, out_pin=args.out, model=model, predictor=predictor
+    )
     logging.info(out_df)
 
 
@@ -192,17 +183,18 @@ def _predict_csv_parser():
         ),
     )
     parser.add_argument(
-        "--impute_collision_energy",
-        type=float,
-        default=0,
-        help="Collision energy to use if none is specified in the file",
-    )
-    parser.add_argument(
         "--out",
         type=str,
         help="Output .sptxt file",
     )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        help="Batch size to use during predictions",
+        default=4,
+    )
     _common_checkpoint_args(parser)
+    Predictor.add_predictor_args(parser)
     return parser
 
 
@@ -214,17 +206,13 @@ def predict_csv():
 
     parser = _predict_csv_parser()
     args = parser.parse_args()
-    if args.impute_collision_energy == 0:
-        nce = False
-    else:
-        nce = args.impute_collision_energy
 
     model = _setup_model(args)
+    predictor = Predictor.from_argparse_args(args)
+    ds = SequenceDataset.from_csv(args.csv)
 
-    with open(args.out, "w") as f:
-        f.write(
-            predict_df(pd.read_csv(args.csv), impute_collision_energy=nce, model=model)
-        )
+    ds.predict(model=model, predictor=predictor, batch_size=args.batch_size)
+    ds.generate_sptxt(args.out)
 
 
 def _convert_sptxt_parser():

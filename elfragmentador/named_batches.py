@@ -1,4 +1,3 @@
-
 from collections import namedtuple
 
 import torch
@@ -55,4 +54,21 @@ Examples:
     >>> y = PredictionResults(spectra = torch.rand(43), irt = torch.rand(1))
     >>> TrainBatch(**x._asdict(), **y._asdict(), weight=None)
     TrainBatch(seq=tensor([...]), mods=tensor([...]), charge=tensor([...]), nce=tensor([...]), spectra=tensor([...]), irt=tensor([...]), weight=None)
+"""
+
+EvaluationLossBatch = namedtuple(
+    "EvaluationLossBatch", "scaled_se_loss, loss_cosine, loss_irt, loss_angle"
+)
+EvaluationLossBatch.__doc__ = """Named tuple that bundles losses from evaluating against a dataset
+Parameters:
+    scaled_se_loss (Tensor):
+        Squared error of the scaled versions of the input and target retention times.
+        (mean subtraction and divided by standard deviation)
+    loss_cosine (Tensor):
+        1 - Cosine similarity of the spectra
+    loss_irt (Tensor):
+        Squared error of the non-scaled retention times
+    loss_angle (Tensor):
+        1 - Spectral angle loss
+
 """

@@ -306,6 +306,7 @@ class AASequenceEmbedding(torch.nn.Module):
     def forward(self, seq, mods, debug: bool = False):
         if debug:
             logging.debug(f"AAE: Input shapes seq={seq.shape}, mods={mods.shape}")
+
         seq = self.aa_encoder(seq.permute(1, 0))
         mods = self.mod_encoder(mods.permute(1, 0))
         seq = seq + mods

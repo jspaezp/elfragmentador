@@ -20,25 +20,35 @@ import torch
 from torch import Tensor, nn
 import pytorch_lightning as pl
 
-from argparse import _ArgumentGroup, ArgumentParser
+from argparse import _ArgumentGroup
 
 import elfragmentador
 from elfragmentador import constants
-from elfragmentador import encoding_decoding
 from elfragmentador.spectra import Spectrum
-from elfragmentador.named_batches import ForwardBatch, PredictionResults, TrainBatch
-from elfragmentador.metrics import CosineLoss, SpectralAngleLoss
+from elfragmentador.named_batches import (
+    EvaluationLossBatch,
+    ForwardBatch,
+    PredictionResults,
+    TrainBatch,
+)
+from elfragmentador.metrics import CosineLoss, PearsonCorrelation, SpectralAngleLoss
 from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
 )
 from elfragmentador.math_utils import MissingDataAverager
+from elfragmentador.utils import torch_batch_from_seq
+from elfragmentador.utils_data import cat_collate, collate_fun
+
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
     OneCycleLR,
     ReduceLROnPlateau,
 )
+
+import uniplot
+
 
 class MLP(nn.Module):
     def __init__(
@@ -102,49 +112,28 @@ class MLP(nn.Module):
 
 
 class _IRTDecoder(nn.Module):
-    def __init__(self, d_model):
+    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3):
+        super().__init__()
         """Decode iRTs
 
         Args:
             d_model (int): Number of dimensions to expect as input
-            nhead (int): Number of heads in the attention layers that decode the input
-            dim_feedforward (int, optional): Number of hidden dimensions in the FFN that decodes the sequence. Defaults to 2048.
-            dropout (float, optional): dropout to use in the multihead attention. Defaults to 0.1.
+            nhead (int): Number of heads in the attention layers that decode the input, defaults to 4
+            dim_feedforward (int, optional): Number of hidden dimensions in the FFN that decodes the sequence. Defaults to 224
+            n_layers (int, optional): dropout to use in the multihead attention. Defaults to 3
         """
-        super().__init__()
-        self.out_mlp = MLP(
-            input_dim=d_model, hidden_dim=d_model, output_dim=1, num_layers=3
-        )
-
-    def forward(self, memory):
-        """Decode transformer encoder inputs to iRT
-
-        Args:
-            memory (Tensor): Output from transformer encoder. Shape *[SequenceLength, Batch, d_model]*
-
-        Returns:
-            Tensor: of shape *[Batch, d_model]*
-
-        Examples:
-            >>> dim_model = 64
-            >>> decoder = _IRTDecoder(d_model = dim_model)
-            >>> out = decoder.forward(torch.rand(22, 55, dim_model))
-            >>> out.shape
-            torch.Size([55, 1])
-        """
-        out = self.out_mlp(memory).mean(axis=0).permute(0, 1)  # [S,B,1] > [B,1] > [1,B]
-        return out
-
-class _IRTDecoderV2(nn.Module):
-    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3):
-        super().__init__()
 
         self.aa_embed = AASequenceEmbedding(d_model=d_model)
         encoder_layers = nn.TransformerEncoderLayer(
-            d_model = d_model, nhead = nhead, dim_feedforward=dim_feedforward, dropout=0,
-            activation="gelu"
+            d_model=d_model,
+            nhead=nhead,
+            dim_feedforward=dim_feedforward,
+            dropout=0,
+            activation="gelu",
         )
-        self.encoder = nn.TransformerEncoder(encoder_layer=encoder_layers, num_layers=n_layers)
+        self.encoder = nn.TransformerEncoder(
+            encoder_layer=encoder_layers, num_layers=n_layers
+        )
         self.linear_out = nn.Linear(in_features=d_model, out_features=1)
 
     def forward(self, seq, mods):
@@ -155,10 +144,11 @@ class _IRTDecoderV2(nn.Module):
         ).masked_fill(seq > 0, float(0.0))
         # mask [N, S]
 
-        embed_seq = self.aa_embed(seq = seq, mods=mods) # [S, N, d_model]
+        embed_seq = self.aa_embed(seq=seq, mods=mods)  # [S, N, d_model]
         memory = self.encoder(embed_seq, src_key_padding_mask=trans_encoder_mask)
-        out = self.linear_out(memory).mean(axis=0).permute(0,1)
+        out = self.linear_out(memory).mean(axis=0).permute(0, 1)
         return out
+
 
 class _PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
@@ -409,15 +399,15 @@ class PepTransformerModel(pl.LightningModule):
         # On this implementation, the rt predictor is a simple MLP
         # that combines the features from the transformer encoder
 
-        # self.irt_decoder = _IRTDecoder(d_model=d_model)
-        self.irt_decoder = _IRTDecoderV2(
+        self.irt_decoder = _IRTDecoder(
             d_model=d_model,
             dim_feedforward=nhid,
             nhead=nhead,
-            n_layers=num_encoder_layers)
+            n_layers=num_encoder_layers,
+        )
 
         # Training related things
-        self.mse_loss = nn.MSELoss(reduction='none')
+        self.mse_loss = nn.MSELoss(reduction="none")
         self.cosine_loss = CosineLoss(dim=1, eps=1e-4)
         self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-4)
         self.lr = lr
@@ -561,35 +551,9 @@ class PepTransformerModel(pl.LightningModule):
         return out
 
     @staticmethod
-    def torch_batch_from_seq(
-        seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True
-    ):
-        """Generate an input batch for the model from a sequence string.
-
-        Parameters:
-          seq (str): String describing the sequence to be predicted, e. "PEPT[PHOSOHO]IDEPINK"
-          nce (float): Collision energy to use for the prediction, e. 27.0
-          charge (int): Charge of the precursor to use for the prediction, e. 3
-
-        Returns:
-            ForwardBatch: Named tuple with the tensors to use as a forward batch
-
-        Examples:
-            >>> PepTransformerModel.torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
-            ForwardBatch(seq=tensor([[23, 13,  4, 13, 17,  ...]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]), nce=tensor([[27.]]))
-        """
-        encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
-            seq, enforce_length=enforce_length, pad_zeros=pad_zeros
-        )
-
-        seq = torch.Tensor(encoded_seq).unsqueeze(0).long()
-        mods = torch.Tensor(encoded_mods).unsqueeze(0).long()
-        in_charge = torch.Tensor([[charge]]).long()
-        in_nce = torch.Tensor([[nce]]).float()
-
-        # This is a named tuple
-        out = ForwardBatch(seq=seq, mods=mods, nce=in_nce, charge=in_charge)
-        return out
+    def torch_batch_from_seq(*args, **kwargs) -> ForwardBatch:
+        torch_batch_from_seq.__doc__
+        return torch_batch_from_seq(*args, **kwargs)
 
     def to_torchscript(self):
         """ """
@@ -679,7 +643,7 @@ class PepTransformerModel(pl.LightningModule):
 
         # TODO consider if adding GPU inference
         out = self.forward(debug=debug, **in_batch._asdict())
-        out = PredictionResults(**{ k:x.squeeze(0) for k,x in out._asdict().items() })
+        out = PredictionResults(**{k: x.squeeze(0) for k, x in out._asdict().items()})
         logging.debug(out)
 
         # rt should be in seconds for spectrast ...
@@ -930,7 +894,9 @@ class PepTransformerModel(pl.LightningModule):
 
         return [opt], [scheduler_dict]
 
-    def _step(self, batch: TrainBatch, batch_idx: int) -> Dict[str, Tensor]:
+    def _step(
+        self, batch: TrainBatch, batch_idx: int, prediction=False
+    ) -> Dict[str, Tensor]:
         """Run main functionality during training an testing steps.
 
         Internally used in training and evaluation steps during the training
@@ -943,10 +909,16 @@ class PepTransformerModel(pl.LightningModule):
             batch = TrainBatch(*batch)
 
         yhat_irt, yhat_spectra = self.batch_forward(batch)
+
+        if prediction:
+            pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
+
         yhat_irt = yhat_irt[~batch.irt.isnan()]
         norm_irt = batch.irt[~batch.irt.isnan()]
 
-        loss_irt = self.mse_loss(yhat_irt, norm_irt.float()) * batch.weight[~batch.irt.isnan()]
+        loss_irt = (
+            self.mse_loss(yhat_irt, norm_irt.float()) * batch.weight[~batch.irt.isnan()]
+        )
         loss_irt = loss_irt.mean() / batch.weight[~batch.irt.isnan()].mean()
 
         loss_angle = self.angle_loss(yhat_spectra, batch.spectra) * batch.weight
@@ -961,7 +933,7 @@ class PepTransformerModel(pl.LightningModule):
             # total_loss = total_loss / (self.loss_ratio + 1)
             total_loss = loss_irt + total_loss
 
-        out = {
+        losses = {
             "l": total_loss,
             "irt_l": loss_irt,
             "spec_l": loss_cosine,
@@ -977,7 +949,10 @@ class PepTransformerModel(pl.LightningModule):
             f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
         )
 
-        return out
+        if prediction:
+            return losses, pred_out
+        else:
+            return losses
 
     def training_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
@@ -1026,3 +1001,77 @@ class PepTransformerModel(pl.LightningModule):
         self.spectra_metric2.reset()
 
         return super().validation_epoch_end(outputs)
+
+    def _evaluation_step(
+        self,
+        batch: TrainBatch,
+        batch_idx: int,
+    ) -> Dict[str, Tensor]:
+        """Run main functionality during training an testing steps.
+
+        Internally used in training and evaluation steps during the training
+        loop in pytorch_lightning.
+
+        Does inference, loss calculation, handling of missing values ...
+        """
+        if isinstance(batch, list):
+            batch = TrainBatch(*batch)
+
+        yhat_irt, yhat_spectra = self.forward(
+            seq=batch.seq, mods=batch.mods, charge=batch.charge, nce=batch.nce
+        )
+
+        pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
+
+        loss_irt = self.mse_loss(yhat_irt, batch.irt.float())
+        loss_angle = self.angle_loss(yhat_spectra, batch.spectra)
+        loss_cosine = self.cosine_loss(yhat_spectra, batch.spectra)
+
+        losses = {
+            "loss_irt": loss_irt,
+            "loss_angle": loss_angle,
+            "loss_cosine": loss_cosine,
+        }
+
+        return losses, pred_out
+
+    def test_step(self, batch, batch_idx=None):
+        losses, pred_out = self._evaluation_step(batch=batch, batch_idx=batch_idx)
+        return losses, pred_out.irt, batch.irt
+
+    def test_epoch_end(self, outputs):
+        losses = cat_collate([x[0] for x in outputs])
+        pred_irt_outs = torch.cat([x[1] for x in outputs])
+        truth_irt = torch.cat([x[2] for x in outputs])
+
+        nm_pred_irt_outs = pred_irt_outs[~torch.isnan(truth_irt)]
+        nm_truth_irt = truth_irt[~torch.isnan(truth_irt)]
+
+        norm_pred_irt = (
+            pred_irt_outs - nm_pred_irt_outs.mean()
+        ) / nm_pred_irt_outs.std()
+        norm_truth_irt = (truth_irt - nm_truth_irt.mean()) / nm_truth_irt.std()
+
+        if self.trainer.plot:
+            xs=norm_pred_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
+            ys=norm_truth_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
+
+            if len(xs) > 0:
+                uniplot.plot(
+                    xs=xs, ys=ys,
+                    title="Scaled ground truth (y) vs scaled prediction(x) of RT",
+                )
+            else:
+                logging.error("All values are missing for retention time, skipping plotting")
+
+        losses.update({"scaled_se_loss": self.mse_loss(norm_pred_irt, norm_truth_irt)})
+        self.log_dict({"median_" + k: v.median() for k, v in losses.items()})
+
+        self.trainer.test_results = EvaluationLossBatch(**losses)
+
+    def predict_step(self, batch: TrainBatch, batch_idx: Optional[int] = None):
+        yhat_irt, yhat_spectra = self.forward(
+            seq=batch.seq, mods=batch.mods, charge=batch.charge, nce=batch.nce
+        )
+        pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
+        return pred_out
