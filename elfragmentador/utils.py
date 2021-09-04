@@ -70,7 +70,6 @@ def _attempt_find_file(row_rawfile, possible_paths):
     raise FileNotFoundError(tried_paths)
 
 
-
 def get_random_peptide():
     AAS = [x for x in CONSTANTS.ALPHABET if x.isupper()]
     len_pep = random.randint(5, CONSTANTS.MAX_SEQUENCE)

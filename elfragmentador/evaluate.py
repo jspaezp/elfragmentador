@@ -127,7 +127,10 @@ def evaluate_on_dataset(
     )
 
     summ_out = {"median_" + k: v.median() for k, v in outs._asdict().items()}
-    return pd.DataFrame({k:v.squeeze().numpy() for k,v in outs._asdict().items()}), summ_out
+    return (
+        pd.DataFrame({k: v.squeeze().numpy() for k, v in outs._asdict().items()}),
+        summ_out,
+    )
 
 
 def evaluate_landmark_rt(model: PepTransformerModel):

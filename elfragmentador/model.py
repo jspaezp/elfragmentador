@@ -1053,16 +1053,19 @@ class PepTransformerModel(pl.LightningModule):
         norm_truth_irt = (truth_irt - nm_truth_irt.mean()) / nm_truth_irt.std()
 
         if self.trainer.plot:
-            xs=norm_pred_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
-            ys=norm_truth_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
+            xs = norm_pred_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
+            ys = norm_truth_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
 
             if len(xs) > 0:
                 uniplot.plot(
-                    xs=xs, ys=ys,
+                    xs=xs,
+                    ys=ys,
                     title="Scaled ground truth (y) vs scaled prediction(x) of RT",
                 )
             else:
-                logging.error("All values are missing for retention time, skipping plotting")
+                logging.error(
+                    "All values are missing for retention time, skipping plotting"
+                )
 
         losses.update({"scaled_se_loss": self.mse_loss(norm_pred_irt, norm_truth_irt)})
         self.log_dict({"median_" + k: v.median() for k, v in losses.items()})

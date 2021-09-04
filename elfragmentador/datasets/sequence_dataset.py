@@ -88,7 +88,9 @@ class SequenceDataset(DatasetBase):
             )
 
         with open(outfile, "w") as f:
-            for ib, irt, spec in zip(self.batches, self.predicted_irt, self.predicted_spectra):
+            for ib, irt, spec in zip(
+                self.batches, self.predicted_irt, self.predicted_spectra
+            ):
                 ob = PredictionResults(irt=irt, spectra=spec)
                 spec = self.convert_to_spectrum(ib, ob).to_sptxt()
                 f.write(spec + "\n")

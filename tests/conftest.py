@@ -43,13 +43,14 @@ def tiny_model():
     mod.eval()
     return mod
 
+
 @pytest.fixture
 def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
     datamodule = datamodules.PeptideDataModule(
-        batch_size=2, base_dir= shared_datadir / "train_data_sample"
+        batch_size=2, base_dir=shared_datadir / "train_data_sample"
     )
     datamodule.setup()
-    out = tmp_path_factory.mktemp("data")/"ckpt.ckpt"
+    out = tmp_path_factory.mktemp("data") / "ckpt.ckpt"
     trainer = Trainer(max_epochs=1)
     trainer.fit(tiny_model, datamodule)
 
@@ -68,4 +69,3 @@ def tiny_model_ts(tiny_model):
 @pytest.fixture(scope="session")
 def model_pair(tiny_model, tiny_model_ts):
     return {"base": tiny_model, "traced": tiny_model_ts}
-
