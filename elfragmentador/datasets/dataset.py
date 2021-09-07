@@ -183,10 +183,8 @@ class Predictor(Trainer):
     ) -> EvaluationLossBatch:
         if optimize_nce:
             best_nce_offset = dataset.optimize_nce(model, optimize_nce, predictor=self)
-        else:
-            best_nce_offset = 0
+            dataset.nce_offset = best_nce_offset
 
-        dataset.nce_offset = best_nce_offset
         dl = DataLoader(
             dataset=dataset,
             batch_size=self.batch_size,
