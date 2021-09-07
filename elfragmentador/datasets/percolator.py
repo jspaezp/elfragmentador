@@ -307,9 +307,7 @@ class MokapotPSMDataset(PinDataset):
         df = df[df["mokapot PEP"] < max_pep]
 
         logging.info("Sorting input")
-        self._initialize_on_df(df)
-
-        self.nce_offset = nce_offset
+        self._initialize_on_df(df, nce_offset=nce_offset)
 
 
 @torch.no_grad()
