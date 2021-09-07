@@ -8,9 +8,8 @@ from pandas import DataFrame
 
 from elfragmentador.utils import torch_batch_from_seq
 from elfragmentador.spectra import Spectrum
-from elfragmentador.datasets.dataset import DatasetBase
+from elfragmentador.datasets.dataset import DatasetBase, Predictor
 from elfragmentador.named_batches import ForwardBatch, PredictionResults
-from elfragmentador.predictor import Predictor
 from elfragmentador.model import PepTransformerModel
 
 
@@ -102,10 +101,11 @@ class SequenceDataset(DatasetBase):
         batch_size: int = 4,
     ):
         if predictor is None:
-            predictor = Predictor()
+            predictor = Predictor(batch_size=batch_size)
 
         predictions = predictor.predict_dataset(
-            model=model, dataset=self, batch_size=batch_size
+            model=model,
+            dataset=self,
         )
         self.predicted_irt = predictions.irt
         self.predicted_spectra = predictions.spectra

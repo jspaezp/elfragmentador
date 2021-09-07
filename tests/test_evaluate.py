@@ -1,6 +1,7 @@
 from pathlib import Path
 import elfragmentador as ef
 from elfragmentador import datamodules, evaluate
+from elfragmentador.predictor import Predictor
 
 
 def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
@@ -9,7 +10,8 @@ def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
     ds = datamodules.PeptideDataset.from_sptxt(
         str(shared_datadir) + "/small_phospho_spectrast.sptxt"
     )
-    out = evaluate.evaluate_on_dataset(mod, ds)
+    predictor = Predictor()
+    out = predictor.evaluate_dataset(mod, ds, optimize_nce=False)
     print(out)
 
 

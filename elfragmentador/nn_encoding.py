@@ -323,12 +323,24 @@ class AASequenceEmbedding(torch.nn.Module):
         return seq
 
     def as_DataFrames(self):
-        df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
-        df_aa.columns = ["EMPTY"] + list(constants.AMINO_ACID)
+        """Returns the weights as data frames
 
-        df_mod = pd.DataFrame(
-            data=self.aa_encoder.mod_encoder.weight.detach().cpu().numpy().T
-        )
+        Returns:
+            Tuple[DataFrame, DataFrame]:
+                A data frame of the aminoacid embeddings and the modification embeddings
+
+        Examples:
+            >>> embed = AASequenceEmbedding(20)
+            >>> aa_embed, mod_embed = embed.as_DataFrames()
+            >>> list(aa_embed)
+            ['EMPTY', 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'c', 'n']
+            >>> list(mod_embed)
+            ['EMPTY', 'CARBAMIDOMETHYL', 'ACETYL', 'DEAMIDATED', 'OXIDATION', 'PHOSPHO', 'METHYL', 'DIMETHYL', 'TRIMETHYL', 'FORMYL', 'GG', 'LRGG', 'NITRO', 'BIOTINYL', 'TMT6PLEX']
+        """
+        df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
+        df_aa.columns = ["EMPTY"] + list(constants.ALPHABET.keys())
+
+        df_mod = pd.DataFrame(data=self.mod_encoder.weight.detach().cpu().numpy().T)
         df_mod.columns = ["EMPTY"] + list(constants.MODIFICATION)
 
         return df_aa, df_mod

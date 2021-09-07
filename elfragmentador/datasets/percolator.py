@@ -39,50 +39,56 @@ class PinDataset(IterableDatasetBase):
     DOT_RE = re.compile("(?<=\.).*(?=\..*$)")
     TEMPLATE_STRING = "controllerType=0 controllerNumber=1 scan={SCAN_NUMBER}"
     DEFAULT_TENSOR = torch.tensor([0 for _ in range(CONSTANTS.NUM_FRAG_EMBEDINGS)])
+    metric = "Xcorr"
 
     def __init__(
         self,
-        in_pin_path: PathLike,
+        in_path: PathLike,
         df: Optional[DataFrame] = None,
         nce_offset: float = 0,
     ):
         """Generate a Dataset from a percolator input file
 
         Args:
-            in_pin_path (PathLike): Input path to percolator input file
+            in_path (PathLike): Input path to percolator input file
             df (DataFrame, optional): Pandas dataframe product of reading the file or a modification of it
             nce_offset (float, optional): [description]. Defaults to 0.
 
         """
         logging.info("Starting Percolator input dataset")
-        self.in_pin_path = Path(in_pin_path)
+        self.in_path = Path(in_path)
         if df is None:
             # TODO fix so the last column remains unchanged, right now it keeps
             # only the first protein because the field is not quoted in comet
             # outputs
             df = pd.read_csv(
-                in_pin_path,
+                in_path,
                 sep="\t",
                 index_col=False,
                 usecols=list(range(PinDataset.NUM_COLUMNS)),
             )
 
-        logging.info(f"Read DataFrame with columns {list(df)} and length {len(df)}")
+            logging.info(f"Read DataFrame with columns {list(df)} and length {len(df)}")
         logging.info("Sorting input")
-        df = (
-            df.sort_values(by=["PepLen", "Peptide", "CalcMass"])
-            .reset_index(drop=True)
-            .copy()
-        )
+
+        if "PepLen" in list(df):
+            column_order = ["PepLen", "Peptide", "CalcMass"]
+        else:
+            column_order = ["CalcMass", "Peptide"]
+
+        df = df.sort_values(by=column_order).reset_index(drop=True).copy()
+        self._initialize_on_df(df, nce_offset=nce_offset)
+
+        # The appendix is in the form of _SpecNum_Charge_ID
+
+    def _initialize_on_df(self, df, nce_offset):
         self.df = df
 
         self.mzml_readers = {}
         self.mzml_files = {}
         self.nce_offset = nce_offset
 
-        # The appendix is in the form of _SpecNum_Charge_ID
-
-    def top_n_subset(self, n: int, column: str, ascending=False) -> PinDataset:
+    def top_n_subset(self, n: int, ascending=False) -> PinDataset:
         """Generate another percolator dataset with a subset of the observations
 
         Args:
@@ -96,10 +102,8 @@ class PinDataset(IterableDatasetBase):
             PinDataset: Subsetted percolator dataset
         """
         df = self.df
-        df = df.sort_values(column, ascending=ascending).head(n)
-        return PinDataset(
-            df=df, in_pin_path=self.in_pin_path, nce_offset=self.nce_offset
-        )
+        df = df.sort_values(self.metric, ascending=ascending).head(n)
+        return self.__class__(df=df, in_path=self.in_path, nce_offset=self.nce_offset)
 
     def generate_elements(self) -> Generator[TrainBatch]:
         """Make a generator that goes though the percolator input
@@ -130,18 +134,19 @@ class PinDataset(IterableDatasetBase):
             try:
                 rawfile_path = self.mzml_files[row_rawfile]
             except KeyError as e:
-                rawfile_path = _attempt_find_file(
+                self.mzml_files[row_rawfile] = _attempt_find_file(
                     row_rawfile,
                     [
-                        self.in_pin_path.parent,
+                        self.in_path.parent,
                         ".",
                         "../",
                         "../../",
-                        self.in_pin_path.parent / ".",
-                        self.in_pin_path.parent / "../",
-                        self.in_pin_path.parent / "../../",
+                        self.in_path.parent / ".",
+                        self.in_path.parent / "../",
+                        self.in_path.parent / "../../",
                     ],
                 )
+                rawfile_path = self.mzml_files[row_rawfile]
 
             if self.mzml_readers.get(str(rawfile_path), None) is None:
                 self.mzml_readers[str(rawfile_path)] = mzml.PreIndexedMzML(
@@ -222,53 +227,6 @@ class PinDataset(IterableDatasetBase):
             )
         )
 
-    def optimize_nce(
-        self, model, offsets=range(-10, 10, 2), n=500, predictor=None, batch_size=4
-    ):
-        if predictor is None:
-            predictor = Predictor()
-
-        offsets = [0] + list(offsets)
-        logging.info(f"Finding best nce offset from {offsets}")
-        best = 0
-        best_score = 0
-
-        tmp_ds = self.top_n_subset(n=min(len(self), n), column="Xcorr")
-        tmp_ds.greedify()
-        for i, offset in enumerate(offsets):
-            tmp_ds.nce_offset = offset
-            outs = predictor.evaluate_dataset(
-                model, tmp_ds, batch_size=batch_size, plot=False
-            )
-            score = 1 - outs.loss_angle.median()
-            logging.info(f"NCE Offset={offset}, score={score}")
-            if score > best_score:
-                if i > 0:
-                    logging.info(
-                        (
-                            f"Updating best offset (from {best} to {offset}) "
-                            f"because {best_score} < {score}"
-                        )
-                    )
-                best = offset
-                best_score = score
-        msg = f"Best nce offset was {best}, score = {best_score}"
-        logging.info(msg)
-        print(msg)
-        self.nce_offset = best
-        return best
-
-    @torch.no_grad()
-    def compare_predicted(
-        self, model, predictor=None, batch_size=4
-    ) -> EvaluationLossBatch:
-        if predictor is None:
-            predictor = Predictor()
-
-        outs = predictor.evaluate_dataset(model, self, batch_size=batch_size)
-
-        return outs
-
     def greedify(self):
         logging.info(f"Making Greedy dataset of length {len(self)}")
         old_offset = self.nce_offset
@@ -299,6 +257,61 @@ class PinDataset(IterableDatasetBase):
         return len(self.df)
 
 
+class MokapotPSMDataset(PinDataset):
+    metric = "mokapot score"
+
+    def __init__(
+        self,
+        in_path: PathLike,
+        df: Optional[DataFrame] = None,
+        nce_offset: float = 0,
+        max_q: float = 0.01,
+        max_pep: float = 0.01,
+    ):
+        """Generate a Dataset from a percolator input file
+
+        Args:
+            txt_file (PathLike): Path to a psms.txt file containing a rescored list of psms (output of mokapot)
+            df (DataFrame, optional): Pandas dataframe product of reading the file or a modification of it
+            nce_offset (float, optional): [description]. Defaults to 0.
+
+        Details:
+            Expects the columns:
+
+            ```
+             SpecId
+             Label
+             ScanNr
+             ExpMass
+             CalcMass
+             Peptide
+             mokapot score
+             mokapot q-value
+             mokapot PEP
+             Proteins
+            ```
+
+        """
+        logging.info("Starting Percolator output dataset")
+        self.in_path = Path(in_path)
+        if df is None:
+            df = pd.read_csv(
+                in_path,
+                sep="\t",
+                index_col=False,
+            )
+
+        logging.info(f"Read DataFrame with columns {list(df)} and length {len(df)}")
+
+        df = df[df["mokapot q-value"] < max_q]
+        df = df[df["mokapot PEP"] < max_pep]
+
+        logging.info("Sorting input")
+        self._initialize_on_df(df)
+
+        self.nce_offset = nce_offset
+
+
 @torch.no_grad()
 def append_preds(
     in_pin: Union[Path, str],
@@ -322,7 +335,7 @@ def append_preds(
         ".*peaks were annotated for spectra.*",
     )
 
-    perc_inputs = PinDataset(in_pin_path=in_pin)
+    perc_inputs = PinDataset(in_path=in_pin)
     perc_inputs.optimize_nce(model, predictor=predictor)
 
     if predictor is None:
@@ -332,7 +345,7 @@ def append_preds(
     df.insert(loc=PinDataset.NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
     df.insert(loc=PinDataset.NUM_COLUMNS - 2, column="DiffNormRT", value=100)
 
-    outs = perc_inputs.compare_predicted(model, predictor=predictor)
+    outs = predictor.evaluate_dataset(model=model, dataset=perc_inputs)
 
     df["SpecAngle"] = 1 - outs.loss_angle
     df["NormRTSqError"] = outs.scaled_se_loss

@@ -26,8 +26,9 @@ import pandas as pd
 from elfragmentador.train import build_train_parser, main_train
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.spectra import SptxtReader
-from elfragmentador.datasets.percolator import append_preds
-from elfragmentador import datamodules, evaluate, rt
+from elfragmentador.datasets.percolator import append_preds, MokapotPSMDataset
+from elfragmentador import evaluate, rt
+from elfragmentador.datasets.peptide_dataset import PeptideDataset
 from elfragmentador.predictor import Predictor
 from elfragmentador.datasets.sequence_dataset import SequenceDataset
 
@@ -187,12 +188,6 @@ def _predict_csv_parser():
         type=str,
         help="Output .sptxt file",
     )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        help="Batch size to use during predictions",
-        default=4,
-    )
     _common_checkpoint_args(parser)
     Predictor.add_predictor_args(parser)
     return parser
@@ -301,8 +296,28 @@ def convert_sptxt():
 
 
 def _evaluate_parser():
-    parser = evaluate.build_evaluate_parser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        "--input",
+        type=str,
+        help="Path to a file to use as a reference for the evaluation (.sptxt generally)",
+    )
+    parser.add_argument(
+        "--screen_nce",
+        type=str,
+        help="Comma delimited series of collision energies to use",
+    )
+    parser.add_argument(
+        "--max_spec",
+        default=1e6,
+        type=int,
+        help="Maximum number of spectra to read",
+    )
+    parser.add_argument(
+        "--out_csv", type=str, help="Optional csv file to output results to"
+    )
     _common_checkpoint_args(parser)
+    parser = Predictor.add_argparse_args(parser)
     return parser
 
 
@@ -316,55 +331,57 @@ def evaluate_checkpoint():
     args = parser.parse_args()
     dict_args = vars(args)
     logging.info(dict_args)
-
+    predictor = Predictor.from_argparse_args(args)
     model = _setup_model(args)
-    if dict_args["csv"] is not None:
-        ds = datamodules.PeptideDataset.from_csv(
-            args.csv,
+
+    input_file = str(dict_args.input)
+    if input_file.endswith("csv"):
+        ds = PeptideDataset.from_csv(
+            input_file,
             max_spec=args.max_spec,
         )
-    elif dict_args["sptxt"] is not None:
-        ds = datamodules.PeptideDataset.from_sptxt(
-            args.sptxt,
+    elif input_file.endswith("sptxt") or input_file.endswith("mgf"):
+        ds = PeptideDataset.from_sptxt(
+            input_file,
             max_spec=args.max_spec,
+        )
+    elif input_file.endswith("feather"):
+        ds = PeptideDataset.from_feather(
+            input_file,
+            max_spec=args.max_spec,
+        )
+    elif input_file.endswith(".psms.txt"):
+        ds = MokapotPSMDataset(
+            in_path=input_file,
         )
     else:
-        raise ValueError("Must have an argument to either --csv or --sptxt")
+        msg = "Input file should have the extension .feather, .csv, .mgf or .sptxt"
+        raise ValueError(msg)
+
+    if dict_args["out_csv"] is None:
+        logging.warning(
+            "No output will be generated because the out_csv argument was not passed"
+        )
 
     if dict_args["screen_nce"] is not None:
         nces = [float(x) for x in dict_args["screen_nce"].split(",")]
     elif dict_args["overwrite_nce"] is not None:
         nces = [dict_args["overwrite_nce"]]
     else:
-        nces = [False]
+        nces = False
 
-    best_res = tuple([{}, {"AverageSpectraCosineSimilarity": 0}])
-    best_nce = None
-    res_history = []
-    for nce in nces:
-        if nce:
-            logging.info(f">>>> Starting evaluation of NCE={nce}")
-        res = evaluate.evaluate_on_dataset(
-            model=model,
-            dataset=ds,
-            batch_size=args.batch_size,
-            device=args.device,
-            overwrite_nce=nce,
-        )
-        res_history.append(res[1]["AverageSpectraCosineSimilarity"])
-        if (
-            res[1]["AverageSpectraCosineSimilarity"]
-            > best_res[1]["AverageSpectraCosineSimilarity"]
-        ):
-            best_res = res
-            best_nce = nce
+    outs = predictor.evaluate_dataset(
+        dataset=ds, model=model, optimize_nce=nces, plot=True
+    )
 
-    if len(nces) > 1:
-        logging.info(f"Best Nce was {best_nce}")
-        uniplot.plot(ys=res_history, xs=nces)
+    summ_out = {"median_" + k: v.median() for k, v in outs._asdict().items()}
+    res = pd.DataFrame({k: v.squeeze().numpy() for k, v in outs._asdict().items()})
+
+    logging.info(summ_out)
 
     if dict_args["out_csv"] is not None:
-        best_res[0].to_csv(dict_args["out_csv"], index=False)
+        logging.info(f"Writting results to {dict_args['out_csv']}")
+        res.to_csv(dict_args["out_csv"], index=False)
 
 
 @_gen_cli_help(build_train_parser())

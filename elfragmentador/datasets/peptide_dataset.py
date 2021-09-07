@@ -34,6 +34,7 @@ class PeptideDataset(DatasetBase):
         max_spec: int = 2e6,
         drop_missing_vals=False,
         filter_df: bool = False,
+        keep_df: bool = False,
     ) -> None:
         super().__init__()
         logging.info(">>> Initalizing Dataset")
@@ -124,7 +125,9 @@ class PeptideDataset(DatasetBase):
             )
         )
         logging.info(">>> Done Initializing dataset\n")
-        del self.df
+
+        if not keep_df:
+            del self.df
 
     @property
     def mod_sequences(self):
@@ -142,6 +145,7 @@ class PeptideDataset(DatasetBase):
         filepath: str,
         max_spec: int = 1e6,
         filter_df: bool = True,
+        keep_df: bool = False,
         *args,
         **kwargs,
     ) -> PeptideDataset:
@@ -151,29 +155,33 @@ class PeptideDataset(DatasetBase):
         if filter_df:
             df = _filter_df_on_sequences(df)
 
-        return PeptideDataset(df)
+        return PeptideDataset(df, keep_df=keep_df)
 
     @staticmethod
     def from_csv(
         filepath: Union[str, Path],
         max_spec: int = 1e6,
         filter_df: bool = True,
+        keep_df: bool = False,
     ):
         df = pd.read_csv(str(filepath))
         if filter_df:
             df = _filter_df_on_sequences(df)
-        return PeptideDataset(df, max_spec=max_spec, filter_df=filter_df)
+        return PeptideDataset(
+            df, max_spec=max_spec, filter_df=filter_df, keep_df=keep_df
+        )
 
     @staticmethod
     def from_feather(
         filepath: PathLike,
         max_spec: int = 2e6,
         filter_df: bool = True,
+        keep_df: bool = False,
     ):
         df = pd.read_feather(str(filepath))
         if filter_df:
             df = _filter_df_on_sequences(df)
-        return PeptideDataset(df, max_spec=max_spec)
+        return PeptideDataset(df, max_spec=max_spec, keep_df=keep_df)
 
     def as_dataloader(self, batch_size, shuffle, num_workers=0, *args, **kwargs):
         return DataLoader(
@@ -184,6 +192,18 @@ class PeptideDataset(DatasetBase):
             *args,
             **kwargs,
         )
+
+    def top_n_subset(self, n, *args, **kwargs):
+        logging.info("Ignoring metric when subsetting in peptide dataset")
+        if not hasattr(self, "df"):
+            msg = "Please generate this dataset again "
+            msg += "using the `keep_df = True` argument"
+
+            raise AttributeError(msg)
+
+        df = self.df.sample(min(n, len(self.df)))
+
+        return PeptideDataset(df, max_spec=n, keep_df=True)
 
     def __len__(self) -> int:
         return len(self.sequence_encodings)

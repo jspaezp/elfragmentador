@@ -937,7 +937,7 @@ class SptxtReader:
 
         logging.info(list(ret))
         logging.info(ret)
-
+        self.df = ret
         return ret
 
     def to_csv(
@@ -951,14 +951,30 @@ class SptxtReader:
         enforce_length=True,
         pad_zeros=True,
     ):
-        df = self.to_df(
-            max_spec=max_spec,
-            min_peaks=min_peaks,
-            min_delta_ascore=min_delta_ascore,
-            irt_fun=irt_fun,
-            enforce_length=enforce_length,
-            pad_zeros=pad_zeros,
-        )
+        if not hasattr(self, "df"):
+            df = self.to_df(
+                max_spec=max_spec,
+                min_peaks=min_peaks,
+                min_delta_ascore=min_delta_ascore,
+                irt_fun=irt_fun,
+                enforce_length=enforce_length,
+                pad_zeros=pad_zeros,
+            )
+        else:
+            df = self.df
+
         if filter_irt_peptides:
             df = df[[x not in CONSTANTS.IRT_PEPTIDES for x in df["Sequences"]]]
+
         df.to_csv(output_path, index=False)
+
+    def to_feather(self, output_path, filter_irt_peptides):
+        if not hasattr(self, "df"):
+            raise RuntimeError("Run .to_df(*args, **kwargs) first")
+
+        df = self.df
+
+        if filter_irt_peptides:
+            df = df[[x not in CONSTANTS.IRT_PEPTIDES for x in df["Sequences"]]]
+
+        df.reset_index(drop=True).to_feather(output_path)

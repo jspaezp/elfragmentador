@@ -49,7 +49,7 @@ from torch.optim.lr_scheduler import (
 
 import uniplot
 
-
+# TODO refactor this massive models into manageable sections
 class MLP(nn.Module):
     def __init__(
         self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int

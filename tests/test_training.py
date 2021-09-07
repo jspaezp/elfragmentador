@@ -22,7 +22,7 @@ def test_mod_train_base(datamodule):
 
 def test_mod_can_overfit(datamodule, tiny_model):
     tiny_model.train()
-    trainer = pl.Trainer(overfit_batches=1, max_epochs=200, gradient_clip_val=50.0)
+    trainer = pl.Trainer(overfit_batches=1, max_epochs=100, gradient_clip_val=50.0)
     tiny_model.steps_per_epoch = 1
     trainer.fit(tiny_model, datamodule.val_dataloader())
 
@@ -52,11 +52,3 @@ def mod_train_with_missing(datadir):
 
     trainer = pl.Trainer(max_epochs=2)
     trainer.fit(mod, datamodule)
-
-
-if __name__ == "__main__":
-    parent_dir = Path(__file__).parent
-    datadir = str(parent_dir) + "/data/"
-    mod_train_base(datadir)
-    mod_train_with_missing(datadir)
-    base_train_works_on_schdulers(datadir)
