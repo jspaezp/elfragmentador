@@ -339,16 +339,26 @@ def evaluate_checkpoint():
         ds = PeptideDataset.from_csv(
             input_file,
             max_spec=args.max_spec,
+            filter_df=False,
+            keep_df=True,
         )
     elif input_file.endswith("sptxt") or input_file.endswith("mgf"):
         ds = PeptideDataset.from_sptxt(
             input_file,
             max_spec=args.max_spec,
+            filter_df=False,
+            keep_df=True,
+            min_peaks=0,
+            min_delta_ascore=0,
+            enforce_length=False,
+            pad_zeros=False,
         )
     elif input_file.endswith("feather"):
         ds = PeptideDataset.from_feather(
             input_file,
             max_spec=args.max_spec,
+            filter_df=False,
+            keep_df=True,
         )
     elif input_file.endswith(".psms.txt"):
         ds = MokapotPSMDataset(
@@ -365,8 +375,6 @@ def evaluate_checkpoint():
 
     if dict_args["screen_nce"] is not None:
         nces = [float(x) for x in dict_args["screen_nce"].split(",")]
-    elif dict_args["overwrite_nce"] is not None:
-        nces = [dict_args["overwrite_nce"]]
     else:
         nces = False
 

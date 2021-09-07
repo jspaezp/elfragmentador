@@ -853,6 +853,7 @@ class SptxtReader:
         d_ascores = []
         nreps = []
 
+        # TODO refactor this ...
         i = 0
         skipped_spec = 0
         iter = tqdm(self)

@@ -146,11 +146,19 @@ class PeptideDataset(DatasetBase):
         max_spec: int = 1e6,
         filter_df: bool = True,
         keep_df: bool = False,
+        min_peaks: int = 3,
+        min_delta_ascore: int = 20,
+        enforce_length=True,
+        pad_zeros=True,
         *args,
         **kwargs,
     ) -> PeptideDataset:
         df = spectra.SptxtReader(str(filepath), *args, **kwargs).to_df(
-            max_spec=max_spec
+            max_spec=max_spec,
+            min_peaks=min_peaks,
+            min_delta_ascore=min_delta_ascore,
+            enforce_length=enforce_length,
+            pad_zeros=pad_zeros,
         )
         if filter_df:
             df = _filter_df_on_sequences(df)

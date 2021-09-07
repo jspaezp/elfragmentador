@@ -61,3 +61,21 @@ def test_prediction_csv_cli(shared_datadir, csv, tmp_path, checkpoint):
     print("".join(contents))
 
     assert len(contents) > 0
+
+
+def test_evaluation_on_dataset_cli(shared_datadir, checkpoint, tmp_path):
+    data = str(shared_datadir) + "/small_phospho_spectrast.sptxt"
+    outfile = tmp_path / "foo.csv"
+
+    exit_code = os.system(
+        f"elfragmentador_evaluate --model_checkpoint {checkpoint} --input {data} --out_csv {outfile} --screen_nce 1,2,3"
+    )
+
+    assert exit_code == 0
+
+    with open(outfile, "r") as f:
+        contents = list(f)
+
+    print("".join(contents))
+
+    assert len(contents) > 0
