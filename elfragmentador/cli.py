@@ -334,7 +334,7 @@ def evaluate_checkpoint():
     predictor = Predictor.from_argparse_args(args)
     model = _setup_model(args)
 
-    input_file = str(dict_args.input)
+    input_file = str(dict_args['input'])
     if input_file.endswith("csv"):
         ds = PeptideDataset.from_csv(
             input_file,
