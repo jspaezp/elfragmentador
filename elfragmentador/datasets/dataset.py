@@ -89,7 +89,8 @@ class NCEOffsetHolder:
                 continue
 
             tried_offsets.append(offset)
-            tmp_ds.offset = offset
+            # TODO write a test here
+            tmp_ds.nce_offset = offset
             outs = predictor.evaluate_dataset(
                 model, tmp_ds, plot=False, optimize_nce=False
             )
