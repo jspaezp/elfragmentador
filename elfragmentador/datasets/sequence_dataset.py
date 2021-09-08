@@ -109,3 +109,15 @@ class SequenceDataset(DatasetBase):
         )
         self.predicted_irt = predictions.irt
         self.predicted_spectra = predictions.spectra
+
+    def append_batches(self, batches):
+        self.cached_batches = batches
+
+    def save_data(self, prefix: PathLike):
+        return self.generate_sptxt(prefix + ".sptxt")
+
+    def top_n_subset(self, n):
+        raise ValueError("Top N is not relevant in the context of a dataset without ground truth")
+    
+    def greedify(self):
+        pass

@@ -1,6 +1,7 @@
 import logging
 
 from torch.nn.modules import loss
+from torchmetrics.metric import Metric
 
 try:
     from typing import Dict, List, Tuple, Optional, Union, Literal
@@ -31,14 +32,15 @@ from elfragmentador.named_batches import (
     PredictionResults,
     TrainBatch,
 )
-from elfragmentador.metrics import CosineLoss, PearsonCorrelation, SpectralAngleLoss
+from elfragmentador.metrics import (
+    MetricCalculator,
+)
 from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
 )
 from elfragmentador.math_utils import MissingDataAverager
 from elfragmentador.utils import torch_batch_from_seq
-from elfragmentador.utils_data import cat_collate, collate_fun
 
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
@@ -307,7 +309,7 @@ _model_sections = [
 ]
 
 
-class PepTransformerModel(pl.LightningModule):
+class PepTransformerModel(MetricCalculator):
     """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
 
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
@@ -407,9 +409,6 @@ class PepTransformerModel(pl.LightningModule):
         )
 
         # Training related things
-        self.mse_loss = nn.MSELoss(reduction="none")
-        self.cosine_loss = CosineLoss(dim=1, eps=1e-4)
-        self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-4)
         self.lr = lr
 
         assert (
@@ -909,26 +908,26 @@ class PepTransformerModel(pl.LightningModule):
             batch = TrainBatch(*batch)
 
         yhat_irt, yhat_spectra = self.batch_forward(batch)
-
-        if prediction:
-            pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
+        pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
 
         yhat_irt = yhat_irt[~batch.irt.isnan()]
         norm_irt = batch.irt[~batch.irt.isnan()]
 
-        loss_irt = (
-            self.mse_loss(yhat_irt, norm_irt.float()) * batch.weight[~batch.irt.isnan()]
+        irt_mse, loss_angle, loss_cosine = self.calculate_metrics(
+            pred_out, PredictionResults(irt=batch.irt.float(), spectra=batch.spectra)
         )
+
+        loss_irt = irt_mse[~batch.irt.isnan()] * batch.weight[~batch.irt.isnan()]
         loss_irt = loss_irt.mean() / batch.weight[~batch.irt.isnan()].mean()
 
-        loss_angle = self.angle_loss(yhat_spectra, batch.spectra) * batch.weight
+        loss_angle = loss_angle * batch.weight
         loss_angle = loss_angle.mean() / batch.weight.mean()
 
-        loss_cosine = self.cosine_loss(yhat_spectra, batch.spectra) * batch.weight
+        loss_cosine = loss_cosine * batch.weight
         loss_cosine = loss_cosine.mean() / batch.weight.mean()
 
         total_loss = loss_angle  # + loss_cosine
-        if len(norm_irt.data) != 0:
+        if not torch.any(torch.isnan(loss_irt)):
             # total_loss = loss_irt + (total_loss * self.loss_ratio)
             # total_loss = total_loss / (self.loss_ratio + 1)
             total_loss = loss_irt + total_loss
@@ -1023,9 +1022,9 @@ class PepTransformerModel(pl.LightningModule):
 
         pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
 
-        loss_irt = self.mse_loss(yhat_irt, batch.irt.float())
-        loss_angle = self.angle_loss(yhat_spectra, batch.spectra)
-        loss_cosine = self.cosine_loss(yhat_spectra, batch.spectra)
+        loss_irt, loss_angle, loss_cosine = self.calculate_metrics(
+            pred_out, PredictionResults(irt=batch.irt.float(), spectra=batch.spectra)
+        )
 
         losses = {
             "loss_irt": loss_irt,
@@ -1038,39 +1037,6 @@ class PepTransformerModel(pl.LightningModule):
     def test_step(self, batch, batch_idx=None):
         losses, pred_out = self._evaluation_step(batch=batch, batch_idx=batch_idx)
         return losses, pred_out.irt, batch.irt
-
-    def test_epoch_end(self, outputs):
-        losses = cat_collate([x[0] for x in outputs])
-        pred_irt_outs = torch.cat([x[1] for x in outputs])
-        truth_irt = torch.cat([x[2] for x in outputs])
-
-        nm_pred_irt_outs = pred_irt_outs[~torch.isnan(truth_irt)]
-        nm_truth_irt = truth_irt[~torch.isnan(truth_irt)]
-
-        norm_pred_irt = (
-            pred_irt_outs - nm_pred_irt_outs.mean()
-        ) / nm_pred_irt_outs.std()
-        norm_truth_irt = (truth_irt - nm_truth_irt.mean()) / nm_truth_irt.std()
-
-        if self.trainer.plot:
-            xs = norm_pred_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
-            ys = norm_truth_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
-
-            if len(xs) > 0:
-                uniplot.plot(
-                    xs=xs,
-                    ys=ys,
-                    title="Scaled ground truth (y) vs scaled prediction(x) of RT",
-                )
-            else:
-                logging.error(
-                    "All values are missing for retention time, skipping plotting"
-                )
-
-        losses.update({"scaled_se_loss": self.mse_loss(norm_pred_irt, norm_truth_irt)})
-        self.log_dict({"median_" + k: v.median() for k, v in losses.items()})
-
-        self.trainer.test_results = EvaluationLossBatch(**losses)
 
     def predict_step(self, batch: TrainBatch, batch_idx: Optional[int] = None):
         yhat_irt, yhat_spectra = self.forward(

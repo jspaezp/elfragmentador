@@ -201,6 +201,9 @@ class PeptideDataset(DatasetBase):
             **kwargs,
         )
 
+    def greedify(self):
+        pass
+
     def top_n_subset(self, n, *args, **kwargs):
         logging.info("Ignoring metric when subsetting in peptide dataset")
         if not hasattr(self, "df"):
@@ -212,6 +215,15 @@ class PeptideDataset(DatasetBase):
         df = self.df.sample(min(n, len(self.df)))
 
         return PeptideDataset(df, max_spec=n, keep_df=True)
+
+    def append_batches(self, batches):
+        for k, v in batches._as_dict():
+            self.df.insert(loc=len(list(self.df)) - 2, column=k, value=float("nan"))
+            self.df[k] = v
+
+    def save_data(self, prefix: PathLike):
+        self.df.reset_index(drop=True).to_csv(prefix + ".csv", index=False)
+        self.df.reset_index(drop=True).to_feather(prefix + ".feather")
 
     def __len__(self) -> int:
         return len(self.sequence_encodings)

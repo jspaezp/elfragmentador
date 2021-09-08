@@ -5,7 +5,7 @@ import re
 import logging
 from pathlib import Path
 from os import PathLike
-from typing import Union, Optional, Generator
+from typing import Union, Optional, Generator, Iterator
 
 from tqdm.auto import tqdm
 
@@ -19,13 +19,9 @@ import torch
 
 import elfragmentador.constants as CONSTANTS
 from elfragmentador.spectra import Spectrum
-from elfragmentador.math_utils import norm
-from elfragmentador.predictor import Predictor
 from elfragmentador.model import PepTransformerModel
-from elfragmentador.datasets.dataset import IterableDatasetBase
+from elfragmentador.datasets.dataset import IterableDatasetBase, Predictor
 from elfragmentador.named_batches import (
-    EvaluationLossBatch,
-    ForwardBatch,
     PredictionResults,
     TrainBatch,
 )
@@ -247,7 +243,16 @@ class PinDataset(IterableDatasetBase):
             )
             yield input_batch
 
-    def __iter__(self):
+    def append_batches(self, batches):
+        for k, v in batches._as_dict():
+            self.df.insert(loc=len(list(self.df)) - 2, column=k, value=float("nan"))
+            self.df[k] = v
+
+    def save_data(self, prefix: PathLike):
+        self.df.reset_index(drop=True).to_csv(prefix + ".csv", index=False)
+        self.df.reset_index(drop=True).to_feather(prefix + ".feather")
+
+    def __iter__(self) -> Iterator[TrainBatch]:
         if hasattr(self, "greedy_cache"):
             return self.greedy_iter()
         else:
@@ -328,9 +333,10 @@ def append_preds(
         pd.DataFrame: Pandas data frame with the appended column
     """
 
+    # TODO check if this is needed
     warnings.filterwarnings(
         "ignore",
-        ".*peaks were annotated for spectra.*",
+        ".*No peaks were annotated for spectra.*",
     )
 
     perc_inputs = PinDataset(in_path=in_pin)

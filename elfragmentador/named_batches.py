@@ -1,3 +1,12 @@
+"""
+PredictionResults = irt + spec
+ForwardBatch = seq + mods + charge + nce
+TrainBatch = PredictionResults + ForwardBatch + Weight
+
+EvaluationLossBatch = scaled_se_loss + loss_cosine + loss_irt + loss_angle
+EvaluationPredictionBatch = EvaluationLossBatch + PredictionBatch
+"""
+
 from collections import namedtuple
 
 import torch
@@ -72,3 +81,8 @@ Parameters:
         1 - Spectral angle loss
 
 """
+
+EvaluationPredictionBatch = namedtuple(
+    "EvaluationPredictionBatch",
+    "scaled_se_loss, loss_cosine, loss_irt, loss_angle, irt, spectra",
+)

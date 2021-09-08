@@ -1,26 +1,92 @@
 import logging
+from os import PathLike
 from typing import Optional, Union, List, Iterable
 from argparse import _ArgumentGroup
+import warnings
 
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 import torch
+from torch import Tensor
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataloader import DataLoader
 
+import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 
 from elfragmentador.utils_data import cat_collate, terminal_plot_similarity
+from elfragmentador.metrics import MetricCalculator
 import uniplot
 
-from elfragmentador import utils_data
+from elfragmentador import spectra, utils_data
 from elfragmentador.model import PepTransformerModel
-from elfragmentador.named_batches import EvaluationLossBatch, PredictionResults
+from elfragmentador.named_batches import (
+    EvaluationLossBatch,
+    EvaluationPredictionBatch,
+    ForwardBatch,
+    PredictionResults,
+    TrainBatch,
+)
 
 
 # TODO write tests so the subclasses actually use nce over-writting ...
 
 
-class NCEOffsetHolder:
+class NCEOffsetHolder(ABC):
+    @classmethod
+    def derived(cls, recursive=True, flatten=False, return_classes=False):
+        """
+        Lists all derived subclasses as a nested dictionary
+
+        Returns:
+            Dict:
+
+        Examples:
+            >>> NCEOffsetHolder.derived(flatten=True)
+            ['BatchDataset', 'DatasetBase', 'IterableDatasetBase', 'MokapotPSMDataset', 'NCEOffsetHolder', 'PeptideDataset', 'PinDataset', 'SequenceDataset']
+            >>> NCEOffsetHolder.derived(flatten=True, return_classes=True)
+            [<class 'elfragmentador.datasets.dataset.BatchDataset'>, ..., <class 'elfragmentador.datasets.sequence_dataset.SequenceDataset'>]
+            >>> NCEOffsetHolder.derived()
+            {'NCEOffsetHolder': [{'DatasetBase': [{'BatchDataset': []}, {'PeptideDataset': []}, {'SequenceDataset': []}]}, {'IterableDatasetBase': [{'PinDataset': [{'MokapotPSMDataset': []}]}]}]}
+        """
+
+        entry_name = cls if return_classes else cls.__name__
+
+        outs = list(cls.__subclasses__())
+        outs = [
+            subclass.derived(
+                recursive=recursive, flatten=flatten, return_classes=return_classes
+            )
+            if recursive
+            else subclass
+            for subclass in outs
+        ]
+
+        if not return_classes:
+            outs = [x.__name__ if hasattr(x, "__name__") else x for x in outs]
+
+        if flatten:
+            flat_outs = []
+            flat_outs.extend([entry_name])
+
+            for out in outs:
+                if isinstance(out, list):
+                    flat_outs.extend(out)
+                else:
+                    flat_outs.extend([out])
+
+            if any([isinstance(x, list) for x in flat_outs]):
+                breakpoint()
+
+            key = lambda x: x.__name__ if isinstance(x, type) else x
+            outs = sorted(list(set(flat_outs)), key=key)
+        else:
+
+            outs = {entry_name: outs}
+
+        return outs
+
     @property
     def nce_offset(self):
         return self._nce_offset
@@ -49,11 +115,21 @@ class NCEOffsetHolder:
 
         return value
 
-    def greedify(self, *args, **kwargs):
-        raise NotImplementedError
+    @abstractmethod
+    def greedify(self):
+        pass
 
-    def top_n_subset(self, n, metric):
-        raise NotImplementedError
+    @abstractmethod
+    def top_n_subset(self, n):
+        pass
+
+    @abstractmethod
+    def append_batches(self, batches):
+        pass
+
+    @abstractmethod
+    def save_data(self, prefix: PathLike):
+        pass
 
     def optimize_nce(
         self,
@@ -118,14 +194,17 @@ class NCEOffsetHolder:
         return best
 
 
+# TODO split inference and prediction datasets
 class DatasetBase(Dataset, NCEOffsetHolder):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def __getitem__(self, index):
+    @abstractmethod
+    def __getitem__(self, index) -> Union[ForwardBatch, TrainBatch]:
         raise NotImplementedError
 
-    def __len__(self):
+    @abstractmethod
+    def __len__(self) -> int:
         raise NotImplementedError
 
 
@@ -133,8 +212,55 @@ class IterableDatasetBase(IterableDataset, NCEOffsetHolder):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def __iter__(self):
+    @abstractmethod
+    def __iter__(self) -> Iterator[ForwardBatch]:
         raise NotImplementedError
+
+
+class BatchDataset(DatasetBase):
+    def __init__(self, elems: ForwardBatch, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for x in elems:
+            assert isinstance(x, Tensor)
+
+        lens = list(set([len(x) for x in elems]))
+        assert len(lens) == 1
+
+        self.length = lens[0]
+        self.elems = elems
+        self.batchtype = type(elems)
+
+    def __getitem__(self, index) -> Union[ForwardBatch, TrainBatch]:
+        out = self.batchtype(*[x[index] for x in self.elems])
+        out = self.batchtype(
+            {
+                k: (v if k != "nce" else self.calc_nce(v))
+                for k, v in out._asdict().items()
+            }
+        )
+        return out
+
+    def __len__(self):
+        return self.length
+
+
+class ComparissonDataset(Dataset):
+    accepted_fields = {"spec", "irt"}
+
+    def __init__(self, gt_db, pred_db, *args, **kwargs):
+        super().__init__()
+        self.gt_db = gt_db
+        self.pred_db = pred_db
+
+    def __getitem__(self, index):
+        gt = PredictionResults(
+            irt=self.gt_db[index].irt, spectra=self.gt_db[index].spectra
+        )
+        pred = PredictionResults(
+            irt=self.pred_db[index].irt, spectra=self.pred_db[index].spectra
+        )
+        return {"gt": gt, "pred": pred}
 
 
 class Predictor(Trainer):
@@ -181,19 +307,42 @@ class Predictor(Trainer):
         dataset: Union[DatasetBase, IterableDatasetBase],
         plot: Optional[bool] = True,
         optimize_nce: Optional[Union[bool, Iterable[float]]] = range(-10, 10, 2),
-    ) -> EvaluationLossBatch:
+        keep_predictions: Optional[bool] = False,
+        save_prefix: Optional[PathLike] = None,
+    ) -> Union[EvaluationLossBatch, EvaluationPredictionBatch]:
+        self.plot = plot
         if optimize_nce:
             best_nce_offset = dataset.optimize_nce(model, optimize_nce, predictor=self)
             dataset.nce_offset = best_nce_offset
 
+        dl = self.make_dataloader(dataset)
+
+        if keep_predictions:
+            tmp_ds = BatchDataset(utils_data.collate_fun([x for x in dl]))
+            preds = self.predict(model, test_dataloader=self.make_dataloader(tmp_ds))
+
+            comp_ds = ComparissonDataset(tmp_ds, BatchDataset(preds))
+            comparisson_model = MetricCalculator()
+            outs = self.test(
+                comparisson_model, self.make_dataloader(comp_ds), plot=plot
+            )
+            outs = EvaluationPredictionBatch(**preds._asdict(), **outs._asdict())
+        else:
+            outs = self.test(model, dl, plot=plot)
+
+        if save_prefix is not None:
+            dataset.append_batches(outs)
+            dataset.save_data(save_prefix)
+
+        return outs
+
+    def make_dataloader(self, dataset):
         dl = DataLoader(
             dataset=dataset,
             batch_size=self.batch_size,
             collate_fn=utils_data.collate_fun,
         )
-        outs = self.test(model, dl, plot=plot)
-
-        return outs
+        return dl
 
     def predict(self, model, test_dataloader, *args, **kwargs) -> PredictionResults:
         outs = super().predict(model, test_dataloader, *args, **kwargs)
@@ -210,6 +359,7 @@ class Predictor(Trainer):
 
         super().test(model, test_dataloader, *args, **kwargs)
 
+        # EvaluationLossBatch
         test_results = self.test_results
 
         # ["scaled_se_loss", "loss_cosine", "loss_irt", "loss_angle"]
@@ -227,7 +377,7 @@ class Predictor(Trainer):
                 "Spectra Cosine Similarity",
             )
             terminal_plot_similarity(
-                1 - test_results.loss_angle.cpu().detach().numpy(), "Spectral Angle"
+                1 - test_results.loss_angle.cpu().detach().numpy(), "Spectral Angle Similarity"
             )
 
         return test_results
