@@ -117,7 +117,9 @@ class SequenceDataset(DatasetBase):
         return self.generate_sptxt(prefix + ".sptxt")
 
     def top_n_subset(self, n):
-        raise ValueError("Top N is not relevant in the context of a dataset without ground truth")
-    
+        raise ValueError(
+            "Top N is not relevant in the context of a dataset without ground truth"
+        )
+
     def greedify(self):
         pass

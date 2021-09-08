@@ -28,7 +28,7 @@ def collate_fun(batch):
     elem = batch[0]
     elem_type = type(elem)
     if isinstance(elem, torch.Tensor):
-        return _match_lengths(nested_list=batch, verbose=False)
+        return _match_lengths(nested_list=batch)
     elif isinstance(elem, tuple) and hasattr(elem, "_fields"):  # namedtuple
         return elem_type(*(collate_fun(samples) for samples in zip(*batch)))
 
@@ -100,7 +100,6 @@ def _match_lengths(
     nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
     max_len: Optional[int] = None,
     name: str = "items",
-    verbose=True,
 ) -> Tensor:
     """
     match_lengths Matches the lengths of all tensors in a list
@@ -110,7 +109,6 @@ def _match_lengths(
             A list of numpy arrays
         max_len (int, optional): Length to match all tensors to, if not provided will pad to the max found
         name (str, optional): name to use (just for logging purposes). Defaults to "items".
-        verbose (bool): Wether to log the matching criteria, defaults to False
 
     Returns:
         Tensor:
@@ -131,42 +129,37 @@ def _match_lengths(
         tensor([[1, 0, 0, 0, 0, 0],
                 [1, 2, 0, 0, 0, 0],
                 [1, 2, 3, 4, 5, 6]])
+        >>> _match_lengths([np.array([[1]]), np.array([[1, 2]]), np.array([[1,2,3,4,5,6]])])
+        tensor([[[1, 0, 0, 0, 0, 0]],
+                [[1, 2, 0, 0, 0, 0]],
+                [[1, 2, 3, 4, 5, 6]]])
     """
     elem = nested_list[0]
     if isinstance(elem, torch.Tensor):
-        pad_fun = F.pad
-        conversion_fun = lambda x: x
-    else:
+        to_numpy = torch.Tensor.numpy
         pad_fun = np.pad
-        conversion_fun = torch.from_numpy
-
-    lengths = np.array([len(x) for x in nested_list])
-    unique_lengths = set(lengths)
-    max_found = max(unique_lengths)
-    if max_len is None:
-        max_len = max_found
-
-    match_max = lengths == max_len
-
-    out_message = (
-        f"{len(match_max)}/{len(nested_list)} "
-        f"{name} actually match the max sequence length of"
-        f" {max_len},"
-        f" found {unique_lengths}"
-    )
-
-    if (len(unique_lengths) == 1) and (max_len in unique_lengths):
-        if verbose:
-            logging.info(out_message)
-        out = torch.stack([conversion_fun(x) for x in nested_list], dim=0)
+        from_numpy = torch.from_numpy
     else:
-        if verbose:
-            logging.warning(out_message)
-        out = [
-            pad_fun(x, (0, max_len - len(x)), "constant") if len(x) != max_len else x
-            for x in nested_list
-        ]
-        out = torch.stack([conversion_fun(x) for x in out], dim=0)
+        to_numpy = lambda x: x
+        pad_fun = np.pad
+        from_numpy = torch.from_numpy
+
+    lengths = np.array([x.shape for x in nested_list])
+    max_lenghts = lengths.max(axis=0)
+
+    if max_len is None:
+        max_len = max_lenghts
+
+    try:
+        out = torch.stack([x for x in nested_list], dim=0)
+    except RuntimeError as e:
+        out = []
+        for x in nested_list:
+            curr_shape = x.shape
+            padding = tuple((0, d) for d in max_lenghts - curr_shape)
+            out.append(pad_fun(to_numpy(x), padding, "constant"))
+
+        out = torch.stack([from_numpy(x) for x in out], dim=0)
 
     return out
 

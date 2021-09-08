@@ -17,7 +17,9 @@ def test_prediction_loop(datamodule, tiny_model):
 
 def test_testing_loop(datamodule, tiny_model):
     trainer = Predictor()
-    out = trainer.test(tiny_model, datamodule.train_dataloader(), ckpt_path=None)
+    out = trainer.test(
+        tiny_model, datamodule.train_dataloader(), ckpt_path=None, plot=False
+    )
 
     assert isinstance(out, tuple)
     assert hasattr(out, "_fields")

@@ -379,11 +379,19 @@ def evaluate_checkpoint():
         nces = False
 
     outs = predictor.evaluate_dataset(
-        dataset=ds, model=model, optimize_nce=nces, plot=True
+        dataset=ds,
+        model=model,
+        optimize_nce=nces,
+        plot=True,
+        keep_predictions=True,
+        save_prefix=dict_args["out_csv"],
     )
 
     summ_out = {"median_" + k: v.median() for k, v in outs._asdict().items()}
-    res = pd.DataFrame({k: v.squeeze().numpy() for k, v in outs._asdict().items()})
+
+    res = pd.DataFrame()
+    for k, v in outs._asdict().items():
+        res[k] = [x.squeeze().numpy().tolist() for x in v]
 
     logging.info(summ_out)
 

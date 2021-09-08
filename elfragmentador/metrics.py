@@ -238,7 +238,6 @@ class MetricCalculator(pl.LightningModule):
 
         return loss_irt, loss_angle, loss_cosine
 
-
     def test_step(self, batch: Dict[str, PredictionResults], batch_idx: int):
         if isinstance(batch["gt"], list):
             batch["gt"] = PredictionResults(**batch["gt"]._asdict())
@@ -271,11 +270,14 @@ class MetricCalculator(pl.LightningModule):
             ys = norm_truth_irt[~torch.isnan(norm_truth_irt)].cpu().detach().numpy()
 
             if len(xs) > 0:
-                uniplot.plot(
-                    xs=xs,
-                    ys=ys,
-                    title="Scaled ground truth (y) vs scaled prediction(x) of RT",
-                )
+                try:
+                    uniplot.plot(
+                        xs=xs,
+                        ys=ys,
+                        title="Scaled ground truth (y) vs scaled prediction(x) of RT",
+                    )
+                except AssertionError as e:
+                    logging.error(f"Failed to generate plot with error {e}")
             else:
                 logging.error(
                     "All values are missing for retention time, skipping plotting"

@@ -244,9 +244,14 @@ class PinDataset(IterableDatasetBase):
             yield input_batch
 
     def append_batches(self, batches):
-        for k, v in batches._as_dict():
+        logging.info(f"Appending info to dataframe {len(self.df)}")
+        {
+            logging.info(f"Appending Batches: {k}:{v.shape}")
+            for k, v in batches._asdict().items()
+        }
+        for k, v in batches._asdict().items():
             self.df.insert(loc=len(list(self.df)) - 2, column=k, value=float("nan"))
-            self.df[k] = v
+            self.df[k] = [x.numpy().flatten().tolist() for x in v]
 
     def save_data(self, prefix: PathLike):
         self.df.reset_index(drop=True).to_csv(prefix + ".csv", index=False)

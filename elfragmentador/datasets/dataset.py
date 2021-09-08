@@ -7,6 +7,8 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 
+import numpy as np
+
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset, IterableDataset
@@ -14,6 +16,7 @@ from torch.utils.data.dataloader import DataLoader
 
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer
+from torch.utils.data.dataset import TensorDataset
 
 from elfragmentador.utils_data import cat_collate, terminal_plot_similarity
 from elfragmentador.metrics import MetricCalculator
@@ -218,31 +221,61 @@ class IterableDatasetBase(IterableDataset, NCEOffsetHolder):
 
 
 class BatchDataset(DatasetBase):
-    def __init__(self, elems: ForwardBatch, *args, **kwargs):
+    def __init__(self, batches: List[ForwardBatch], *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        for x in elems:
+        logging.info("Initializing BatchDataset")
+        elem = batches[0]
+        for x in elem:
             assert isinstance(x, Tensor)
 
-        lens = list(set([len(x) for x in elems]))
+        lens = list(set([len(x) for x in elem]))
         assert len(lens) == 1
 
-        self.length = lens[0]
-        self.elems = elems
-        self.batchtype = type(elems)
+        keep_batches = [
+            self.cat_list([y[i] for y in batches]) for i, _ in enumerate(elem)
+        ]
+
+        self.length = len(keep_batches[0])
+        self.batchtype = type(elem)
+        self.batches = self.batchtype(*keep_batches)
+        info = {k: v.shape for k, v in self.batches._asdict().items()}
+        logging.info(f"Initialized BatchDataset with {info}")
 
     def __getitem__(self, index) -> Union[ForwardBatch, TrainBatch]:
-        out = self.batchtype(*[x[index] for x in self.elems])
-        out = self.batchtype(
-            {
-                k: (v if k != "nce" else self.calc_nce(v))
-                for k, v in out._asdict().items()
-            }
-        )
+        out = [x[index] for x in self.batches]
+        out = self.batchtype(*out)
         return out
 
     def __len__(self):
         return self.length
+
+    def append_batches(self, batches):
+        raise RuntimeError
+
+    def greedify(self):
+        pass
+
+    def save_data(self, prefix: PathLike):
+        raise RuntimeError
+
+    def top_n_subset(self, n):
+        raise RuntimeError
+
+    @staticmethod
+    def cat_list(tensor_list):
+        lengths = np.array([x.shape for x in tensor_list])
+        max_lenghts = lengths.max(axis=0)
+        out = []
+        for x in tensor_list:
+            delta_shape = max_lenghts[1:] - x.shape[1:]
+            padding = [[0, 0]] + [(0, d) for d in delta_shape]
+            padding = tuple(padding)
+            out.append(np.pad(x.numpy(), padding, "constant"))
+
+        out = torch.cat([torch.from_numpy(x) for x in out], dim=0).squeeze()
+        if len(out.shape) == 1:
+            out = out.unsqueeze(-1)
+        return out
 
 
 class ComparissonDataset(Dataset):
@@ -252,6 +285,7 @@ class ComparissonDataset(Dataset):
         super().__init__()
         self.gt_db = gt_db
         self.pred_db = pred_db
+        assert len(gt_db) == len(pred_db)
 
     def __getitem__(self, index):
         gt = PredictionResults(
@@ -261,6 +295,9 @@ class ComparissonDataset(Dataset):
             irt=self.pred_db[index].irt, spectra=self.pred_db[index].spectra
         )
         return {"gt": gt, "pred": pred}
+
+    def __len__(self):
+        return len(self.pred_db)
 
 
 class Predictor(Trainer):
@@ -318,14 +355,22 @@ class Predictor(Trainer):
         dl = self.make_dataloader(dataset)
 
         if keep_predictions:
-            tmp_ds = BatchDataset(utils_data.collate_fun([x for x in dl]))
+            tmp_ds = BatchDataset([x for x in dl])
             preds = self.predict(model, test_dataloader=self.make_dataloader(tmp_ds))
+            {
+                logging.info(f"Predictions: {k}:{v.shape}")
+                for k, v in preds._asdict().items()
+            }
 
-            comp_ds = ComparissonDataset(tmp_ds, BatchDataset(preds))
+            comp_ds = ComparissonDataset(tmp_ds, BatchDataset([preds]))
             comparisson_model = MetricCalculator()
             outs = self.test(
                 comparisson_model, self.make_dataloader(comp_ds), plot=plot
             )
+            {
+                logging.info(f"Comparissons: {k}:{v.shape}")
+                for k, v in outs._asdict().items()
+            }
             outs = EvaluationPredictionBatch(**preds._asdict(), **outs._asdict())
         else:
             outs = self.test(model, dl, plot=plot)
@@ -377,7 +422,8 @@ class Predictor(Trainer):
                 "Spectra Cosine Similarity",
             )
             terminal_plot_similarity(
-                1 - test_results.loss_angle.cpu().detach().numpy(), "Spectral Angle Similarity"
+                1 - test_results.loss_angle.cpu().detach().numpy(),
+                "Spectral Angle Similarity",
             )
 
         return test_results

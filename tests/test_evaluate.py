@@ -14,6 +14,10 @@ def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
     out = predictor.evaluate_dataset(mod, ds, optimize_nce=False)
     print(out)
 
+    assert isinstance(out, tuple) and hasattr(out, "_fields")
+    expect_fields = ["scaled_se_loss", "loss_cosine", "loss_irt", "loss_angle"]
+    assert all([x in expect_fields for x in out._fields])
+
 
 def test_irt_evaluation_works(tiny_model):
     evaluate.evaluate_landmark_rt(model=tiny_model)
