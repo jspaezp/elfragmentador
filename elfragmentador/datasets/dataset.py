@@ -1,11 +1,10 @@
 import logging
 from os import PathLike
-from typing import Optional, Union, List, Iterable
+from typing import Optional, Union, List, Iterable, Iterator
 from argparse import _ArgumentGroup
 import warnings
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
 
 import numpy as np
 
@@ -16,7 +15,6 @@ from torch.utils.data.dataloader import DataLoader
 
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer
-from torch.utils.data.dataset import TensorDataset
 
 from elfragmentador.utils_data import cat_collate, terminal_plot_similarity
 from elfragmentador.metrics import MetricCalculator
@@ -349,6 +347,7 @@ class Predictor(Trainer):
 
     @staticmethod
     def add_predictor_args(parser: _ArgumentGroup):
+        # Remember to add new arguments to __init__
         parser.add_argument("--gpus", default=0)
         parser.add_argument(
             "--precision",

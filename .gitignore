@@ -27,3 +27,5 @@ benchmarking_workflow/ip
 benchmarking_workflow/pp
 benchmarking_workflow/spectrast
 benchmarking_workflow/prosit_in
+
+notebooks/*.csv
