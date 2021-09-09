@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 
 from pathlib import PosixPath, Path
 from typing import Dict, Iterable, List, Optional, Union
@@ -86,11 +87,17 @@ class PeptideDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader:
+        warnings.filterwarnings(
+            "ignore", message=".*The dataloader.*workers.*bottleneck.*"
+        )
         return self.train_dataset.as_dataloader(
             num_workers=0, batch_size=self.batch_size, shuffle=True
         )
 
     def val_dataloader(self) -> DataLoader:
+        warnings.filterwarnings(
+            "ignore", message=".*The dataloader.*workers.*bottleneck.*"
+        )
         return self.val_dataset.as_dataloader(
             num_workers=0, batch_size=self.batch_size, shuffle=False
         )

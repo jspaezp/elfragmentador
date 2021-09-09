@@ -143,10 +143,11 @@ def base_export_torchscript(datadir, keep=False):
     print(f">> Head of torchscript out \n{[y.flatten()[:5] for y in script_out]}")
 
 
-def test_ts_and_base_give_same_result(fake_tensors, tiny_model, tiny_model_ts):
+def test_ts_and_base_give_same_result(fake_tensors, model_pair_builder):
     # TODO make parametrized
 
-    base_mod, script_mod = tiny_model, tiny_model_ts
+    model_pair = model_pair_builder()
+    base_mod, script_mod = model_pair["base"], model_pair["traced"]
     batches = DataLoader(fake_tensors, batch_size=1)
 
     with torch.no_grad():
@@ -154,8 +155,8 @@ def test_ts_and_base_give_same_result(fake_tensors, tiny_model, tiny_model_ts):
             base_out = base_mod(*script_batch)
             script_out = script_mod(*script_batch)
 
-            for a, b in zip(base_out, script_out):
-                assert torch.all(a == b)
+            assert torch.all(script_out[0] == base_out[0])
+            assert torch.all(script_out[1] == base_out[1])
 
 
 @pytest.mark.parametrize("model", ["base", "traced"])

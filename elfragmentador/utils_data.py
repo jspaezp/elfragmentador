@@ -90,7 +90,7 @@ def _convert_tensor_column(column, elem_function=float, verbose=True, *args, **k
         ]
 
     else:
-        logging.warning("Passed column is not a string, skipping conversion")
+        logging.debug("Passed column is not a string, skipping conversion")
         out = column
 
     return out
@@ -99,7 +99,7 @@ def _convert_tensor_column(column, elem_function=float, verbose=True, *args, **k
 def _match_lengths(
     nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
     max_len: Optional[int] = None,
-    name: str = "items",
+    name="Tensor",
 ) -> Tensor:
     """
     match_lengths Matches the lengths of all tensors in a list
@@ -134,29 +134,39 @@ def _match_lengths(
                 [[1, 2, 0, 0, 0, 0]],
                 [[1, 2, 3, 4, 5, 6]]])
     """
+    logging.debug(f"Matching shapes of {name}")
     elem = nested_list[0]
     if isinstance(elem, torch.Tensor):
         to_numpy = torch.Tensor.numpy
         pad_fun = np.pad
         from_numpy = torch.from_numpy
+        to_torch = lambda x: x
     else:
         to_numpy = lambda x: x
         pad_fun = np.pad
         from_numpy = torch.from_numpy
+        to_torch = from_numpy
 
     lengths = np.array([x.shape for x in nested_list])
-    max_lenghts = lengths.max(axis=0)
+    obs_max_lengths = lengths.max(axis=0)
 
     if max_len is None:
-        max_len = max_lenghts
+        max_len = obs_max_lengths
+    else:
+        max_len = np.array(max_len)
+        logging.debug(f"Setting maximum length of {name} to {max_len}")
 
     try:
-        out = torch.stack([x for x in nested_list], dim=0)
+        if np.any(max_len != obs_max_lengths):
+            raise RuntimeError(
+                "All lengths are uniform but not consistent with the requested one"
+            )
+        out = torch.stack([to_torch(x) for x in nested_list], dim=0)
     except RuntimeError as e:
         out = []
         for x in nested_list:
             curr_shape = x.shape
-            padding = tuple((0, d) for d in max_lenghts - curr_shape)
+            padding = tuple((0, d) for d in max_len - curr_shape)
             out.append(pad_fun(to_numpy(x), padding, "constant"))
 
         out = torch.stack([from_numpy(x) for x in out], dim=0)

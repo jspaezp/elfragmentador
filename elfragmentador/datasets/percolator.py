@@ -5,7 +5,7 @@ import re
 import logging
 from pathlib import Path
 from os import PathLike
-from typing import Union, Optional, Generator, Iterator
+from typing import Union, Optional, Generator, Iterator, NamedTuple
 
 from tqdm.auto import tqdm
 
@@ -16,6 +16,7 @@ from pandas.core.frame import DataFrame
 from pyteomics import mzml
 
 import torch
+from torch import Tensor
 
 import elfragmentador.constants as CONSTANTS
 from elfragmentador.spectra import Spectrum
@@ -243,13 +244,14 @@ class PinDataset(IterableDatasetBase):
             )
             yield input_batch
 
-    def append_batches(self, batches):
-        logging.info(f"Appending info to dataframe {len(self.df)}")
+    def append_batches(self, batches: NamedTuple[Tensor], prefix=""):
+        logging.info(f"Appending info to dataframe with prefix '{prefix}'")
         {
-            logging.info(f"Appending Batches: {k}:{v.shape}")
+            logging.debug(f"Appending Batches: {prefix}{k}:{v.shape}")
             for k, v in batches._asdict().items()
         }
         for k, v in batches._asdict().items():
+            k = prefix + k
             self.df.insert(loc=len(list(self.df)) - 2, column=k, value=float("nan"))
             self.df[k] = [x.numpy().flatten().tolist() for x in v]
 

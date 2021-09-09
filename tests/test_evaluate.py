@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 import elfragmentador as ef
 from elfragmentador import datamodules, evaluate
@@ -5,6 +6,7 @@ from elfragmentador.predictor import Predictor
 
 
 def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
+
     mod = tiny_model
     mod.eval()
     ds = datamodules.PeptideDataset.from_sptxt(
@@ -19,11 +21,6 @@ def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
     assert all([x in expect_fields for x in out._fields])
 
 
-def test_irt_evaluation_works(tiny_model):
+def test_irt_evaluation_works(tiny_model_builder):
+    tiny_model = tiny_model_builder()
     evaluate.evaluate_landmark_rt(model=tiny_model)
-
-
-if __name__ == "__main__":
-    parent_dir = Path(__file__).parent
-    test_evaluation_on_dataset_works(str(parent_dir) + "/data/")
-    test_irt_evaluation_works()

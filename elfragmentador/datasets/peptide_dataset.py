@@ -63,7 +63,9 @@ class PeptideDataset(DatasetBase):
         name_match = _match_colnames(df)
 
         self.sequence_encodings = _match_lengths(
-            self.df[name_match["SeqE"]], constants.MAX_TENSOR_SEQUENCE, "Sequences"
+            self.df[name_match["SeqE"]],
+            constants.MAX_TENSOR_SEQUENCE,
+            "Sequences",
         ).long()
 
         self.mod_encodings = _match_lengths(
@@ -216,10 +218,12 @@ class PeptideDataset(DatasetBase):
 
         return PeptideDataset(df, max_spec=n, keep_df=True)
 
-    def append_batches(self, batches):
-        for k, v in batches._as_dict():
-            self.df.insert(loc=len(list(self.df)) - 2, column=k, value=float("nan"))
-            self.df[k] = v
+    def append_batches(self, batches, prefix=""):
+        for k, v in batches._asdict().items():
+            self.df.insert(
+                loc=len(list(self.df)) - 2, column=prefix + k, value=float("nan")
+            )
+            self.df[prefix + k] = v
 
     def save_data(self, prefix: PathLike):
         self.df.reset_index(drop=True).to_csv(prefix + ".csv", index=False)

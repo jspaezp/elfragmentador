@@ -1,3 +1,4 @@
+import warnings
 import pytest
 from elfragmentador.model import PepTransformerModel
 from elfragmentador import datamodules
@@ -27,25 +28,34 @@ def fake_tensors():
 
 
 @pytest.fixture(scope="session")
-def tiny_model():
-    mod = PepTransformerModel(
-        num_decoder_layers=3,
-        num_encoder_layers=2,
-        nhid=112,
-        d_model=112,
-        nhead=2,
-        dropout=0,
-        lr=1e-4,
-        scheduler="cosine",
-        loss_ratio=1000,
-        lr_ratio=10,
-    )
-    mod.eval()
-    return mod
+def tiny_model_builder():
+    def tiny_model_builder():
+        mod = PepTransformerModel(
+            num_decoder_layers=3,
+            num_encoder_layers=2,
+            nhid=112,
+            d_model=112,
+            nhead=2,
+            dropout=0,
+            lr=1e-4,
+            scheduler="cosine",
+            loss_ratio=1000,
+            lr_ratio=10,
+        )
+        mod.eval()
+        return mod
+    return tiny_model_builder
+
+@pytest.fixture(scope="session")
+def tiny_model(tiny_model_builder):
+    return tiny_model_builder()
 
 
 @pytest.fixture
 def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
+    warnings.filterwarnings("ignore", ".*The number of training samples .*")
+    warnings.filterwarnings("ignore", ".*peaks were annotated The number of training samples .*")
+    warnings.filterwarnings("ignore", ".*peaks were annotated The number of training samples Skipping peptide due few peaks being annotated .*")
     datamodule = datamodules.PeptideDataModule(
         batch_size=2, base_dir=shared_datadir / "train_data_sample"
     )
@@ -59,7 +69,8 @@ def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
 
 
 @pytest.fixture(scope="session")
-def tiny_model_ts(tiny_model):
+def tiny_model_ts(tiny_model_builder):
+    tiny_model = tiny_model_builder()
     with torch.no_grad():
         ts = tiny_model.to_torchscript()
         ts.eval()
@@ -67,5 +78,10 @@ def tiny_model_ts(tiny_model):
 
 
 @pytest.fixture(scope="session")
-def model_pair(tiny_model, tiny_model_ts):
-    return {"base": tiny_model, "traced": tiny_model_ts}
+def model_pair_builder(tiny_model_builder):
+    def model_pair_builder():
+        tiny_model = tiny_model_builder()
+        ts = tiny_model.to_torchscript()
+        return {"base": tiny_model, "traced": ts}
+
+    return model_pair_builder

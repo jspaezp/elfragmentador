@@ -92,31 +92,51 @@ class NCEOffsetHolder(ABC):
 
     @property
     def nce_offset(self):
-        return self._nce_offset
+        if hasattr(self, "_nce_offset"):
+            return self._nce_offset
+        else:
+            return None
 
     @nce_offset.setter
     def nce_offset(self, value):
-        logging.warning(f"Setting nce offset to {value}, removing nce overwritting")
+        msg = f"Setting nce offset to {value}"
+        if self.overwrite_nce is not None:
+            msg += ", removing nce overwritting"
+        logging.info(msg)
         self._nce_offset = value
         self._overwrite_nce = None
 
     @property
     def overwrite_nce(self):
-        return self._overwrite_nce
+        if hasattr(self, "_overwrite_nce"):
+            return self._overwrite_nce
+        else:
+            return None
 
     @overwrite_nce.setter
     def overwrite_nce(self, value):
-        logging.warning(f"Setting nce overwritting to {value}, removing nce offset")
+        msg = f"Setting nce overwritting to {value}"
+        if self.nce_offset is not None:
+            msg += ", removing nce offset"
+        logging.info(msg)
         self._overwrite_nce = value
         self._nce_offset = None
 
     def calc_nce(self, value):
+        self._used_calc_nce = True
         if hasattr(self, "overwrite_nce") and self.overwrite_nce:
             value = self.overwrite_nce
         elif hasattr(self, "nce_offset") and self.nce_offset:
             value = value + self.nce_offset
 
         return value
+
+    @property
+    def used_calc_nce(self):
+        if hasattr(self, "_used_calc_nce") and self._used_calc_nce:
+            return True
+        else:
+            return False
 
     @abstractmethod
     def greedify(self):
@@ -127,7 +147,7 @@ class NCEOffsetHolder(ABC):
         pass
 
     @abstractmethod
-    def append_batches(self, batches):
+    def append_batches(self, batches, prefix=""):
         pass
 
     @abstractmethod
@@ -187,6 +207,9 @@ class NCEOffsetHolder(ABC):
                 best = offset
                 best_score = score
 
+            if not tmp_ds.used_calc_nce:
+                logging.error(f"calc_nce was not used by {tmp_ds}")
+
         msg = f"Best nce offset was {best}, score = {best_score}"
         logging.info(msg)
 
@@ -224,22 +247,14 @@ class BatchDataset(DatasetBase):
     def __init__(self, batches: List[ForwardBatch], *args, **kwargs):
         super().__init__(*args, **kwargs)
         logging.info("Initializing BatchDataset")
-        elem = batches[0]
-        for x in elem:
-            assert isinstance(x, Tensor)
 
-        lens = list(set([len(x) for x in elem]))
-        assert len(lens) == 1
-
-        keep_batches = [
-            self.cat_list([y[i] for y in batches]) for i, _ in enumerate(elem)
-        ]
+        keep_batches = self.cat_batch_list(batches)
 
         self.length = len(keep_batches[0])
-        self.batchtype = type(elem)
-        self.batches = self.batchtype(*keep_batches)
+        self.batchtype = type(keep_batches)
+        self.batches = keep_batches
         info = {k: v.shape for k, v in self.batches._asdict().items()}
-        logging.info(f"Initialized BatchDataset with {info}")
+        logging.debug(f"Initialized BatchDataset with {info}")
 
     def __getitem__(self, index) -> Union[ForwardBatch, TrainBatch]:
         out = [x[index] for x in self.batches]
@@ -249,14 +264,14 @@ class BatchDataset(DatasetBase):
     def __len__(self):
         return self.length
 
-    def append_batches(self, batches):
-        raise RuntimeError
+    def append_batches(self, batches, prefix):
+        raise NotImplementedError
 
     def greedify(self):
         pass
 
     def save_data(self, prefix: PathLike):
-        raise RuntimeError
+        raise NotImplementedError
 
     def top_n_subset(self, n):
         raise RuntimeError
@@ -276,6 +291,24 @@ class BatchDataset(DatasetBase):
         if len(out.shape) == 1:
             out = out.unsqueeze(-1)
         return out
+
+    @staticmethod
+    def cat_batch_list(batch_list):
+        elem = batch_list[0]
+        batchtype = type(elem)
+        for x in elem:
+            assert isinstance(x, Tensor)
+
+        lens = list(set([len(x) for x in elem]))
+        assert len(lens) == 1
+
+        keep_batches = [
+            BatchDataset.cat_list([y[i] for y in batch_list])
+            for i, _ in enumerate(elem)
+        ]
+
+        keep_batches = batchtype(*keep_batches)
+        return keep_batches
 
 
 class ComparissonDataset(Dataset):
@@ -298,6 +331,10 @@ class ComparissonDataset(Dataset):
 
     def __len__(self):
         return len(self.pred_db)
+
+
+def _log_batches(batches, prefix="Tensor"):
+    {logging.debug(f"{prefix}: {k}:{v.shape}") for k, v in batches._asdict().items()}
 
 
 class Predictor(Trainer):
@@ -355,33 +392,40 @@ class Predictor(Trainer):
         dl = self.make_dataloader(dataset)
 
         if keep_predictions:
-            tmp_ds = BatchDataset([x for x in dl])
-            preds = self.predict(model, test_dataloader=self.make_dataloader(tmp_ds))
-            {
-                logging.info(f"Predictions: {k}:{v.shape}")
-                for k, v in preds._asdict().items()
-            }
+            gt_batches = BatchDataset.cat_batch_list([x for x in dl])
+            dataset.append_batches(gt_batches, prefix="GroundTruth_")
+            gt_ds = BatchDataset([gt_batches])
 
-            comp_ds = ComparissonDataset(tmp_ds, BatchDataset([preds]))
+            preds = self.predict(model, test_dataloader=self.make_dataloader(gt_ds))
+            dataset.append_batches(preds, prefix="Prediction_")
+            _log_batches(preds, "Predictions")
+
+            comp_ds = ComparissonDataset(gt_ds, BatchDataset([preds]))
+            comp_dl = self.make_dataloader(comp_ds)
             comparisson_model = MetricCalculator()
-            outs = self.test(
-                comparisson_model, self.make_dataloader(comp_ds), plot=plot
-            )
-            {
-                logging.info(f"Comparissons: {k}:{v.shape}")
-                for k, v in outs._asdict().items()
-            }
-            outs = EvaluationPredictionBatch(**preds._asdict(), **outs._asdict())
+
+            losses = self.test(comparisson_model, comp_dl, plot=plot)
+            dataset.append_batches(losses, prefix="Loss_")
+            _log_batches(losses, "Losses")
+
+            outs = EvaluationPredictionBatch(**preds._asdict(), **losses._asdict())
         else:
             outs = self.test(model, dl, plot=plot)
+            _log_batches(outs, "Losses")
+
+        _log_batches(outs, "Outputs")
 
         if save_prefix is not None:
-            dataset.append_batches(outs)
+            logging.debug("Saving data with prefix '{prefix}'")
             dataset.save_data(save_prefix)
 
         return outs
 
     def make_dataloader(self, dataset):
+        warnings.filterwarnings(
+            "ignore", message=".*The dataloader.*workers.*bottleneck.*"
+        )
+
         dl = DataLoader(
             dataset=dataset,
             batch_size=self.batch_size,
