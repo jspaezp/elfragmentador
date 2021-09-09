@@ -163,8 +163,9 @@ def test_ts_and_base_give_same_result(fake_tensors, model_pair_builder):
 @pytest.mark.parametrize("batch_size", [1, 2, 4, 10])
 @pytest.mark.benchmark(min_rounds=10, disable_gc=True, warmup=False)
 def test_benchmark_inference_speeds(
-    model, batch_size, fake_tensors, model_pair, benchmark
+    model, batch_size, fake_tensors, model_pair_builder, benchmark
 ):
+    model_pair = model_pair_builder()
     model = model_pair[model]
 
     def inf_model():
