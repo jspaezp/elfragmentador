@@ -44,7 +44,9 @@ def tiny_model_builder():
         )
         mod.eval()
         return mod
+
     return tiny_model_builder
+
 
 @pytest.fixture(scope="session")
 def tiny_model(tiny_model_builder):
@@ -54,8 +56,13 @@ def tiny_model(tiny_model_builder):
 @pytest.fixture
 def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
     warnings.filterwarnings("ignore", ".*The number of training samples .*")
-    warnings.filterwarnings("ignore", ".*peaks were annotated The number of training samples .*")
-    warnings.filterwarnings("ignore", ".*peaks were annotated The number of training samples Skipping peptide due few peaks being annotated .*")
+    warnings.filterwarnings(
+        "ignore", ".*peaks were annotated The number of training samples .*"
+    )
+    warnings.filterwarnings(
+        "ignore",
+        ".*peaks were annotated The number of training samples Skipping peptide due few peaks being annotated .*",
+    )
     datamodule = datamodules.PeptideDataModule(
         batch_size=2, base_dir=shared_datadir / "train_data_sample"
     )
