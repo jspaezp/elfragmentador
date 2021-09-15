@@ -111,7 +111,6 @@ class ConcatenationEncoder(torch.nn.Module):
 
         Args:
             dims_add (int): Number of dimensions to add as an encoding
-            dropout (float, optional): dropout, by default 0.1
             max_val (float, optional): maximum expected value of the variable that will be encoded, by default 200.0
             static_size (Union[Literal[False], float], optional):
                 Optional ingeter to pass in order to make the size deterministic.
@@ -198,8 +197,6 @@ class PositionalEncoding(torch.nn.Module):
         Args:
             d_model (int):
                 the embed dim (required), must be even.
-            dropout (float):
-                the dropout value (default=0.1).
             max_len (int):
                 the max. length of the incoming sequence (default=5000).
             static_size (Union[LiteralFalse, int], optional):

@@ -520,7 +520,7 @@ class Predictor(Trainer):
         parser.add_argument(
             "--batch_size",
             default=32,
-            help="Precision to use during prediction (32 or 16), only available using GPU",
+            help="Batch size to use during inference (I suggest ~32 on a cpu and ~600 on a gpu)",
         )
 
     def predict_dataset(
