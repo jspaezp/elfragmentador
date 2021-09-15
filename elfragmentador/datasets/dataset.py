@@ -341,12 +341,12 @@ class ComparissonDataset(Dataset):
         """Generic dataset comparer
 
         Provided 2 different datasets, gives utilities to compare them
-        
+
         It is meant to be used to compare ground-truth vs predicted spectra.
         It calculates the general losses and the scaled retention time loss.
 
         Args:
-            gt_db (NCEOffsetHolder) 
+            gt_db (NCEOffsetHolder)
             pred_db (NCEOffsetHolder)
 
         Example:
@@ -355,7 +355,7 @@ class ComparissonDataset(Dataset):
             >>> # comp = ComparissonDataset(ds1, ds2)
             >>> # comp.compare()
             >>> # out = comp.save_data()
-            >>> # out 
+            >>> # out
             # Contains the columns [Sequence, Charge, NCE, scaled_se_loss, loss_cosine, loss_irt, loss_angle]
         """
         super().__init__()

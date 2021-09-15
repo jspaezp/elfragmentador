@@ -760,14 +760,14 @@ class SptxtReader:
 
         if "Mods" in comment_dict and "[" not in sequence:
             # "2/2,M,Oxidation/8,M,Oxidation"
-            mods = comment_dict['Mods'].split("/")[::-1][:-1]
+            mods = comment_dict["Mods"].split("/")[::-1][:-1]
             # ['8,M,Oxidation', '2,M,Oxidation']
             mods = [x.split(",") for x in mods]
             mods = [[int(x[0]), f"{x[1]}[{x[2].upper()}]"] for x in mods]
             # [[8, 'M[OXIDATION]'], [2, 'M[OXIDATION]']]
 
             for m in mods:
-                sequence = sequence[:m[0]] + m[1] + sequence[m[0]+1:]
+                sequence = sequence[: m[0]] + m[1] + sequence[m[0] + 1 :]
                 # KVM[OXIDATION]RWFQAM[OXIDATION]
 
         nce = comment_dict.get("CollisionEnergy", None) or comment_dict.get(
