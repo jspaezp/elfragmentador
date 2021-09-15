@@ -145,4 +145,6 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         callbacks=callbacks["callbacks"],
     )
 
+    model.summarize(max_depth=3)
+
     trainer.fit(model, datamodule)

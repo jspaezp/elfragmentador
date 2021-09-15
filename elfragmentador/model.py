@@ -1,4 +1,5 @@
 import logging
+import copy
 
 from torch.nn.modules import loss
 from torchmetrics.metric import Metric
@@ -19,6 +20,7 @@ import time
 
 import torch
 from torch import Tensor, nn
+import torch.nn.functional as F
 import pytorch_lightning as pl
 
 from argparse import _ArgumentGroup
@@ -32,9 +34,7 @@ from elfragmentador.named_batches import (
     PredictionResults,
     TrainBatch,
 )
-from elfragmentador.metrics import (
-    MetricCalculator,
-)
+from elfragmentador.metrics import MetricCalculator, CosineLoss, SpectralAngleLoss
 from elfragmentador.nn_encoding import (
     ConcatenationEncoder,
     AASequenceEmbedding,
@@ -114,7 +114,7 @@ class MLP(nn.Module):
 
 
 class _IRTDecoder(nn.Module):
-    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3):
+    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3, dropout=0.05):
         super().__init__()
         """Decode iRTs
 
@@ -130,7 +130,7 @@ class _IRTDecoder(nn.Module):
             d_model=d_model,
             nhead=nhead,
             dim_feedforward=dim_feedforward,
-            dropout=0,
+            dropout=dropout,
             activation="gelu",
         )
         self.encoder = nn.TransformerEncoder(
@@ -171,7 +171,7 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
 
-    def forward(self, seq: Tensor, mods: Tensor, debug: bool = False) -> Tensor:
+    def forward(self, seq: Tensor, mods: Tensor) -> Tensor:
         # For the mask ....
         # If a BoolTensor is provided, positions with True are not allowed
         # to attend while False values will be unchanged <- form the pytorch docs
@@ -187,24 +187,13 @@ class _PeptideTransformerEncoder(torch.nn.Module):
             seq <= 0, float("-inf")
         ).masked_fill(seq > 0, float(0.0))
 
-        if debug:
-            logging.debug(f"PTE: Shape of mask {trans_encoder_mask.shape}")
-
-        x = self.aa_encoder(seq=seq, mods=mods, debug=debug)
+        x = self.aa_encoder(seq=seq, mods=mods)
         # x shape [S, N, d_model]
-
-        if debug:
-            logging.debug(f"PTE: Shape after AASequence encoder {x.shape}")
 
         trans_encoder_output = self.transformer_encoder(
             x, src_key_padding_mask=trans_encoder_mask
         )
         # trans_encoder_output shape [S, N, d_model]
-
-        if debug:
-            logging.debug(
-                f"PTE: Shape after trans encoder {trans_encoder_output.shape}"
-            )
 
         return trans_encoder_output, trans_encoder_mask
 
@@ -245,8 +234,13 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         self.trans_decoder_embedding = nn.Embedding(
             constants.NUM_FRAG_EMBEDINGS, n_embeds
         )
-        self.charge_encoder = ConcatenationEncoder(dims_add=charge_dims, max_val=10.0)
-        self.nce_encoder = ConcatenationEncoder(dims_add=nce_dims, max_val=100.0)
+        self.charge_encoder = ConcatenationEncoder(
+            dims_add=charge_dims, max_val=10.0, scaling=math.sqrt(d_model)
+        )
+        self.nce_encoder = ConcatenationEncoder(
+            dims_add=nce_dims, max_val=100.0, scaling=math.sqrt(d_model)
+        )
+        self.init_weights()
 
     def init_weights(self):
         """ """
@@ -259,22 +253,18 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         charge: Tensor,
         nce: Tensor,
         memory_key_padding_mask: Tensor,
-        debug: bool = False,
     ) -> Tensor:
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        trans_decoder_tgt = trans_decoder_tgt * math.sqrt(
-            self.trans_decoder_embedding.num_embeddings
-        )
+        # trans_decoder_tgt = trans_decoder_tgt * math.sqrt(
+        #     self.trans_decoder_embedding.num_embeddings
+        # )
         # [T, E2] > [T, 1, E2]
         trans_decoder_tgt = trans_decoder_tgt.expand(-1, charge.size(0), -1)
         # [T, B, E2]
-        trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge, debug=debug)
+        trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge)
         # [T, B, E1]
-        trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce, debug=debug)
+        trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
         # [T, B, E]
-
-        if debug:
-            logging.debug(f"PTD: Shape of query embedding {trans_decoder_tgt.shape}")
 
         spectra_output = self.trans_decoder(
             memory=memory,
@@ -282,19 +272,11 @@ class _PeptideTransformerDecoder(torch.nn.Module):
             memory_key_padding_mask=memory_key_padding_mask,
         )
         # Shape is [NumFragments, Batch, NumEmbed]
-        if debug:
-            logging.debug(f"PTD: Shape of the output spectra {spectra_output.shape}")
 
         spectra_output = self.peak_decoder(spectra_output)
         # Shape is [NumFragments, Batch, 1]
-        if debug:
-            logging.debug(f"PTD: Shape of the MLP spectra {spectra_output.shape}")
-
         spectra_output = spectra_output.squeeze(-1).permute(1, 0)
         # Shape is [Batch, NumFragments]
-        if debug:
-            logging.debug(f"PTD: Shape of the permuted spectra {spectra_output.shape}")
-
         return spectra_output
 
 
@@ -309,7 +291,7 @@ _model_sections = [
 ]
 
 
-class PepTransformerModel(MetricCalculator):
+class PepTransformerModel(pl.LightningModule):
     """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
 
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
@@ -379,6 +361,10 @@ class PepTransformerModel(MetricCalculator):
         """
         super().__init__()
         self.save_hyperparameters()
+        logging.info(
+            f"num_decoder_layers {num_decoder_layers} num_encoder_layers {num_encoder_layers}"
+            f" nhid {nhid} d_model {d_model} nhead {nhead} dropout {dropout}"
+        )
 
         # Peptide encoder
         self.encoder = _PeptideTransformerEncoder(
@@ -406,7 +392,13 @@ class PepTransformerModel(MetricCalculator):
             dim_feedforward=nhid,
             nhead=nhead,
             n_layers=num_encoder_layers,
+            dropout=dropout,
         )
+
+        self.metric_calculator = MetricCalculator()
+        self.mse_loss = nn.MSELoss(reduction="none")
+        self.cosine_loss = CosineLoss(dim=1, eps=1e-8)
+        self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-8)
 
         # Training related things
         self.lr = lr
@@ -429,7 +421,7 @@ class PepTransformerModel(MetricCalculator):
             "IrtDecoder": self.irt_decoder,
         }
 
-        self.make_trainable_sections(trainable_sections)
+        # self.make_trainable_sections(trainable_sections)
         self.irt_metric = MissingDataAverager()
         self.loss_metric = MissingDataAverager()
         self.spectra_metric = MissingDataAverager()
@@ -441,7 +433,6 @@ class PepTransformerModel(MetricCalculator):
         mods: Tensor,
         charge: Tensor,
         nce: Tensor,
-        debug: bool = False,
     ) -> PredictionResults:
         """Forward Generate predictions.
 
@@ -452,9 +443,6 @@ class PepTransformerModel(MetricCalculator):
             mods (Tensor): Encoded modification sequence [B, L], by default None
             nce (Tensor): float Tensor with the charges [B, 1]
             charge (Tensor): long Tensor with the charges [B, 1], by default None
-            debug (bool):
-                When set, it will log (a lot) of the shapes of the intermediate
-                tensors inside the model. By default False
 
         Details:
             seq:
@@ -470,84 +458,19 @@ class PepTransformerModel(MetricCalculator):
                 Modifications encoded as integers
 
         """
-        if debug:
-            logging.debug(
-                f"PT: Shape of inputs seq={seq.shape},"
-                f" mods={mods.shape if mods is not None else None},"
-                f" nce={nce.shape}"
-                f" charge={charge.shape}"
-            )
 
-        trans_encoder_output, mem_mask = self.encoder(seq=seq, mods=mods, debug=debug)
-        # rt_output = self.irt_decoder(trans_encoder_output)
+        trans_encoder_output, mem_mask = self.encoder(seq=seq, mods=mods)
+
         rt_output = self.irt_decoder(seq=seq, mods=mods)
-        if debug:
-            logging.debug(f"PT: Shape after RT decoder {rt_output.shape}")
 
         spectra_output = self.decoder(
             memory=trans_encoder_output,
             charge=charge,
             nce=nce,
-            debug=debug,
             memory_key_padding_mask=mem_mask,
         )
 
-        if debug:
-            logging.debug(
-                f"PT: Final Outputs of shapes {rt_output.shape}, {spectra_output.shape}"
-            )
-
         return PredictionResults(irt=rt_output, spectra=spectra_output)
-
-    def batch_forward(
-        self, inputs: TrainBatch, debug: bool = False
-    ) -> PredictionResults:
-        """batch_forward Forward function that takes a `TrainBatch` as an input.
-
-        This function is a wrapper around forward but takes a named tuple as an
-        input instead of the positional/keword arguments.
-
-        Args:
-          inputs (TrainBatch):
-            Named tuple (check the documentation of that object for which names)
-          debug (bool):
-            When set, it will log (a lot) of the shapes of the intermediate tensors
-            inside the model. By default False
-
-        Returns:
-            PredictionResults
-        """
-
-        def unsqueeze_if_needed(x: Tensor, dims: int):
-            """
-            Args:
-              x:
-              dims: needed dimensions
-
-            Returns:
-                Tensor
-
-            """
-            if len(x.shape) != dims:
-                if debug:
-                    logging.debug(f"PT: Unsqueezing tensor of shape {x.shape}")
-                x = x.unsqueeze(0)
-            else:
-                if debug:
-                    logging.debug(f"PT: Skipping Unsqueezing tensor of shape {x.shape}")
-            return x
-
-        if isinstance(inputs, list):
-            inputs = TrainBatch(*inputs)
-
-        out = self.forward(
-            seq=unsqueeze_if_needed(inputs.seq, 2),
-            mods=unsqueeze_if_needed(inputs.mods, 2),
-            nce=unsqueeze_if_needed(inputs.nce, 2),
-            charge=unsqueeze_if_needed(inputs.charge, 2),
-            debug=debug,
-        )
-        return out
 
     @staticmethod
     def torch_batch_from_seq(*args, **kwargs) -> ForwardBatch:
@@ -582,7 +505,6 @@ class PepTransformerModel(MetricCalculator):
         nce: float,
         as_spectrum=False,
         enforce_length=True,
-        debug: bool = False,
     ) -> Union[PredictionResults, Spectrum]:
         """predict_from_seq Predicts spectra from a sequence as a string.
         
@@ -608,9 +530,6 @@ class PepTransformerModel(MetricCalculator):
             as_spectrum (bool, optional):
                 Wether to return a Spectrum object instead of the raw tensor predictions
                 (Default value = False)
-            debug (bool, optional):
-                When set, it will write to logging at a debug level (a lot) of the shapes
-                of the intermediate tensors inside the model. By default False
         
         Returns:
           PredictionResults: A named tuple with two named results; irt and spectra
@@ -627,21 +546,15 @@ class PepTransformerModel(MetricCalculator):
             >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, as_spectrum=True)
             >>> type(out)
             <class 'elfragmentador.spectra.Spectrum'>
-            >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, debug=True)
+            >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
         """
 
         in_batch = self.torch_batch_from_seq(
             seq, nce, charge, enforce_length=enforce_length
         )
 
-        if debug:
-            logging.debug(
-                f">>PT: PEPTIDE INPUT Shape of peptide"
-                f" inputs {in_batch.seq.shape}, {in_batch.charge.shape}"
-            )
-
         # TODO consider if adding GPU inference
-        out = self.forward(debug=debug, **in_batch._asdict())
+        out = self.forward(**in_batch._asdict())
         out = PredictionResults(**{k: x.squeeze(0) for k, x in out._asdict().items()})
         logging.debug(out)
 
@@ -894,7 +807,7 @@ class PepTransformerModel(MetricCalculator):
         return [opt], [scheduler_dict]
 
     def _step(
-        self, batch: TrainBatch, batch_idx: int, prediction=False
+        self, batch: TrainBatch, batch_idx: int, layernorm=False
     ) -> Dict[str, Tensor]:
         """Run main functionality during training an testing steps.
 
@@ -907,30 +820,49 @@ class PepTransformerModel(MetricCalculator):
         if isinstance(batch, list):
             batch = TrainBatch(*batch)
 
-        yhat_irt, yhat_spectra = self.batch_forward(batch)
-        pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
-
-        yhat_irt = yhat_irt[~batch.irt.isnan()]
-        norm_irt = batch.irt[~batch.irt.isnan()]
-
-        irt_mse, loss_angle, loss_cosine = self.calculate_metrics(
-            pred_out, PredictionResults(irt=batch.irt.float(), spectra=batch.spectra)
+        yhat_irt, yhat_spectra = self.forward(
+            seq=batch.seq, mods=batch.mods, nce=batch.nce, charge=batch.charge
         )
 
-        loss_irt = irt_mse[~batch.irt.isnan()] * batch.weight[~batch.irt.isnan()]
+        truth_spectra = F.pad(
+            batch.spectra,
+            (0, constants.NUM_FRAG_EMBEDINGS - batch.spectra.size(1)),
+            mode="constant",
+        )
+
+        if layernorm:
+            scaling = 1 - (truth_spectra + 1e-8).mean(axis=0)
+            grandmean = scaling.mean()
+
+            yhat_spectra = scaling * yhat_spectra / grandmean
+            truth_spectra = scaling * truth_spectra / grandmean
+
+        loss_irt = self.mse_loss(
+            yhat_irt[~batch.irt.isnan()], batch.irt[~batch.irt.isnan()]
+        ).squeeze()
+        loss_angle = self.angle_loss(yhat_spectra, truth_spectra).squeeze()
+        loss_cosine = self.cosine_loss(yhat_spectra, truth_spectra).squeeze()
+
+        loss_irt = (
+            loss_irt.squeeze() * batch.weight.squeeze()[~batch.irt.squeeze().isnan()]
+        )
         loss_irt = loss_irt.mean() / batch.weight[~batch.irt.isnan()].mean()
 
-        loss_angle = loss_angle * batch.weight
+        loss_angle = loss_angle * batch.weight.squeeze()
         loss_angle = loss_angle.mean() / batch.weight.mean()
 
-        loss_cosine = loss_cosine * batch.weight
+        loss_cosine = loss_cosine * batch.weight.squeeze()
         loss_cosine = loss_cosine.mean() / batch.weight.mean()
 
-        total_loss = loss_angle  # + loss_cosine
+        total_loss = loss_angle
         if not torch.any(torch.isnan(loss_irt)):
             # total_loss = loss_irt + (total_loss * self.loss_ratio)
             # total_loss = total_loss / (self.loss_ratio + 1)
             total_loss = loss_irt + total_loss
+        else:
+            logging.warning(
+                f"Skipping addition of irt loss on batch {batch_idx} with value {loss_irt.flatten()}, preds: {yhat_irt.flatten()}"
+            )
 
         losses = {
             "l": total_loss,
@@ -939,25 +871,46 @@ class PepTransformerModel(MetricCalculator):
             "spec_l2": loss_angle,
         }
 
-        assert not torch.isnan(total_loss), logging.error(
-            f"Fail at... \n Loss: {total_loss},\n"
-            f"\n loss_irt: {loss_irt}\n"
-            f"\n loss_spectra: {loss_cosine}\n"
-            f"\n yhat_spec: {yhat_spectra},\n"
-            f"\n y_spec: {batch.spectra}\n"
-            f"\n y_irt: {norm_irt}, {len(norm_irt.data)}"
-        )
+        if torch.isnan(total_loss):
+            if hasattr(self, "num_failed"):
+                self.num_failed += 1
 
-        if prediction:
-            return losses, pred_out
+            else:
+                self.num_failed = 1
+
+            logging.error(
+                f"Fail {self.num_failed} at... batch {batch_idx} \n Loss: {total_loss},\n"
+                f"\n loss_irt: {loss_irt.flatten()}\n"
+                f"\n loss_spectra: {loss_cosine.flatten()}\n"
+                f"\n yhat_spec: {yhat_spectra.flatten()},\n"
+                f"\n y_spec: {batch.spectra.flatten()}\n"
+                f"\n y_irt: {batch.irt.flatten()}, {len(batch.irt.data)}"
+                f"\n yhat_irt: {yhat_irt.flatten()}"
+            )
+
+            if self.num_failed > 2:
+                torch.save(self.cpu().state_dict(), "broken_state.pt")
+                logging.error(self.cpu().state_dict())
+
+                logging.error("last succesfull state:")
+                logging.error(self.last_state)
+                raise RuntimeError(
+                    "Too many nan in a row, dumping state to 'broken_state.pt'"
+                )
+
         else:
-            return losses
+            self.num_failed = 0
+            if batch_idx % 50 == 0:
+                logging.debug("Saved state dict")
+                self.last_state = copy.deepcopy(self.state_dict())
+
+        return losses
 
     def training_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
     ) -> Dict[str, Tensor]:
         """See pytorch_lightning documentation."""
-        step_out = self._step(batch, batch_idx=batch_idx)
+        step_out = self._step(batch, batch_idx=batch_idx, layernorm=False)
         log_dict = {"train_" + k: v for k, v in step_out.items()}
         log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
 
@@ -969,6 +922,12 @@ class PepTransformerModel(MetricCalculator):
 
         return step_out["l"]
 
+    def on_train_start(self) -> None:
+        logging.info("Weights before the start of the training epoch:")
+        self.last_state = copy.deepcopy(self.state_dict())
+        logging.info(self.last_state)
+        return super().on_train_start()
+
     def validation_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
     ) -> None:
@@ -979,6 +938,8 @@ class PepTransformerModel(MetricCalculator):
         self.loss_metric.update(step_out["l"])
         self.spectra_metric.update(step_out["spec_l"])
         self.spectra_metric2.update(step_out["spec_l2"])
+
+        return step_out["l"]
 
     def validation_epoch_end(self, outputs) -> None:
         """See pytorch lightning documentation """
@@ -1021,10 +982,9 @@ class PepTransformerModel(MetricCalculator):
         )
 
         pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
+        gt_out = PredictionResults(irt=batch.irt.float(), spectra=batch.spectra)
 
-        loss_irt, loss_angle, loss_cosine = self.calculate_metrics(
-            pred_out, PredictionResults(irt=batch.irt.float(), spectra=batch.spectra)
-        )
+        loss_irt, loss_angle, loss_cosine = self.metric_calculator(pred_out, gt_out)
 
         losses = {
             "loss_irt": loss_irt,
@@ -1038,9 +998,51 @@ class PepTransformerModel(MetricCalculator):
         losses, pred_out = self._evaluation_step(batch=batch, batch_idx=batch_idx)
         return losses, pred_out.irt, batch.irt
 
+    def test_epoch_end(self, results):
+        self.metric_calculator.trainer = self.trainer
+        self.metric_calculator.log_dict = self.log_dict
+        return self.metric_calculator.test_epoch_end(results)
+
     def predict_step(self, batch: TrainBatch, batch_idx: Optional[int] = None):
         yhat_irt, yhat_spectra = self.forward(
             seq=batch.seq, mods=batch.mods, charge=batch.charge, nce=batch.nce
         )
-        pred_out = PredictionResults(irt=yhat_irt, spectra=yhat_spectra)
+        pred_out = PredictionResults(irt=yhat_irt, spectra=torch.relu(yhat_spectra))
         return pred_out
+
+    def on_after_backward(self):
+
+        msg = []
+        global_step = self.global_step
+        if (global_step % 50) == 0:
+            for name, param in self.named_parameters():
+                if "weight" in name and not "norm" in name:
+                    if param.requires_grad:
+                        try:
+                            if param.grad is None:
+                                raise AttributeError
+                            # self.logger.experiment.add_histogram(f"{name}_grad", param.grad, global_step)
+                            # This only works on tensorboard ...
+                            if any(
+                                x in name
+                                for x in [
+                                    "aa_encoder.weight",
+                                    "mod_encoder.weight",
+                                    "trans_decoder_embedding.weight",
+                                ]
+                            ):
+                                val = param.grad.abs().mean()
+                                if torch.any(torch.isnan(val)):
+                                    logging.error(
+                                        f"nan mean gradient for {name}: {param.grad}"
+                                    )
+                                self.log(name, val, prog_bar=True, on_step=True)
+                        except AttributeError:
+                            msg.append(name)
+                        except ValueError:
+                            msg.append(name)
+
+        if len(msg) > 0:
+            logging.warning(
+                " ".join(msg) + "Did not have gradients in step {global_step}"
+            )

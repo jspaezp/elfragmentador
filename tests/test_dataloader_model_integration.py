@@ -9,16 +9,11 @@ def test_dataset_input_works_on_model(shared_datadir):
     mod.eval()
     ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + "/sample.sptxt")
     dl = DataLoader(ds, 4)
-    inputs = ds[0]
+    inputs = next(dl.__iter__())
 
-    mod.batch_forward(inputs, debug=True)
+    mod.forward(seq=inputs.seq, mods=inputs.mods, charge=inputs.charge, nce=inputs.nce)
 
     with torch.no_grad():
-        for i, b in enumerate(dl):
+        for i, inputs in enumerate(dl):
             print(f"Batch Number: {i}")
-            mod.batch_forward(b, debug=True)
-
-
-if __name__ == "__main__":
-    parent_dir = Path(__file__).parent
-    test_dataset_input_works_on_model(str(parent_dir) + "/data/")
+            mod(seq=inputs.seq, mods=inputs.mods, charge=inputs.charge, nce=inputs.nce)

@@ -32,7 +32,7 @@ def test_concat_encoder_adds_right_number():
     x = torch.zeros((5, 1, 20))
     for d in range(1, 10, 1):
         encoder = model.ConcatenationEncoder(d, 200)
-        out = encoder(x, torch.tensor([[7]]), debug=True)
+        out = encoder(x, torch.tensor([[7]]))
         dim_diff = out.shape[-1] - 20
         assert (
             d == dim_diff
@@ -59,7 +59,6 @@ def mod_forward_base(datadir):
             charge=x.charge,
             mods=x.mods,
             nce=x.nce,
-            debug=True,
         )
 
     assert not all(torch.isnan(yhat_irt)), print(yhat_irt.mean())
@@ -71,7 +70,7 @@ def mod_forward_base(datadir):
 def test_model_forward_seq():
     mod = model.PepTransformerModel(nhead=4, d_model=64)
     with torch.no_grad():
-        out = mod.predict_from_seq("AAAACDMK", 3, nce=27.0, debug=True)
+        out = mod.predict_from_seq("AAAACDMK", 3, nce=27.0)
     print(f">> Shape of outputs {[y.shape for y in out]}")
 
 
@@ -226,8 +225,8 @@ def test_variable_length_has_same_results(setup_model):
 
             assert torch.all(
                 (
-                    mod.forward(**batch1._asdict(), debug=True).spectra
-                    - mod.forward(**batch2._asdict(), debug=True).spectra
+                    mod.forward(**batch1._asdict()).spectra
+                    - mod.forward(**batch2._asdict()).spectra
                 )
                 < 1e-5
             )

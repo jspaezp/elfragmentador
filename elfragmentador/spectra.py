@@ -325,7 +325,7 @@ class Spectrum:
             len(annots) > 0
         ), f"No peaks were annotated in this spectrum {self.sequence}"
         if len(annots) < 3:
-            warnings.warn(
+            logging.warning(
                 f"Less than 3 ({len(annots)}) peaks were"
                 f" annotated for spectra {self.sequence}"
             )
@@ -683,17 +683,22 @@ class SptxtReader:
                 if line.startswith("#"):
                     continue
                 stripped_line = line.strip()
-                if len(stripped_line) == 0:
+                if len(stripped_line) == 0 or stripped_line.startswith("Name:"):
                     if len(spectrum_section) > 0:
                         try:
                             yield spectrum_section
                         except AssertionError as e:
                             warnings.warn(f"Skipping spectra with assertion error: {e}")
                             pass
-                        spectrum_section = []
+                        spectrum_section = (
+                            [] if len(stripped_line) == 0 else [stripped_line]
+                        )
+                    elif len(stripped_line) > 0:
+                        spectrum_section = [stripped_line]
                 else:
                     spectrum_section.append(stripped_line)
 
+            # Try to yield the last spectrum
             if len(spectrum_section) > 0:
                 try:
                     yield spectrum_section
@@ -745,17 +750,29 @@ class SptxtReader:
             tmp = v.split(":")
             named_params_dict[tmp[0].strip()] = ":".join(tmp[1:])
 
-        fragmentation = named_params_dict.get("FullName", None)
-        if fragmentation is not None:
-            fragmentation = fragmentation[fragmentation.index("(") + 1 : -1]
-
         comment_sec = [
-            v.split("=") for v in named_params_dict["Comment"].strip().split(" ")
+            v.split("=")
+            for v in named_params_dict["Comment"].strip().replace("; ", ";").split(" ")
         ]
         comment_dict = {v[0]: v[1] for v in comment_sec}
         sequence, charge = named_params_dict["Name"].split("/")
+        sequence = sequence.strip()
 
-        nce = comment_dict.get("CollisionEnergy", None)
+        if "Mods" in comment_dict and "[" not in sequence:
+            # "2/2,M,Oxidation/8,M,Oxidation"
+            mods = comment_dict['Mods'].split("/")[::-1][:-1]
+            # ['8,M,Oxidation', '2,M,Oxidation']
+            mods = [x.split(",") for x in mods]
+            mods = [[int(x[0]), f"{x[1]}[{x[2].upper()}]"] for x in mods]
+            # [[8, 'M[OXIDATION]'], [2, 'M[OXIDATION]']]
+
+            for m in mods:
+                sequence = sequence[:m[0]] + m[1] + sequence[m[0]+1:]
+                # KVM[OXIDATION]RWFQAM[OXIDATION]
+
+        nce = comment_dict.get("CollisionEnergy", None) or comment_dict.get(
+            "Collision_energy", None
+        )
         if nce is not None:
             nce = float(nce)
 
@@ -898,7 +915,7 @@ class SptxtReader:
             charges.append(spec.charge)
             sequences.append(spec.sequence)
             mod_sequences.append(spec.mod_sequence)
-            rts.append(spec.rt)
+            rts.append(spec.rt or spec.irt)
             nces.append(spec.nce)
             orig.append(spec.raw_spectra)
             d_ascores.append(spec.delta_ascore)

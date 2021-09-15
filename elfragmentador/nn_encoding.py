@@ -16,6 +16,7 @@ except ImportError:
 import logging
 import math
 import torch
+import torch.nn.functional as F
 from torch import Tensor, nn
 from elfragmentador import constants
 import pytorch_lightning as pl
@@ -96,6 +97,7 @@ class ConcatenationEncoder(torch.nn.Module):
         dims_add: int,
         max_val: Union[float, int] = 200.0,
         static_size: bool = False,
+        scaling=1,
     ) -> None:
         """ConcatenationEncoder concatenates information into the embedding.
 
@@ -133,8 +135,9 @@ class ConcatenationEncoder(torch.nn.Module):
         # TODO add option to make trainable
         self.static_size = static_size
         self.dims_add = dims_add
+        self.scaling = scaling
 
-    def forward(self, x: Tensor, val: Tensor, debug: bool = False) -> Tensor:
+    def forward(self, x: Tensor, val: Tensor) -> Tensor:
         """Forward pass thought the encoder.
 
         Parameters:
@@ -157,32 +160,18 @@ class ConcatenationEncoder(torch.nn.Module):
             torch.Size([5, 1, 30])
             >>> output = encoder(x2, torch.tensor([[7], [4]]))
         """
-        if debug:
-            logging.debug(f"CE: Shape of inputs val={val.shape} x={x.shape}")
 
         e_sin = torch.sin(val * self.div_term)
         e_cos = torch.cos(val * self.div_term)
         e = torch.cat([e_sin, e_cos], axis=-1)
 
-        if debug:
-            logging.debug(f"CE: Making encodings e={e.shape}")
-
         assert (
             e.shape[-1] < self.dims_add + 2
         ), "Internal error in concatenation encoder"
+
         e = e[..., : self.dims_add]
-
-        if debug:
-            logging.debug(f"CE: clipping encodings e={e.shape}")
-
-        e = e.unsqueeze(0).expand(x.size(0), -1, -1)
-
-        if debug:
-            logging.debug(f"CE: Shape before concat e={e.shape} x={x.shape}")
-
+        e = e.unsqueeze(0).expand(x.size(0), -1, -1) / self.scaling
         x = torch.cat((x, e), axis=-1)
-        if debug:
-            logging.debug(f"CE: Shape after concat x={x.shape}")
 
         return x
 
@@ -239,7 +228,7 @@ class PositionalEncoding(torch.nn.Module):
         )
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
+        pe = pe.unsqueeze(0).transpose(0, 1) / math.sqrt(d_model)
         # Pe has [shape max_len, 1, d_model]
         self.register_buffer("pe", pe)
         self.static_size = static_size
@@ -264,10 +253,10 @@ class PositionalEncoding(torch.nn.Module):
             >>> output.shape
             torch.Size([4, 1, 6])
             >>> output
-            tensor([[[1.0000, 2.0000, 1.0000, 2.0000, 1.0000, 2.0000]],
-                [[1.8415, 1.5403, 1.0464, 1.9989, 1.0022, 2.0000]],
-                [[1.9093, 0.5839, 1.0927, 1.9957, 1.0043, 2.0000]],
-                [[1.1411, 0.0100, 1.1388, 1.9903, 1.0065, 2.0000]]])
+            tensor([[[...]],
+                [[...]],
+                [[...]],
+                [[...]]])
         """
         if self.static_size:
             end_position = self.static_size
@@ -303,22 +292,16 @@ class AASequenceEmbedding(torch.nn.Module):
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
         torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
 
-    def forward(self, seq, mods, debug: bool = False):
-        if debug:
-            logging.debug(f"AAE: Input shapes seq={seq.shape}, mods={mods.shape}")
-
+    def forward(self, seq, mods):
+        # seq and mod are [N, S] shaped
+        mods = F.pad(mods, (0, seq.size(1) - mods.size(1)), "constant")
         seq = self.aa_encoder(seq.permute(1, 0))
         mods = self.mod_encoder(mods.permute(1, 0))
         seq = seq + mods
 
         # TODO consider if this line is needed, it is used in attention is all you need
         seq = seq * math.sqrt(self.aa_encoder.num_embeddings)
-        if debug:
-            logging.debug(f"AAE: Shape after embedding {seq.shape}")
-
         seq = self.position_embed(seq)
-        if debug:
-            logging.debug(f"AAE: Shape after embedding positions {seq.shape}")
 
         return seq
 

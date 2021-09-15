@@ -12,12 +12,14 @@ import torch
 from torch.utils.data.dataloader import DataLoader
 
 import pytorch_lightning as pl
+from elfragmentador import utils_data
 
 from elfragmentador.named_batches import TrainBatch
 from elfragmentador.utils_data import (
     _convert_tensor_columns_df,
+    collate_fun,
 )
-from elfragmentador.datasets import PeptideDataset
+from elfragmentador.datasets.peptide_dataset import PeptideDataset
 
 from argparse import _ArgumentGroup
 
@@ -91,7 +93,10 @@ class PeptideDataModule(pl.LightningDataModule):
             "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
         return self.train_dataset.as_dataloader(
-            num_workers=0, batch_size=self.batch_size, shuffle=True
+            num_workers=0,
+            batch_size=self.batch_size,
+            shuffle=True,
+            collate_fn=utils_data.collate_fun,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -99,5 +104,8 @@ class PeptideDataModule(pl.LightningDataModule):
             "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
         return self.val_dataset.as_dataloader(
-            num_workers=0, batch_size=self.batch_size, shuffle=False
+            num_workers=0,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=utils_data.collate_fun,
         )

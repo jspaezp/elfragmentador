@@ -18,6 +18,7 @@ import uniplot
 
 def collate_fun(batch):
     """Collate function that first equalizes the length of tensors
+    Modified from the pytorch implementation
 
     Examples:
         >>> collate_fun([torch.ones(2), torch.ones(4), torch.ones(14)])
@@ -31,16 +32,26 @@ def collate_fun(batch):
         return _match_lengths(nested_list=batch)
     elif isinstance(elem, tuple) and hasattr(elem, "_fields"):  # namedtuple
         return elem_type(*(collate_fun(samples) for samples in zip(*batch)))
+    elif isinstance(elem, dict):
+        return {key: collate_fun([d[key] for d in batch]) for key in elem}
 
     return default_collate([x for x in batch])
 
 
 def cat_collate(batch):
+    """Collate function that concatenates the first dimension, instead of stacking it
+
+    Examples:
+        >>> collate_fun([torch.ones(4), torch.ones(4), torch.ones(4)])
+        tensor([[1., 1., 1., 1.],
+                [1., 1., 1., 1.],
+                [1., 1., 1., 1.]])
+    """
     elem = batch[0]
     elemtype = type(elem)
 
     if isinstance(elem, torch.Tensor):
-        return torch.cat(batch)
+        return torch.cat([b if len(b.shape) > 0 else b.unsqueeze(0) for b in batch])
 
     if isinstance(elem, dict):
         out = {key: cat_collate([d[key] for d in batch]) for key in elem}
@@ -130,9 +141,9 @@ def _match_lengths(
                 [1, 2, 0, 0, 0, 0],
                 [1, 2, 3, 4, 5, 6]])
         >>> _match_lengths([np.array([[1]]), np.array([[1, 2]]), np.array([[1,2,3,4,5,6]])])
-        tensor([[[1, 0, 0, 0, 0, 0]],
-                [[1, 2, 0, 0, 0, 0]],
-                [[1, 2, 3, 4, 5, 6]]])
+        tensor([[1, 0, 0, 0, 0, 0],
+                [1, 2, 0, 0, 0, 0],
+                [1, 2, 3, 4, 5, 6]])
     """
     logging.debug(f"Matching shapes of {name}")
     elem = nested_list[0]
@@ -156,6 +167,7 @@ def _match_lengths(
         max_len = np.array(max_len)
         logging.debug(f"Setting maximum length of {name} to {max_len}")
 
+    # TODO check if this error recovery is too expensive
     try:
         if np.any(max_len != obs_max_lengths):
             raise RuntimeError(
@@ -170,6 +182,9 @@ def _match_lengths(
             out.append(pad_fun(to_numpy(x), padding, "constant"))
 
         out = torch.stack([from_numpy(x) for x in out], dim=0)
+
+    # drop values with all zeros
+    out = out[..., out.max(axis=0).values.flip(0).cumsum(0).flip(0) != 0, ...]
 
     return out
 
@@ -234,6 +249,7 @@ def _match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
         "SpecE": _match_col("Encoding", "Spec", colnames, combine_mode="intersect"),
         "Ch": _match_col("harg", None, colnames),
         "iRT": _match_col("IRT", "iRT", colnames, combine_mode="union"),
+        "RT": _match_col("RT", None, colnames),
         "NCE": _match_col(
             "nce", "NCE", colnames, combine_mode="union", match_mode="startswith"
         ),

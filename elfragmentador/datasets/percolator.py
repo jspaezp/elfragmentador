@@ -21,7 +21,11 @@ from torch import Tensor
 import elfragmentador.constants as CONSTANTS
 from elfragmentador.spectra import Spectrum
 from elfragmentador.model import PepTransformerModel
-from elfragmentador.datasets.dataset import IterableDatasetBase, Predictor
+from elfragmentador.datasets.dataset import (
+    IterableDatasetBase,
+    Predictor,
+)
+from elfragmentador.datasets.batch_utils import _append_batch_to_df
 from elfragmentador.named_batches import (
     PredictionResults,
     TrainBatch,
@@ -245,15 +249,7 @@ class PinDataset(IterableDatasetBase):
             yield input_batch
 
     def append_batches(self, batches: NamedTuple[Tensor], prefix=""):
-        logging.info(f"Appending info to dataframe with prefix '{prefix}'")
-        {
-            logging.debug(f"Appending Batches: {prefix}{k}:{v.shape}")
-            for k, v in batches._asdict().items()
-        }
-        for k, v in batches._asdict().items():
-            k = prefix + k
-            self.df.insert(loc=len(list(self.df)) - 2, column=k, value=float("nan"))
-            self.df[k] = [x.numpy().flatten().tolist() for x in v]
+        _append_batch_to_df(df=self.df, batches=batches, prefix=prefix)
 
     def save_data(self, prefix: PathLike):
         self.df.reset_index(drop=True).to_csv(prefix + ".csv", index=False)

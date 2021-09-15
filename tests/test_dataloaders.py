@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 
-def check_lengths(i: NamedTuple):
+def check_type(i: NamedTuple):
     expect_names = set(
         [
             "seq",
@@ -20,16 +20,9 @@ def check_lengths(i: NamedTuple):
         ]
     )
     assert expect_names == set(i._fields)
-    assert i.seq.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
-    assert i.mods.shape == torch.Size([constants.MAX_TENSOR_SEQUENCE])
-    assert i.spectra.shape == torch.Size([constants.NUM_FRAG_EMBEDINGS])
-    assert i.charge.shape == torch.Size([1])
-    assert i.irt.shape == torch.Size([1])
-    assert i.nce.shape == torch.Size([1])
-    assert i.weight.shape == torch.Size([1])
 
 
-def test_dataset_outputs_correct_dims(shared_datadir):
+def test_dataset_outputs_correct_type(shared_datadir):
     df = pd.read_csv(str(shared_datadir) + "/train_data_sample/combined_val.csv")
     dataset = datamodules.PeptideDataset(df, filter_df=True)
     i = dataset[0]
@@ -39,7 +32,7 @@ def test_dataset_outputs_correct_dims(shared_datadir):
         print(type(x))
         print(x.data)
 
-    check_lengths(i)
+    check_type(i)
 
 
 def test_dataset_from_sptxt_works(shared_datadir):
@@ -51,4 +44,4 @@ def test_dataset_from_sptxt_works(shared_datadir):
 
     for f in infiles:
         ds = datamodules.PeptideDataset.from_sptxt(str(shared_datadir) + f)
-        check_lengths(ds[0])
+        check_type(ds[0])

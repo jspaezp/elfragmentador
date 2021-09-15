@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import torch.nn.functional as F
 from elfragmentador.datasets.dataset import DatasetBase
 
 import logging
@@ -57,7 +59,7 @@ class PeptideDataset(DatasetBase):
             )
             df = df.sample(n=int(max_spec))
 
-        self.df = df  # TODO remove this for memory ...
+        self.df = df
 
         df = _convert_tensor_columns_df(df)
         name_match = _match_colnames(df)
@@ -80,11 +82,11 @@ class PeptideDataset(DatasetBase):
         spectra_lengths = len(self.spectra_encodings[0])
         sequence_lengths = len(self.sequence_encodings[0])
 
-        self.norm_irts = (
-            torch.from_numpy(np.array(self.df[name_match["iRT"]]).astype("float") / 100)
-            .float()
-            .unsqueeze(1)
-        )
+        irts = torch.from_numpy(np.array(self.df[name_match["iRT"]]).astype("float"))
+        if torch.all(torch.isnan(irts)):
+            irts = torch.from_numpy(np.array(self.df[name_match["RT"]]).astype("float"))
+
+        self.norm_irts = (irts / 100).float().unsqueeze(1)
         self.nces = (
             torch.from_numpy(np.array(self.df[name_match["NCE"]]).astype("float"))
             .float()
@@ -135,10 +137,14 @@ class PeptideDataset(DatasetBase):
     def mod_sequences(self):
         """ """
         if not hasattr(self, "_mod_sequences"):
-            self._mod_sequences = [
-                decode_mod_seq([int(s) for s in seq], [int(m) for m in mod])
-                for seq, mod in zip(self.sequence_encodings, self.mod_encodings)
-            ]
+            self._mod_sequences = []
+
+            for seq, mod in zip(self.sequence_encodings, self.mod_encodings):
+                mod = F.pad(mod, (0, seq.size(-1)), mode="constant")
+                seq = [int(s) for s in seq]
+                mods = [int(m) for m in mod]
+                seq = decode_mod_seq(seq, mods)
+                self._mod_sequences.append(seq)
 
         return self._mod_sequences
 
@@ -243,12 +249,12 @@ class PeptideDataset(DatasetBase):
         weight = self.weights[index]
 
         out = TrainBatch(
-            seq=encoded_sequence,
-            mods=encoded_mods,
-            charge=charge,
-            nce=nce,
-            spectra=encoded_spectra,
-            irt=norm_irt,
-            weight=weight,
+            seq=encoded_sequence.clone(),
+            mods=encoded_mods.clone(),
+            charge=charge.clone(),
+            nce=nce.clone(),
+            spectra=encoded_spectra.clone(),
+            irt=norm_irt.clone(),
+            weight=weight.clone(),
         )
         return out
