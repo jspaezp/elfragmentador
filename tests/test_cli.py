@@ -21,7 +21,14 @@ def test_cli_help(command_name):
     assert exit_code == 0
 
 
-def test_cli_train(shared_datadir):
+args = [
+    "--max_epochs 2 --d_model 64 --nhid 120 --nhead 2",
+    "--max_epochs 2 --d_model 64 --nhid 120 --nhead 2 --max_spec 20",
+]
+
+
+@pytest.mark.parametrize("arguments", args)
+def test_cli_train(shared_datadir, arguments):
     # Set up wandb to pretend that we are already logged in.
     # On a real world setting we would use $ wandb login
     import wandb
@@ -32,7 +39,11 @@ def test_cli_train(shared_datadir):
     # Actual cli call
     parser = train.build_train_parser()
     args = parser.parse_args(
-        ["--fast_dev_run", "1", "--data_dir", str(shared_datadir / "train_data_sample")]
+        [
+            *arguments.split(),
+            "--data_dir",
+            str(shared_datadir / "train_data_sample"),
+        ]
     )
     dict_args = vars(args)
     for k, v in dict_args.items():

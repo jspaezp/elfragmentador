@@ -32,12 +32,20 @@ def _solve_alias(x: str) -> str:
         'M[OXIDATION]'
         >>> _solve_alias("C[+57]")
         'C'
+        >>> _solve_alias("C[Carbamidomethyl (C)]")
+        'C'
     """
     try:
         x = x if len(x) == 1 else x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x]}]"
     except KeyError as e:
         if len(x) > 1 and x[1] == "[" and x[2] in "1234567890":
             x = x[:1] + f"[{constants.MOD_PEPTIDE_ALIASES[x.replace('[', '[+')]}]"
+
+        elif " " in x and x[-1] == "]" and x[1] == "[":
+            content = x[2:-1].split(" ")[0].upper()
+            query = f"{x[0]}[{content}]"
+            x = x[0] + f"[{constants.MOD_PEPTIDE_ALIASES[query]}]"
+
         elif len(x) == 3:
             pass
         else:
@@ -74,9 +82,12 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
         ['n', 'A', 'A', 'A', 'M[+16]', 'C', 'C', 'c']
         >>> list(peptide_parser("K.AAAM[+16]CC.K"))
         ['n', 'A', 'A', 'A', 'M[+16]', 'C', 'C', 'c']
+        >>> list(peptide_parser("_KC[Carbamidomethyl (C)]W_"))
+        ['n', 'K', 'C[Carbamidomethyl (C)]', 'W', 'c']
     """
 
     ANNOTATIONS = "[](){}"
+    ANNOTATION_CLOSING = {"[": "]", "{": "}", "(": ")"}
 
     # This fixes a bug where passing a list would yield the incorrect results
     p = "".join(p)
@@ -98,12 +109,9 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
             i += 1
             continue
         elif i + 1 < n and p[i + 1] in ANNOTATIONS:
+            closing_annotation = ANNOTATION_CLOSING[p[i + 1]]
             p_ = p[i + 2 :]
-            annots = [x for x in ANNOTATIONS if x in p_]
-            nexts = []
-            for an in annots:
-                nexts.append(p_.index(an))
-            j = min(nexts)
+            j = p_.index(closing_annotation)
             offset = i + j + 3
             out = p[i:offset]
             try:

@@ -1,15 +1,21 @@
+from __future__ import annotations
+
+from collections import defaultdict
 import logging
 from os import PathLike
-from typing import Optional, Union, List, Iterable, Iterator
+from typing import NamedTuple, Optional, Sequence, Union, List, Iterable, Iterator
 from argparse import _ArgumentGroup
 import warnings
 
 from abc import ABC, abstractmethod
 
 import numpy as np
+from pandas.core.frame import DataFrame
+from pandas.io.pytables import format_doc
 
 import torch
 from torch import Tensor
+import torch.nn.functional as F
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataloader import DataLoader
 
@@ -21,7 +27,9 @@ from elfragmentador.metrics import MetricCalculator
 import uniplot
 
 from elfragmentador import spectra, utils_data
+from elfragmentador import encoding_decoding
 from elfragmentador.model import PepTransformerModel
+from elfragmentador.datasets.batch_utils import _log_batches
 from elfragmentador.named_batches import (
     EvaluationLossBatch,
     EvaluationPredictionBatch,
@@ -45,11 +53,11 @@ class NCEOffsetHolder(ABC):
 
         Examples:
             >>> NCEOffsetHolder.derived(flatten=True)
-            ['BatchDataset', 'DatasetBase', 'IterableDatasetBase', 'MokapotPSMDataset', 'NCEOffsetHolder', 'PeptideDataset', 'PinDataset', 'SequenceDataset']
+            ['BatchDataset', 'DatasetBase', 'IterableDatasetBase', 'MokapotPSMDataset', 'NCEOffsetHolder', 'PeptideDataset', 'PinDataset', 'SequenceDataset', 'SpectronautLibrary']
             >>> NCEOffsetHolder.derived(flatten=True, return_classes=True)
-            [<class 'elfragmentador.datasets.dataset.BatchDataset'>, ..., <class 'elfragmentador.datasets.sequence_dataset.SequenceDataset'>]
+            [<class 'elfragmentador.datasets.dataset.BatchDataset'>, ..., <class 'elfragmentador.datasets.spectronaut_dataset.SpectronautLibrary'>]
             >>> NCEOffsetHolder.derived()
-            {'NCEOffsetHolder': [{'DatasetBase': [{'BatchDataset': []}, {'PeptideDataset': []}, {'SequenceDataset': []}]}, {'IterableDatasetBase': [{'PinDataset': [{'MokapotPSMDataset': []}]}]}]}
+             {'NCEOffsetHolder': [{'DatasetBase': ..., {'IterableDatasetBase': [{'PinDataset': [{'MokapotPSMDataset': []}]}]}]}
         """
 
         entry_name = cls if return_classes else cls.__name__
@@ -128,6 +136,19 @@ class NCEOffsetHolder(ABC):
             value = value + self.nce_offset
 
         return value
+
+    def disable_nce_offset(self):
+        if hasattr(self, "overwrite_nce") and self.overwrite_nce:
+            self._backup_nce = {"overwrite_nce": self.overwrite_nce}
+            self.overwrite_nce = None
+        elif hasattr(self, "nce_offset") and self.nce_offset:
+            self._backup_nce = {"nce_offset": self.nce_offset}
+            self.nce_offset = None
+
+    def enable_nce_offset(self):
+        if hasattr(self, "_backup_nce"):
+            for k, v in self._backup_nce.items():
+                setattr(self, k, v)
 
     @property
     def used_calc_nce(self):
@@ -231,6 +252,10 @@ class DatasetBase(Dataset, NCEOffsetHolder):
     def __len__(self) -> int:
         raise NotImplementedError
 
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
 
 class IterableDatasetBase(IterableDataset, NCEOffsetHolder):
     def __init__(self, *args, **kwargs) -> None:
@@ -313,12 +338,46 @@ class ComparissonDataset(Dataset):
     accepted_fields = {"spec", "irt"}
 
     def __init__(self, gt_db, pred_db, *args, **kwargs):
+        """Generic dataset comparer
+
+        Provided 2 different datasets, gives utilities to compare them
+        
+        It is meant to be used to compare ground-truth vs predicted spectra.
+        It calculates the general losses and the scaled retention time loss.
+
+        Args:
+            gt_db (NCEOffsetHolder) 
+            pred_db (NCEOffsetHolder)
+
+        Example:
+            >>> # ds1 = PeptideDataset.from_sptxt("path_to_sptxt")
+            >>> # ds2 = MokapotPSMDataset("path_to_psms.txt")
+            >>> # comp = ComparissonDataset(ds1, ds2)
+            >>> # comp.compare()
+            >>> # out = comp.save_data()
+            >>> # out 
+            # Contains the columns [Sequence, Charge, NCE, scaled_se_loss, loss_cosine, loss_irt, loss_angle]
+        """
         super().__init__()
         self.gt_db = gt_db
         self.pred_db = pred_db
-        assert len(gt_db) == len(pred_db)
+
+        if len(gt_db) != len(pred_db):
+            logging.info(
+                "Length of datasets does not match,"
+                " attempting to match them by keys (sequence, charge and nce)"
+            )
+            self._match_datasets()
+        else:
+            self.length = len(pred_db)
 
     def __getitem__(self, index):
+        if hasattr(self, "mapping"):
+            return self.__match_getitem__(index)
+        else:
+            return self.__index_getitem__(index)
+
+    def __index_getitem__(self, index):
         gt = PredictionResults(
             irt=self.gt_db[index].irt, spectra=self.gt_db[index].spectra
         )
@@ -328,11 +387,115 @@ class ComparissonDataset(Dataset):
         return {"gt": gt, "pred": pred}
 
     def __len__(self):
-        return len(self.pred_db)
+        return self.length
 
+    @staticmethod
+    def _make_key(batch):
+        mods = F.pad(batch.mods, (0, batch.seq.size(-1) - batch.mods.size(-1)))
+        mod_seq = encoding_decoding.decode_mod_seq(
+            seq_encoding=batch.seq, mod_encoding=mods
+        )
+        key = f"{mod_seq}/{int(batch.charge)}/{float(batch.nce)}"
+        return key
 
-def _log_batches(batches, prefix="Tensor"):
-    {logging.debug(f"{prefix}: {k}:{v.shape}") for k, v in batches._asdict().items()}
+    def _match_datasets(self):
+        if hasattr(self, "mapping"):
+            return None
+
+        base = defaultdict(lambda: {"gt": None, "pred": None, "fw_batch": None})
+
+        self.gt_db.disable_nce_offset()
+        self.pred_db.disable_nce_offset()
+
+        for x in self.gt_db:
+            preds = PredictionResults(irt=x.irt, spectra=x.spectra)
+            seqs = ForwardBatch(seq=x.seq, mods=x.mods, charge=x.charge, nce=x.nce)
+            key = self._make_key(x)
+            base[key]["gt"] = preds
+            base[key]["fw_batch"] = seqs
+
+        for x in self.pred_db:
+            preds = PredictionResults(irt=x.irt, spectra=x.spectra)
+            seqs = ForwardBatch(seq=x.seq, mods=x.mods, charge=x.charge, nce=x.nce)
+            key = self._make_key(x)
+            base[key]["pred"] = preds
+            base[key]["fw_batch"] = seqs
+
+        self.mapping = list([v["fw_batch"] for v in base.values()])
+        self.mapping_pairs = base
+        self.pred_db.enable_nce_offset()
+        self.gt_db.enable_nce_offset()
+        self.length = len(self.mapping)
+
+    def __match_getitem__(self, index):
+        mapping_key = self._make_key(self.mapping[index])
+        outs = self.mapping_pairs[mapping_key]
+
+        if outs["gt"] is None:
+            outs["gt"] = PredictionResults(
+                irt=torch.full_like(outs["pred"].irt, float("nan")),
+                spectra=torch.full_like(outs["pred"].spectra, float("nan")),
+            )
+
+        if outs["pred"] is None:
+            outs["pred"] = PredictionResults(
+                irt=torch.full_like(outs["gt"].irt, float("nan")),
+                spectra=torch.full_like(outs["gt"].spectra, float("nan")),
+            )
+
+        gt = PredictionResults(irt=outs["gt"].irt, spectra=outs["gt"].spectra)
+        pred = PredictionResults(irt=outs["pred"].irt, spectra=outs["pred"].spectra)
+        return {"gt": gt, "pred": pred}
+
+    def compare(
+        self, plot: Optional[bool] = False, predictor: Optional[Predictor] = None
+    ):
+        if predictor is None:
+            predictor = Predictor(batch_size=16)
+
+        comp_dl = predictor.make_dataloader(self)
+        comparisson_model = MetricCalculator()
+
+        losses = predictor.test(comparisson_model, comp_dl, plot=plot)
+        logging.info("Saving calculated losses to {self}.losses")
+        self.losses = losses
+        return losses
+
+    def save_data(self, prefix: Optional[PathLike] = None):
+
+        df_dict = {
+            "Sequence": [],
+            "Charge": [],
+            "NCE": [],
+        }
+
+        loss_dict = self.losses._asdict()
+        [df_dict.update({k: []}) for k, v in loss_dict.items()]
+
+        for i, fw_batch in enumerate(self.mapping):
+
+            key = self._make_key(fw_batch)
+            split_key = key.split("/")
+
+            df_dict["Sequence"].append(split_key[0])
+            df_dict["Charge"].append(int(split_key[1]))
+            df_dict["NCE"].append(float(split_key[2]))
+
+            for k, v in loss_dict.items():
+                df_dict[k].append(float(v[i].squeeze().numpy()))
+
+        out_df = DataFrame(df_dict)
+        if prefix is not None:
+            logging.info(f"Saving data to {prefix}.csv and {prefix}.feather")
+            out_df.to_csv(str(prefix) + ".csv", index=False)
+            out_df.reset_index(drop=True).to_feather(str(prefix) + ".feather")
+        else:
+            logging.info(
+                f"Not saving data to disk because no prefix"
+                " was passed to {self}.save_data"
+            )
+
+        return out_df
 
 
 class Predictor(Trainer):
@@ -447,7 +610,8 @@ class Predictor(Trainer):
 
         super().test(model, test_dataloader, *args, **kwargs)
 
-        # EvaluationLossBatch
+        # EvaluationLossBatch, this gets saved by the passed model. when
+        # implemented in on_test_epoch_end / on_test_end
         test_results = self.test_results
 
         # ["scaled_se_loss", "loss_cosine", "loss_irt", "loss_angle"]

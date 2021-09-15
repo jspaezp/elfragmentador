@@ -131,16 +131,19 @@ def decode_mod_seq(
     """
     out = []
 
-    if mod_encoding is None:
+    if mod_encoding is None or len(mod_encoding) == 0:
         mod_encoding = [0] * len(seq_encoding)
 
     for i, s in enumerate(seq_encoding):
+        # This solves the issue where a tensor is passed instead
+        # of a list of ints
+        s = int(s)
         if s == 0:
             break
 
         out.append(CONSTANTS.ALPHABET_S[s])
         if mod_encoding[i] != 0:
-            out.append(f"[{CONSTANTS.MOD_INDICES_S[mod_encoding[i]]}]")
+            out.append(f"[{CONSTANTS.MOD_INDICES_S[int(mod_encoding[i])]}]")
 
     if clip_explicit_term:
         out = clip_explicit_terminus(out)

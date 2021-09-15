@@ -3,8 +3,10 @@ from typing import Dict
 
 import torch
 from torch import Tensor, nn
+import torch.nn.functional as F
 import pytorch_lightning as pl
 
+from elfragmentador import constants
 from elfragmentador.named_batches import (
     PredictionResults,
     EvaluationLossBatch,
@@ -19,12 +21,12 @@ import uniplot
 class CosineLoss(torch.nn.CosineSimilarity):
     """CosineLoss Implements a simple cosine similarity based loss."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, dim=1, eps=1e-8) -> None:
         """__init__ Instantiates the class.
 
         All arguments are passed to `torch.nn.CosineSimilarity`
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(dim=dim, eps=eps)
 
     def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
         """Forward calculates the loss.
@@ -68,8 +70,8 @@ class CosineLoss(torch.nn.CosineSimilarity):
 
 
 class SpectralAngle(torch.nn.CosineSimilarity):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, dim=1, eps=1e-8):
+        super().__init__(dim=dim, eps=eps)
 
     def forward(self, truth, prediction):
         """Forward calculates the loss.
@@ -222,29 +224,38 @@ class MetricCalculator(pl.LightningModule):
         super().__init__()
 
         self.mse_loss = nn.MSELoss(reduction="none")
-        self.cosine_loss = CosineLoss(dim=1, eps=1e-4)
-        self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-4)
+        self.cosine_loss = CosineLoss(dim=1, eps=1e-8)
+        self.angle_loss = SpectralAngleLoss(dim=1, eps=1e-8)
 
-    def forward(self, x: PredictionResults, y: PredictionResults):
-        return self.calculate_metrics(x=x, y=y)
+    def forward(self, pred: PredictionResults, gt: PredictionResults):
+        return self.calculate_metrics(pred=pred, gt=gt)
 
-    def calculate_metrics(self, x: PredictionResults, y: PredictionResults):
+    def calculate_metrics(self, pred: PredictionResults, gt: PredictionResults):
 
-        yhat_irt, yhat_spectra = y.irt, y.spectra
+        yhat_irt, yhat_spectra = pred.irt.float(), F.normalize(
+            torch.relu(self.pad_spectra(pred.spectra)), 2, 1
+        )
+        irt, spectra = gt.irt.float(), F.normalize(
+            torch.relu(self.pad_spectra(gt.spectra)), 2, 1
+        )
 
-        loss_irt = self.mse_loss(yhat_irt, x.irt.float())
-        loss_angle = self.angle_loss(yhat_spectra, x.spectra)
-        loss_cosine = self.cosine_loss(yhat_spectra, x.spectra)
+        loss_irt = self.mse_loss(yhat_irt, irt)
+        loss_angle = self.angle_loss(yhat_spectra, spectra)
+        loss_cosine = self.cosine_loss(yhat_spectra, spectra)
 
-        return loss_irt, loss_angle, loss_cosine
+        return loss_irt.squeeze(), loss_angle.squeeze(), loss_cosine.squeeze()
+
+    @staticmethod
+    def pad_spectra(spec):
+        spec = F.pad(
+            spec, (0, constants.NUM_FRAG_EMBEDINGS - spec.size(1)), mode="constant"
+        )
+        return spec
 
     def test_step(self, batch: Dict[str, PredictionResults], batch_idx: int):
-        if isinstance(batch["gt"], list):
-            batch["gt"] = PredictionResults(**batch["gt"]._asdict())
-        if isinstance(batch["pred"], list):
-            batch["pred"] = PredictionResults(**batch["pred"])
-
-        loss_irt, loss_angle, loss_cosine = self.forward(x=batch["gt"], y=batch["pred"])
+        loss_irt, loss_angle, loss_cosine = self.calculate_metrics(
+            gt=batch["gt"], pred=batch["pred"]
+        )
         losses = {
             "loss_irt": loss_irt,
             "loss_angle": loss_angle,
