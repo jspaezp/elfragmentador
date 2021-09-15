@@ -908,7 +908,7 @@ class PepTransformerModel(pl.LightningModule):
 
     def training_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
-    ) -> Dict[str, Tensor]:
+    ) -> Tensor:
         """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx, layernorm=False)
         log_dict = {"train_" + k: v for k, v in step_out.items()}
@@ -930,7 +930,7 @@ class PepTransformerModel(pl.LightningModule):
 
     def validation_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
-    ) -> None:
+    ) -> Tensor:
         """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
 
@@ -941,7 +941,7 @@ class PepTransformerModel(pl.LightningModule):
 
         return step_out["l"]
 
-    def validation_epoch_end(self, outputs) -> None:
+    def validation_epoch_end(self, outputs: List[Tensor]) -> List[Tensor]:
         """See pytorch lightning documentation """
         log_dict = {
             "val_irt_l": self.irt_metric.compute(),
@@ -965,7 +965,7 @@ class PepTransformerModel(pl.LightningModule):
     def _evaluation_step(
         self,
         batch: TrainBatch,
-        batch_idx: int,
+        batch_idx: Optional[int],
     ) -> Dict[str, Tensor]:
         """Run main functionality during training an testing steps.
 
@@ -994,11 +994,13 @@ class PepTransformerModel(pl.LightningModule):
 
         return losses, pred_out
 
-    def test_step(self, batch, batch_idx=None):
+    def test_step(
+        self, batch, batch_idx: Optional[int] = None
+    ) -> Tuple[Dict[str, Tensor], PredictionResults]:
         losses, pred_out = self._evaluation_step(batch=batch, batch_idx=batch_idx)
         return losses, pred_out.irt, batch.irt
 
-    def test_epoch_end(self, results):
+    def test_epoch_end(self, results: List):
         self.metric_calculator.trainer = self.trainer
         self.metric_calculator.log_dict = self.log_dict
         return self.metric_calculator.test_epoch_end(results)
