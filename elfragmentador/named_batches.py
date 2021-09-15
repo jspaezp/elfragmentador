@@ -8,7 +8,7 @@ EvaluationPredictionBatch = EvaluationLossBatch + PredictionBatch
 """
 
 from collections import namedtuple
-from typing import NamedTuple
+from typing import NamedTuple, Union
 
 import torch
 from torch import Tensor
@@ -160,3 +160,12 @@ class EvaluationPredictionBatch(NamedTuple):
 
     def __hash__(self):
         return _hash_tensors(self)
+
+
+NamedTensorBatch = Union[
+    EvaluationLossBatch,
+    EvaluationPredictionBatch,
+    ForwardBatch,
+    TrainBatch,
+    PredictionResults,
+]

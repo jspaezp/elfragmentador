@@ -36,6 +36,7 @@ from elfragmentador.named_batches import (
     ForwardBatch,
     PredictionResults,
     TrainBatch,
+    NamedTensorBatch,
 )
 
 
@@ -97,14 +98,14 @@ class NCEOffsetHolder(ABC):
         return outs
 
     @property
-    def nce_offset(self):
+    def nce_offset(self) -> float:
         if hasattr(self, "_nce_offset"):
             return self._nce_offset
         else:
             return None
 
     @nce_offset.setter
-    def nce_offset(self, value):
+    def nce_offset(self, value: float):
         msg = f"Setting nce offset to {value}"
         if self.overwrite_nce is not None:
             msg += ", removing nce overwritting"
@@ -113,14 +114,14 @@ class NCEOffsetHolder(ABC):
         self._overwrite_nce = None
 
     @property
-    def overwrite_nce(self):
+    def overwrite_nce(self) -> float:
         if hasattr(self, "_overwrite_nce"):
             return self._overwrite_nce
         else:
             return None
 
     @overwrite_nce.setter
-    def overwrite_nce(self, value):
+    def overwrite_nce(self, value: float):
         msg = f"Setting nce overwritting to {value}"
         if self.nce_offset is not None:
             msg += ", removing nce offset"
@@ -128,7 +129,7 @@ class NCEOffsetHolder(ABC):
         self._overwrite_nce = value
         self._nce_offset = None
 
-    def calc_nce(self, value):
+    def calc_nce(self, value: float) -> float:
         self._used_calc_nce = True
         if hasattr(self, "overwrite_nce") and self.overwrite_nce:
             value = self.overwrite_nce
@@ -137,7 +138,7 @@ class NCEOffsetHolder(ABC):
 
         return value
 
-    def disable_nce_offset(self):
+    def disable_nce_offset(self) -> None:
         if hasattr(self, "overwrite_nce") and self.overwrite_nce:
             self._backup_nce = {"overwrite_nce": self.overwrite_nce}
             self.overwrite_nce = None
@@ -145,13 +146,13 @@ class NCEOffsetHolder(ABC):
             self._backup_nce = {"nce_offset": self.nce_offset}
             self.nce_offset = None
 
-    def enable_nce_offset(self):
+    def enable_nce_offset(self) -> None:
         if hasattr(self, "_backup_nce"):
             for k, v in self._backup_nce.items():
                 setattr(self, k, v)
 
     @property
-    def used_calc_nce(self):
+    def used_calc_nce(self) -> bool:
         if hasattr(self, "_used_calc_nce") and self._used_calc_nce:
             return True
         else:
@@ -162,11 +163,11 @@ class NCEOffsetHolder(ABC):
         pass
 
     @abstractmethod
-    def top_n_subset(self, n):
+    def top_n_subset(self, n: int):
         pass
 
     @abstractmethod
-    def append_batches(self, batches, prefix=""):
+    def append_batches(self, batches: NamedTuple[Tensor], prefix: str = ""):
         pass
 
     @abstractmethod
@@ -176,9 +177,9 @@ class NCEOffsetHolder(ABC):
     def optimize_nce(
         self,
         model,
-        offsets=range(-10, 10, 2),
-        n=500,
-        predictor=None,
+        offsets: Iterable[float] = range(-10, 10, 2),
+        n: int = 500,
+        predictor: Predictor = None,
     ):
         # Requires implementing a 'top_n_subset' method in the
         # derived class, optionally have a .metric attribute
@@ -252,7 +253,7 @@ class DatasetBase(Dataset, NCEOffsetHolder):
     def __len__(self) -> int:
         raise NotImplementedError
 
-    def __iter__(self):
+    def __iter__(self) -> int:
         for i in range(len(self)):
             yield self[i]
 
@@ -279,28 +280,28 @@ class BatchDataset(DatasetBase):
         info = {k: v.shape for k, v in self.batches._asdict().items()}
         logging.debug(f"Initialized BatchDataset with {info}")
 
-    def __getitem__(self, index) -> Union[ForwardBatch, TrainBatch]:
+    def __getitem__(self, index: int) -> Union[ForwardBatch, TrainBatch]:
         out = [x[index] for x in self.batches]
         out = self.batchtype(*out)
         return out
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.length
 
     def append_batches(self, batches, prefix):
         raise NotImplementedError
 
-    def greedify(self):
+    def greedify(self) -> None:
         pass
 
     def save_data(self, prefix: PathLike):
         raise NotImplementedError
 
-    def top_n_subset(self, n):
+    def top_n_subset(self, n: int):
         raise RuntimeError
 
     @staticmethod
-    def cat_list(tensor_list):
+    def cat_list(tensor_list: List[Tensor]):
         lengths = np.array([x.shape for x in tensor_list])
         max_lenghts = lengths.max(axis=0)
         out = []
@@ -316,7 +317,7 @@ class BatchDataset(DatasetBase):
         return out
 
     @staticmethod
-    def cat_batch_list(batch_list):
+    def cat_batch_list(batch_list: List[NamedTensorBatch]):
         elem = batch_list[0]
         batchtype = type(elem)
         for x in elem:
@@ -337,7 +338,7 @@ class BatchDataset(DatasetBase):
 class ComparissonDataset(Dataset):
     accepted_fields = {"spec", "irt"}
 
-    def __init__(self, gt_db, pred_db, *args, **kwargs):
+    def __init__(self, gt_db: Dataset, pred_db: Dataset, *args, **kwargs):
         """Generic dataset comparer
 
         Provided 2 different datasets, gives utilities to compare them
@@ -371,13 +372,13 @@ class ComparissonDataset(Dataset):
         else:
             self.length = len(pred_db)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         if hasattr(self, "mapping"):
             return self.__match_getitem__(index)
         else:
             return self.__index_getitem__(index)
 
-    def __index_getitem__(self, index):
+    def __index_getitem__(self, index: int):
         gt = PredictionResults(
             irt=self.gt_db[index].irt, spectra=self.gt_db[index].spectra
         )
@@ -390,7 +391,7 @@ class ComparissonDataset(Dataset):
         return self.length
 
     @staticmethod
-    def _make_key(batch):
+    def _make_key(batch: Union[ForwardBatch, TrainBatch]):
         mods = F.pad(batch.mods, (0, batch.seq.size(-1) - batch.mods.size(-1)))
         mod_seq = encoding_decoding.decode_mod_seq(
             seq_encoding=batch.seq, mod_encoding=mods
@@ -427,7 +428,7 @@ class ComparissonDataset(Dataset):
         self.gt_db.enable_nce_offset()
         self.length = len(self.mapping)
 
-    def __match_getitem__(self, index):
+    def __match_getitem__(self, index: int):
         mapping_key = self._make_key(self.mapping[index])
         outs = self.mapping_pairs[mapping_key]
 
@@ -583,7 +584,7 @@ class Predictor(Trainer):
 
         return outs
 
-    def make_dataloader(self, dataset):
+    def make_dataloader(self, dataset: DataLoader):
         warnings.filterwarnings(
             "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
@@ -595,7 +596,9 @@ class Predictor(Trainer):
         )
         return dl
 
-    def predict(self, model, test_dataloader, *args, **kwargs) -> PredictionResults:
+    def predict(
+        self, model, test_dataloader: DataLoader, *args, **kwargs
+    ) -> PredictionResults:
         outs = super().predict(model, test_dataloader, *args, **kwargs)
         outs = cat_collate(outs)
         outs = PredictionResults(irt=outs.irt * 100, spectra=outs.spectra)
@@ -603,7 +606,7 @@ class Predictor(Trainer):
         return outs
 
     def test(
-        self, model, test_dataloader, plot=True, *args, **kwargs
+        self, model, test_dataloader: DataLoader, plot: bool = True, *args, **kwargs
     ) -> EvaluationLossBatch:
         self.plot = plot
         logging.info(">>> Starting Evaluation of the spectra <<<")

@@ -9,7 +9,8 @@ properties (retention time and fragmentation).
 
 ## Usage
 
-Please check out [The Quickstart guide](./docs/quickstart.md) for usage instructions.
+Currently the documentatino lives here: [https://jspaezp.github.io/elfragmentador/](https://jspaezp.github.io/elfragmentador/)
+Please check out [The Quickstart guide](https://jspaezp.github.io/elfragmentador/quickstart) for usage instructions.
 
 ![](./docs/img/spectrum.png)
 
