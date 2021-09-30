@@ -34,6 +34,7 @@ from elfragmentador.utils import _attempt_find_file, torch_batch_from_seq
 
 
 class PinDataset(IterableDatasetBase):
+    # TODO change this so it actually infers the number of columns from the header
     NUM_COLUMNS = 28
     REGEX_FILE_APPENDIX = re.compile("_\d+_\d+_\d+$")
     APPENDIX_CHARGE_REGEX = re.compile("(?<=_)\d+(?=_)")

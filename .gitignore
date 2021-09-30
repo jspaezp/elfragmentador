@@ -9,6 +9,7 @@ scratch.py
 **.config_ipynb
 dist/**
 lightning_logs/**
+**/lightning_logs/**
 settings.json
 .coverage
 .coverage*

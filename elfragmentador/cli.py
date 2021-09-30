@@ -1,3 +1,4 @@
+from elfragmentador.utils_data import collate_fun
 from pathlib import Path
 import logging
 import logging.config
@@ -30,7 +31,7 @@ from elfragmentador.datasets.percolator import append_preds, MokapotPSMDataset
 from elfragmentador import evaluate, rt
 from elfragmentador.datasets.peptide_dataset import PeptideDataset
 from elfragmentador.predictor import Predictor
-from elfragmentador.datasets.sequence_dataset import SequenceDataset
+from elfragmentador.datasets.sequence_dataset import FastaDataset, SequenceDataset
 
 import uniplot
 
@@ -205,6 +206,79 @@ def predict_csv():
     model = _setup_model(args)
     predictor = Predictor.from_argparse_args(args)
     ds = SequenceDataset.from_csv(args.csv)
+
+    ds.predict(model=model, predictor=predictor, batch_size=args.batch_size)
+    ds.generate_sptxt(args.out)
+
+
+def _predict_fasta_parser():
+    parser = ArgumentParser(
+        prog="elfragmentador_predict_fasta",
+        formatter_class=ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--fasta",
+        type=str,
+        help="Input fasta file",
+    )
+    parser.add_argument(
+        "--enzyme",
+        type=str,
+        help="Enzyme to use to digest the fasta file",
+        default="trypsin",
+    )
+    parser.add_argument(
+        "--nce",
+        type=str,
+        help="Comma delimited series of collision energies to use",
+        default="27,30",
+    )
+    parser.add_argument(
+        "--charges",
+        type=str,
+        help="Comma delimited series of charges to use",
+        default="2,3",
+    )
+    parser.add_argument(
+        "--missed_cleavages",
+        type=int,
+        help="Maximum number of missed clevages",
+        default=2,
+    )
+    parser.add_argument(
+        "--min_length", type=int, help="Minimum peptide length to consider", default=5
+    )
+    parser.add_argument(
+        "--out",
+        type=str,
+        help="Output .sptxt file",
+    )
+    _common_checkpoint_args(parser)
+    Predictor.add_predictor_args(parser)
+    return parser
+
+
+@_gen_cli_help(_predict_fasta_parser())
+def predict_fasta():
+    """Predicts the peptides in a fasta file"""
+    logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
+    greeting()
+
+    parser = _predict_fasta_parser()
+    args = parser.parse_args()
+
+    model = _setup_model(args)
+    predictor = Predictor.from_argparse_args(args)
+    nces = [float(x) for x in args.nce.split(",")]
+    charges = [float(x) for x in args.charges.split(",")]
+    ds = FastaDataset(
+        fasta_file=args.fasta,
+        enzyme=args.enzyme,
+        missed_cleavages=args.missed_cleavages,
+        min_length=args.min_length,
+        collision_energies=nces,
+        charges=charges,
+    )
 
     ds.predict(model=model, predictor=predictor, batch_size=args.batch_size)
     ds.generate_sptxt(args.out)

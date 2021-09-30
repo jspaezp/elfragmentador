@@ -54,7 +54,7 @@ class NCEOffsetHolder(ABC):
 
         Examples:
             >>> NCEOffsetHolder.derived(flatten=True)
-            ['BatchDataset', 'DatasetBase', 'IterableDatasetBase', 'MokapotPSMDataset', 'NCEOffsetHolder', 'PeptideDataset', 'PinDataset', 'SequenceDataset', 'SpectronautLibrary']
+            ['BatchDataset', 'DatasetBase', 'FastaDataset', 'IterableDatasetBase', 'MokapotPSMDataset', ..., 'SpectronautLibrary']
             >>> NCEOffsetHolder.derived(flatten=True, return_classes=True)
             [<class 'elfragmentador.datasets.dataset.BatchDataset'>, ..., <class 'elfragmentador.datasets.spectronaut_dataset.SpectronautLibrary'>]
             >>> NCEOffsetHolder.derived()

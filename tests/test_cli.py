@@ -9,6 +9,7 @@ cli_commands = [
     ("elfragmentador_calculate_irt"),
     ("elfragmentador_append_pin"),
     ("elfragmentador_predict_csv"),
+    ("elfragmentador_predict_fasta"),
 ]
 
 
@@ -69,7 +70,7 @@ def test_prediction_csv_cli(shared_datadir, csv, tmp_path, checkpoint):
     with open(outfile, "r") as f:
         contents = list(f)
 
-    print("".join(contents))
+    # print("".join(contents))
 
     assert len(contents) > 0
 
@@ -80,6 +81,26 @@ def test_evaluation_on_dataset_cli(shared_datadir, checkpoint, tmp_path):
 
     exit_code = os.system(
         f"elfragmentador_evaluate --model_checkpoint {checkpoint} --input {data} --out_csv {outfile} --screen_nce 1,2,3"
+    )
+
+    assert exit_code == 0
+
+    with open(outfile, "r") as f:
+        contents = list(f)
+
+    print("".join(contents))
+
+    assert len(contents) > 0
+
+
+def test_fasta_prediction_cli(shared_datadir, checkpoint, tmp_path):
+    fasta_file = (
+        shared_datadir / "fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta"
+    )
+    outfile = tmp_path / "foo.sptxt"
+
+    exit_code = os.system(
+        f"elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint {checkpoint} --fasta {fasta_file} --out {outfile}"
     )
 
     assert exit_code == 0
