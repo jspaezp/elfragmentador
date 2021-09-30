@@ -50,12 +50,16 @@ class SequenceDataset(DatasetBase):
             desc="Generating Tensors",
         )
         for s, n, c in my_iter:
-            tmp = torch_batch_from_seq(
-                seq=s, nce=n, charge=c, enforce_length=False, pad_zeros=False
-            )
-            out = ForwardBatch(**{k: x.squeeze(0) for k, x in tmp._asdict().items()})
-            self.batches.append(out)
+            self.batches.append(self.make_batch_element(seq=s, nce=n, charge=c))
         self.predictions = None
+
+    @staticmethod
+    def make_batch_element(seq, nce, charge):
+        tmp = torch_batch_from_seq(
+            seq=seq, nce=nce, charge=charge, enforce_length=False, pad_zeros=False
+        )
+        out = ForwardBatch(**{k: x.squeeze(0) for k, x in tmp._asdict().items()})
+        return out
 
     @staticmethod
     def from_csv(path: PathLike):
@@ -115,10 +119,14 @@ class SequenceDataset(DatasetBase):
                 "No predictions found, run 'SequenceDataset.predict' first"
             )
 
+        my_iter = tqdm(
+            zip(self.batches, self.predicted_irt, self.predicted_spectra),
+            desc=f"Writting Spectra to {outfile}",
+            total=len(self.predicted_spectra),
+        )
+
         with open(outfile, "w") as f:
-            for ib, irt, spec in zip(
-                self.batches, self.predicted_irt, self.predicted_spectra
-            ):
+            for ib, irt, spec in my_iter:
                 ob = PredictionResults(irt=irt, spectra=spec)
                 spec = self.convert_to_spectrum(ib, ob).to_sptxt()
                 f.write(spec + "\n")
@@ -181,7 +189,33 @@ class FastaDataset(SequenceDataset):
             )
         )
 
-        unique_peptides = set()
+        sequences = []
+        out_charges = []
+        out_nces = []
+
+        my_iter = self.yield_peptides(
+            fasta_file=fasta_file,
+            charges=charges,
+            collision_energies=collision_energies,
+            missed_cleavages=missed_cleavages,
+            min_length=min_length,
+            enzyme=enzyme,
+        )
+
+        for seq, charge, ce in my_iter:
+            sequences.append(seq)
+            out_charges.append(charge)
+            out_nces.append(ce)
+
+        super().__init__(
+            sequences=sequences, collision_energies=out_nces, charges=out_charges
+        )
+
+    @staticmethod
+    def yield_peptides(
+        fasta_file, charges, collision_energies, missed_cleavages, min_length, enzyme
+    ):
+        unique_peptides_count = 0
         with open(fasta_file, mode="rt") as gzfile:
             for description, sequence in fasta.FASTA(gzfile):
                 new_peptides = parser.cleave(
@@ -190,19 +224,11 @@ class FastaDataset(SequenceDataset):
                     missed_cleavages=missed_cleavages,
                     min_length=min_length,
                 )
-                unique_peptides.update([x for x in new_peptides if len(x) < 50])
-        logging.info(f"Done, {len(unique_peptides)} unique sequences")
+                for charge in charges:
+                    for ce in collision_energies:
+                        for x in new_peptides:
+                            if len(x) < 50:
+                                unique_peptides_count += 1
+                                yield x, charge, ce
 
-        sequences = []
-        out_charges = []
-        out_nces = []
-        for charge in charges:
-            for ce in collision_energies:
-                for seq in unique_peptides:
-                    sequences.append(seq)
-                    out_charges.append(charge)
-                    out_nces.append(ce)
-
-        super().__init__(
-            sequences=sequences, collision_energies=out_nces, charges=out_charges
-        )
+        logging.info(f"Done, {unique_peptides_count} unique sequences")
