@@ -108,6 +108,22 @@ def test_fasta_prediction_cli(shared_datadir, checkpoint, tmp_path):
     with open(outfile, "r") as f:
         contents = list(f)
 
-    print("".join(contents))
+    assert len(contents) > 1
+
+
+def test_fasta_prediction_cli_variable_batch_size(shared_datadir, checkpoint, tmp_path):
+    fasta_file = (
+        shared_datadir / "fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta"
+    )
+    outfile = tmp_path / "foo.sptxt"
+
+    exit_code = os.system(
+        f"elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint {checkpoint} --fasta {fasta_file} --out {outfile} --batch_size 200"
+    )
+
+    assert exit_code == 0
+
+    with open(outfile, "r") as f:
+        contents = list(f)
 
     assert len(contents) > 0

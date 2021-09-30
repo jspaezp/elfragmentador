@@ -512,16 +512,21 @@ class Predictor(Trainer):
     @staticmethod
     def add_predictor_args(parser: _ArgumentGroup):
         # Remember to add new arguments to __init__
-        parser.add_argument("--gpus", default=0)
+        parser.add_argument(
+            "--gpus",
+            default=0,
+        )
         parser.add_argument(
             "--precision",
             default=32,
             help="Precision to use during prediction (32 or 16), only available using GPU",
+            type=int,
         )
         parser.add_argument(
             "--batch_size",
             default=32,
             help="Batch size to use during inference (I suggest ~32 on a cpu and ~600 on a gpu)",
+            type=int,
         )
 
     def predict_dataset(
@@ -531,7 +536,7 @@ class Predictor(Trainer):
     ) -> PredictionResults:
         dl = DataLoader(
             dataset=dataset,
-            batch_size=self.batch_size,
+            batch_size=int(self.batch_size),
             collate_fn=utils_data.collate_fun,
         )
         outs = self.predict(model, dl)
@@ -589,6 +594,9 @@ class Predictor(Trainer):
             "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
 
+        logging.info(
+            f"Initializig dataloader for {dataset} and batch size of {self.batch_size}"
+        )
         dl = DataLoader(
             dataset=dataset,
             batch_size=self.batch_size,

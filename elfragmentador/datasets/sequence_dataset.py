@@ -8,6 +8,8 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
+from tqdm.auto import tqdm
+
 from elfragmentador.utils import torch_batch_from_seq
 from elfragmentador.spectra import Spectrum
 from elfragmentador.datasets.dataset import DatasetBase, Predictor
@@ -42,7 +44,12 @@ class SequenceDataset(DatasetBase):
             charges,
         )
         self.batches = []
-        for s, n, c in zip(sequences, collision_energies, charges):
+        my_iter = tqdm(
+            zip(sequences, collision_energies, charges),
+            total=len(sequences),
+            desc="Generating Tensors",
+        )
+        for s, n, c in my_iter:
             tmp = torch_batch_from_seq(
                 seq=s, nce=n, charge=c, enforce_length=False, pad_zeros=False
             )
