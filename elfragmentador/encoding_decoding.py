@@ -192,7 +192,7 @@ def decode_fragment_tensor(
     intensities = (
         [float(x) for x in tensor]
         if isinstance(tensor, list)
-        else tensor.float().numpy()
+        else tensor.float().cpu().numpy()
     )
 
     assert len(intensities) == len(masses), logging.error(
