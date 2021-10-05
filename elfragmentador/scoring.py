@@ -64,7 +64,7 @@ def get_site_localizing_ions(
     out_dict = {k: {} for k in mod_isoforms}
     for ion in mod_isoform_ions[mod_isoforms[0]]:
         unique_vals = list(
-            set([round(v[ion], 10) for k, v in mod_isoform_ions.items()])
+            set([round(float(v[ion]), 10) for k, v in mod_isoform_ions.items()])
         )
 
         for mi in mod_isoforms:

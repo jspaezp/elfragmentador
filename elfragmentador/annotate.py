@@ -10,6 +10,7 @@ from typing import Callable, Dict, List, Tuple, Union, Iterator
 import warnings
 
 import numpy
+import numpy as np
 from numpy import bool_, float64, ndarray
 
 from elfragmentador import constants, encoding_decoding
@@ -209,7 +210,8 @@ def get_precursor_mz(peptide: str, charge: int):
         >>> get_precursor_mz("MYPEPTIDE", 2)
         547.739165817
     """
-    return _get_mz(get_theoretical_mass(peptide), 0, charge)
+
+    return (get_theoretical_mass(peptide) + charge * constants.PROTON) / charge
 
 
 def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
@@ -231,33 +233,27 @@ def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
             438.12428742]))
     """
     amino_acids = peptide_parser(peptide)
-    masses = [constants.MOD_AA_MASSES[a] for a in amino_acids]
+    masses = np.float64([constants.MOD_AA_MASSES[a] for a in amino_acids])
     forward = numpy.cumsum(masses)
     backward = numpy.cumsum(masses[::-1])
     return forward, backward
 
 
-def _get_mz(sum_: float64, ion_offset: float, charge: int) -> float64:
-    """Calculates the m/z of an ion getting the offset by the type of ion and the charge,
-    Meant for internal use
-    """
-    return (sum_ + ion_offset + charge * constants.PROTON) / charge
-
-
-def _get_mzs(cumsum: ndarray, ion_type: str, z: int) -> List[float64]:
+def _get_mzs(cumsum: ndarray, ion_type: str, z: int) -> np.float64:
     """
     Gets the m/z values from a series after being provided with the cumulative sums of the
     aminoacids in its series, meant for internal use
     """
 
-    # return (cumsum[:-1] + constants.ION_OFFSET[ion_type] + (z * constants.PROTON))/z
-    # TODO this can be vectorized if needed
-    return [_get_mz(s, constants.ION_OFFSET[ion_type], z) for s in cumsum[:-2]][1:]
+    cumsum = cumsum[:-2]
+    out = (cumsum + constants.ION_OFFSET[ion_type] + z * constants.PROTON) / z
+    out = out[1:]
+    return out
 
 
 def _get_annotation(
     forward: ndarray, backward: ndarray, charge: int, ion_types: str
-) -> OrderedDict:
+) -> Dict[str, float]:
     """Calculates the ion annotations based on the forward
     and backward cumulative masses
 
@@ -275,11 +271,10 @@ def _get_annotation(
         array([  1.00782503,  72.04493903, 203.08542403, 363.11607276, 380.11881242])
         >>> bw
         array([ 17.00273967, 177.03338839, 308.07387339, 379.11098739, 380.11881242])
-        >>> _get_annotation(fw, bw, 3, "y")
-        OrderedDict([('y1', 60.354347608199994), ...])
+        >>> out = _get_annotation(fw, bw, 3, "y")
+        >>> {k:round(float(v), 7) for k, v in out.items()}
+        {'y1': 60.3543476, 'y2': 104.0345093}
     """
-    tmp = "{}{}"
-    tmp_nl = "{}{}-{}"
     all_ = {}
     for ion_type in ion_types:
         if ion_type in constants.FORWARD:
@@ -289,15 +284,10 @@ def _get_annotation(
         else:
             raise ValueError("unknown ion_type: {}".format(ion_type))
         masses = _get_mzs(cummass, ion_type, charge)
-        d = {tmp.format(ion_type, i + 1): m for i, m in enumerate(masses)}
+        d = {ion_type + str(i + 1): m for i, m in enumerate(np.nditer(masses))}
         all_.update(d)
-        """
-        for nl, offset in constants.NEUTRAL_LOSS.items():
-            nl_masses = _get_mzs(cummass - offset, ion_type, charge)
-            d = {tmp_nl.format(ion_type, i + 1, nl): m for i, m in enumerate(nl_masses)}
-            all_.update(d)
-        """
-    return collections.OrderedDict(sorted(all_.items(), key=lambda t: t[0]))
+
+    return all_
 
 
 def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
@@ -314,10 +304,10 @@ def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
         >>> foo = get_peptide_ions("AA")
         >>> sorted(foo.keys())
         ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z3b1', 'z3y1']
-        >>> foo['z1y1'] # ground truth from http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
-        90.054955167
-        >>> foo['z1b1']
-        72.044390467
+        >>> print(round(foo['z1y1'], 6)) # ground truth from http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
+        90.054955
+        >>> print(round(foo['z1b1'], 6))
+        72.04439
     """
     out = _get_peptide_ions(
         aa_seq,
@@ -343,16 +333,16 @@ def _get_peptide_ions(
 
     Examples:
         >>> foo = _get_peptide_ions("AA", [1,2])
-        >>> foo
-        {'z1y1': 90.054955167, ...}
+        >>> {k:round(v, 8) for k, v in foo.items()}
+        {'z1y1': 90.05495517, ...}
     """
     fw, bw = _get_forward_backward(aa_seq)
     out = {}
 
     for charge in charges:
         for ion in ion_types:
-            ion_dict = _get_annotation(fw, bw, charge, ion)
-            ion_dict = {"z" + str(charge) + k: v for k, v in ion_dict.items()}
+            ion_dict = _get_annotation(fw, bw, float(charge), ion)
+            ion_dict = {"z" + str(charge) + k: float(v) for k, v in ion_dict.items()}
             out.update(ion_dict)
 
     return out

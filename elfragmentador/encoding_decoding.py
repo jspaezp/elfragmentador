@@ -5,6 +5,8 @@ import pandas as pd
 from elfragmentador import annotate
 import elfragmentador.constants as CONSTANTS
 from pandas.core.frame import DataFrame
+import numpy as np
+import torch
 from torch import Tensor
 from typing import Dict, List, Optional, Sequence, Union
 
@@ -168,10 +170,11 @@ def encode_fragments(
     return encoding
 
 
+@torch.no_grad()
 def decode_fragment_tensor(
     sequence: str,
     tensor: Union[List[int], Tensor],
-) -> DataFrame:
+) -> Dict[str, Union[List[str], np.float32]]:
     """
     Returns a data frame with annotations from sequence
     and a tensor encoding a spectra
@@ -179,28 +182,27 @@ def decode_fragment_tensor(
     Examples:
         >>> import torch
         >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (CONSTANTS.NUM_FRAG_EMBEDINGS)))
-        >>> foo.head()
-        Fragment        Mass  Intensity
-        0     z1b1   72.044390        0.0
-        1     z1y1  147.112804        1.0
-        2     z1b2  143.081504        2.0
-        3     z1y2  307.143453        3.0
-        4     z1b3  214.118618        4.0
-        >>> # import matplotlib.pyplot as plt
-        >>> # plt.vlines(foo['Mass'], 0, foo['Intensity'])
-        >>> # plt.show()
+        >>> {k:v[:5] for k,v in foo.items()}
+        {'Fragment': ['z1b1', 'z1y1', 'z1b2', 'z1y2', 'z1b3'], 'Mass': array([ 72.04439047, 147.11280417, 143.08150447, 307.14345289,
+           214.11861847]), 'Intensity': array([0., 1., 2., 3., 4.])}
     """
     key_list = CONSTANTS.FRAG_EMBEDING_LABELS
     fragment_ions = annotate.get_peptide_ions(sequence)
     masses = [fragment_ions.get(k, 0) for k in key_list]
-    intensities = [float(x) for x in tensor]
+    intensities = (
+        [float(x) for x in tensor]
+        if isinstance(tensor, list)
+        else tensor.float().numpy()
+    )
 
     assert len(intensities) == len(masses), logging.error(
         f"Int {len(intensities)}: \n{intensities}\n\nmasses {len(masses)}: \n{masses}"
     )
 
-    out_dict = {"Fragment": key_list, "Mass": masses, "Intensity": intensities}
-    out_df = pd.DataFrame(out_dict)
-    out_df = out_df[out_df["Mass"] != 0].copy()
+    key_list = [k for k, i in zip(key_list, masses) if i > 0]
+    intensities = np.float64([k for k, i in zip(intensities, masses) if i > 0])
+    masses = np.float64([k for k, i in zip(masses, masses) if i > 0])
 
-    return out_df
+    out_dict = {"Fragment": key_list, "Mass": masses, "Intensity": intensities}
+
+    return out_dict

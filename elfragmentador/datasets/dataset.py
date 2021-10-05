@@ -539,7 +539,7 @@ class Predictor(Trainer):
             batch_size=int(self.batch_size),
             collate_fn=utils_data.collate_fun,
         )
-        outs = self.predict(model, dl)
+        outs = self.predict(model, test_dataloader=dl)
 
         return outs
 
@@ -607,7 +607,7 @@ class Predictor(Trainer):
     def predict(
         self, model, test_dataloader: DataLoader, *args, **kwargs
     ) -> PredictionResults:
-        outs = super().predict(model, test_dataloader, *args, **kwargs)
+        outs = super().predict(model, dataloaders=test_dataloader, *args, **kwargs)
         outs = cat_collate(outs)
         outs = PredictionResults(irt=outs.irt * 100, spectra=outs.spectra)
 

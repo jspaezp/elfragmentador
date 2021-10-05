@@ -99,11 +99,9 @@ class Spectrum:
         tolerance, tolerance_unit = CONSTANTS.TOLERANCE[analyzer]
         parsed_peptide = list(annotate.peptide_parser(sequence, solve_aliases=True))
 
-        # Makes sure all elements in the sequence are aminoacids
-        assert set(parsed_peptide) <= CONSTANTS.AMINO_ACID_SET.union(
-            CONSTANTS.MOD_PEPTIDE_ALIASES
-        ), f"Assertion of supported modifications failed for {sequence}: {parsed_peptide}"
         sequence = "".join(parsed_peptide)
+
+        # TODO rename to stripped sequence
         self.sequence = "".join([x[:1] for x in parsed_peptide])
         self.mod_sequence = sequence
         self.length = len(encoding_decoding.clip_explicit_terminus(parsed_peptide))
@@ -111,7 +109,7 @@ class Spectrum:
         self.parent_mz = parent_mz
         self.modifications = modifications
 
-        amino_acids = list(annotate.peptide_parser(sequence))
+        amino_acids = parsed_peptide
 
         # TODO consider if this masses should be calculated in a lazy manner
         # TODO redefine these with the functions inside annotate
@@ -119,13 +117,13 @@ class Spectrum:
         self.theoretical_mz = (
             self.theoretical_mass + (charge * CONSTANTS.PROTON)
         ) / charge
-
-        assert len(mzs) == len(intensities)
-        self.mzs = mzs
-        self.intensities = intensities
-
         self.delta_m = abs(self.parent_mz - self.theoretical_mz)
         self.delta_ppm = 1e6 * abs(self.delta_m) / self.theoretical_mz
+
+        assert len(mzs) == len(intensities)
+        # TODO consider if these should be np arrays ... so everything can be vectorized
+        self.mzs = mzs
+        self.intensities = intensities
 
         # Annotation related section
         self.tolerance = tolerance
@@ -254,21 +252,26 @@ class Spectrum:
             NCE: 27.0
             RT: None
             OriginalSpectra: None
+            Annotations: {'z1b1': 0.0, 'z1y1': 0.0, 'z1b2': 0.0, 'z1y2': 0.0, 'z1b3': 0.0, 'z1y3': 0.0, 'z2b1': 0.0, 'z2y1': 0.0, 'z2b2': 0.0, 'z2y2': 0.0, 'z2b3': 0.0, 'z2y3': 0.0, 'z3b1': 0.0, 'z3y1': 0.0, 'z3b2': 0.0, 'z3y2': 0.0, 'z3b3': 0.0, 'z3y3': 0.0}
         """
         mod_sequence = encoding_decoding.decode_mod_seq(sequence_tensor, mod_tensor)
-        fragment_df = encoding_decoding.decode_fragment_tensor(
+        fragment_dict = encoding_decoding.decode_fragment_tensor(
             mod_sequence, fragment_tensor
         )
         self = cls(
             mod_sequence,
-            mzs=[float(x) for x in fragment_df["Mass"]],
-            intensities=[float(x) for x in fragment_df["Intensity"]],
+            mzs=[float(x) for x in fragment_dict["Mass"]],
+            intensities=[float(x) for x in fragment_dict["Intensity"]],
             charge=charge,
             parent_mz=parent_mz,
             nce=nce,
             *args,
             **kwargs,
         )
+        # {'z1b2': 1.0, 'z1y1': 0.4395149415331312}
+        self._annotated_peaks = {
+            k: v for k, v in zip(fragment_dict["Fragment"], fragment_dict["Intensity"])
+        }
         return self
 
     def precursor_error(self, error_type: str = "ppm") -> float:
