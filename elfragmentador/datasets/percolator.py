@@ -343,6 +343,9 @@ def append_preds(
         ".*No peaks were annotated for spectra.*",
     )
 
+    SPEC_COL_NAME = "SpecAngle"
+    RT_COL_NAME = "DiffNormRT"
+
     perc_inputs = PinDataset(in_path=in_pin)
     perc_inputs.optimize_nce(model, predictor=predictor)
 
@@ -350,13 +353,13 @@ def append_preds(
         predictor = Predictor()
 
     df = perc_inputs.df.copy()
-    df.insert(loc=PinDataset.NUM_COLUMNS - 2, column="SpecCorrelation", value=0)
-    df.insert(loc=PinDataset.NUM_COLUMNS - 2, column="DiffNormRT", value=100)
+    df.insert(loc=PinDataset.NUM_COLUMNS - 2, column=SPEC_COL_NAME, value=0)
+    df.insert(loc=PinDataset.NUM_COLUMNS - 2, column=RT_COL_NAME, value=100)
 
     outs = predictor.evaluate_dataset(model=model, dataset=perc_inputs)
 
-    df["SpecAngle"] = 1 - outs.loss_angle
-    df["NormRTSqError"] = outs.scaled_se_loss
+    df[SPEC_COL_NAME] = 1 - outs.loss_angle
+    df[RT_COL_NAME] = outs.scaled_se_loss
 
     if out_pin is not None:
         df.to_csv(out_pin, index=False, sep="\t")
