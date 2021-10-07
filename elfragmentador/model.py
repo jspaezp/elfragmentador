@@ -136,7 +136,14 @@ class _IRTDecoder(nn.Module):
         self.encoder = nn.TransformerEncoder(
             encoder_layer=encoder_layers, num_layers=n_layers
         )
-        self.linear_out = nn.Linear(in_features=d_model, out_features=1)
+        self.decoder = _LearnableEmbedTransformerDecoder(
+            d_model=d_model,
+            nhead=nhead,
+            nhid=dim_feedforward,
+            layers=n_layers,
+            dropout=dropout,
+            num_outputs=1,
+        )
 
     def forward(self, seq, mods):
         # seq [N, S], mods [N, S]
@@ -148,7 +155,7 @@ class _IRTDecoder(nn.Module):
 
         embed_seq = self.aa_embed(seq=seq, mods=mods)  # [S, N, d_model]
         memory = self.encoder(embed_seq, src_key_padding_mask=trans_encoder_mask)
-        out = self.linear_out(memory).mean(axis=0).permute(0, 1)
+        out = self.decoder(memory, trans_encoder_mask)
         return out
 
 
@@ -198,7 +205,7 @@ class _PeptideTransformerEncoder(torch.nn.Module):
         return trans_encoder_output, trans_encoder_mask
 
 
-class _PeptideTransformerDecoder(torch.nn.Module):
+class _LearnableEmbedTransformerDecoder(torch.nn.Module):
     def __init__(
         self,
         d_model: int,
@@ -206,17 +213,13 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         nhid: int,
         layers: int,
         dropout: float,
-        charge_dims_pct: float = 0.05,
-        nce_dims_pct: float = 0.05,
+        num_outputs: int,
+        embed_dims: Optional[int] = None,
     ) -> None:
         super().__init__()
         logging.info(
             f"Creating TransformerDecoder nhid={nhid}, d_model={d_model} nhead={nhead} layers={layers}"
         )
-        charge_dims = math.ceil(d_model * charge_dims_pct)
-        nce_dims = math.ceil(d_model * nce_dims_pct)
-        n_embeds = d_model - (charge_dims + nce_dims)
-
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=d_model,
             nhead=nhead,
@@ -228,12 +231,88 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         # self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
         self.peak_decoder = nn.Linear(d_model, 1)
 
-        logging.info(
-            f"Creating embedding for spectra of length {constants.NUM_FRAG_EMBEDINGS}"
-        )
+        logging.info(f"Creating embedding for spectra of length {num_outputs}")
         self.trans_decoder_embedding = nn.Embedding(
-            constants.NUM_FRAG_EMBEDINGS, n_embeds
+            num_embeddings=num_outputs, embedding_dim=d_model if embed_dims is None else embed_dims
         )
+        self.init_weights()
+
+    def init_weights(self):
+        """ """
+        initrange = 0.1
+        nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
+
+    def get_learnable_query(self, batch_size):
+        trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
+        # trans_decoder_tgt = trans_decoder_tgt * math.sqrt(
+        #     self.trans_decoder_embedding.num_embeddings
+        # )
+        # [T, E2] > [T, 1, E2]
+        trans_decoder_tgt = trans_decoder_tgt.expand(-1, batch_size, -1)
+        return trans_decoder_tgt
+
+    def preprocess_query(self, query):
+        """ Has to be implemente when subclassing """
+        return query
+
+    def decoder_forward(
+        self, trans_decoder_tgt: Tensor, memory: Tensor, memory_key_padding_mask: Tensor
+    ):
+        spectra_output = self.trans_decoder(
+            memory=memory,
+            tgt=trans_decoder_tgt,
+            memory_key_padding_mask=memory_key_padding_mask,
+        )
+        # Shape is [NumFragments, Batch, NumEmbed]
+
+        spectra_output = self.peak_decoder(spectra_output)
+        # Shape is [NumFragments, Batch, 1]
+        spectra_output = spectra_output.squeeze(-1).permute(1, 0)
+        # Shape is [Batch, NumFragments]
+        return spectra_output
+
+    def forward(
+        self,
+        memory: Tensor,
+        memory_key_padding_mask: Tensor,
+    ) -> Tensor:
+        """ Has to be implemente when subclassing """
+        trans_decoder_tgt = self.get_learnable_query(batch_size=memory.size(1))
+        trans_decoder_tgt = self.preprocess_query(trans_decoder_tgt)
+
+        output = self.decoder_forward(
+            trans_decoder_tgt=trans_decoder_tgt,
+            memory=memory,
+            memory_key_padding_mask=memory_key_padding_mask,
+        )
+        return output
+
+
+class _PeptideTransformerDecoder(_LearnableEmbedTransformerDecoder):
+    def __init__(
+        self,
+        d_model: int,
+        nhead: int,
+        nhid: int,
+        layers: int,
+        dropout: float,
+        charge_dims_pct: float = 0.05,
+        nce_dims_pct: float = 0.05,
+    ) -> None:
+        charge_dims = math.ceil(d_model * charge_dims_pct)
+        nce_dims = math.ceil(d_model * nce_dims_pct)
+        n_embeds = d_model - (charge_dims + nce_dims)
+
+        super().__init__(
+            d_model=d_model,
+            embed_dims=n_embeds,
+            nhead=nhead,
+            nhid=nhid,
+            layers=layers,
+            dropout=dropout,
+            num_outputs=constants.NUM_FRAG_EMBEDINGS,
+        )
+
         self.charge_encoder = ConcatenationEncoder(
             dims_add=charge_dims, max_val=10.0, scaling=math.sqrt(d_model)
         )
@@ -247,37 +326,33 @@ class _PeptideTransformerDecoder(torch.nn.Module):
         initrange = 0.1
         nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
 
-    def forward(
-        self,
-        memory: Tensor,
-        charge: Tensor,
-        nce: Tensor,
-        memory_key_padding_mask: Tensor,
-    ) -> Tensor:
-        trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        # trans_decoder_tgt = trans_decoder_tgt * math.sqrt(
-        #     self.trans_decoder_embedding.num_embeddings
-        # )
-        # [T, E2] > [T, 1, E2]
-        trans_decoder_tgt = trans_decoder_tgt.expand(-1, charge.size(0), -1)
+    def preprocess_query(self, query, charge, nce):
         # [T, B, E2]
-        trans_decoder_tgt = self.charge_encoder(trans_decoder_tgt, charge)
+        trans_decoder_tgt = self.charge_encoder(query, charge)
         # [T, B, E1]
         trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
         # [T, B, E]
+        return trans_decoder_tgt
 
-        spectra_output = self.trans_decoder(
+    def forward(
+        self,
+        memory: Tensor,
+        memory_key_padding_mask: Tensor,
+        charge: Tensor,
+        nce: Tensor,
+    ) -> Tensor:
+        trans_decoder_tgt = self.get_learnable_query(batch_size=charge.size(0))
+        trans_decoder_tgt = self.preprocess_query(
+            trans_decoder_tgt, nce=nce, charge=charge
+        )
+        # [T, B, E]
+
+        output = self.decoder_forward(
+            trans_decoder_tgt=trans_decoder_tgt,
             memory=memory,
-            tgt=trans_decoder_tgt,
             memory_key_padding_mask=memory_key_padding_mask,
         )
-        # Shape is [NumFragments, Batch, NumEmbed]
-
-        spectra_output = self.peak_decoder(spectra_output)
-        # Shape is [NumFragments, Batch, 1]
-        spectra_output = spectra_output.squeeze(-1).permute(1, 0)
-        # Shape is [Batch, NumFragments]
-        return spectra_output
+        return output
 
 
 _model_sections = [
