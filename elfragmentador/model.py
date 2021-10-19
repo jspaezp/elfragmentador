@@ -233,7 +233,8 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
 
         logging.info(f"Creating embedding for spectra of length {num_outputs}")
         self.trans_decoder_embedding = nn.Embedding(
-            num_embeddings=num_outputs, embedding_dim=d_model if embed_dims is None else embed_dims
+            num_embeddings=num_outputs,
+            embedding_dim=d_model if embed_dims is None else embed_dims,
         )
         self.init_weights()
 

@@ -30,3 +30,4 @@ benchmarking_workflow/spectrast
 benchmarking_workflow/prosit_in
 
 notebooks/*.csv
+.Rproj.user

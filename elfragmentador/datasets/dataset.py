@@ -39,6 +39,7 @@ from elfragmentador.named_batches import (
     NamedTensorBatch,
 )
 
+from tqdm.auto import tqdm
 
 # TODO write tests so the subclasses actually use nce over-writting ...
 
@@ -396,10 +397,10 @@ class ComparissonDataset(Dataset):
         mod_seq = encoding_decoding.decode_mod_seq(
             seq_encoding=batch.seq, mod_encoding=mods
         )
-        key = f"{mod_seq}/{int(batch.charge)}/{float(batch.nce)}"
+        key = f"{mod_seq}/{int(batch.charge)}/{round(float(batch.nce), 2)}"
         return key
 
-    def _match_datasets(self):
+    def _match_datasets(self, ignore_nce=False):
         if hasattr(self, "mapping"):
             return None
 
@@ -408,28 +409,55 @@ class ComparissonDataset(Dataset):
         self.gt_db.disable_nce_offset()
         self.pred_db.disable_nce_offset()
 
-        for x in self.gt_db:
+        gt_keys = []
+        for x in tqdm(self.gt_db):
             preds = PredictionResults(irt=x.irt, spectra=x.spectra)
-            seqs = ForwardBatch(seq=x.seq, mods=x.mods, charge=x.charge, nce=x.nce)
-            key = self._make_key(x)
+            seqs = ForwardBatch(
+                seq=x.seq, mods=x.mods, charge=x.charge, nce=0 if ignore_nce else x.nce
+            )
+            key = self._make_key(seqs)
+            gt_keys.append(key)
             base[key]["gt"] = preds
             base[key]["fw_batch"] = seqs
 
-        for x in self.pred_db:
+        pred_keys = []
+        for x in tqdm(self.pred_db):
             preds = PredictionResults(irt=x.irt, spectra=x.spectra)
-            seqs = ForwardBatch(seq=x.seq, mods=x.mods, charge=x.charge, nce=x.nce)
-            key = self._make_key(x)
+            seqs = ForwardBatch(
+                seq=x.seq, mods=x.mods, charge=x.charge, nce=0 if ignore_nce else x.nce
+            )
+            key = self._make_key(seqs)
+            pred_keys.append(key)
             base[key]["pred"] = preds
             base[key]["fw_batch"] = seqs
 
-        self.mapping = list([v["fw_batch"] for v in base.values()])
+        pred_keys = set(pred_keys)
+        gt_keys = set(gt_keys)
+
+        logging.info(
+            (
+                f"{len(pred_keys.intersection(gt_keys))} keys in both datasets,",
+                f"{len(gt_keys)} in GT, {len(pred_keys)} in Preds",
+            )
+        )
+
+        logging.info(
+            (
+                f"{list(pred_keys - gt_keys)[:5]} sample keys not in gt \n",
+                f"{list(gt_keys - pred_keys)[:5]} Sample keys not in preds",
+            )
+        )
+
+        self.mapping = list(base)
         self.mapping_pairs = base
+
         self.pred_db.enable_nce_offset()
         self.gt_db.enable_nce_offset()
+
         self.length = len(self.mapping)
 
     def __match_getitem__(self, index: int):
-        mapping_key = self._make_key(self.mapping[index])
+        mapping_key = self.mapping[index]
         outs = self.mapping_pairs[mapping_key]
 
         if outs["gt"] is None:
@@ -473,9 +501,8 @@ class ComparissonDataset(Dataset):
         loss_dict = self.losses._asdict()
         [df_dict.update({k: []}) for k, v in loss_dict.items()]
 
-        for i, fw_batch in enumerate(self.mapping):
+        for i, key in enumerate(self.mapping):
 
-            key = self._make_key(fw_batch)
             split_key = key.split("/")
 
             df_dict["Sequence"].append(split_key[0])
