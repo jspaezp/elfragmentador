@@ -105,8 +105,8 @@ class SequenceDataset(DatasetBase):
             mod_tensor=in_batch.mods.squeeze().numpy(),
             charge=int(in_batch.charge),
             nce=float(in_batch.nce),
-            rt=float(out.irt) * 100 * 60,
-            irt=float(out.irt) * 100,
+            rt=float(out.irt) * 60,
+            irt=float(out.irt),
         )
 
         return out
