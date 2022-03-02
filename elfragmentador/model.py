@@ -1140,10 +1140,12 @@ class PepTransformerModel(pl.LightningModule):
         evaluate_landmark_rt(self)
         return super().on_train_epoch_end()
 
-    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        out = super().on_load_checkpoint(checkpoint)
-        evaluate_landmark_rt(self)
-        return out
+    @classmethod
+    def load_from_checkpoint(cls, *args, **kwargs):
+        mod = super().load_from_checkpoint(*args, **kwargs)
+        evaluate_landmark_rt(mod)
+        return mod
+
 
 
 def evaluate_landmark_rt(model: PepTransformerModel):

@@ -5,7 +5,6 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
 
 import elfragmentador
-from elfragmentador.utils_data import collate_fun
 
 try:
     from argparse import BooleanOptionalAction
@@ -19,7 +18,6 @@ import warnings
 import pandas as pd
 import pytorch_lightning as pl
 import torch
-import uniplot
 
 from elfragmentador import rt
 from elfragmentador.datasets.peptide_dataset import PeptideDataset
@@ -42,7 +40,10 @@ def _common_checkpoint_args(parser):
         "--model_checkpoint",
         type=str,
         default=elfragmentador.DEFAULT_CHECKPOINT,
-        help="Model checkpoint to use for the prediction, if nothing is passed will download a pretrained model",
+        help=(
+            "Model checkpoint to use for the prediction, "
+            "if nothing is passed will download a pretrained model"
+        ),
     )
     parser.add_argument(
         "--threads",
@@ -333,12 +334,14 @@ def convert_sptxt():
     logging.info([x.name for x in args.file])
 
     # Here we make the partial function that will be used to actually read the data
-    converter = lambda fname, outname: SptxtReader(fname).to_csv(
-        outname,
-        filter_irt_peptides=args.keep_irts,
-        min_delta_ascore=args.min_delta_ascore,
-        min_peaks=args.min_peaks,
-    )
+    def converter(fname, outname):
+        out = SptxtReader(fname).to_csv(
+            outname,
+            filter_irt_peptides=args.keep_irts,
+            min_delta_ascore=args.min_delta_ascore,
+            min_peaks=args.min_peaks,
+        )
+        return out
 
     for f in args.file:
         out_file = f.name + ".csv"
@@ -369,7 +372,10 @@ def _evaluate_parser():
     parser.add_argument(
         "--input",
         type=str,
-        help="Path to a file to use as a reference for the evaluation (.sptxt generally)",
+        help=(
+            "Path to a file to use as a reference for the evaluation"
+            " (.sptxt generally)"
+        ),
     )
     parser.add_argument(
         "--screen_nce",

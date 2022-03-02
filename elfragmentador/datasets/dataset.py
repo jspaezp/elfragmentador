@@ -6,22 +6,20 @@ from abc import ABC, abstractmethod
 from argparse import _ArgumentGroup
 from collections import defaultdict
 from os import PathLike
-from typing import Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
+from typing import Iterable, Iterator, List, NamedTuple, Optional, Union
 
 import numpy as np
-import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import uniplot
 from pandas.core.frame import DataFrame
-from pandas.io.pytables import format_doc
 from pytorch_lightning import Trainer
 from torch import Tensor
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 
-from elfragmentador import encoding_decoding, spectra, utils_data
+from elfragmentador import encoding_decoding, utils_data
 from elfragmentador.datasets.batch_utils import _log_batches
 from elfragmentador.metrics import MetricCalculator
 from elfragmentador.model import PepTransformerModel
@@ -49,11 +47,14 @@ class NCEOffsetHolder(ABC):
 
         Examples:
             >>> NCEOffsetHolder.derived(flatten=True)
-            ['BatchDataset', 'DatasetBase', 'FastaDataset', 'IterableDatasetBase', 'MokapotPSMDataset', ..., 'SpectronautLibrary']
+            ['BatchDataset', 'DatasetBase', 'FastaDataset', 'IterableDatasetBase', \
+            'MokapotPSMDataset', ..., 'SpectronautLibrary']
             >>> NCEOffsetHolder.derived(flatten=True, return_classes=True)
-            [<class 'elfragmentador.datasets.dataset.BatchDataset'>, ..., <class 'elfragmentador.datasets.spectronaut_dataset.SpectronautLibrary'>]
+            [<class 'elfragmentador.datasets.dataset.BatchDataset'>, ..., \
+            <class 'elfragmentador.datasets.spectronaut_dataset.SpectronautLibrary'>]
             >>> NCEOffsetHolder.derived()
-             {'NCEOffsetHolder': [{'DatasetBase': ..., {'IterableDatasetBase': [{'PinDataset': [{'MokapotPSMDataset': []}]}]}]}
+            {'NCEOffsetHolder': [{'DatasetBase': ..., {'IterableDatasetBase': \
+            [{'PinDataset': [{'MokapotPSMDataset': []}]}]}]}
         """
 
         entry_name = cls if return_classes else cls.__name__
@@ -84,8 +85,10 @@ class NCEOffsetHolder(ABC):
             if any([isinstance(x, list) for x in flat_outs]):
                 breakpoint()
 
-            key = lambda x: x.__name__ if isinstance(x, type) else x
-            outs = sorted(list(set(flat_outs)), key=key)
+            def key_fun(x):
+                return x.__name__ if isinstance(x, type) else x
+
+            outs = sorted(list(set(flat_outs)), key=key_fun)
         else:
 
             outs = {entry_name: outs}
@@ -352,7 +355,8 @@ class ComparissonDataset(Dataset):
             >>> # comp.compare()
             >>> # out = comp.save_data()
             >>> # out
-            # Contains the columns [Sequence, Charge, NCE, scaled_se_loss, loss_cosine, loss_irt, loss_angle]
+            # Contains the columns [Sequence, Charge, NCE, scaled_se_loss, loss_cosine,
+            # loss_irt, loss_angle]
         """
         super().__init__()
         self.gt_db = gt_db
@@ -513,7 +517,7 @@ class ComparissonDataset(Dataset):
             out_df.reset_index(drop=True).to_feather(str(prefix) + ".feather")
         else:
             logging.info(
-                f"Not saving data to disk because no prefix"
+                "Not saving data to disk because no prefix"
                 " was passed to {self}.save_data"
             )
 
@@ -540,13 +544,19 @@ class Predictor(Trainer):
         parser.add_argument(
             "--precision",
             default=32,
-            help="Precision to use during prediction (32 or 16), only available using GPU",
+            help=(
+                "Precision to use during prediction (32 or 16),"
+                " only available using GPU"
+            ),
             type=int,
         )
         parser.add_argument(
             "--batch_size",
             default=32,
-            help="Batch size to use during inference (I suggest ~32 on a cpu and ~600 on a gpu)",
+            help=(
+                "Batch size to use during inference"
+                " (I suggest ~32 on a cpu and ~600 on a gpu)"
+            ),
             type=int,
         )
 
