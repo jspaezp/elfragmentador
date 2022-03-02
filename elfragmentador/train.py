@@ -1,19 +1,19 @@
-import math
 import logging
-from argparse import Namespace, ArgumentParser, ArgumentDefaultsHelpFormatter
+import math
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
+from typing import Dict, List, Union
 
-import torch
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
-
-from elfragmentador import datamodules, model
-import elfragmentador as tp
-from elfragmentador.model import PepTransformerModel
+import torch
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
+from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
-from typing import Dict, List, Union
+
+import elfragmentador as ef
+from elfragmentador import datamodules, model
+from elfragmentador.model import PepTransformerModel
 
 
 def build_train_parser() -> ArgumentParser:
@@ -90,7 +90,7 @@ def get_callbacks(
         WandbLogger, List[Union[LearningRateMonitor, ModelCheckpoint, EarlyStopping]]
     ],
 ]:
-    complete_run_name = f"{tp.__version__}_{run_name}"
+    complete_run_name = f"{ef.__version__}_{run_name}"
     wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()
     checkpointer = pl.callbacks.ModelCheckpoint(
@@ -135,9 +135,9 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         wandb_project=args.wandb_project,
     )
 
-    callbacks["logger"].watch(model.encoder)
-    callbacks["logger"].watch(model.decoder)
-    callbacks["logger"].watch(model.irt_decoder)
+    # callbacks["logger"].watch(model.encoder)
+    # callbacks["logger"].watch(model.decoder)
+    # callbacks["logger"].watch(model.irt_decoder)
 
     trainer = pl.Trainer.from_argparse_args(
         args,

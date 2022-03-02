@@ -1,15 +1,11 @@
-from elfragmentador.utils_data import collate_fun
-from pathlib import Path
+import argparse
 import logging
 import logging.config
-
-import argparse
-from argparse import (
-    ArgumentDefaultsHelpFormatter,
-    ArgumentParser,
-)
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+from pathlib import Path
 
 import elfragmentador
+from elfragmentador.utils_data import collate_fun
 
 try:
     from argparse import BooleanOptionalAction
@@ -20,20 +16,19 @@ except ImportError:
 
 import warnings
 
-import torch
-import pytorch_lightning as pl
 import pandas as pd
-
-from elfragmentador.train import build_train_parser, main_train
-from elfragmentador.model import PepTransformerModel
-from elfragmentador.spectra import SptxtReader
-from elfragmentador.datasets.percolator import append_preds, MokapotPSMDataset
-from elfragmentador import evaluate, rt
-from elfragmentador.datasets.peptide_dataset import PeptideDataset
-from elfragmentador.predictor import Predictor
-from elfragmentador.datasets.sequence_dataset import FastaDataset, SequenceDataset
-
+import pytorch_lightning as pl
+import torch
 import uniplot
+
+from elfragmentador import rt
+from elfragmentador.datasets.peptide_dataset import PeptideDataset
+from elfragmentador.datasets.percolator import MokapotPSMDataset, append_preds
+from elfragmentador.datasets.sequence_dataset import FastaDataset, SequenceDataset
+from elfragmentador.model import PepTransformerModel
+from elfragmentador.predictor import Predictor
+from elfragmentador.spectra import SptxtReader
+from elfragmentador.train import build_train_parser, main_train
 
 DEFAULT_LOGGER_BASIC_CONF = {
     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",

@@ -1,8 +1,6 @@
 import pytest
 import random
 
-import elfragmentador
-
 import tempfile
 from pathlib import Path
 

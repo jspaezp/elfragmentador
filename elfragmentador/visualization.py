@@ -6,12 +6,12 @@ except ImportError:
     plt = None
 
 import networkx as nx
-
-import torch
-from elfragmentador import encoding_decoding, annotate, constants
-from elfragmentador.model import PepTransformerModel
-import pandas as pd
 import numpy as np
+import pandas as pd
+import torch
+
+from elfragmentador import annotate, constants, encoding_decoding
+from elfragmentador.model import PepTransformerModel
 
 
 class SelfAttentionExplorer(torch.no_grad):
@@ -107,10 +107,13 @@ class SelfAttentionExplorer(torch.no_grad):
     @staticmethod
     def _make_hook_transformer_layer(target):
         def hook_fn(m, i, o):
+            # The output of the self attention layer is the value and the weights
+            # of the self attention
+            self_attention_weights = m.forward(*i)[1]
             if target.get(m, None) is None:
-                target[m] = o[1]
+                target[m] = self_attention_weights
             else:
-                target[m] = torch.cat([target[m], o[1]])
+                target[m] = torch.cat([target[m], self_attention_weights])
 
         return hook_fn
 

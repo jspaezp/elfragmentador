@@ -1,8 +1,9 @@
 import math
-from elfragmentador import annotate, constants
-from elfragmentador import isoforms
-from numpy import float64
 from typing import Any, Dict, List, Tuple, Union
+
+from numpy import float64
+
+from elfragmentador import annotate, constants, isoforms
 
 
 def get_site_localizing_ions(

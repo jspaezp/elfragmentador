@@ -5,14 +5,14 @@ from os import PathLike
 from pathlib import Path
 from typing import NamedTuple
 
-import torch
 import numpy as np
 import pandas as pd
-from elfragmentador.datasets.dataset import DatasetBase
-from elfragmentador.datasets.batch_utils import _append_batch_to_df
+import torch
 
-from elfragmentador.spectra import Spectrum
+from elfragmentador.datasets.batch_utils import _append_batch_to_df
+from elfragmentador.datasets.dataset import DatasetBase
 from elfragmentador.named_batches import TrainBatch
+from elfragmentador.spectra import Spectrum
 
 
 class SpectronautLibrary(DatasetBase):

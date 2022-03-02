@@ -1,14 +1,15 @@
 import logging
-
 from collections import namedtuple
-import pandas as pd
-from elfragmentador import annotate
-import elfragmentador.constants as CONSTANTS
-from pandas.core.frame import DataFrame
-import numpy as np
-import torch
-from torch import Tensor
 from typing import Dict, List, Optional, Sequence, Union
+
+import numpy as np
+import pandas as pd
+import torch
+from pandas.core.frame import DataFrame
+from torch import Tensor
+
+import elfragmentador.constants as CONSTANTS
+from elfragmentador import annotate
 
 SequencePair = namedtuple("SequencePair", "aas, mods")
 SequencePair.__doc__ = """

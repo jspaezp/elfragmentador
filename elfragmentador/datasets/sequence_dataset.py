@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, List, Union
 from os import PathLike
 from pathlib import Path
+from typing import List, Optional, Union
 
 import pandas as pd
 from pandas import DataFrame
-
+from pyteomics import fasta, parser
 from tqdm.auto import tqdm
 
-from elfragmentador.utils import torch_batch_from_seq
-from elfragmentador.spectra import Spectrum
 from elfragmentador.datasets.dataset import DatasetBase, Predictor
-from elfragmentador.named_batches import ForwardBatch, PredictionResults
 from elfragmentador.model import PepTransformerModel
-
-from pyteomics import fasta, parser
+from elfragmentador.named_batches import ForwardBatch, PredictionResults
+from elfragmentador.spectra import Spectrum
+from elfragmentador.utils import torch_batch_from_seq
 
 
 class SequenceDataset(DatasetBase):

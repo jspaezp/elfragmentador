@@ -1,21 +1,20 @@
 import logging
+from math import pi as PI
 from typing import Dict
 
-import torch
-from torch import Tensor, nn
-import torch.nn.functional as F
 import pytorch_lightning as pl
+import torch
+import torch.nn.functional as F
+import uniplot
+from torch import Tensor, nn
 
 from elfragmentador import constants
 from elfragmentador.named_batches import (
-    PredictionResults,
     EvaluationLossBatch,
     EvaluationPredictionBatch,
+    PredictionResults,
 )
 from elfragmentador.utils_data import cat_collate, collate_fun
-from math import pi as PI
-
-import uniplot
 
 
 class CosineLoss(torch.nn.CosineSimilarity):

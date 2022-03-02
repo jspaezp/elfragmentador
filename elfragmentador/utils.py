@@ -1,25 +1,21 @@
 from __future__ import annotations
 
-import random
-from pathlib import Path
 import logging
+import random
+import warnings
+from pathlib import Path
 
 import pandas as pd
+import torch
+from torch.nn.functional import cosine_similarity
+from torch.utils.data.dataset import TensorDataset
 from tqdm.auto import tqdm
 
 import elfragmentador
 import elfragmentador.constants as CONSTANTS
 from elfragmentador import encoding_decoding
-
-from elfragmentador.named_batches import ForwardBatch, PredictionResults
 from elfragmentador.math_utils import norm
-
-import torch
-from torch.utils.data.dataset import TensorDataset
-from torch.nn.functional import cosine_similarity
-
-import warnings
-
+from elfragmentador.named_batches import ForwardBatch, PredictionResults
 
 # TODO split addition of metadata and actual predictions to separate functions to
 

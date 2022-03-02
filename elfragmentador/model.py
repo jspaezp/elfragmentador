@@ -1,47 +1,30 @@
-import logging
 import copy
+import logging
 
 from torch.nn.modules import loss
 from torchmetrics.metric import Metric
 
 try:
-    from typing import Dict, List, Tuple, Optional, Union, Literal
+    from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
-    from typing import Dict, List, Tuple, Optional, Union, NewType
+    from typing import Any, Dict, List, NewType, Optional, Tuple, Union
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
-import warnings
 import math
 import time
-
-import torch
-from torch import Tensor, nn
-import torch.nn.functional as F
-import pytorch_lightning as pl
-
+import warnings
 from argparse import _ArgumentGroup
 
-import elfragmentador
-from elfragmentador import constants
-from elfragmentador.spectra import Spectrum
-from elfragmentador.named_batches import (
-    EvaluationLossBatch,
-    ForwardBatch,
-    PredictionResults,
-    TrainBatch,
-)
-from elfragmentador.metrics import MetricCalculator, CosineLoss, SpectralAngleLoss
-from elfragmentador.nn_encoding import (
-    ConcatenationEncoder,
-    AASequenceEmbedding,
-)
-from elfragmentador.math_utils import MissingDataAverager
-from elfragmentador.utils import torch_batch_from_seq
-
+import numpy as np
+import pytorch_lightning as pl
+import torch
+import torch.nn.functional as F
+import uniplot
+from torch import Tensor, nn
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingWarmRestarts,
@@ -49,7 +32,15 @@ from torch.optim.lr_scheduler import (
     ReduceLROnPlateau,
 )
 
-import uniplot
+import elfragmentador
+from elfragmentador import constants
+from elfragmentador.math_utils import MissingDataAverager, norm, polyfit
+from elfragmentador.metrics import CosineLoss, MetricCalculator, SpectralAngleLoss
+from elfragmentador.named_batches import ForwardBatch, PredictionResults, TrainBatch
+from elfragmentador.nn_encoding import AASequenceEmbedding, ConcatenationEncoder
+from elfragmentador.spectra import Spectrum
+from elfragmentador.utils import torch_batch_from_seq
+
 
 # TODO refactor this massive models into manageable sections
 class MLP(nn.Module):
@@ -645,7 +636,7 @@ class PepTransformerModel(pl.LightningModule):
                 charge=charge,
                 nce=nce,
                 rt=float(out.irt) * 100 * 60,
-                irt=float(out.irt) * 100,
+                irt=float(out.irt),  # * 100,
             )
 
         return out
@@ -1124,3 +1115,40 @@ class PepTransformerModel(pl.LightningModule):
             logging.warning(
                 " ".join(msg) + "Did not have gradients in step {global_step}"
             )
+
+    def on_train_epoch_end(self) -> None:
+        evaluate_landmark_rt(self)
+        return super().on_train_epoch_end()
+
+    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        out = super().on_load_checkpoint(checkpoint)
+        evaluate_landmark_rt(self)
+        return out
+
+
+def evaluate_landmark_rt(model: PepTransformerModel):
+    """evaluate_landmark_rt Checks the prediction of the model on the iRT peptides
+
+    Predicts all the procal and Biognosys iRT peptides and checks the correlation
+    of the theoretical iRT values and the predicted ones
+
+    Parameters
+    ----------
+    model : PepTransformerModel
+        A model to test the predictions on
+
+    """
+    model.eval()
+    real_rt = []
+    pred_rt = []
+    for seq, desc in constants.IRT_PEPTIDES.items():
+        with torch.no_grad():
+            out = model.predict_from_seq(seq, 2, 25, enforce_length=False)
+            pred_rt.append(out.irt.numpy())
+            real_rt.append(np.array(desc["irt"]))
+
+    # TODO make this return a correlation coefficient
+    fit = polyfit(np.array(real_rt).flatten(), np.array(pred_rt).flatten())
+    logging.info(fit)
+    uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())
+    return fit

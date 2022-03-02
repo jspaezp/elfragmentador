@@ -4,24 +4,25 @@ embeddings for the aminoacids and ions
 """
 
 try:
-    from typing import Dict, List, Tuple, Optional, Union, Literal
+    from typing import Dict, List, Literal, Optional, Tuple, Union
 
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
-    from typing import Dict, List, Tuple, Optional, Union, NewType
+    from typing import Dict, List, NewType, Optional, Tuple, Union
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
 import logging
 import math
+
+import pandas as pd
+import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
-from elfragmentador import constants
-import pytorch_lightning as pl
 
-import pandas as pd
+from elfragmentador import constants
 
 
 class SeqPositionalEmbed(torch.nn.Module):

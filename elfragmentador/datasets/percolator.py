@@ -1,35 +1,26 @@
 from __future__ import annotations
 
-import warnings
-import re
 import logging
-from pathlib import Path
+import re
+import warnings
 from os import PathLike
-from typing import Union, Optional, Generator, Iterator, NamedTuple
-
-from tqdm.auto import tqdm
+from pathlib import Path
+from typing import Generator, Iterator, NamedTuple, Optional, Union
 
 import numpy as np
 import pandas as pd
-
+import torch
 from pandas.core.frame import DataFrame
 from pyteomics import mzml
-
-import torch
 from torch import Tensor
+from tqdm.auto import tqdm
 
 import elfragmentador.constants as CONSTANTS
-from elfragmentador.spectra import Spectrum
-from elfragmentador.model import PepTransformerModel
-from elfragmentador.datasets.dataset import (
-    IterableDatasetBase,
-    Predictor,
-)
 from elfragmentador.datasets.batch_utils import _append_batch_to_df
-from elfragmentador.named_batches import (
-    PredictionResults,
-    TrainBatch,
-)
+from elfragmentador.datasets.dataset import IterableDatasetBase, Predictor
+from elfragmentador.model import PepTransformerModel
+from elfragmentador.named_batches import PredictionResults, TrainBatch
+from elfragmentador.spectra import Spectrum
 from elfragmentador.utils import _attempt_find_file, torch_batch_from_seq
 
 

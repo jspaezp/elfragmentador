@@ -4,8 +4,9 @@ Contains utilities to represent spectra as well as functions to read them in bul
 """
 
 from __future__ import annotations
-from collections import defaultdict
+
 import logging
+from collections import defaultdict
 from os import PathLike
 
 try:
@@ -14,20 +15,20 @@ except ImportError:
     plt = None
 
 import warnings
-from typing import Iterator, Dict, Optional, List, Sequence, Union
 from pathlib import Path
+from typing import Dict, Iterator, List, Optional, Sequence, Union
 
-from elfragmentador import constants as CONSTANTS
-from elfragmentador import annotate, encoding_decoding, scoring
-import elfragmentador
-from elfragmentador.encoding_decoding import encode_fragments, SequencePair
-
-from pandas.core.frame import DataFrame
 import numpy as np
 import spectrum_utils.plot as sup
 import spectrum_utils.spectrum as sus
-
+from pandas.core.frame import DataFrame
 from tqdm.auto import tqdm
+
+import elfragmentador
+from elfragmentador import annotate
+from elfragmentador import constants as CONSTANTS
+from elfragmentador import encoding_decoding, scoring
+from elfragmentador.encoding_decoding import SequencePair, encode_fragments
 
 
 class Spectrum:

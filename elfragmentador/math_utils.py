@@ -1,8 +1,9 @@
-from typing import Union, List, Dict
-import torch
-from torchmetrics import Metric
-from numpy import ndarray, float64
+from typing import Dict, List, Union
+
 import numpy as np
+import torch
+from numpy import float64, ndarray
+from torchmetrics import Metric
 
 
 class MissingDataAverager(Metric):

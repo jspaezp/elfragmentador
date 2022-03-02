@@ -1,30 +1,27 @@
 from __future__ import annotations
 
-import torch.nn.functional as F
-from elfragmentador.datasets.dataset import DatasetBase
-
 import logging
 import warnings
-
 from os import PathLike
 from pathlib import Path
 from typing import Union
 
-import torch
-from torch.utils.data import DataLoader
-
 import numpy as np
 import pandas as pd
+import torch
+import torch.nn.functional as F
 from pandas.core.frame import DataFrame
+from torch.utils.data import DataLoader
 
 from elfragmentador import constants, spectra
-from elfragmentador.named_batches import TrainBatch
+from elfragmentador.datasets.dataset import DatasetBase
 from elfragmentador.encoding_decoding import decode_mod_seq
+from elfragmentador.named_batches import TrainBatch
 from elfragmentador.utils_data import (
-    _match_lengths,
-    _match_colnames,
     _convert_tensor_columns_df,
     _filter_df_on_sequences,
+    _match_colnames,
+    _match_lengths,
 )
 
 

@@ -2,26 +2,19 @@ from __future__ import annotations
 
 import logging
 import warnings
-
-from pathlib import PosixPath, Path
+from argparse import _ArgumentGroup
+from pathlib import Path, PosixPath
 from typing import Dict, Iterable, List, Optional, Union
 
 import pandas as pd
-
+import pytorch_lightning as pl
 import torch
 from torch.utils.data.dataloader import DataLoader
 
-import pytorch_lightning as pl
 from elfragmentador import utils_data
-
-from elfragmentador.named_batches import TrainBatch
-from elfragmentador.utils_data import (
-    _convert_tensor_columns_df,
-    collate_fun,
-)
 from elfragmentador.datasets.peptide_dataset import PeptideDataset
-
-from argparse import _ArgumentGroup
+from elfragmentador.named_batches import TrainBatch
+from elfragmentador.utils_data import _convert_tensor_columns_df, collate_fun
 
 
 class PeptideDataModule(pl.LightningDataModule):

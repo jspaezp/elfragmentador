@@ -1,19 +1,18 @@
-from typing import Union, Optional, List, Dict
-import warnings
 import logging
-from torch.utils.data._utils.collate import default_collate
+import warnings
+from typing import Dict, List, Optional, Union
 
-import pandas as pd
-from pandas import DataFrame
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn.functional as F
+import uniplot
+from pandas import DataFrame
 from torch import Tensor
-
+from torch.utils.data._utils.collate import default_collate
 from tqdm.auto import tqdm
 
 from elfragmentador import constants as CONSTANTS
-import uniplot
 
 
 def collate_fun(batch):

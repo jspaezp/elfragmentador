@@ -5,9 +5,9 @@
 """
 
 import collections
-from collections import OrderedDict, defaultdict
-from typing import Callable, Dict, List, Tuple, Union, Iterator
 import warnings
+from collections import OrderedDict, defaultdict
+from typing import Callable, Dict, Iterator, List, Tuple, Union
 
 import numpy
 import numpy as np

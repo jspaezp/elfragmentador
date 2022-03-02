@@ -1,45 +1,39 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import logging
-from os import PathLike
-from typing import NamedTuple, Optional, Sequence, Union, List, Iterable, Iterator
-from argparse import _ArgumentGroup
 import warnings
-
 from abc import ABC, abstractmethod
+from argparse import _ArgumentGroup
+from collections import defaultdict
+from os import PathLike
+from typing import Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
 
 import numpy as np
+import pytorch_lightning as pl
+import torch
+import torch.nn.functional as F
+import uniplot
 from pandas.core.frame import DataFrame
 from pandas.io.pytables import format_doc
-
-import torch
+from pytorch_lightning import Trainer
 from torch import Tensor
-import torch.nn.functional as F
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataloader import DataLoader
+from tqdm.auto import tqdm
 
-import pytorch_lightning as pl
-from pytorch_lightning import Trainer
-
-from elfragmentador.utils_data import cat_collate, terminal_plot_similarity
-from elfragmentador.metrics import MetricCalculator
-import uniplot
-
-from elfragmentador import spectra, utils_data
-from elfragmentador import encoding_decoding
-from elfragmentador.model import PepTransformerModel
+from elfragmentador import encoding_decoding, spectra, utils_data
 from elfragmentador.datasets.batch_utils import _log_batches
+from elfragmentador.metrics import MetricCalculator
+from elfragmentador.model import PepTransformerModel
 from elfragmentador.named_batches import (
     EvaluationLossBatch,
     EvaluationPredictionBatch,
     ForwardBatch,
+    NamedTensorBatch,
     PredictionResults,
     TrainBatch,
-    NamedTensorBatch,
 )
-
-from tqdm.auto import tqdm
+from elfragmentador.utils_data import cat_collate, terminal_plot_similarity
 
 # TODO write tests so the subclasses actually use nce over-writting ...
 

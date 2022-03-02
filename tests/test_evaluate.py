@@ -1,7 +1,7 @@
 import warnings
 from pathlib import Path
 import elfragmentador as ef
-from elfragmentador import datamodules, evaluate
+from elfragmentador import datamodules
 from elfragmentador.predictor import Predictor
 
 
@@ -20,7 +20,3 @@ def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
     expect_fields = ["scaled_se_loss", "loss_cosine", "loss_irt", "loss_angle"]
     assert all([x in expect_fields for x in out._fields])
 
-
-def test_irt_evaluation_works(tiny_model_builder):
-    tiny_model = tiny_model_builder()
-    evaluate.evaluate_landmark_rt(model=tiny_model)

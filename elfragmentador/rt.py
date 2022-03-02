@@ -1,10 +1,13 @@
 from pathlib import Path
-from typing import Union, List
+from typing import List, Union
 
-from tqdm.auto import tqdm
 import pandas as pd
+from tqdm.auto import tqdm
+
 from elfragmentador import constants
-from elfragmentador.evaluate import polyfit
+from elfragmentador.math_utils import polyfit
+
+# TODO remove this ...
 
 
 def calculate_file_iRT(file: Union[Path, str]) -> pd.DataFrame:

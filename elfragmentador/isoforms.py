@@ -1,5 +1,6 @@
 import warnings
-from typing import List, Generator, Iterable
+from typing import Generator, Iterable, List
+
 from elfragmentador.annotate import peptide_parser
 from elfragmentador.encoding_decoding import clip_explicit_terminus
 

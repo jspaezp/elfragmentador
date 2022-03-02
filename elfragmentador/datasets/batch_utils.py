@@ -1,6 +1,7 @@
 import logging
-from pandas import DataFrame
 from typing import NamedTuple
+
+from pandas import DataFrame
 
 
 def _log_batches(batches, prefix="Tensor"):
