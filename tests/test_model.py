@@ -153,7 +153,7 @@ def test_ts_and_base_give_same_result(fake_tensors, model_pair_builder):
             script_out = script_mod(*script_batch)
 
             assert torch.all(script_out[0] == base_out[0])
-            assert torch.all(script_out[1] == base_out[1])
+            assert torch.all(torch.abs(script_out[1] - base_out[1]) < 0.00001)
 
 
 @pytest.mark.parametrize("model", ["base", "traced"])
