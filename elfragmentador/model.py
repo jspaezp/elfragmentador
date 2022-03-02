@@ -1,9 +1,6 @@
 import copy
 import logging
 
-from torch.nn.modules import loss
-from torchmetrics.metric import Metric
-
 try:
     from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
@@ -34,7 +31,7 @@ from torch.optim.lr_scheduler import (
 
 import elfragmentador
 from elfragmentador import constants
-from elfragmentador.math_utils import MissingDataAverager, norm, polyfit
+from elfragmentador.math_utils import MissingDataAverager, polyfit
 from elfragmentador.metrics import CosineLoss, MetricCalculator, SpectralAngleLoss
 from elfragmentador.named_batches import ForwardBatch, PredictionResults, TrainBatch
 from elfragmentador.nn_encoding import AASequenceEmbedding, ConcatenationEncoder
@@ -110,10 +107,17 @@ class _IRTDecoder(nn.Module):
         """Decode iRTs
 
         Args:
-            d_model (int): Number of dimensions to expect as input
-            nhead (int): Number of heads in the attention layers that decode the input, defaults to 4
-            dim_feedforward (int, optional): Number of hidden dimensions in the FFN that decodes the sequence. Defaults to 224
-            n_layers (int, optional): dropout to use in the multihead attention. Defaults to 3
+            d_model (int):
+                Number of dimensions to expect as input
+            nhead (int):
+                Number of heads in the attention layers that decode the input.
+                defaults to 4
+            dim_feedforward (int, optional):
+                Number of hidden dimensions in the FFN that decodes the sequence.
+                Defaults to 224
+            n_layers (int, optional):
+                dropout to use in the multihead attention.
+                Defaults to 3
         """
 
         self.aa_embed = AASequenceEmbedding(d_model=d_model)
@@ -145,6 +149,7 @@ class _IRTDecoder(nn.Module):
         # mask [N, S]
 
         embed_seq = self.aa_embed(seq=seq, mods=mods)  # [S, N, d_model]
+
         memory = self.encoder(embed_seq, src_key_padding_mask=trans_encoder_mask)
         out = self.decoder(memory, trans_encoder_mask)
         return out
@@ -209,7 +214,13 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
     ) -> None:
         super().__init__()
         logging.info(
-            f"Creating TransformerDecoder nhid={nhid}, d_model={d_model} nhead={nhead} layers={layers}"
+            (
+                f"Creating TransformerDecoder"
+                f" nhid={nhid}, "
+                f"d_model={d_model} "
+                f"nhead={nhead} "
+                f"layers={layers}"
+            )
         )
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=d_model,
@@ -429,8 +440,10 @@ class PepTransformerModel(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         logging.info(
-            f"num_decoder_layers {num_decoder_layers} num_encoder_layers {num_encoder_layers}"
-            f" nhid {nhid} d_model {d_model} nhead {nhead} dropout {dropout}"
+            f"num_decoder_layers {num_decoder_layers} "
+            f"num_encoder_layers {num_encoder_layers} "
+            f"nhid {nhid} d_model {d_model} "
+            f"nhead {nhead} dropout {dropout}"
         )
 
         # Peptide encoder
@@ -574,34 +587,34 @@ class PepTransformerModel(pl.LightningModule):
         enforce_length=True,
     ) -> Union[PredictionResults, Spectrum]:
         """predict_from_seq Predicts spectra from a sequence as a string.
-        
+
         Utility method that gets a sequence as a string, encodes it internally
         to the correct input form and outputs the predicted spectra.
-        
+
         Note that the spectra is not decoded as an output, please check
         `elfragmentador.encoding_decoding.decode_fragment_tensor` for the
         decoding.
-        
+
         The irt is scaled by 100 and is in the Biognosys scale.
-        
+
         TODO: consider if the output should be decoded ...
-        
+
         Parameters:
-            seq (str): 
+            seq (str):
                 Sequence to use for prediction, supports modifications in the form
                 of S[PHOSPHO], S[+80] and T[181]
-            charge (int): 
+            charge (int):
                 Precursor charge to be assumed during the fragmentation
             nce (float):
                 Normalized collision energy to use during the prediction
             as_spectrum (bool, optional):
                 Wether to return a Spectrum object instead of the raw tensor predictions
                 (Default value = False)
-        
+
         Returns:
           PredictionResults: A named tuple with two named results; irt and spectra
           Spectrum: A spectrum object with the predicted spectrum
-        
+
         Examples:
             >>> pl.seed_everything(42)
             42
@@ -610,7 +623,8 @@ class PepTransformerModel(pl.LightningModule):
             >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
             PredictionResults(irt=tensor(..., grad_fn=<SqueezeBackward1>), \
             spectra=tensor([...], grad_fn=<SqueezeBackward1>))
-            >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, as_spectrum=True)
+            >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, \
+            as_spectrum=True)
             >>> type(out)
             <class 'elfragmentador.spectra.Spectrum'>
             >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
@@ -620,10 +634,12 @@ class PepTransformerModel(pl.LightningModule):
             seq, nce, charge, enforce_length=enforce_length
         )
 
-        in_batch_dict = {k:v.to(self.device) for k, v in in_batch._asdict().items()}
-        
+        in_batch_dict = {k: v.to(self.device) for k, v in in_batch._asdict().items()}
+
         out = self.forward(**in_batch_dict)
-        out = PredictionResults(**{k: x.squeeze(0).cpu() for k, x in out._asdict().items()})
+        out = PredictionResults(
+            **{k: x.squeeze(0).cpu() for k, x in out._asdict().items()}
+        )
         logging.debug(out)
 
         # rt should be in seconds for spectrast ...
@@ -929,7 +945,11 @@ class PepTransformerModel(pl.LightningModule):
             total_loss = loss_irt + total_loss
         else:
             logging.warning(
-                f"Skipping addition of irt loss on batch {batch_idx} with value {loss_irt.flatten()}, preds: {yhat_irt.flatten()}"
+                (
+                    f"Skipping addition of irt loss on batch {batch_idx} "
+                    f"with value {loss_irt.flatten()}, "
+                    f"preds: {yhat_irt.flatten()}"
+                )
             )
 
         losses = {
@@ -947,7 +967,8 @@ class PepTransformerModel(pl.LightningModule):
                 self.num_failed = 1
 
             logging.error(
-                f"Fail {self.num_failed} at... batch {batch_idx} \n Loss: {total_loss},\n"
+                f"Fail {self.num_failed} at... batch {batch_idx} \n"
+                f" Loss: {total_loss},\n"
                 f"\n loss_irt: {loss_irt.flatten()}\n"
                 f"\n loss_spectra: {loss_cosine.flatten()}\n"
                 f"\n yhat_spec: {yhat_spectra.flatten()},\n"
@@ -1086,13 +1107,11 @@ class PepTransformerModel(pl.LightningModule):
         global_step = self.global_step
         if (global_step % 50) == 0:
             for name, param in self.named_parameters():
-                if "weight" in name and not "norm" in name:
+                if "weight" in name and "norm" not in name:
                     if param.requires_grad:
                         try:
                             if param.grad is None:
                                 raise AttributeError
-                            # self.logger.experiment.add_histogram(f"{name}_grad", param.grad, global_step)
-                            # This only works on tensorboard ...
                             if any(
                                 x in name
                                 for x in [

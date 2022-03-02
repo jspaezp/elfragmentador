@@ -1,19 +1,16 @@
-import pytest
 import random
-
 import tempfile
 from pathlib import Path
 
+import pytest
 import torch
 from torch.utils.data.dataloader import DataLoader
 
-from elfragmentador import model
-from elfragmentador import datamodules
-from elfragmentador import constants
-from elfragmentador.model import ForwardBatch
-
-from elfragmentador import utils as efu
+from elfragmentador import constants, datamodules
 from elfragmentador import encoding_decoding as efe
+from elfragmentador import model
+from elfragmentador import utils as efu
+from elfragmentador.model import ForwardBatch
 
 
 def test_concat_encoder():
@@ -190,7 +187,7 @@ def test_model_forward(shared_datadir):
 
 @pytest.fixture
 def setup_model(tiny_model):
-    mod = tiny_model.eval()
+    tiny_model.eval()
 
     # TODO make this a test ...
     seqs = [efu.get_random_peptide() for _ in range(100)]

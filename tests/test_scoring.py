@@ -1,13 +1,13 @@
 import random
 
 from elfragmentador import encoding_decoding
-from elfragmentador.spectra import Spectrum
 from elfragmentador.annotate import get_peptide_ions
 from elfragmentador.scoring import (
     calc_ascore,
     calc_delta_ascore,
     get_site_localizing_ions,
 )
+from elfragmentador.spectra import Spectrum
 
 
 def test_ascore_calculation_works():

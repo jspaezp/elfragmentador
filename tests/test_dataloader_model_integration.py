@@ -1,7 +1,9 @@
 from pathlib import Path
+
 import torch
-from elfragmentador import model, datamodules
 from torch.utils.data.dataloader import DataLoader
+
+from elfragmentador import datamodules, model
 
 
 def test_dataset_input_works_on_model(shared_datadir):

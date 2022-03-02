@@ -1,11 +1,12 @@
 import warnings
-import pytest
-from elfragmentador.model import PepTransformerModel
-from elfragmentador import datamodules
-from elfragmentador.utils import prepare_fake_tensor_dataset
 
-from pytorch_lightning import Trainer
+import pytest
 import torch
+from pytorch_lightning import Trainer
+
+from elfragmentador import datamodules
+from elfragmentador.model import PepTransformerModel
+from elfragmentador.utils import prepare_fake_tensor_dataset
 
 
 @pytest.fixture(params=["csv", "csv.gz"])

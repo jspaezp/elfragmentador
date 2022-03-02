@@ -1,4 +1,5 @@
 import torch
+
 from elfragmentador.nn_encoding import SeqPositionalEmbed
 
 

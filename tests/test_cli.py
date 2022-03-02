@@ -1,6 +1,8 @@
 import os
+
 import pytest
-from elfragmentador import train, model
+
+from elfragmentador import model, train
 
 cli_commands = [
     ("elfragmentador_train"),

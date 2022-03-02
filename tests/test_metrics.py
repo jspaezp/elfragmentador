@@ -1,6 +1,7 @@
-import elfragmentador.metrics as EFM
 import pytest
 import torch
+
+import elfragmentador.metrics as EFM
 
 
 @pytest.fixture

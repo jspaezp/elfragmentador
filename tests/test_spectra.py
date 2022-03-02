@@ -1,5 +1,6 @@
-from elfragmentador import spectra, constants, annotate
 import pandas as pd
+
+from elfragmentador import annotate, constants, spectra
 
 
 def test_parse_spec():

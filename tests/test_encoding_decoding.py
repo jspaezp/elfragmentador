@@ -1,9 +1,7 @@
 import pytest
-
 import torch
-from elfragmentador import encoding_decoding
-from elfragmentador import constants
 
+from elfragmentador import constants, encoding_decoding
 
 testdata_aa_encoding = [
     ("_AACD_", [23, 1, 1, 2, 3, 22, 0, 0, 0, 0, 0], "AACD"),

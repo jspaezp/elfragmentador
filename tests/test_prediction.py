@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+
 from elfragmentador.predictor import Predictor
 
 

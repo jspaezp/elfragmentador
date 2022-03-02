@@ -1,10 +1,12 @@
+from pathlib import Path
 from typing import NamedTuple
+
+import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader
+
 from elfragmentador import constants, datamodules
-from pathlib import Path
-import pandas as pd
-import numpy as np
 
 
 def check_type(i: NamedTuple):

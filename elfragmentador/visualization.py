@@ -96,9 +96,11 @@ class SelfAttentionExplorer(torch.no_grad):
             f"{self.aa_seqs.__repr__()}\n"
             ">> Charges (charges):\n"
             f"{self.charges.__repr__()}\n"
-            f">> Encoder vizs (encoder_viz) {list(self.encoder_viz.values())[0].shape}:\n"
+            ">> Encoder vizs (encoder_viz)"
+            f" {list(self.encoder_viz.values())[0].shape}:\n"
             f"{self.encoder_viz.__repr__()}\n"
-            f">> Decoder vizs (decoder_viz) {list(self.decoder_viz.values())[0].shape}:\n"
+            ">> Decoder vizs (decoder_viz)"
+            f" {list(self.decoder_viz.values())[0].shape}:\n"
             f"{self.decoder_viz.__repr__()}"
         )
 
@@ -171,7 +173,11 @@ class SelfAttentionExplorer(torch.no_grad):
 
 
 def make_bipartite(x):
-    """Makes a bipartite graph from a data frame whose column and row indices are the same"""
+    """
+    Makes a bipartite graph
+    from a data frame whose col and row indices are the same
+    """
+
     B = nx.Graph()
     B.add_nodes_from(
         [x for x in x.index], bipartite=0

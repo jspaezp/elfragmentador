@@ -1,7 +1,8 @@
 import pandas as pd
-from pandas import DataFrame
 import torch
+from pandas import DataFrame
 from torch.utils.data import DataLoader
+
 from elfragmentador.datasets.dataset import ComparissonDataset
 from elfragmentador.datasets.spectronaut_dataset import SpectronautLibrary
 from elfragmentador.metrics import MetricCalculator
