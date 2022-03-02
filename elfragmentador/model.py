@@ -91,7 +91,7 @@ class MLP(nn.Module):
                     [-0.0061, -0.0219],
                     [-0.0061, -0.0220],
                     [-0.0061, -0.0220],
-                    [-0.0061, -0.0219]], grad_fn=<AddmmBackward>)
+                    [-0.0061, -0.0219]], grad_fn=<AddmmBackward0>)
             >>> out.shape
             torch.Size([5, 2])
         """
@@ -620,9 +620,10 @@ class PepTransformerModel(pl.LightningModule):
             seq, nce, charge, enforce_length=enforce_length
         )
 
-        # TODO consider if adding GPU inference
-        out = self.forward(**in_batch._asdict())
-        out = PredictionResults(**{k: x.squeeze(0) for k, x in out._asdict().items()})
+        in_batch_dict = {k:v.to(self.device) for k, v in in_batch._asdict().items()}
+        
+        out = self.forward(**in_batch_dict)
+        out = PredictionResults(**{k: x.squeeze(0).cpu() for k, x in out._asdict().items()})
         logging.debug(out)
 
         # rt should be in seconds for spectrast ...
@@ -635,7 +636,7 @@ class PepTransformerModel(pl.LightningModule):
                 mod_tensor=in_batch.mods.squeeze().numpy(),
                 charge=charge,
                 nce=nce,
-                rt=float(out.irt) * 100 * 60,
+                rt=float(out.irt),
                 irt=float(out.irt),  # * 100,
             )
 
@@ -1147,7 +1148,6 @@ def evaluate_landmark_rt(model: PepTransformerModel):
             pred_rt.append(out.irt.numpy())
             real_rt.append(np.array(desc["irt"]))
 
-    # TODO make this return a correlation coefficient
     fit = polyfit(np.array(real_rt).flatten(), np.array(pred_rt).flatten())
     logging.info(fit)
     uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())
