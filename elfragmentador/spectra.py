@@ -1,5 +1,7 @@
 """
-Contains utilities to represent spectra as well as functions to read them in bulk from
+Contains utilities to represent spectra as well as functions to read them in
+bulk from.
+
 .sptxt files
 """
 
@@ -15,8 +17,7 @@ except ImportError:
     plt = None
 
 import warnings
-from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Sequence, Union
+from typing import Dict, Iterator, List, Optional, Union
 
 import numpy as np
 import spectrum_utils.plot as sup
@@ -32,7 +33,9 @@ from elfragmentador.encoding_decoding import SequencePair, encode_fragments
 
 
 class Spectrum:
-    """Represents Spectra and bundles methods to annotate peaks."""
+    """
+    Represents Spectra and bundles methods to annotate peaks.
+    """
 
     __SPTXT_TEMPLATE = (
         "Name: {name}\n"
@@ -62,11 +65,12 @@ class Spectrum:
         nreps: Optional[int] = None,
     ) -> None:
         """
-        Representation of spectra with methods to convert from and to encodings.
+        Representation of spectra with methods to convert from and to
+        encodings.
 
-        This class provides a way to represent spectra and its associated peptide sequence,
-        as well as multiple methods to convert these information to the encoding required
-        for training the main model
+        This class provides a way to represent spectra and its associated peptide
+        sequence, as well as multiple methods to convert these information to the
+        encoding required for training the main model
 
         Parameters
         ----------
@@ -95,7 +99,8 @@ class Spectrum:
         raw_spectra : str, optional
             String describing the file where the spectra originated, by default None
         nreps : int, optional
-            Integer describing how many spectra were used to generate this concensus spectrum
+            Integer describing how many spectra were used to generate this
+            concensus spectrum
         """
         tolerance, tolerance_unit = CONSTANTS.TOLERANCE[analyzer]
         parsed_peptide = list(annotate.peptide_parser(sequence, solve_aliases=True))
@@ -149,7 +154,8 @@ class Spectrum:
         seq: str,
         charge: int,
     ) -> Spectrum:
-        """theoretical_spectrum Generates theoretical spectra from sequences.
+        """
+        theoretical_spectrum Generates theoretical spectra from sequences.
 
         Parameters
         ----------
@@ -241,7 +247,9 @@ class Spectrum:
 
         Examples
         --------
-        >>> Spectrum.from_tensors([1, 1, 2, 3, 0, 0, 0, 0, 0, 0], [0]*CONSTANTS.NUM_FRAG_EMBEDINGS)
+        >>> Spectrum.from_tensors( \
+            [1, 1, 2, 3, 0, 0, 0, 0, 0, 0], \
+            [0]*CONSTANTS.NUM_FRAG_EMBEDINGS)
         Spectrum:
             Sequence: AACD len:4
             Mod.Sequence: AACD
@@ -253,7 +261,10 @@ class Spectrum:
             NCE: 27.0
             RT: None
             OriginalSpectra: None
-            Annotations: {'z1b1': 0.0, 'z1y1': 0.0, 'z1b2': 0.0, 'z1y2': 0.0, 'z1b3': 0.0, 'z1y3': 0.0, 'z2b1': 0.0, 'z2y1': 0.0, 'z2b2': 0.0, 'z2y2': 0.0, 'z2b3': 0.0, 'z2y3': 0.0, 'z3b1': 0.0, 'z3y1': 0.0, 'z3b2': 0.0, 'z3y2': 0.0, 'z3b3': 0.0, 'z3y3': 0.0}
+            Annotations: {'z1b1': 0.0, 'z1y1': 0.0, 'z1b2': 0.0, 'z1y2': 0.0, \
+                'z1b3': 0.0, 'z1y3': 0.0, 'z2b1': 0.0, 'z2y1': 0.0, 'z2b2': 0.0, \
+                'z2y2': 0.0, 'z2b3': 0.0, 'z2y3': 0.0, 'z3b1': 0.0, 'z3y1': 0.0, \
+                'z3b2': 0.0, 'z3y2': 0.0, 'z3b3': 0.0, 'z3y3': 0.0}
         """
         mod_sequence = encoding_decoding.decode_mod_seq(sequence_tensor, mod_tensor)
         fragment_dict = encoding_decoding.decode_fragment_tensor(
@@ -299,10 +310,14 @@ class Spectrum:
 
         Examples
         --------
-        >>> myspec = Spectrum("AA", charge=1, parent_mz=161.0920, mzs=[101.0713], intensities=[299.0], nce = 27.0, )
+        >>> myspec = Spectrum( \
+            "AA", charge=1, parent_mz=161.0920, mzs=[101.0713], \
+            intensities=[299.0], nce = 27.0)
         >>> myspec.precursor_error("ppm")
         0.42936316076909053
-        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842, mzs=[101.0713, 143.0816, 147.1129], intensities=[299.0, 5772.5, 2537.1], nce = 27.0, )
+        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842,\
+            mzs=[101.0713, 143.0816, 147.1129], \
+            intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
         >>> myspec.precursor_error("ppm")
         0.06981956539363246
         >>> myspec.precursor_error("da")
@@ -363,25 +378,30 @@ class Spectrum:
         """
         encode_spectra Produce encoded sequences from your spectrum object.
 
-        It produces a list of integers that represents the spectrum, the labels correspond
-        to the ones in CONSTANTS.FRAG_EMBEDING_LABELS, but can also be acquired using the
-        argument dry=True
+        It produces a list of integers that represents the spectrum,
+        the labels correspond to the ones in CONSTANTS.FRAG_EMBEDING_LABELS,
+        but can also be acquired using the argument dry=True
 
         Parameters
         ----------
         dry : bool, optional
-            wether to actually compute the encoding or only return the labels, by default False
+            wether to actually compute the encoding or only return the labels,
+            by default False
 
         Returns
         -------
         List[int] or List[str]
             The list of intensities matching the ions (normalized to the highest) or
-            the labels for such ions, depending on wether the dry argument was passed or not
+            the labels for such ions,
+            depending on wether the dry argument was passed or not
 
 
         Examples
         --------
-        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842, mzs=[101.0713, 143.0816, 147.1129], intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
+        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3,\
+            parent_mz=505.5842,\
+            mzs=[101.0713, 143.0816, 147.1129], \
+            intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
         >>> myspec.encode_spectra()
         [0, 0.4395149415331312, 1.0, 0, 0, 0, 0, ..., 0]
         >>> len(myspec.encode_spectra())
@@ -404,7 +424,8 @@ class Spectrum:
 
     def encode_sequence(self, enforce_length=True, pad_zeros=True) -> SequencePair:
         """
-        encode_sequence returns the encoded sequence of the aminoacids/modifications.
+        encode_sequence returns the encoded sequence of the
+        aminoacids/modifications.
 
         It returns two lists representing the aminoacid and modification sequences, the
         length of the sequence will correspond to CONSTANTS.MAX_TENSOR_SEQUENCE.
@@ -421,9 +442,13 @@ class Spectrum:
 
         Examples
         --------
-        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842, mzs=[101.0713, 143.0816, 147.1129], intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
+        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3,\
+            parent_mz=505.5842, \
+            mzs=[101.0713, 143.0816, 147.1129], \
+            intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
         >>> myspec.encode_sequence()
-        SequencePair(aas=[23, 1, 1, 1, 17, 13, 1, 9, 9, 17, 19, ..., 0], mods=[0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5, ..., 0])
+        SequencePair(aas=[23, 1, 1, 1, 17, 13, 1, 9, 9, 17, 19, ..., 0], \
+            mods=[0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5, ..., 0])
         """
         return encoding_decoding.encode_mod_seq(
             self.mod_sequence, enforce_length=enforce_length, pad_zeros=pad_zeros
@@ -445,7 +470,10 @@ class Spectrum:
 
         Examples
         --------
-        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3, parent_mz=505.5842, mzs=[101.0713, 143.0816, 147.1129], intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
+        >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", \
+            charge=3, parent_mz=505.5842, \
+            mzs=[101.0713, 143.0816, 147.1129], \
+            intensities=[299.0, 5772.5, 2537.1], nce = 27.0)
         >>> myspec.annotated_peaks
         {'z1b2': 1.0, 'z1y1': 0.4395149415331312}
         """
@@ -468,7 +496,10 @@ class Spectrum:
 
         Examples
         --------
-        >>> myspec = Spectrum("MYPEPT[181]IDEK", 2, 200, [100, 200], [1e8, 1e7], nce=27.0)
+        >>> myspec = Spectrum(\
+            "MYPEPT[181]IDEK", \
+            2, 200, [100, 200], \
+            [1e8, 1e7], nce=27.0)
         >>> myspec
         Spectrum:
             Sequence: MYPEPTIDEK len:10
@@ -486,7 +517,8 @@ class Spectrum:
             "Spectrum:\n"
             f"\tSequence: {encoding_decoding.clip_explicit_terminus(self.sequence)}"
             f" len:{self.length}\n"
-            f"\tMod.Sequence: {encoding_decoding.clip_explicit_terminus(self.mod_sequence)}\n"
+            "\tMod.Sequence: "
+            f"{encoding_decoding.clip_explicit_terminus(self.mod_sequence)}\n"
             f"\tCharge: {self.charge}\n"
             f"\tMZs: {self.mzs[:3]}...{len(self.mzs)}\n"
             f"\tInts: {self.intensities[:3]}...{len(self.intensities)}\n"
@@ -504,7 +536,7 @@ class Spectrum:
 
     def to_sptxt(self) -> str:
         """
-        to_sptxt Represents the spectrum for an sptxt file
+        to_sptxt Represents the spectrum for an sptxt file.
 
         Returns
         -------
@@ -513,7 +545,10 @@ class Spectrum:
 
         Examples
         --------
-        >>> myspec = Spectrum("MYPEPT[181]IDEK", 2, 200, [100, 200], [1e8, 1e7], nce=27.0)
+        >>> myspec = Spectrum( \
+            "MYPEPT[181]IDEK",\
+            2, 200, [100, 200],\
+            [1e8, 1e7], nce=27.0)
         >>> myspec
         Spectrum:
             Sequence: MYPEPTIDEK len:10
@@ -535,8 +570,6 @@ class Spectrum:
         Num Peaks: 2
         100\t100000000.0\t"?"
         200\t10000000.0\t"?"
-
-
         """
         mod_seq = annotate.mass_diff_encode_seq(self.mod_sequence)
         name = f"{mod_seq}/{self.charge}"
@@ -658,7 +691,10 @@ class SptxtReader:
         return self.read()
 
     def _get_sptxt_data(self):
-        """Goes through the file and gets the number of spectra and the modifications present"""
+        """
+        Goes through the file and gets the number of spectra and the
+        modifications present.
+        """
         ptms = set()
         length = 0
         with open(self.filepath, "r") as f:
@@ -678,9 +714,13 @@ class SptxtReader:
 
         return dict(mods), length
 
-    # TODO consider if moving this parser to just use another dependency ... pyteomics ??
+    # TODO consider if moving this parser to just use another dependency
+    # ... pyteomics ??
     def _chunk_sptxt(self) -> Iterator[List[str]]:
-        """Reads an .sptxt and returns chunks of strings with each spectrum section"""
+        """
+        Reads an .sptxt and returns chunks of strings with each spectrum
+        section.
+        """
         with open(self.filepath, "r") as f:
             spectrum_section = []
             for line in f:
@@ -798,9 +838,9 @@ class SptxtReader:
 
         # Peaks Handling
         peaks_sec = [v for v in x if v[0] in digits and ("\t" in v or " " in v)]
-        peaks_sec = [l.strip().split() for l in peaks_sec if "." in l]
-        mz = [float(l[0]) for l in peaks_sec]
-        intensity = [float(l[1]) for l in peaks_sec]
+        peaks_sec = [line.strip().split() for line in peaks_sec if "." in line]
+        mz = [float(line[0]) for line in peaks_sec]
+        intensity = [float(line[1]) for line in peaks_sec]
 
         out_spec = Spectrum(
             sequence=sequence.strip(),
@@ -884,7 +924,8 @@ class SptxtReader:
             if i >= max_spec:
                 break
 
-            # TODO add offset to skip the first x sequences and a way to make the selection random
+            # TODO add offset to skip the first x sequences
+            # and a way to make the selection random
             seq_encode, mod_encode = spec.encode_sequence(
                 enforce_length=enforce_length, pad_zeros=pad_zeros
             )
@@ -901,14 +942,16 @@ class SptxtReader:
 
             if min_peaks is not None and spec.num_matching_peaks < min_peaks:
                 warnings.warn(
-                    f"Skipping peptide due few peaks being annotated {spec.mod_sequence}"
+                    "Skipping peptide due few peaks",
+                    f" being annotated {spec.mod_sequence}",
                 )
                 skipped_spec += 1
                 continue
 
             if min_delta_ascore is not None and spec.delta_ascore < min_delta_ascore:
                 warnings.warn(
-                    f"Skipping peptide due low ascore '{spec.delta_ascore}' {spec.mod_sequence}"
+                    "Skipping peptide due low ascore "
+                    f"'{spec.delta_ascore}' {spec.mod_sequence}"
                 )
                 skipped_spec += 1
                 continue
@@ -945,10 +988,8 @@ class SptxtReader:
             raise NotImplementedError
         else:
             """
-            warnings.warn(
-                "No calculation function passed for iRT,"
-                " will replace the column with missing"
-            )
+            warnings.warn( "No calculation function passed for iRT," " will
+            replace the column with missing" )
             """
             ret["iRT"] = np.nan
 

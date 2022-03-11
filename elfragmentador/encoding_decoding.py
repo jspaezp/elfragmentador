@@ -1,11 +1,9 @@
 import logging
 from collections import namedtuple
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
-import pandas as pd
 import torch
-from pandas.core.frame import DataFrame
 from torch import Tensor
 
 import elfragmentador.constants as CONSTANTS
@@ -22,7 +20,7 @@ Example for the following sequence `_AAIFVVAR_`:
 
 def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePair:
     """
-    Encodes a peptide sequence to a numeric vector
+    Encodes a peptide sequence to a numeric vector.
 
     Args:
         seq (str): Modified sequence to encode
@@ -40,7 +38,8 @@ def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePai
         32
         >>> out = encode_mod_seq(samp_seq)
         >>> out
-        SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
+        SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0],
+           mods=[0, 0, 0, 0,..., 0, 0])
         >>> len(out)
         2
         >>> [len(x) for x in out]
@@ -84,13 +83,15 @@ def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePai
 
 
 def clip_explicit_terminus(seq: Union[str, List]):
-    """Remove explicit terminus
+    """
+    Remove explicit terminus.
 
     Args:
         seq (Union[str, List]): Sequence to be stripped form eplicit termini
 
     Returns:
-        Sequence (Union[str, List]): Same as sequence input but removing explicit n and c termini
+        Sequence (Union[str, List]):
+            Same as sequence input but removing explicit n and c termini
 
     Examples:
         >>> clip_explicit_terminus("PEPTIDEPINK")
@@ -115,13 +116,15 @@ def decode_mod_seq(
     mod_encoding: Optional[List[int]] = None,
     clip_explicit_term=True,
 ) -> str:
-    """Decode a pair of encoded sequences to a string representation
+    """
+    Decode a pair of encoded sequences to a string representation.
 
     Args:
         seq_encoding (List[int]):
             List of integers encoding a peptide sequence
         mod_encoding (Optional[List[int]], optional):
-            List of integers representing the modifications on the sequence. Defaults to None.
+            List of integers representing the modifications on the sequence.
+            Defaults to None.
         clip_explicit_term (bool, optional):
             Wether the explicit n and c terminus should be included. Defaults to True.
 
@@ -157,7 +160,8 @@ def encode_fragments(
     annotated_peaks: Optional[Union[Dict[str, int], Dict[str, float]]]
 ) -> Union[List[float], List[int]]:
     """
-    Gets either the labels or an sequence that encodes a spectra
+    Gets either the labels or an sequence that encodes a spectra.
+
     # TODO split this into different functions ...
 
     Examples:
@@ -177,15 +181,20 @@ def decode_fragment_tensor(
     tensor: Union[List[int], Tensor],
 ) -> Dict[str, Union[List[str], np.float32]]:
     """
-    Returns a data frame with annotations from sequence
-    and a tensor encoding a spectra
+    Returns a data frame with annotations from sequence and a tensor encoding a
+    spectra.
 
     Examples:
         >>> import torch
-        >>> foo = decode_fragment_tensor("AAACK", torch.arange(0, (CONSTANTS.NUM_FRAG_EMBEDINGS)))
+        >>> foo = decode_fragment_tensor(
+            "AAACK",
+            torch.arange(0, (CONSTANTS.NUM_FRAG_EMBEDINGS)))
         >>> {k:v[:5] for k,v in foo.items()}
-        {'Fragment': ['z1b1', 'z1y1', 'z1b2', 'z1y2', 'z1b3'], 'Mass': array([ 72.04439047, 147.11280417, 143.08150447, 307.14345289,
-           214.11861847]), 'Intensity': array([0., 1., 2., 3., 4.])}
+        {\
+            'Fragment': ['z1b1', 'z1y1', 'z1b2', 'z1y2', 'z1b3'],\
+            'Mass': array([ 72.04439047, 147.11280417, 143.08150447, 307.14345289,
+            214.11861847]), 'Intensity': array([0., 1., 2., 3., 4.])\
+        }
     """
     key_list = CONSTANTS.FRAG_EMBEDING_LABELS
     fragment_ions = annotate.get_peptide_ions(sequence)

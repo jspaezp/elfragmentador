@@ -1,23 +1,21 @@
 """
-Implements torch models to handle encoding and decoding of positions as well as learnable
-embeddings for the aminoacids and ions
+Implements torch models to handle encoding and decoding of positions as well as
+learnable embeddings for the aminoacids and ions.
 """
 
 try:
-    from typing import Dict, List, Literal, Optional, Tuple, Union
+    from typing import Literal, Union
 
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
-    from typing import Dict, List, NewType, Optional, Tuple, Union
+    from typing import NewType, Union
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
-import logging
 import math
 
 import pandas as pd
-import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
@@ -41,7 +39,8 @@ class SeqPositionalEmbed(torch.nn.Module):
         self.inverted = inverted
 
     def forward(self, x: torch.LongTensor) -> Tensor:
-        """forward
+        """
+        forward.
 
         Returns the positional encoding for a sequence, expressed as integers
 
@@ -56,7 +55,11 @@ class SeqPositionalEmbed(torch.nn.Module):
         Examples:
             >>> encoder = SeqPositionalEmbed(6, 50, inverted=True)
             >>> encoder2 = SeqPositionalEmbed(6, 50, inverted=False)
-            >>> x = torch.cat([torch.ones(1,2), torch.ones(1,2)*2, torch.zeros((1,2))], dim = -1).long()
+            >>> x = torch.cat([
+                torch.ones(1,2),
+                torch.ones(1,2)*2,
+                torch.zeros((1,2))],
+                dim = -1).long()
             >>> x[0]
             tensor([1, 1, 2, 2, 0, 0])
             >>> x.shape
@@ -100,22 +103,25 @@ class ConcatenationEncoder(torch.nn.Module):
         static_size: bool = False,
         scaling=1,
     ) -> None:
-        """ConcatenationEncoder concatenates information into the embedding.
+        r"""ConcatenationEncoder concatenates information into the embedding.
 
-        Adds information on continuous variables into an embedding by concatenating an n number
-        of dimensions to it.
+        Adds information on continuous variables into an embedding by concatenating
+        an n number of dimensions to it.
 
-        It is meant to add different information to every element in a batch, but the same
-        information (number of dimensions) to every element of a sequence inside an element
-        of the batch. \(x[i_1,j,-y:] = x[i_2,j,-y:]\) ; being \(y\) the number of added
-        dimensions.
+        It is meant to add different information to every element in a batch, but the
+        same information (number of dimensions) to every element of a sequence inside
+        an element of the batch. \(x[i_1,j,-y:] = x[i_2,j,-y:]\) ; being \(y\) the
+        number of added dimensions.
 
         Args:
             dims_add (int): Number of dimensions to add as an encoding
-            max_val (float, optional): maximum expected value of the variable that will be encoded, by default 200.0
+            max_val (float, optional):
+                maximum expected value of the variable that will be encoded,
+                by default 200.0
             static_size (Union[Literal[False], float], optional):
                 Optional ingeter to pass in order to make the size deterministic.
-                This is only required if you want to export your model to torchscript, by default False
+                This is only required if you want to export your model to torchscript,
+                by default False
 
         Examples:
             >>> x1 = torch.zeros((5, 1, 20))
@@ -138,7 +144,8 @@ class ConcatenationEncoder(torch.nn.Module):
         self.scaling = scaling
 
     def forward(self, x: Tensor, val: Tensor) -> Tensor:
-        """Forward pass thought the encoder.
+        """
+        Forward pass thought the encoder.
 
         Parameters:
             x (Tensor):
@@ -149,7 +156,8 @@ class ConcatenationEncoder(torch.nn.Module):
                 Shape is **[batch size, 1]**.
 
         Returns:
-            Tensor (Tensor), Of shape **[sequence length, batch size, embed_dim + added_dims]**
+            Tensor (Tensor),
+            Of shape **[sequence length, batch size, embed_dim + added_dims]**
 
         Examples:
             >>> x1 = torch.zeros((5, 1, 20))
@@ -304,7 +312,8 @@ class AASequenceEmbedding(torch.nn.Module):
         return seq
 
     def as_DataFrames(self):
-        """Returns the weights as data frames
+        """
+        Returns the weights as data frames.
 
         Returns:
             Tuple[DataFrame, DataFrame]:
@@ -314,9 +323,12 @@ class AASequenceEmbedding(torch.nn.Module):
             >>> embed = AASequenceEmbedding(20)
             >>> aa_embed, mod_embed = embed.as_DataFrames()
             >>> list(aa_embed)
-            ['EMPTY', 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'c', 'n']
+            ['EMPTY', 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',\
+                'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'c', 'n']
             >>> list(mod_embed)
-            ['EMPTY', 'CARBAMIDOMETHYL', 'ACETYL', 'DEAMIDATED', 'OXIDATION', 'PHOSPHO', 'METHYL', 'DIMETHYL', 'TRIMETHYL', 'FORMYL', 'GG', 'LRGG', 'NITRO', 'BIOTINYL', 'TMT6PLEX']
+            ['EMPTY', 'CARBAMIDOMETHYL', 'ACETYL', 'DEAMIDATED', 'OXIDATION', \
+                'PHOSPHO', 'METHYL', 'DIMETHYL', 'TRIMETHYL', 'FORMYL', 'GG', \
+                'LRGG', 'NITRO', 'BIOTINYL', 'TMT6PLEX']
         """
         df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
         df_aa.columns = ["EMPTY"] + list(constants.ALPHABET.keys())

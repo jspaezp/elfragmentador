@@ -102,7 +102,8 @@ class PeptideDataset(DatasetBase):
             )
             self.nces = torch.where(self.nces.isnan(), torch.Tensor([30.0]), self.nces)
 
-            # This syntax is compatible in torch +1.8, will change when colab migrates to it
+            # This syntax is compatible in torch +1.8,
+            # will change when colab migrates to it
             # self.nces = torch.nan_to_num(self.nces, nan=30.0)
 
         self.charges = (
@@ -132,7 +133,9 @@ class PeptideDataset(DatasetBase):
 
     @property
     def mod_sequences(self):
-        """ """
+        """
+        Returns the mod sequences as a list of strings
+        """
         if not hasattr(self, "_mod_sequences"):
             self._mod_sequences = []
 

@@ -1,12 +1,12 @@
 """
 > Greatly inspired/copied from:
+
 > https://github.com/kusterlab/prosit/blob/master/prosit
 > And released under an Apache 2.0 license
 """
 
-import collections
 import warnings
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from typing import Callable, Dict, Iterator, List, Tuple, Union
 
 import numpy
@@ -18,7 +18,7 @@ from elfragmentador import constants, encoding_decoding
 
 def _solve_alias(x: str) -> str:
     """
-    _solve_alias Gets the cannnonical form of an aminoacid
+    _solve_alias Gets the cannnonical form of an aminoacid.
 
     Args:
         x (str): An aminoacid (possibly modified) to be queried
@@ -59,7 +59,7 @@ def _solve_alias(x: str) -> str:
 
 def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
     """
-    peptide_parser Parses peptides in a string to an iterable
+    peptide_parser Parses peptides in a string to an iterable.
 
     Args:
         p (str):
@@ -117,7 +117,7 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
             out = p[i:offset]
             try:
                 yield_value = _solve_alias(out) if solve_aliases else out
-            except KeyError as e:
+            except KeyError:
                 raise ValueError(f"Unable to Solve alias for {out}, in peptide {p}")
 
             i = offset
@@ -134,8 +134,8 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
 
 def mass_diff_encode_seq(seq: str) -> str:
     """
-    Solve peptide string so modifications are expressed as mass
-    difference without the +
+    Solve peptide string so modifications are expressed as mass difference
+    without the +
 
     "T[+80]" > "T[80]"
 
@@ -144,7 +144,6 @@ def mass_diff_encode_seq(seq: str) -> str:
 
     Returns:
        str, Sequence with solved aliases
-
     """
     iter = peptide_parser(seq, solve_aliases=True)
     iter = encoding_decoding.clip_explicit_terminus(list(iter))
@@ -155,14 +154,19 @@ def mass_diff_encode_seq(seq: str) -> str:
 
 
 def canonicalize_seq(seq: str, robust: bool = False) -> str:
-    """canonicalize_seq Solves all modification aliases in a sequence.
+    """
+    canonicalize_seq Solves all modification aliases in a sequence.
 
     Given a sequence, converts al supported modification aliases to the
     "canonical" version of them and returns the new version.
 
     Args:
-      seq (str): Modified peptide sequence, for example "PEPTIDE[+23]TIDE")
-      robust (bool): Wether you want error to be silent and return none when they happen, by default False
+      seq (str):
+          Modified peptide sequence,
+          for example "PEPTIDE[+23]TIDE")
+      robust (bool):
+          Wether you want error to be silent and return none
+          when they happen, by default False
 
     Returns:
       str: Same sequence as input but with all mod aliases replaced for the primary
@@ -171,7 +175,6 @@ def canonicalize_seq(seq: str, robust: bool = False) -> str:
     Examples:
       >>> canonicalize_seq("PEPTM(ox)IDEPINK")
       'nPEPTM[OXIDATION]IDEPINKc'
-
     """
     try:
         out = "".join(peptide_parser(seq, solve_aliases=True))
@@ -185,7 +188,8 @@ def canonicalize_seq(seq: str, robust: bool = False) -> str:
 
 
 def get_theoretical_mass(peptide: str):
-    """Calculates the theoretical mass of a peptide
+    """
+    Calculates the theoretical mass of a peptide.
 
     Examples:
         >>> get_theoretical_mass("MYPEPTIDE")
@@ -197,8 +201,9 @@ def get_theoretical_mass(peptide: str):
 
 
 def get_precursor_mz(peptide: str, charge: int):
-    """Calculates the theoretical mass/charge of a precursor peptide
-    (assumes positive mode)
+    """
+    Calculates the theoretical mass/charge of a precursor peptide (assumes
+    positive mode)
 
     Args:
       peptide (str): Peptide string
@@ -215,22 +220,22 @@ def get_precursor_mz(peptide: str, charge: int):
 
 
 def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
-    """Calculates masses forward and backwards from aminoacid
-    sequences
+    """
+    Calculates masses forward and backwards from aminoacid sequences.
 
     Examples:
         >>> _get_forward_backward("AMC")
         (array([  1.00782503,  72.04493903, 203.08542403, 363.11607276,
-            380.11881242]), array([ 17.00273967, 177.03338839, 308.07387339, 379.11098739,
-            380.11881242]))
+            380.11881242]), array([ 17.00273967, 177.03338839,
+            308.07387339, 379.11098739, 380.11881242]))
         >>> _get_forward_backward("AM[147]C")
         (array([  1.00782503,  72.04493903, 219.08033403, 379.11098276,
-            396.11372242]), array([ 17.00273967, 177.03338839, 324.06878339, 395.10589739,
-            396.11372242]))
+            396.11372242]), array([ 17.00273967, 177.03338839,
+            324.06878339, 395.10589739, 396.11372242]))
         >>> _get_forward_backward("n[+42]AM[147]C")
         (array([ 43.01839004, 114.05550404, 261.09089904, 421.12154776,
-            438.12428742]), array([ 17.00273967, 177.03338839, 324.06878339, 395.10589739,
-            438.12428742]))
+            438.12428742]), array([ 17.00273967, 177.03338839,
+            324.06878339, 395.10589739, 438.12428742]))
     """
     amino_acids = peptide_parser(peptide)
     masses = np.float64([constants.MOD_AA_MASSES[a] for a in amino_acids])
@@ -241,8 +246,8 @@ def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
 
 def _get_mzs(cumsum: ndarray, ion_type: str, z: int) -> np.float64:
     """
-    Gets the m/z values from a series after being provided with the cumulative sums of the
-    aminoacids in its series, meant for internal use
+    Gets the m/z values from a series after being provided with the cumulative
+    sums of the aminoacids in its series, meant for internal use.
     """
 
     cumsum = cumsum[:-2]
@@ -254,8 +259,9 @@ def _get_mzs(cumsum: ndarray, ion_type: str, z: int) -> np.float64:
 def _get_annotation(
     forward: ndarray, backward: ndarray, charge: int, ion_types: str
 ) -> Dict[str, float]:
-    """Calculates the ion annotations based on the forward
-    and backward cumulative masses
+    """
+    Calculates the ion annotations based on the forward and backward cumulative
+    masses.
 
     Args:
       forward (ndarray): Forward cumulative mass
@@ -291,7 +297,8 @@ def _get_annotation(
 
 
 def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
-    """Gets the theoretical masses of fragment ions
+    """
+    Gets the theoretical masses of fragment ions.
 
     Args:
       aa_seq (str): Aminoacid sequence with modifications
@@ -304,7 +311,9 @@ def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
         >>> foo = get_peptide_ions("AA")
         >>> sorted(foo.keys())
         ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z3b1', 'z3y1']
-        >>> print(round(foo['z1y1'], 6)) # ground truth from http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
+        >>> print(round(foo['z1y1'], 6))
+        # ground truth from
+        # http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
         90.054955
         >>> print(round(foo['z1b1'], 6))
         72.04439
@@ -322,12 +331,14 @@ def _get_peptide_ions(
     charges: Union[List[int], range] = range(1, 5),
     ion_types: Union[str, List[str]] = "yb",
 ) -> Dict[str, float64]:
-    """Gets a dictionary of theoretical ion masses for a peptide
+    """
+    Gets a dictionary of theoretical ion masses for a peptide.
 
     Args:
-      aa_seq: (str):
-      charges: (Union[List[int], range]): Range of charges to use (Default value = range(1,5)
-      ion_types: Union[str, List[str]]: Ion types to calculate (Default value = "yb")
+        aa_seq: (str):
+        charges: (Union[List[int], range]):
+            Range of charges to use (Default value = range(1,5)
+        ion_types: Union[str, List[str]]: Ion types to calculate (Default value = "yb")
 
     Returns:
 
@@ -351,7 +362,9 @@ def _get_peptide_ions(
 def get_tolerance(
     theoretical: float64, tolerance: Union[float, int] = 25.0, unit: str = "ppm"
 ) -> float64:
-    """Calculates the toleranc in daltons from either a dalton tolerance or a ppm tolerance
+    """
+    Calculates the toleranc in daltons from either a dalton tolerance or a ppm
+    tolerance.
 
     Args:
       theoretical (float64): Theoretical m/z to be used (only used for ppm)
@@ -360,7 +373,6 @@ def get_tolerance(
 
     Returns:
         float, the tolerance value in daltons
-
     """
     if unit == "ppm":
         return theoretical * float(tolerance) / 10 ** 6
@@ -373,7 +385,8 @@ def get_tolerance(
 def is_in_tolerance(
     theoretical: float64, observed: float, tolerance: int = 25, unit: str = "ppm"
 ) -> bool_:
-    """Checks wether an observed mass is close enough to a theoretical mass
+    """
+    Checks wether an observed mass is close enough to a theoretical mass.
 
     Args:
       theoretical (float64): Theoretical mass
@@ -383,7 +396,6 @@ def is_in_tolerance(
 
     Returns:
         bool, Wether the value observed is within the tolerance of the theoretical value
-
     """
     mz_tolerance = get_tolerance(theoretical, tolerance, unit)
     lower = observed - mz_tolerance
@@ -401,11 +413,13 @@ def is_sorted(
     key: Callable = lambda x: x,
 ) -> bool:
     """
-    is_sorted Checks if a list is sorted
+    is_sorted Checks if a list is sorted.
 
     Args:
         lst (List): List to check if it is sorted
-        key (Callable, optional): Function to use as the key to compare. Defaults to lambdax:x.
+        key (Callable, optional):
+            Function to use as the key to compare.
+            Defaults to lambda x:x.
 
     Returns:
         bool: Wether at least 1 element is out of order
@@ -434,11 +448,12 @@ def sort_if_needed(
     key: Callable = lambda x: x,
 ) -> None:
     """
-    sort_if_needed Sorts a list in place if it is not already sorted
+    sort_if_needed Sorts a list in place if it is not already sorted.
 
     Args:
         lst (List): List to be sorted
-        key (Callable, optional): Function to use as the key for sorting. Defaults to lambdax:x.
+        key (Callable, optional): Function to use as the key for sorting.
+            Defaults to lambda x:x.
 
     Examples:
         >>> foo = [1,16,3,4]
@@ -458,7 +473,7 @@ def annotate_peaks(
     unit: str = "ppm",
 ) -> Dict[str, float]:
     """
-    annotate_peaks Assigns m/z peaks to annotations
+    annotate_peaks Assigns m/z peaks to annotations.
 
     Args:
         theoretical_peaks (Dict[str, float64]):
@@ -478,7 +493,6 @@ def annotate_peaks(
         Dict[str, float]:
             A dictionary with the keys being the names of the ions and the values being
             the intensities that were asigned to such ion.
-
     """
     max_delta = tolerance if unit == "da" else max(mzs) * tolerance / 1e6
 

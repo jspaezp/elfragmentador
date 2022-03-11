@@ -8,7 +8,7 @@ from torchmetrics import Metric
 
 class MissingDataAverager(Metric):
     """
-    Metric class that averages values, ignoring missing
+    Metric class that averages values, ignoring missing.
 
     Examples:
     >>> averager = MissingDataAverager()
@@ -20,9 +20,9 @@ class MissingDataAverager(Metric):
     """
 
     def __init__(self, dist_sync_on_step=False):
-        # call `self.add_state`for every internal state that is needed for the metrics computations
-        # dist_reduce_fx indicates the function that should be used to reduce
-        # state from multiple processes
+        # call `self.add_state`for every internal state that is needed for the
+        # metrics computations dist_reduce_fx indicates the function that should
+        # be used to reduce state from multiple processes
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.add_state("values", default=[], dist_reduce_fx="cat")
@@ -37,7 +37,7 @@ class MissingDataAverager(Metric):
 
 def nanmean(v, *args, inplace=False, **kwargs):
     """
-    Function that calculates mean of a tensor while removing missing values
+    Function that calculates mean of a tensor while removing missing values.
 
     From: https://github.com/pytorch/pytorch/issues/21987#issuecomment-539402619
     """
@@ -49,7 +49,10 @@ def nanmean(v, *args, inplace=False, **kwargs):
 
 
 def norm(x: ndarray) -> ndarray:
-    """Normalizes a numpy array by substracting mean and dividing by standard deviation"""
+    """
+    Normalizes a numpy array by substracting mean and dividing by standard
+    deviation.
+    """
     sd = np.nanstd(x)
     m = np.nanmean(x)
     out = (x - m) / sd
@@ -62,7 +65,9 @@ def norm(x: ndarray) -> ndarray:
 def polyfit(
     x: ndarray, y: ndarray, degree: int = 1
 ) -> Dict[str, Union[List[float], float64]]:
-    """Fits a polynomial fit"""
+    """
+    Fits a polynomial fit.
+    """
     results = {}
 
     coeffs = np.polyfit(x, y, degree)

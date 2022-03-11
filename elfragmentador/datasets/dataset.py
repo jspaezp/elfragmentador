@@ -40,7 +40,7 @@ class NCEOffsetHolder(ABC):
     @classmethod
     def derived(cls, recursive=True, flatten=False, return_classes=False):
         """
-        Lists all derived subclasses as a nested dictionary
+        Lists all derived subclasses as a nested dictionary.
 
         Returns:
             Dict:
@@ -336,8 +336,11 @@ class BatchDataset(DatasetBase):
 class ComparissonDataset(Dataset):
     accepted_fields = {"spec", "irt"}
 
-    def __init__(self, gt_db: Dataset, pred_db: Dataset, *args, **kwargs):
-        """Generic dataset comparer
+    def __init__(
+        self, gt_db: Dataset, pred_db: Dataset, ignore_nce=False, *args, **kwargs
+    ):
+        """
+        Generic dataset comparer.
 
         Provided 2 different datasets, gives utilities to compare them
 
@@ -367,7 +370,7 @@ class ComparissonDataset(Dataset):
                 "Length of datasets does not match,"
                 " attempting to match them by keys (sequence, charge and nce)"
             )
-            self._match_datasets()
+            self._match_datasets(ignore_nce=ignore_nce)
         else:
             self.length = len(pred_db)
 
@@ -390,12 +393,13 @@ class ComparissonDataset(Dataset):
         return self.length
 
     @staticmethod
-    def _make_key(batch: Union[ForwardBatch, TrainBatch]):
+    def _make_key(batch: Union[ForwardBatch, TrainBatch], ignore_nce=False):
         mods = F.pad(batch.mods, (0, batch.seq.size(-1) - batch.mods.size(-1)))
         mod_seq = encoding_decoding.decode_mod_seq(
             seq_encoding=batch.seq, mod_encoding=mods
         )
-        key = f"{mod_seq}/{int(batch.charge)}/{round(float(batch.nce), 2)}"
+        nce_key = f"/{round(float(batch.nce), 2)}" if not ignore_nce else "/0"
+        key = f"{mod_seq}/{int(batch.charge)}{nce_key}"
         return key
 
     def _match_datasets(self, ignore_nce=False):
@@ -410,10 +414,8 @@ class ComparissonDataset(Dataset):
         gt_keys = []
         for x in tqdm(self.gt_db):
             preds = PredictionResults(irt=x.irt, spectra=x.spectra)
-            seqs = ForwardBatch(
-                seq=x.seq, mods=x.mods, charge=x.charge, nce=0 if ignore_nce else x.nce
-            )
-            key = self._make_key(seqs)
+            seqs = ForwardBatch(seq=x.seq, mods=x.mods, charge=x.charge, nce=x.nce)
+            key = self._make_key(seqs, ignore_nce=ignore_nce)
             gt_keys.append(key)
             base[key]["gt"] = preds
             base[key]["fw_batch"] = seqs
@@ -421,10 +423,8 @@ class ComparissonDataset(Dataset):
         pred_keys = []
         for x in tqdm(self.pred_db):
             preds = PredictionResults(irt=x.irt, spectra=x.spectra)
-            seqs = ForwardBatch(
-                seq=x.seq, mods=x.mods, charge=x.charge, nce=0 if ignore_nce else x.nce
-            )
-            key = self._make_key(seqs)
+            seqs = ForwardBatch(seq=x.seq, mods=x.mods, charge=x.charge, nce=x.nce)
+            key = self._make_key(seqs, ignore_nce=ignore_nce)
             pred_keys.append(key)
             base[key]["pred"] = preds
             base[key]["fw_batch"] = seqs
@@ -489,6 +489,10 @@ class ComparissonDataset(Dataset):
         return losses
 
     def save_data(self, prefix: Optional[PathLike] = None):
+        """
+        Saves the data to a csv file if a path is provided, else it returns the
+        data as a dataframe.
+        """
 
         df_dict = {
             "Sequence": [],
@@ -525,12 +529,29 @@ class ComparissonDataset(Dataset):
 
 
 class Predictor(Trainer):
+    """
+    A class for testing a model and generating predictions.
+    """
+
     def __init__(
         self,
         gpus: Optional[Union[List[int], str, int]] = 0,
         precision: int = 32,
         batch_size: int = 4,
     ):
+        """
+        __init__
+
+        Initializes a Predictor object
+
+        Args:
+            gpus (Optional[Union[List[int], str, int]]):
+                The gpus to use for inference.
+            precision (int, optional):
+                The precision to use for the model. Defaults to 32.
+            batch_size (int, optional):
+                The batch size to use for training. Defaults to 4.
+        """
         super().__init__(gpus=gpus, precision=precision)
         self.batch_size = batch_size
 
@@ -565,6 +586,17 @@ class Predictor(Trainer):
         model: PepTransformerModel,
         dataset: Union[DatasetBase, IterableDatasetBase],
     ) -> PredictionResults:
+        """
+        predict_dataset.
+
+        Args:
+            model (PepTransformerModel): A model to use for prediction
+            dataset (Union[DatasetBase, IterableDatasetBase]):
+                A dataset to use for prediction
+
+        Returns:
+            PredictionResults: A named tuple with the predictions returned by the model
+        """
         dl = DataLoader(
             dataset=dataset,
             batch_size=int(self.batch_size),
@@ -583,6 +615,29 @@ class Predictor(Trainer):
         keep_predictions: Optional[bool] = False,
         save_prefix: Optional[PathLike] = None,
     ) -> Union[EvaluationLossBatch, EvaluationPredictionBatch]:
+        """
+        evaluate_dataset.
+
+        Args:
+            model (PepTransformerModel):
+                A model to use for prediction
+            dataset (Union[DatasetBase, IterableDatasetBase]):
+                A dataset to use for prediction
+            plot (Optional[bool], optional):
+                Wether to plot the comparissons. Defaults to True.
+            optimize_nce (Optional[Union[bool, Iterable[float]]], optional):
+                A range of values to use as offset to optimize the collision energy.
+                Defaults to range(-10, 10, 2).
+            keep_predictions (Optional[bool], optional):
+                Wether to keep the predictions in the dataset,
+                requires the implementation of append_batches in the dataset.
+                Defaults to False.
+            save_prefix (Optional[PathLike], optional):
+                A path to use to save the data. Defaults to None.
+
+        Returns:
+            Union[EvaluationLossBatch, EvaluationPredictionBatch]
+        """
         self.plot = plot
         if optimize_nce:
             best_nce_offset = dataset.optimize_nce(model, optimize_nce, predictor=self)

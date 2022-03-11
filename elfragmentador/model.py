@@ -2,12 +2,12 @@ import copy
 import logging
 
 try:
-    from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+    from typing import Dict, List, Literal, Optional, Tuple, Union
 
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
-    from typing import Any, Dict, List, NewType, Optional, Tuple, Union
+    from typing import Dict, List, NewType, Optional, Tuple, Union
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
@@ -44,7 +44,8 @@ class MLP(nn.Module):
     def __init__(
         self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int
     ) -> None:
-        """MLP implements a very simple multi-layer perceptron (also called FFN).
+        """
+        MLP implements a very simple multi-layer perceptron (also called FFN).
 
         Concatenates hidden linear layers with activations for n layers.
         This implementation uses gelu instead of relu
@@ -70,7 +71,8 @@ class MLP(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass over the network.
+        """
+        Forward pass over the network.
 
         Args:
           x (Tensor):
@@ -241,21 +243,19 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        """ """
         initrange = 0.1
         nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
 
     def get_learnable_query(self, batch_size):
         trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        # trans_decoder_tgt = trans_decoder_tgt * math.sqrt(
-        #     self.trans_decoder_embedding.num_embeddings
-        # )
         # [T, E2] > [T, 1, E2]
         trans_decoder_tgt = trans_decoder_tgt.expand(-1, batch_size, -1)
         return trans_decoder_tgt
 
     def preprocess_query(self, query):
-        """ Has to be implemente when subclassing """
+        """
+        Has to be implemente when subclassing.
+        """
         return query
 
     def decoder_forward(
@@ -279,7 +279,9 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
         memory: Tensor,
         memory_key_padding_mask: Tensor,
     ) -> Tensor:
-        """ Has to be implemente when subclassing """
+        """
+        Has to be implemente when subclassing.
+        """
         trans_decoder_tgt = self.get_learnable_query(batch_size=memory.size(1))
         trans_decoder_tgt = self.preprocess_query(trans_decoder_tgt)
 
@@ -325,7 +327,6 @@ class _PeptideTransformerDecoder(_LearnableEmbedTransformerDecoder):
         self.init_weights()
 
     def init_weights(self):
-        """ """
         initrange = 0.1
         nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
 
@@ -370,7 +371,9 @@ _model_sections = [
 
 
 class PepTransformerModel(pl.LightningModule):
-    """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
+    """
+    PepTransformerModel Predicts retention times and HCD spectra from peptides.
+    """
 
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
     model_sections = _model_sections
@@ -393,7 +396,8 @@ class PepTransformerModel(pl.LightningModule):
         *args,
         **kwargs,
     ) -> None:
-        """__init__ Instantiates the class.
+        """
+        __init__ Instantiates the class.
 
         Generates a new instance of the PepTransformerModel
 
@@ -514,7 +518,8 @@ class PepTransformerModel(pl.LightningModule):
         charge: Tensor,
         nce: Tensor,
     ) -> PredictionResults:
-        """Forward Generate predictions.
+        """
+        Forward Generate predictions.
 
         Privides the function for the forward pass to the model.
 
@@ -536,7 +541,6 @@ class PepTransformerModel(pl.LightningModule):
                 peptide precursors (long)
             mods:
                 Modifications encoded as integers
-
         """
 
         trans_encoder_output, mem_mask = self.encoder(seq=seq, mods=mods)
@@ -558,7 +562,9 @@ class PepTransformerModel(pl.LightningModule):
         return torch_batch_from_seq(*args, **kwargs)
 
     def to_torchscript(self):
-        """ """
+        """
+        Convert the model to torchscript.
+        """
         _fake_input_data_torchscript = self.torch_batch_from_seq(
             seq="MYM[OXIDATION]DIFIEDPEPTYDE", charge=3, nce=27.0
         )
@@ -586,7 +592,8 @@ class PepTransformerModel(pl.LightningModule):
         as_spectrum=False,
         enforce_length=True,
     ) -> Union[PredictionResults, Spectrum]:
-        """predict_from_seq Predicts spectra from a sequence as a string.
+        """
+        predict_from_seq Predicts spectra from a sequence as a string.
 
         Utility method that gets a sequence as a string, encodes it internally
         to the correct input form and outputs the predicted spectra.
@@ -660,7 +667,8 @@ class PepTransformerModel(pl.LightningModule):
 
     @staticmethod
     def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
-        """add_model_specific_args Adds arguments to a parser.
+        """
+        add_model_specific_args Adds arguments to a parser.
 
         It is used to add the command line arguments for the training/generation
         of the model.
@@ -672,7 +680,6 @@ class PepTransformerModel(pl.LightningModule):
 
         Returns:
             _ArgumentGroup, the same parser with the added arguments
-
         """
         parser.add_argument(
             "--num_queries",
@@ -757,7 +764,8 @@ class PepTransformerModel(pl.LightningModule):
         return parser
 
     def make_trainable_sections(self, sections: List[str] = _model_sections) -> None:
-        """Makes sections of the model trainable
+        """
+        Makes sections of the model trainable.
 
         It freezes the whole model and makes the specified sections trainable
 
@@ -767,14 +775,14 @@ class PepTransformerModel(pl.LightningModule):
         """
 
         def set_grad_section(model_section, trainable=True):
-            """Freezes or unfreezes a model section
+            """
+            Freezes or unfreezes a model section.
 
             Args:
               model_section:
               trainable: (Default value = True)
 
             Returns:
-
             """
             for param in model_section.parameters():
                 param.requires_grad = trainable
@@ -801,7 +809,8 @@ class PepTransformerModel(pl.LightningModule):
         Tuple[List[AdamW], List[Dict[str, Union[CosineAnnealingWarmRestarts, str]]]],
         Tuple[List[AdamW], List[Dict[str, Union[OneCycleLR, str]]]],
     ]:
-        """configure_optimizers COnfigures the optimizers for training.
+        """
+        configure_optimizers COnfigures the optimizers for training.
 
         It is internally used by pytorch_lightning during training, so far I
         implemented 3 options (set when making the module).
@@ -815,7 +824,6 @@ class PepTransformerModel(pl.LightningModule):
 
         Returns:
           Two lists, one containing the optimizer and another contining the scheduler.
-
         """
         opt = torch.optim.AdamW(
             filter(lambda p: p.requires_grad, self.parameters()),
@@ -893,7 +901,8 @@ class PepTransformerModel(pl.LightningModule):
     def _step(
         self, batch: TrainBatch, batch_idx: int, layernorm=False
     ) -> Dict[str, Tensor]:
-        """Run main functionality during training an testing steps.
+        """
+        Run main functionality during training an testing steps.
 
         Internally used in training and evaluation steps during the training
         loop in pytorch_lightning.
@@ -998,7 +1007,9 @@ class PepTransformerModel(pl.LightningModule):
     def training_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
     ) -> Tensor:
-        """See pytorch_lightning documentation."""
+        """
+        See pytorch_lightning documentation.
+        """
         step_out = self._step(batch, batch_idx=batch_idx, layernorm=False)
         log_dict = {"train_" + k: v for k, v in step_out.items()}
         log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
@@ -1020,7 +1031,9 @@ class PepTransformerModel(pl.LightningModule):
     def validation_step(
         self, batch: TrainBatch, batch_idx: Optional[int] = None
     ) -> Tensor:
-        """See pytorch_lightning documentation."""
+        """
+        See pytorch_lightning documentation.
+        """
         step_out = self._step(batch, batch_idx=batch_idx)
 
         self.irt_metric.update(step_out["irt_l"])
@@ -1031,7 +1044,9 @@ class PepTransformerModel(pl.LightningModule):
         return step_out["l"]
 
     def validation_epoch_end(self, outputs: List[Tensor]) -> List[Tensor]:
-        """See pytorch lightning documentation """
+        """
+        See pytorch lightning documentation.
+        """
         log_dict = {
             "val_irt_l": self.irt_metric.compute(),
             "val_l": self.loss_metric.compute(),
@@ -1056,7 +1071,8 @@ class PepTransformerModel(pl.LightningModule):
         batch: TrainBatch,
         batch_idx: Optional[int],
     ) -> Dict[str, Tensor]:
-        """Run main functionality during training an testing steps.
+        """
+        Run main functionality during training an testing steps.
 
         Internally used in training and evaluation steps during the training
         loop in pytorch_lightning.
@@ -1147,9 +1163,10 @@ class PepTransformerModel(pl.LightningModule):
         return mod
 
 
-
 def evaluate_landmark_rt(model: PepTransformerModel):
-    """evaluate_landmark_rt Checks the prediction of the model on the iRT peptides
+    """
+    evaluate_landmark_rt Checks the prediction of the model on the iRT
+    peptides.
 
     Predicts all the procal and Biognosys iRT peptides and checks the correlation
     of the theoretical iRT values and the predicted ones
@@ -1158,7 +1175,6 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     ----------
     model : PepTransformerModel
         A model to test the predictions on
-
     """
     model.eval()
     real_rt = []

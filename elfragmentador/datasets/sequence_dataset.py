@@ -21,7 +21,8 @@ class SequenceDataset(DatasetBase):
     def __init__(
         self, sequences: List[str], collision_energies: List[float], charges: List[int]
     ) -> None:
-        """Dataset that contains sequences to be used to predict spectra
+        """
+        Dataset that contains sequences to be used to predict spectra.
 
         Args:
             sequences (List[str]): List of modified peptide sequences
@@ -33,7 +34,8 @@ class SequenceDataset(DatasetBase):
             >>> ces, charges = [27, 28], [2, 3]
             >>> my_ds = SequenceDataset(seqs, ces, charges)
             >>> my_ds[0]
-            ForwardBatch(seq=tensor([23, 11, 21, 13,  4, 13, 17,  8,  3,  4,  9, 22]), mods=tensor([0, ..., 0]), charge=tensor([2]), nce=tensor([27.]))
+            ForwardBatch(seq=tensor([23, 11, 21, 13,  4, 13, 17,  8,  3,  4,  9, 22]), \
+                mods=tensor([0, ..., 0]), charge=tensor([2]), nce=tensor([27.]))
         """
         super().__init__()
         self.sequences, self.collision_energies, self.charges = (

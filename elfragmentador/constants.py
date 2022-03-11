@@ -37,7 +37,7 @@ PROTON = 1.007276467
 ELECTRON = 0.00054858
 H = 1.007825035
 C = 12.0
-O = 15.99491463
+O = 15.99491463  # noqa: E741
 N = 14.003074
 
 # Tiny molecules
@@ -74,9 +74,9 @@ MODIFICATION = {
     "FORMYL": 27.994915,  # Formylation
     "GG": 114.042927,  # GlyGly ubiquitinylation residue
     "LRGG": 383.228103,  # LeuArgGlyGly ubiquitinylation residue
-    "NITRO": 44.985078,  #  Oxidation to nitro
-    "BIOTINYL": 226.077598,  #  Biotinilation
-    "TMT6PLEX": 229.162932,  #  TMT6
+    "NITRO": 44.985078,  # Oxidation to nitro
+    "BIOTINYL": 226.077598,  # Biotinilation
+    "TMT6PLEX": 229.162932,  # TMT6
 }
 
 # Currently unsupported proteometools modifications
@@ -101,7 +101,7 @@ VARIABLE_MODS = {
     "TRIMETHYL": "K",  # Trimethylation
     "FORMYL": "K",  # Formylation
     "GG": "K",  # GlyGly ubiquitinylation residue
-    "NITRO": "Y",  #  Oxidation to nitro
+    "NITRO": "Y",  # Oxidation to nitro
     "TMT6PLEX": "Kn",  # TMT 6 plex
 }
 
@@ -318,7 +318,8 @@ del ion
 del key
 
 if __name__ == "__main__":
-    # This is implemented so the constants can be printed if needed running this file directly
+    # This is implemented so the constants can be printed if needed
+    # by running this file directly
     my_vars = {k: v for k, v in globals().items() if not k.startswith("_")}
     for k, v in my_vars.items():
         print(f"\n>>> {k} {type(v)} = {v}")

@@ -20,11 +20,11 @@ import pytorch_lightning as pl
 import torch
 
 from elfragmentador import rt
+from elfragmentador.datasets import Predictor
 from elfragmentador.datasets.peptide_dataset import PeptideDataset
 from elfragmentador.datasets.percolator import MokapotPSMDataset, append_preds
 from elfragmentador.datasets.sequence_dataset import FastaDataset, SequenceDataset
 from elfragmentador.model import PepTransformerModel
-from elfragmentador.predictor import Predictor
 from elfragmentador.spectra import SptxtReader
 from elfragmentador.train import build_train_parser, main_train
 
@@ -35,7 +35,9 @@ DEFAULT_LOGGER_BASIC_CONF = {
 
 
 def _common_checkpoint_args(parser):
-    """Adds the common to handle model checkpoints to a parser"""
+    """
+    Adds the common to handle model checkpoints to a parser.
+    """
     parser.add_argument(
         "--model_checkpoint",
         type=str,
@@ -147,8 +149,9 @@ def _append_prediction_parser():
 
 @_gen_cli_help(_append_prediction_parser())
 def append_predictions():
-    """Appends the cosine similarity between the predicted and actual spectra
-    to a percolator input.
+    """
+    Appends the cosine similarity between the predicted and actual spectra to a
+    percolator input.
     """
     log_conf = DEFAULT_LOGGER_BASIC_CONF.copy()
     log_conf.update({"level": logging.INFO})
@@ -192,7 +195,9 @@ def _predict_csv_parser():
 
 @_gen_cli_help(_predict_csv_parser())
 def predict_csv():
-    """Predicts the peptides in a csv file"""
+    """
+    Predicts the peptides in a csv file.
+    """
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     greeting()
 
@@ -256,7 +261,9 @@ def _predict_fasta_parser():
 
 @_gen_cli_help(_predict_fasta_parser())
 def predict_fasta():
-    """Predicts the peptides in a fasta file"""
+    """
+    Predicts the peptides in a fasta file.
+    """
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     greeting()
 
@@ -320,10 +327,11 @@ def _convert_sptxt_parser():
 
 @_gen_cli_help(_convert_sptxt_parser())
 def convert_sptxt():
-    """convert_sptxt Provides a CLI to convert an sptxt to a csv for training
+    """
+    convert_sptxt Provides a CLI to convert an sptxt to a csv for training.
 
-    provides a CLI for the sptxt_to_csv function, chek that guy out for the actual
-    implementation
+    provides a CLI for the sptxt_to_csv function, chek that guy out for
+    the actual implementation
     """
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     greeting()

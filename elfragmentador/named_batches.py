@@ -7,10 +7,8 @@ EvaluationLossBatch = scaled_se_loss + loss_cosine + loss_irt + loss_angle
 EvaluationPredictionBatch = EvaluationLossBatch + PredictionBatch
 """
 
-from collections import namedtuple
 from typing import NamedTuple, Union
 
-import torch
 from torch import Tensor
 
 
@@ -24,7 +22,8 @@ def _hash_tensors(tensor_tuple):
 
 
 class PredictionResults(NamedTuple):
-    """Named Tuple that bundles prediction results
+    """
+    Named Tuple that bundles prediction results.
 
     Parameters:
         irt (Tensor): Tensor containing normalized irt predictions
@@ -47,7 +46,9 @@ class PredictionResults(NamedTuple):
 
 
 class ForwardBatch(NamedTuple):
-    """Named Tuple that bundles all tensors needed for a forward pass in the model
+    """
+    Named Tuple that bundles all tensors needed for a forward pass in the
+    model.
 
     Parameters:
         seq (Tensor): Encoded peptide sequences
@@ -61,7 +62,8 @@ class ForwardBatch(NamedTuple):
         ... mods=torch.zeros(12),
         ... charge=torch.ones(12) * 2,
         ... nce = torch.ones(12) * 34)
-        ForwardBatch(seq=tensor([1., ...]), mods=tensor([0., ...]), charge=tensor([2., ...]), nce=tensor([34., ...]))
+        ForwardBatch(seq=tensor([1., ...]), mods=tensor([0., ...]), \
+            charge=tensor([2., ...]), nce=tensor([34., ...]))
     """
 
     seq: Tensor
@@ -74,7 +76,9 @@ class ForwardBatch(NamedTuple):
 
 
 class TrainBatch(NamedTuple):
-    """Named Tuple that bundles all tensors needed for a training step in the model
+    """
+    Named Tuple that bundles all tensors needed for a training step in the
+    model.
 
     Parameters:
         seq (Tensor): Encoded peptide sequences
@@ -93,7 +97,8 @@ class TrainBatch(NamedTuple):
         ... nce = torch.ones(12) * 34)
         >>> y = PredictionResults(spectra = torch.rand(43), irt = torch.rand(1))
         >>> TrainBatch(**x._asdict(), **y._asdict(), weight=None)
-        TrainBatch(seq=tensor([...]), mods=tensor([...]), charge=tensor([...]), nce=tensor([...]), spectra=tensor([...]), irt=tensor([...]), weight=None)
+        TrainBatch(seq=tensor([...]), mods=tensor([...]), charge=tensor([...]), \
+            nce=tensor([...]), spectra=tensor([...]), irt=tensor([...]), weight=None)
     """
 
     seq: Tensor
@@ -112,7 +117,8 @@ class EvaluationLossBatch(NamedTuple):
     """Named tuple that bundles losses from evaluating against a dataset
     Parameters:
         scaled_se_loss (Tensor):
-            Squared error of the scaled versions of the input and target retention times.
+            Squared error of the scaled versions of the input
+            and target retention times.
             (mean subtraction and divided by standard deviation)
         loss_cosine (Tensor):
             1 - Cosine similarity of the spectra
@@ -133,11 +139,13 @@ class EvaluationLossBatch(NamedTuple):
 
 
 class EvaluationPredictionBatch(NamedTuple):
-    """ "EvaluationPredictionBatch
+    """
+    "EvaluationPredictionBatch.
 
     Parameters:
         scaled_se_loss (Tensor):
-            Squared error of the scaled versions of the input and target retention times.
+            Squared error of the scaled versions of the input
+            and target retention times.
             (mean subtraction and divided by standard deviation)
         loss_cosine (Tensor):
             1 - Cosine similarity of the spectra

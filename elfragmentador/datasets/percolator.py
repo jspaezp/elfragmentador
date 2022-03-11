@@ -7,13 +7,11 @@ from os import PathLike
 from pathlib import Path
 from typing import Generator, Iterator, NamedTuple, Optional, Union
 
-import numpy as np
 import pandas as pd
 import torch
 from pandas.core.frame import DataFrame
 from pyteomics import mzml
 from torch import Tensor
-from tqdm.auto import tqdm
 
 import elfragmentador.constants as CONSTANTS
 from elfragmentador.datasets.batch_utils import _append_batch_to_df
@@ -27,9 +25,9 @@ from elfragmentador.utils import _attempt_find_file, torch_batch_from_seq
 class PinDataset(IterableDatasetBase):
     # TODO change this so it actually infers the number of columns from the header
     NUM_COLUMNS = 28
-    REGEX_FILE_APPENDIX = re.compile("_\d+_\d+_\d+$")
-    APPENDIX_CHARGE_REGEX = re.compile("(?<=_)\d+(?=_)")
-    DOT_RE = re.compile("(?<=\.).*(?=\..*$)")
+    REGEX_FILE_APPENDIX = re.compile(r"_\d+_\d+_\d+$")
+    APPENDIX_CHARGE_REGEX = re.compile(r"(?<=_)\d+(?=_)")
+    DOT_RE = re.compile(r"(?<=\.).*(?=\..*$)")
     TEMPLATE_STRING = "controllerType=0 controllerNumber=1 scan={SCAN_NUMBER}"
     DEFAULT_TENSOR = torch.tensor([0 for _ in range(CONSTANTS.NUM_FRAG_EMBEDINGS)])
     metric = "Xcorr"
@@ -40,13 +38,14 @@ class PinDataset(IterableDatasetBase):
         df: Optional[DataFrame] = None,
         nce_offset: float = 0,
     ):
-        """Generate a Dataset from a percolator input file
+        """
+        Generate a Dataset from a percolator input file.
 
         Args:
             in_path (PathLike): Input path to percolator input file
-            df (DataFrame, optional): Pandas dataframe product of reading the file or a modification of it
+            df (DataFrame, optional):
+                Pandas dataframe product of reading the file or a modification of it
             nce_offset (float, optional): [description]. Defaults to 0.
-
         """
         logging.info("Starting Percolator input dataset")
         self.in_path = Path(in_path)
@@ -82,7 +81,8 @@ class PinDataset(IterableDatasetBase):
         self.nce_offset = nce_offset
 
     def top_n_subset(self, n: int, ascending=False) -> PinDataset:
-        """Generate another percolator dataset with a subset of the observations
+        """
+        Generate another percolator dataset with a subset of the observations.
 
         Args:
             n (int): Number of observations to return
@@ -99,7 +99,8 @@ class PinDataset(IterableDatasetBase):
         return self.__class__(df=df, in_path=self.in_path, nce_offset=self.nce_offset)
 
     def generate_elements(self) -> Generator[TrainBatch]:
-        """Make a generator that goes though the percolator input
+        """
+        Make a generator that goes though the percolator input.
 
         The generator yields two named tuples with the inputs for a
         PepTransformerModel and the ground truth observed spectrum
@@ -126,7 +127,7 @@ class PinDataset(IterableDatasetBase):
 
             try:
                 rawfile_path = self.mzml_files[row_rawfile]
-            except KeyError as e:
+            except KeyError:
                 self.mzml_files[row_rawfile] = _attempt_find_file(
                     row_rawfile,
                     [
@@ -268,11 +269,15 @@ class MokapotPSMDataset(PinDataset):
         max_q: float = 0.01,
         max_pep: float = 0.01,
     ):
-        """Generate a Dataset from a percolator input file
+        """
+        Generate a Dataset from a percolator input file.
 
         Args:
-            txt_file (PathLike): Path to a psms.txt file containing a rescored list of psms (output of mokapot)
-            df (DataFrame, optional): Pandas dataframe product of reading the file or a modification of it
+            txt_file (PathLike):
+                Path to a psms.txt file containing a rescored list of psms
+                This is usually the output of mokapot
+            df (DataFrame, optional):
+                Pandas dataframe product of reading the file or a modification of it
             nce_offset (float, optional): [description]. Defaults to 0.
 
         Details:
@@ -290,7 +295,6 @@ class MokapotPSMDataset(PinDataset):
              mokapot PEP
              Proteins
             ```
-
         """
         logging.info("Starting Percolator output dataset")
         self.in_path = Path(in_path)
@@ -317,7 +321,8 @@ def append_preds(
     model: PepTransformerModel,
     predictor: Optional(Predictor) = None,
 ) -> pd.DataFrame:
-    """Append cosine similarity to prediction to a percolator input
+    """
+    Append cosine similarity to prediction to a percolator input.
 
     Args:
         in_pin (Union[Path, str]): Input Percolator file location

@@ -8,7 +8,6 @@ import torch
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
-from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
 
 import elfragmentador as ef
@@ -25,7 +24,8 @@ def build_train_parser() -> ArgumentParser:
     )
     model_parser = parser.add_argument_group(
         "Model Parameters",
-        "Parameters that modify the model or its training (learn rate, scheduler, layers, dimension ...)",
+        "Parameters that modify the model or its training "
+        + "(learn rate, scheduler, layers, dimension ...)",
     )
     data_parser = parser.add_argument_group(
         "Data Parameters", "Parameters for the loading of data"
@@ -38,7 +38,7 @@ def build_train_parser() -> ArgumentParser:
     program_parser.add_argument(
         "--run_name",
         type=str,
-        default=f"ElFragmentador",
+        default="ElFragmentador",
         help="Name to be given to the run (logging)",
     )
     program_parser.add_argument(

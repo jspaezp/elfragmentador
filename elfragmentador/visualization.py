@@ -15,7 +15,9 @@ from elfragmentador.model import PepTransformerModel
 
 
 class SelfAttentionExplorer(torch.no_grad):
-    """SelfAttentionExplorer lets you explore self-attention with a context manager.
+    """
+    SelfAttentionExplorer lets you explore self-attention with a context
+    manager.
 
     It is a context manager that takes a PepTransformerModel and wraps the transformer
     layers to save the self-attention matrices during its activity. Once it closes, the
@@ -174,8 +176,8 @@ class SelfAttentionExplorer(torch.no_grad):
 
 def make_bipartite(x):
     """
-    Makes a bipartite graph
-    from a data frame whose col and row indices are the same
+    Makes a bipartite graph from a data frame whose col and row indices are the
+    same.
     """
 
     B = nx.Graph()
@@ -197,7 +199,8 @@ def make_bipartite(x):
 
 
 def plot_bipartite_seq(B):
-    """Plots a bipartite graph from a sequence self-attention
+    """
+    Plots a bipartite graph from a sequence self-attention.
 
     expects names to be in the form of X[index] and X[index]_
     """

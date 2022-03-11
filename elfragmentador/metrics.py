@@ -9,26 +9,26 @@ import uniplot
 from torch import Tensor, nn
 
 from elfragmentador import constants
-from elfragmentador.named_batches import (
-    EvaluationLossBatch,
-    EvaluationPredictionBatch,
-    PredictionResults,
-)
-from elfragmentador.utils_data import cat_collate, collate_fun
+from elfragmentador.named_batches import EvaluationLossBatch, PredictionResults
+from elfragmentador.utils_data import cat_collate
 
 
 class CosineLoss(torch.nn.CosineSimilarity):
-    """CosineLoss Implements a simple cosine similarity based loss."""
+    """
+    CosineLoss Implements a simple cosine similarity based loss.
+    """
 
     def __init__(self, dim=1, eps=1e-8) -> None:
-        """__init__ Instantiates the class.
+        """
+        __init__ Instantiates the class.
 
         All arguments are passed to `torch.nn.CosineSimilarity`
         """
         super().__init__(dim=dim, eps=eps)
 
     def forward(self, truth: Tensor, prediction: Tensor) -> Tensor:
-        """Forward calculates the loss.
+        """
+        Forward calculates the loss.
 
         Parameters:
             truth : Tensor
@@ -73,7 +73,8 @@ class SpectralAngle(torch.nn.CosineSimilarity):
         super().__init__(dim=dim, eps=eps)
 
     def forward(self, truth, prediction):
-        """Forward calculates the loss.
+        """
+        Forward calculates the loss.
 
         Parameters:
             truth : Tensor
@@ -118,7 +119,8 @@ class SpectralAngleLoss(SpectralAngle):
         super().__init__(*args, **kwargs)
 
     def forward(self, truth, prediction):
-        """Forward calculates the loss.
+        """
+        Forward calculates the loss.
 
         Parameters:
             truth : Tensor
@@ -157,10 +159,13 @@ class SpectralAngleLoss(SpectralAngle):
 
 
 class PearsonCorrelation(torch.nn.Module):
-    """PearsonCorrelation Implements a simple pearson correlation."""
+    """
+    PearsonCorrelation Implements a simple pearson correlation.
+    """
 
     def __init__(self, axis=1, eps=1e-4):
-        """__init__ Instantiates the class.
+        """
+        __init__ Instantiates the class.
 
         Creates a callable object to calculate the pearson correlation on an axis
 
@@ -179,7 +184,8 @@ class PearsonCorrelation(torch.nn.Module):
         self.eps = eps
 
     def forward(self, x, y):
-        """Forward calculates the loss.
+        """
+        Forward calculates the loss.
 
         Parameters
         ----------

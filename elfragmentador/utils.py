@@ -2,20 +2,14 @@ from __future__ import annotations
 
 import logging
 import random
-import warnings
 from pathlib import Path
 
-import pandas as pd
 import torch
-from torch.nn.functional import cosine_similarity
 from torch.utils.data.dataset import TensorDataset
-from tqdm.auto import tqdm
 
-import elfragmentador
 import elfragmentador.constants as CONSTANTS
 from elfragmentador import encoding_decoding
-from elfragmentador.math_utils import norm
-from elfragmentador.named_batches import ForwardBatch, PredictionResults
+from elfragmentador.named_batches import ForwardBatch
 
 # TODO split addition of metadata and actual predictions to separate functions to
 
@@ -23,10 +17,12 @@ from elfragmentador.named_batches import ForwardBatch, PredictionResults
 def torch_batch_from_seq(
     seq: str, nce: float, charge: int, enforce_length=True, pad_zeros=True
 ):
-    """Generate an input batch for the model from a sequence string.
+    """
+    Generate an input batch for the model from a sequence string.
 
     Parameters:
-        seq (str): String describing the sequence to be predicted, e. "PEPT[PHOSOHO]IDEPINK"
+        seq (str):
+            String describing the sequence to be predicted, e. "PEPT[PHOSOHO]IDEPINK"
         nce (float): Collision energy to use for the prediction, e. 27.0
         charge (int): Charge of the precursor to use for the prediction, e. 3
 
@@ -35,7 +31,9 @@ def torch_batch_from_seq(
 
     Examples:
         >>> torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
-        ForwardBatch(seq=tensor([[23, 13,  4, 13, 17,  ...]]), mods=tensor([[0, ... 0]]), charge=tensor([[3]]), nce=tensor([[27.]]))
+        ForwardBatch(seq=tensor([[23, 13,  4, 13, 17,  ...]]), \
+            mods=tensor([[0, ... 0]]), \
+            charge=tensor([[3]]), nce=tensor([[27.]]))
     """
     encoded_seq, encoded_mods = encoding_decoding.encode_mod_seq(
         seq, enforce_length=enforce_length, pad_zeros=pad_zeros

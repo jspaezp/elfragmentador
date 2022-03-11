@@ -7,7 +7,7 @@ from elfragmentador.encoding_decoding import clip_explicit_terminus
 
 class _unique_element:
     """
-    Part of the answer from https://stackoverflow.com/questions/6284396
+    Part of the answer from https://stackoverflow.com/questions/6284396.
     """
 
     def __init__(self, value, occurrences):
@@ -16,7 +16,8 @@ class _unique_element:
 
 
 def perm_unique(elements: Iterable) -> Generator:
-    """perm_unique Gets permutations of elements taking into account repeated.
+    """
+    perm_unique Gets permutations of elements taking into account repeated.
 
     Part of the answer from https://stackoverflow.com/questions/6284396
 
@@ -37,7 +38,8 @@ def perm_unique(elements: Iterable) -> Generator:
     --------
     >>> out = list(perm_unique("COM"))
     >>> sorted(out)
-    [('C', 'M', 'O'), ('C', 'O', 'M'), ('M', 'C', 'O'), ('M', 'O', 'C'), ('O', 'C', 'M'), ('O', 'M', 'C')]
+    [('C', 'M', 'O'), ('C', 'O', 'M'), ('M', 'C', 'O'),
+     ('M', 'O', 'C'), ('O', 'C', 'M'), ('O', 'M', 'C')]
     >>> out = list(perm_unique("CCM"))
     >>> sorted(out)
     [('C', 'C', 'M'), ('C', 'M', 'C'), ('M', 'C', 'C')]
@@ -53,7 +55,7 @@ def perm_unique(elements: Iterable) -> Generator:
 
 def _perm_unique_helper(listunique, result_list, d):
     """
-    Part of the answer from https://stackoverflow.com/questions/6284396
+    Part of the answer from https://stackoverflow.com/questions/6284396.
     """
     if d < 0:
         yield tuple(result_list)
@@ -98,7 +100,8 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
 
 
 def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]) -> List[str]:
-    """get_mod_isoforms
+    """
+    get_mod_isoforms.
 
     Gets modification isoforms for a peptide with modifications
 
