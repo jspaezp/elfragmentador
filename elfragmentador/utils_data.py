@@ -110,6 +110,9 @@ def _convert_tensor_column(column, elem_function=float, verbose=True, *args, **k
     return out
 
 
+_to_numpy = lambda x: x if isinstance(x, np.ndarray) else np.array(x)  # noqa: E731
+
+
 def _match_lengths(
     nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
     max_len: Optional[int] = None,
@@ -150,22 +153,13 @@ def _match_lengths(
             [np.array([[1]]), \
              np.array([[1, 2]]), \
              np.array([[1,2,3,4,5,6]])])
-        tensor([[1, 0, 0, 0, 0, 0],
-                [1, 2, 0, 0, 0, 0],
-                [1, 2, 3, 4, 5, 6]])
+        tensor([[[1, 0, 0, 0, 0, 0]],
+                [[1, 2, 0, 0, 0, 0]],
+                [[1, 2, 3, 4, 5, 6]]])
     """
     logging.debug(f"Matching shapes of {name}")
-    elem = nested_list[0]
-    if isinstance(elem, torch.Tensor):
-        to_numpy = torch.Tensor.numpy
-        pad_fun = np.pad
-        from_numpy = torch.from_numpy
-    else:
-        pad_fun = np.pad
-        from_numpy = torch.from_numpy
-        to_torch = from_numpy
 
-    lengths = np.array([x.shape for x in nested_list])
+    lengths = np.array(list(set([x.shape for x in nested_list])))
     obs_max_lengths = lengths.max(axis=0)
 
     if max_len is None:
@@ -177,23 +171,23 @@ def _match_lengths(
     # TODO check if this error recovery is too expensive
     try:
         if np.any(max_len != obs_max_lengths):
-            raise RuntimeError(
+            raise ValueError(
                 "All lengths are uniform but not consistent with the requested one"
             )
-        out = torch.stack([to_torch(x) for x in nested_list], dim=0)
-    except RuntimeError:
+        out = np.stack(nested_list, axis=0)
+    except ValueError:
         out = []
         for x in nested_list:
             curr_shape = x.shape
             padding = tuple((0, d) for d in max_len - curr_shape)
-            out.append(pad_fun(to_numpy(x), padding, "constant"))
+            out.append(np.pad(_to_numpy(x), padding, "constant"))
 
-        out = torch.stack([from_numpy(x) for x in out], dim=0)
+        out = np.stack(out, axis=0)
 
     # drop values with all zeros
-    out = out[..., out.max(axis=0).values.flip(0).cumsum(0).flip(0) != 0, ...]
+    # out = out[..., out.max(axis=0).values.flip(0).cumsum(0).flip(0) != 0, ...]
 
-    return out
+    return torch.from_numpy(out)
 
 
 def _match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import elfragmentador as ef
 from elfragmentador import datamodules
-from elfragmentador.predictor import Predictor
+from elfragmentador.datasets import Predictor
 
 
 def test_evaluation_on_dataset_works(shared_datadir, tiny_model):

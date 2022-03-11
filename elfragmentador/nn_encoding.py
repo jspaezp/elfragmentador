@@ -56,10 +56,10 @@ class SeqPositionalEmbed(torch.nn.Module):
             >>> encoder = SeqPositionalEmbed(6, 50, inverted=True)
             >>> encoder2 = SeqPositionalEmbed(6, 50, inverted=False)
             >>> x = torch.cat([
-                torch.ones(1,2),
-                torch.ones(1,2)*2,
-                torch.zeros((1,2))],
-                dim = -1).long()
+            ... torch.ones(1,2),
+            ... torch.ones(1,2)*2,
+            ... torch.zeros((1,2))],
+            ... dim = -1).long()
             >>> x[0]
             tensor([1, 1, 2, 2, 0, 0])
             >>> x.shape
@@ -251,6 +251,7 @@ class PositionalEncoding(torch.nn.Module):
             Tensor (Tensor), of shape **[sequence length, batch size, embed dim]**
 
         Examples:
+            >>> import pytorch_lightning as pl
             >>> pl.seed_everything(42)
             42
             >>> x = torch.ones((4,1,6)).float()

@@ -942,8 +942,8 @@ class SptxtReader:
 
             if min_peaks is not None and spec.num_matching_peaks < min_peaks:
                 warnings.warn(
-                    "Skipping peptide due few peaks",
-                    f" being annotated {spec.mod_sequence}",
+                    "Skipping peptide due few peaks"
+                    f" being annotated {spec.mod_sequence}"
                 )
                 skipped_spec += 1
                 continue

@@ -187,14 +187,12 @@ def decode_fragment_tensor(
     Examples:
         >>> import torch
         >>> foo = decode_fragment_tensor(
-            "AAACK",
-            torch.arange(0, (CONSTANTS.NUM_FRAG_EMBEDINGS)))
+        ... "AAACK",
+        ... torch.arange(0, (CONSTANTS.NUM_FRAG_EMBEDINGS)))
         >>> {k:v[:5] for k,v in foo.items()}
-        {\
-            'Fragment': ['z1b1', 'z1y1', 'z1b2', 'z1y2', 'z1b3'],\
-            'Mass': array([ 72.04439047, 147.11280417, 143.08150447, 307.14345289,
-            214.11861847]), 'Intensity': array([0., 1., 2., 3., 4.])\
-        }
+        {'Fragment': ['z1b1', 'z1y1', 'z1b2', 'z1y2', 'z1b3'], \
+'Mass': array([ 72.04439047, 147.11280417, 143.08150447, 307.14345289, \
+214.11861847]), 'Intensity': array([0., 1., 2., 3., 4.])}
     """
     key_list = CONSTANTS.FRAG_EMBEDING_LABELS
     fragment_ions = annotate.get_peptide_ions(sequence)

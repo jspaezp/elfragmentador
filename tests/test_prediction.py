@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
 
-from elfragmentador.predictor import Predictor
+from elfragmentador.datasets import Predictor
 
 
 def test_prediction_loop(datamodule, tiny_model):

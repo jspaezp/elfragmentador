@@ -42,9 +42,9 @@ class CosineLoss(torch.nn.CosineSimilarity):
             >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
             tensor([[1., 1., 1., 1., 1.]])
             >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
-            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[0., 0., 0., 0., 0.]])
+            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
             >>> loss = CosineLoss(dim=2, eps=1e-4)
             >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
             >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
@@ -86,7 +86,7 @@ class SpectralAngle(torch.nn.CosineSimilarity):
         Examples:
             >>> loss = SpectralAngle(dim=1, eps=1e-4)
             >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
+            tensor([[0., 0., 0., 0., 0.]])
             >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
             tensor([[1., 1., 1., 1., 1.]])
             >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
@@ -134,9 +134,9 @@ class SpectralAngleLoss(SpectralAngle):
             >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
             tensor([[1., 1., 1., 1., 1.]])
             >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
-            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[0., 0., 0., 0., 0.]])
+            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
+            tensor([[1., 1., 1., 1., 1.]])
             >>> loss = SpectralAngleLoss(dim=2, eps=1e-4)
             >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
             >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
@@ -147,7 +147,7 @@ class SpectralAngleLoss(SpectralAngle):
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.1]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
             >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0., 0.]])
+            tensor([[0.0000, 0.0622]])
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
             >>> # The first tensor is a scaled version, and the second
@@ -199,12 +199,9 @@ class PearsonCorrelation(torch.nn.Module):
         Examples
         --------
         >>> loss = PearsonCorrelation(axis=1, eps=1e-4)
-        >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-        tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
-        tensor([[1., 1., 1., 1., 1.]])
-        >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
-        tensor([[0., 0., 0., 0., 0.]])
+        >>> loss(torch.tensor([[1.,2.,3.],[4.,5.,6.]]),
+        ... torch.tensor([[1.1,2.0,3.2],[4.1,5.0,6.2]]))
+        tensor([0.9966, 0.9966])
         >>> out = loss(torch.rand([5, 174]), torch.rand([5, 174]))
         >>> out.shape
         torch.Size([5])

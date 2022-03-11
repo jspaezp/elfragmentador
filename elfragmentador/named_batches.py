@@ -30,6 +30,7 @@ class PredictionResults(NamedTuple):
         spectra (Tensor): Tensor containing encoded predicted spectra
 
     Examples:
+        >>> import torch
         >>> foo = PredictionResults(irt = torch.rand(43), spectra = torch.rand(1))
         >>> foo
         PredictionResults(irt=tensor([...]), spectra=tensor([0...]))
@@ -57,13 +58,14 @@ class ForwardBatch(NamedTuple):
         nce (Tensor): Normalized collision energy
 
     Examples:
+        >>> import torch
         >>> ForwardBatch(
-        ... seq = torch.ones(12),
-        ... mods=torch.zeros(12),
-        ... charge=torch.ones(12) * 2,
-        ... nce = torch.ones(12) * 34)
-        ForwardBatch(seq=tensor([1., ...]), mods=tensor([0., ...]), \
-            charge=tensor([2., ...]), nce=tensor([34., ...]))
+        ... seq = torch.ones(2),
+        ... mods=torch.zeros(2),
+        ... charge=torch.ones(2) * 2,
+        ... nce = torch.ones(2) * 34)
+        ForwardBatch(seq=tensor([1., 1.]), mods=tensor([0., 0.]), \
+charge=tensor([2., 2.]), nce=tensor([34., 34.]))
     """
 
     seq: Tensor
@@ -90,6 +92,7 @@ class TrainBatch(NamedTuple):
         weight (Union[Tensor, None]): Weight of the element for the loss
 
     Examples:
+        >>> import torch
         >>> x = ForwardBatch(
         ... seq = torch.ones(12),
         ... mods=torch.zeros(12),

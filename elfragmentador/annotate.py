@@ -311,9 +311,9 @@ def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
         >>> foo = get_peptide_ions("AA")
         >>> sorted(foo.keys())
         ['z1b1', 'z1y1', 'z2b1', 'z2y1', 'z3b1', 'z3y1']
+        >>> # ground truth from
+        >>> # http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
         >>> print(round(foo['z1y1'], 6))
-        # ground truth from
-        # http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
         90.054955
         >>> print(round(foo['z1b1'], 6))
         72.04439
