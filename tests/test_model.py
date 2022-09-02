@@ -40,7 +40,7 @@ def mod_forward_base(datadir):
     datamodule = datamodules.PeptideDataModule(
         batch_size=5, base_dir=datadir / "train_data_sample"
     )
-    datamodule.setup()
+    datamodule.setup("train")
 
     for x in datamodule.val_dataloader():
         print(x)
@@ -74,7 +74,7 @@ def _test_export_onnx(datadir, keep=False):
     datamodule = datamodules.PeptideDataModule(
         batch_size=5, base_dir=datadir / "train_data_sample"
     )
-    datamodule.setup()
+    datamodule.setup("train")
 
     for input_sample in datamodule.val_dataloader():
         break
@@ -111,7 +111,7 @@ def base_export_torchscript(datadir, keep=False):
     datamodule = datamodules.PeptideDataModule(
         batch_size=5, base_dir=datadir / "train_data_sample"
     )
-    datamodule.setup()
+    datamodule.setup("train")
 
     for input_sample in datamodule.val_dataloader():
         break

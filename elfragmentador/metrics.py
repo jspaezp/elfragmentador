@@ -39,29 +39,45 @@ class CosineLoss(torch.nn.CosineSimilarity):
 
         Examples:
             >>> loss = CosineLoss(dim=1, eps=1e-4)
-            >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
-            >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
+
+            >>> x = torch.ones([1,2,5])
+            >>> y = torch.zeros([1,2,5]) + 0.1
+            >>> calc_loss = loss(x, y)
+            >>> calc_loss.round(decimals = 2)
             tensor([[0., 0., 0., 0., 0.]])
+            >>> # Uniform tensors give low loss
+
+            >>> loss(x, 5*x).round(decimals = 2)
+            tensor([[0., 0., 0., 0., 0.]])
+
             >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[1., 1., 1., 1., 1.]])
+
             >>> loss = CosineLoss(dim=2, eps=1e-4)
             >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> x = torch.tensor(x)
             >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
-            >>> torch.tensor(x).shape
+            >>> y = torch.tensor(y)
+            >>> x.shape
             torch.Size([1, 2, 3])
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.0085, 0.0000]])
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[0.0100, 0.0000]])
+
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.0000, 0.4909]])
+            >>> x = torch.tensor(x)
+            >>> y = torch.tensor(y)
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[0.0000, 0.4900]])
+
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
             >>> # The first tensor is a scaled version, and the second
             >>> # has a missmatch
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.000, 0.1021]])
+            >>> x = torch.tensor(x)
+            >>> y = torch.tensor(y)
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[0.000, 0.1000]])
         """
         out = super().forward(truth, prediction)
         out = 1 - out
@@ -74,7 +90,7 @@ class SpectralAngle(torch.nn.CosineSimilarity):
 
     def forward(self, truth, prediction):
         """
-        Forward calculates the loss.
+        Forward calculates the similarity.
 
         Parameters:
             truth : Tensor
@@ -85,27 +101,45 @@ class SpectralAngle(torch.nn.CosineSimilarity):
 
         Examples:
             >>> loss = SpectralAngle(dim=1, eps=1e-4)
-            >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[0., 0., 0., 0., 0.]])
-            >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
+
+            >>> x = torch.ones([1,2,5])
+            >>> y = torch.zeros([1,2,5]) + 0.1
+            >>> calc_loss = loss(x, y)
+            >>> calc_loss.round(decimals = 2)
             tensor([[1., 1., 1., 1., 1.]])
+
+            >>> loss(x, 5*x).round(decimals = 2)
+            tensor([[1., 1., 1., 1., 1.]])
+            
             >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[0., 0., 0., 0., 0.]])
+
             >>> loss = SpectralAngle(dim=2, eps=1e-4)
             >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> x = torch.tensor(x)
             >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
-            >>> torch.tensor(x).shape
+            >>> y = torch.tensor(y)
+            >>> x.shape
             torch.Size([1, 2, 3])
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.9169, 1.0000]])
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.1]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[1.000, 1.000]])
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.0]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[1.000, 0.9378]])
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[0.9200, nan]])
+
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
+            >>> x = torch.tensor(x)
+            >>> y = torch.tensor(y)
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[nan, 0.3400]])
+
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
+            >>> # The first tensor is a scaled version, and the second
+            >>> # has a missmatch
+            >>> x = torch.tensor(x)
+            >>> y = torch.tensor(y)
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[nan, 0.7100]])
+
         """
         out = super().forward(truth, prediction)
         out = 2 * (torch.acos(out) / PI)
@@ -131,29 +165,44 @@ class SpectralAngleLoss(SpectralAngle):
 
         Examples:
             >>> loss = SpectralAngleLoss(dim=1, eps=1e-4)
-            >>> loss(torch.ones([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
-            >>> loss(torch.ones([1,2,5]), 5*torch.ones([1,2,5]))
+            
+            >>> x = torch.ones([1,2,5])
+            >>> y = torch.zeros([1,2,5]) + 0.1
+            >>> calc_loss = loss(x, y)
+            >>> calc_loss.round(decimals = 2)
             tensor([[0., 0., 0., 0., 0.]])
+
+            >>> loss(x, 5*x).round(decimals = 2)
+            tensor([[0., 0., 0., 0., 0.]])
+            
             >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[1., 1., 1., 1., 1.]])
+
             >>> loss = SpectralAngleLoss(dim=2, eps=1e-4)
             >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
+            >>> x = torch.tensor(x)
             >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
-            >>> torch.tensor(x).shape
+            >>> y = torch.tensor(y)
+            >>> x.shape
             torch.Size([1, 2, 3])
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.0831, 0.0000]])
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.1]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.0000, 0.0622]])
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[0.0800, nan]])
+
+            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
+            >>> x = torch.tensor(x)
+            >>> y = torch.tensor(y)
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[nan, 0.6600]])
+
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
             >>> # The first tensor is a scaled version, and the second
             >>> # has a missmatch
-            >>> loss(torch.tensor(x), torch.tensor(y))
-            tensor([[0.000, 0.2902]])
+            >>> x = torch.tensor(x)
+            >>> y = torch.tensor(y)
+            >>> loss(x, y).round(decimals = 2).abs()
+            tensor([[nan, 0.2900]])
         """
         return 1 - super().forward(truth, prediction)
 
@@ -214,8 +263,8 @@ class PearsonCorrelation(torch.nn.Module):
         vy = y - torch.mean(y, axis=self.axis).unsqueeze(self.axis)
 
         num = torch.sum(vx * vy, axis=self.axis)
-        denom_1 = torch.sqrt(torch.sum(vx ** 2, axis=self.axis))
-        denom_2 = torch.sqrt(torch.sum(vy ** 2, axis=self.axis))
+        denom_1 = torch.sqrt(torch.sum(vx**2, axis=self.axis))
+        denom_2 = torch.sqrt(torch.sum(vy**2, axis=self.axis))
         denom = (denom_1 * denom_2) + self.eps
         cost = num / denom
         return cost

@@ -18,7 +18,7 @@ def datamodule(shared_datadir, request):
     datamodule = datamodules.PeptideDataModule(
         batch_size=2, base_dir=path[request.param]
     )
-    datamodule.setup()
+    datamodule.setup("train")
     return datamodule
 
 
@@ -67,7 +67,7 @@ def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
     datamodule = datamodules.PeptideDataModule(
         batch_size=2, base_dir=shared_datadir / "train_data_sample"
     )
-    datamodule.setup()
+    datamodule.setup("train")
     out = tmp_path_factory.mktemp("data") / "ckpt.ckpt"
     trainer = Trainer(max_epochs=1)
     trainer.fit(tiny_model, datamodule)

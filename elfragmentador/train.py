@@ -116,6 +116,7 @@ def get_callbacks(
 
 
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
+    from pytorch_lightning.callbacks.model_summary import ModelSummary
     # TODO add loggging levela and a more structured logger ...
     logging.info(model)
     datamodule = datamodules.PeptideDataModule(
@@ -124,7 +125,7 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         drop_missing_vals=args.drop_missing_vals,
         max_spec=args.max_spec,
     )
-    datamodule.setup()
+    datamodule.setup("train")
     spe = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)
     logging.info(f">>> TRAIN: Setting steps per epoch to {spe}")
     model.steps_per_epoch = spe

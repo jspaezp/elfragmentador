@@ -91,6 +91,7 @@ I have explored many variations on the model but currently the one distributed i
 - Decouple to a different package with less dependencies for the inference side of things
 - Complete dosctrings and add those to documentation website
 - Refactor the package so the hierarchy makes more sense
+- Fix torchscript export ...
 
 #### Possible
 

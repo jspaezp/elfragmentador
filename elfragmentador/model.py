@@ -18,6 +18,7 @@ from argparse import _ArgumentGroup
 
 import numpy as np
 import pytorch_lightning as pl
+from pytorch_lightning.utilities.model_summary import summarize
 import torch
 import torch.nn.functional as F
 import uniplot
@@ -510,6 +511,9 @@ class PepTransformerModel(pl.LightningModule):
         self.loss_metric = MissingDataAverager()
         self.spectra_metric = MissingDataAverager()
         self.spectra_metric2 = MissingDataAverager()
+
+    def summarize(self, max_depth=2):
+        return summarize(self, max_depth)
 
     def forward(
         self,
