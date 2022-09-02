@@ -18,10 +18,10 @@ from argparse import _ArgumentGroup
 
 import numpy as np
 import pytorch_lightning as pl
-from pytorch_lightning.utilities.model_summary import summarize
 import torch
 import torch.nn.functional as F
 import uniplot
+from pytorch_lightning.utilities.model_summary import summarize
 from torch import Tensor, nn
 from torch.optim.adamw import AdamW
 from torch.optim.lr_scheduler import (

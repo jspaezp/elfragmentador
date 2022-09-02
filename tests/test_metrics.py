@@ -16,7 +16,7 @@ def test_spectral_angle_loss(batch):
     out = loss(batch.spectra, batch.spectra)
     assert torch.all(out < 0.001)
 
-    out = loss(batch.spectra, batch.spectra + 10*torch.rand_like(batch.spectra))
+    out = loss(batch.spectra, batch.spectra + 10 * torch.rand_like(batch.spectra))
     assert torch.all(out > 0.001)
 
 
@@ -37,7 +37,7 @@ def test_metrics_give_same_result(batch):
     spec_base = batch.spectra
     random_spec = torch.rand_like(spec_base)
     spec1 = batch.spectra + random_spec
-    spec2 = batch.spectra + 5*random_spec
+    spec2 = batch.spectra + 5 * random_spec
 
     similar_spec_loss = loss1(spec_base, spec1)
     dissimilar_spec_loss = loss1(spec_base, spec2)

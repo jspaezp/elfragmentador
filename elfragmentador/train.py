@@ -116,7 +116,6 @@ def get_callbacks(
 
 
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
-    from pytorch_lightning.callbacks.model_summary import ModelSummary
     # TODO add loggging levela and a more structured logger ...
     logging.info(model)
     datamodule = datamodules.PeptideDataModule(

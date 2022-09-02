@@ -375,7 +375,7 @@ def get_tolerance(
         float, the tolerance value in daltons
     """
     if unit == "ppm":
-        return theoretical * float(tolerance) / 10 ** 6
+        return theoretical * float(tolerance) / 10**6
     elif unit == "da":
         return float(tolerance)
     else:

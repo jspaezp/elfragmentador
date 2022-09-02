@@ -4,7 +4,7 @@ import logging
 import warnings
 from argparse import _ArgumentGroup
 from pathlib import Path, PosixPath
-from typing import Union, Optional
+from typing import Optional, Union
 
 import pandas as pd
 import pytorch_lightning as pl

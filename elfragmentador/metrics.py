@@ -110,7 +110,7 @@ class SpectralAngle(torch.nn.CosineSimilarity):
 
             >>> loss(x, 5*x).round(decimals = 2)
             tensor([[1., 1., 1., 1., 1.]])
-            
+
             >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[0., 0., 0., 0., 0.]])
 
@@ -165,7 +165,7 @@ class SpectralAngleLoss(SpectralAngle):
 
         Examples:
             >>> loss = SpectralAngleLoss(dim=1, eps=1e-4)
-            
+
             >>> x = torch.ones([1,2,5])
             >>> y = torch.zeros([1,2,5]) + 0.1
             >>> calc_loss = loss(x, y)
@@ -174,7 +174,7 @@ class SpectralAngleLoss(SpectralAngle):
 
             >>> loss(x, 5*x).round(decimals = 2)
             tensor([[0., 0., 0., 0., 0.]])
-            
+
             >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
             tensor([[1., 1., 1., 1., 1.]])
 

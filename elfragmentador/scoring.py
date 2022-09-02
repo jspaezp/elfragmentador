@@ -185,7 +185,7 @@ def _calculate_scores_dict(
             ).values()
         )
         unmatched_peaks = num_tot_peaks - matched_peaks
-        prob = (prior ** matched_peaks) * ((1 - prior) ** unmatched_peaks)
+        prob = (prior**matched_peaks) * ((1 - prior) ** unmatched_peaks)
         score = -10 * math.log10(prob + EPSILON)
         scores[isoform] = score
     return scores
