@@ -10,13 +10,13 @@ from elfragmentador import constants, datamodules
 
 def check_type(i: NamedTuple):
     expect_names = {
-            "seq",
-            "mods",
-            "spectra",
-            "charge",
-            "irt",
-            "nce",
-            "weight",
+        "seq",
+        "mods",
+        "spectra",
+        "charge",
+        "irt",
+        "nce",
+        "weight",
     }
     assert expect_names == set(i._fields)
 

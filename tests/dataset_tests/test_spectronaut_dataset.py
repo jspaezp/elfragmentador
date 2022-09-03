@@ -30,7 +30,14 @@ def test_spectronaut_library_can_be_matched(shared_datadir):
     for x in DataLoader(cds, batch_size=5):
         outs = calculator(x["gt"], x["pred"])
 
-        assert all(torch.all(y == 0) for y in outs)
+        print(outs)
+        print(x["gt"].spectra.shape)
+        print(x["pred"].spectra.shape)
+
+        for i, metric in enumerate(outs):
+            for gt, pred, o in zip(x["gt"].spectra, x["pred"].spectra, metric):
+                assert o < 1e-3, f"\nx={gt}\ny={pred}\no={o}, i={i}"
+                assert o > -1e-3, f"\nx={gt}\ny={pred}\no={o} i={i}"
 
 
 def test_spectronaut_library_can_be_compared(shared_datadir, tmpdir):

@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+import pytorch_lightning as pl
 import torch
 from torch.utils.data.dataloader import DataLoader
 
@@ -11,6 +12,8 @@ from elfragmentador import encoding_decoding as efe
 from elfragmentador import model
 from elfragmentador import utils as efu
 from elfragmentador.model import ForwardBatch
+
+pl.seed_everything(42)
 
 
 def test_concat_encoder():

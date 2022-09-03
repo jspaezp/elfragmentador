@@ -62,7 +62,10 @@ def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
     )
     warnings.filterwarnings(
         "ignore",
-        ".*peaks were annotated The number of training samples Skipping peptide due few peaks being annotated .*",
+        (
+            ".*peaks were annotated The number of training samples "
+            "Skipping peptide due few peaks being annotated .*"
+        ),
     )
     datamodule = datamodules.PeptideDataModule(
         batch_size=2, base_dir=shared_datadir / "train_data_sample"
@@ -80,6 +83,7 @@ def checkpoint(tmp_path_factory, tiny_model, shared_datadir):
 def tiny_model_ts(tiny_model_builder):
     tiny_model = tiny_model_builder()
     with torch.no_grad():
+        breakpoint()
         ts = tiny_model.to_torchscript()
         ts.eval()
     return ts

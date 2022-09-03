@@ -558,10 +558,21 @@ class PepTransformerModel(pl.LightningModule):
         return torch_batch_from_seq(*args, **kwargs)
 
     def to_torchscript(self):
-        """Convert the model to torchscript."""
+        """
+        Convert the model to torchscript.
+
+        Example:
+        >>> model = PepTransformerModel()
+        >>> ts = model.to_torchscript()
+        >>> type(ts)
+        <class 'torch.jit._trace.TopLevelTracedModule'>
+        """
         _fake_input_data_torchscript = self.torch_batch_from_seq(
             seq="MYM[OXIDATION]DIFIEDPEPTYDE", charge=3, nce=27.0
         )
+
+        backup_calculator = self.metric_calculator
+        self.metric_calculator = None
 
         bkp_1 = self.decoder.nce_encoder.static_size
         self.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
@@ -575,6 +586,7 @@ class PepTransformerModel(pl.LightningModule):
 
         self.decoder.nce_encoder.static_size = bkp_1
         self.decoder.charge_encoder.static_size = bkp_2
+        self.metric_calculator = backup_calculator
 
         return script
 

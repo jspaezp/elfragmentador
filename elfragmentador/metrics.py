@@ -119,26 +119,30 @@ class SpectralAngle(torch.nn.CosineSimilarity):
             >>> x.shape
             torch.Size([1, 2, 3])
             >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.9200, nan]])
+            tensor([[0.9200, 1.000]])
 
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
             >>> x = torch.tensor(x)
             >>> y = torch.tensor(y)
             >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[nan, 0.3400]])
+            tensor([[1.000, 0.3400]])
 
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
+            >>> x = [[[0.2, 0.4, 2],[2, 0.4, 1.0]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
             >>> # The first tensor is a scaled version, and the second
             >>> # has a missmatch
             >>> x = torch.tensor(x)
             >>> y = torch.tensor(y)
             >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[nan, 0.7100]])
+            tensor([[1.000, 0.7100]])
         """
         out = super().forward(truth, prediction)
-        out = 2 * (torch.acos(out) / PI)
+
+        # Here clamp is needed to avoid nan values
+        # Where due to numerical errors the cosine similarity
+        # is slightly larger than 1
+        out = 2 * (torch.acos(out.clamp(0, 1)) / PI)
         out = 1 - out
 
         return out
@@ -182,14 +186,14 @@ class SpectralAngleLoss(SpectralAngle):
             >>> x.shape
             torch.Size([1, 2, 3])
             >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.0800, nan]])
+            tensor([[0.0800, 0.000]])
 
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
             >>> x = torch.tensor(x)
             >>> y = torch.tensor(y)
             >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[nan, 0.6600]])
+            tensor([[0.000, 0.6600]])
 
             >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
             >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
@@ -198,7 +202,7 @@ class SpectralAngleLoss(SpectralAngle):
             >>> x = torch.tensor(x)
             >>> y = torch.tensor(y)
             >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[nan, 0.2900]])
+            tensor([[0.000, 0.2900]])
         """
         return 1 - super().forward(truth, prediction)
 
@@ -288,7 +292,7 @@ class MetricCalculator(pl.LightningModule):
         loss_angle = self.angle_loss(yhat_spectra, spectra)
         loss_cosine = self.cosine_loss(yhat_spectra, spectra)
 
-        return loss_irt.squeeze(), loss_angle.squeeze(), loss_cosine.squeeze()
+        return loss_irt, loss_angle, loss_cosine
 
     @staticmethod
     def pad_spectra(spec):
