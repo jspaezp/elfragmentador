@@ -40,4 +40,4 @@ jobs:
           poetry config pypi-token.pypi ${PYPITOKEN}
       - name: Publish
         run: |
-        poetry publish --build
+          poetry publish --build
