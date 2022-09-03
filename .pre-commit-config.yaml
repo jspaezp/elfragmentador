@@ -18,6 +18,18 @@ repos:
     -   id: autoflake
   - repo: local
     hooks:
+      - id: black
+        name: black
+        entry: poetry run black .
+        language: system
+        always_run: true
+        pass_filenames: false
+      - id: isort
+        name: isort
+        entry: poetry run isort .
+        language: system
+        always_run: true
+        pass_filenames: false
       - id: pydocstringformatter
         name: pydocstringformatter
         entry: poetry run pydocstringformatter elfragmentador
@@ -27,12 +39,6 @@ repos:
       - id: flake8
         name: flake8
         entry: poetry run flake8 elfragmentador
-        language: system
-        always_run: true
-        pass_filenames: false
-      - id: isort
-        name: isort
-        entry: poetry run isort .
         language: system
         always_run: true
         pass_filenames: false

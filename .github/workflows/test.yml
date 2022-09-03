@@ -32,7 +32,7 @@ jobs:
       - name: Install deps
         run: poetry install -n -vv
       - name: Black
-        run: poetry run python -m black . --check
+        run: poetry run python -m black . --check --diff
       - name: flake8
         run: poetry run flake8 elfragmentador
       - name: isort
