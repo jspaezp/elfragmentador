@@ -48,3 +48,15 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: build_nbs
+        name: build_nbs
+        entry: bash docs/render_nbs.bash
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: build_docs
+        name: build_docs
+        entry: poetry run python -m mkdocs build --strict
+        language: system
+        pass_filenames: false
+        always_run: true

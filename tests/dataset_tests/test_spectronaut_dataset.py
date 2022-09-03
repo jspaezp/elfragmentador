@@ -1,5 +1,4 @@
 import pandas as pd
-import torch
 from pandas import DataFrame
 from torch.utils.data import DataLoader
 

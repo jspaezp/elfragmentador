@@ -1,6 +1,4 @@
-______________________________________________________________________
-
-## jupyter: python3 format: gfm
+# "Visualize Attention of the default checkpoint"
 
 ```{python}
 from matplotlib import pyplot as plt
