@@ -4,24 +4,18 @@ Implements torch models to handle encoding and decoding of positions as well as.
 learnable embeddings for the aminoacids and ions.
 """
 
-try:
-    from typing import Literal, Union
-
-    LiteralFalse = Literal[False]
-except ImportError:
-    # Python pre-3.8 compatibility
-    from typing import NewType, Union
-
-    LiteralFalse = NewType("LiteralFalse", bool)
-
 import math
+from typing import Literal, Tuple, Union
 
 import pandas as pd
 import torch
 import torch.nn.functional as F
+from pandas import DataFrame
 from torch import Tensor, nn
 
 from elfragmentador import constants
+
+LiteralFalse = Literal[False]
 
 
 class SeqPositionalEmbed(torch.nn.Module):
@@ -313,7 +307,7 @@ class AASequenceEmbedding(torch.nn.Module):
 
         return seq
 
-    def as_DataFrames(self):
+    def as_DataFrames(self) -> Tuple[DataFrame, DataFrame]:
         """
         Returns the weights as data frames.
 

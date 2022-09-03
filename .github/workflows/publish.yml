@@ -29,6 +29,13 @@ jobs:
       - name: Unit testing
         run: |
           poetry run python -m pytest
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+      - name: View Quarto version
+        run:
+          quarto --version
+      - name: Build Notebooks
+        run: bash docs/render_nbs.bash
       - name: Deploy Docs
         run: |
           poetry run python -m mkdocs gh-deploy --strict --force

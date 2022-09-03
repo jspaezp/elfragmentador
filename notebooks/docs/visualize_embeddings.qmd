@@ -1,6 +1,4 @@
-______________________________________________________________________
-
-## jupyter: python3 format: gfm
+# "Visualize The embeddings of the default checkpoint"
 
 ```{python}
 import elfragmentador

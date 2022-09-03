@@ -39,5 +39,12 @@ jobs:
         run: poetry run isort . --check
       - name: Pytest
         run: poetry run python -m pytest
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+      - name: View Quarto version
+        run:
+          quarto --version
+      - name: Build Notebooks
+        run: bash docs/render_nbs.bash
       - name: mkdocs
-        run: poetry run python -m mkdocs build
+        run: poetry run python -m mkdocs build --strict

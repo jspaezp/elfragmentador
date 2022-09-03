@@ -32,3 +32,10 @@ benchmarking_workflow/prosit_in
 
 notebooks/*.csv
 .Rproj.user
+
+notebooks/**.html
+docs/notebooks/**
+docs/notebooks/**files
+docs/**files/
+site/**
+notebooks/**/**.html
