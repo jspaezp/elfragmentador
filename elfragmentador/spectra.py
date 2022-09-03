@@ -6,6 +6,7 @@ bulk from.
 """
 
 from __future__ import annotations
+# To be removed when pep-0563 gets implemented
 
 import logging
 from collections import defaultdict

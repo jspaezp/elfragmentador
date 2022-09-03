@@ -1,0 +1,43 @@
+
+
+name: Upload Python Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Set up poetry
+        uses: abatilo/actions-poetry@v2.1.6
+        with:
+          poetry-version: '1.1.14'
+      - name: Install dependencies
+        run: |
+          poetry install .
+      - name: Build package
+        run: |
+          poetry build
+      - name: Unit testing
+        run: |
+          poetry run python -m pytest
+      - name: Deploy Docs
+        run: |
+          poetry run python -m mkdocs gh-deploy --strict --force
+      - name: Publish Setup
+        env:
+          PYPITOKEN: ${{ secrets.PYPITOKEN }}
+        run: |
+          poetry config pypi-token.pypi ${PYPITOKEN}
+      - name: Publish
+        run: |
+        poetry publish --build
