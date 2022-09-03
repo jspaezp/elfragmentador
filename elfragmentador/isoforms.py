@@ -1,14 +1,12 @@
 import warnings
-from typing import Generator, Iterable, List
+from collections.abc import Generator, Iterable
 
 from elfragmentador.annotate import peptide_parser
 from elfragmentador.encoding_decoding import clip_explicit_terminus
 
 
 class _unique_element:
-    """
-    Part of the answer from https://stackoverflow.com/questions/6284396.
-    """
+    """Part of the answer from https://stackoverflow.com/questions/6284396."""
 
     def __init__(self, value, occurrences):
         self.value = value
@@ -17,7 +15,7 @@ class _unique_element:
 
 def perm_unique(elements: Iterable) -> Generator:
     """
-    perm_unique Gets permutations of elements taking into account repeated.
+    Perm_unique Gets permutations of elements taking into account repeated.
 
     Part of the answer from https://stackoverflow.com/questions/6284396
 
@@ -54,9 +52,7 @@ def perm_unique(elements: Iterable) -> Generator:
 
 
 def _perm_unique_helper(listunique, result_list, d):
-    """
-    Part of the answer from https://stackoverflow.com/questions/6284396.
-    """
+    """Part of the answer from https://stackoverflow.com/questions/6284396."""
     if d < 0:
         yield tuple(result_list)
     else:
@@ -64,12 +60,11 @@ def _perm_unique_helper(listunique, result_list, d):
             if i.occurrences > 0:
                 result_list[d] = i.value
                 i.occurrences -= 1
-                for g in _perm_unique_helper(listunique, result_list, d - 1):
-                    yield g
+                yield from _perm_unique_helper(listunique, result_list, d - 1)
                 i.occurrences += 1
 
 
-def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
+def _get_mod_isoforms(seq: str, mod: str, aas: str) -> list[str]:
     # mod = "PHOSPHO"
     # seq = "S[PHOSPHO]AS"
     # aas = "STY"
@@ -99,9 +94,9 @@ def _get_mod_isoforms(seq: str, mod: str, aas: str) -> List[str]:
     return list(set(out_seqs))
 
 
-def get_mod_isoforms(seq: str, mods_list: List[str], aas_list: List[str]) -> List[str]:
+def get_mod_isoforms(seq: str, mods_list: list[str], aas_list: list[str]) -> list[str]:
     """
-    get_mod_isoforms.
+    Get_mod_isoforms.
 
     Gets modification isoforms for a peptide with modifications
 

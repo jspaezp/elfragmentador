@@ -6,23 +6,20 @@ Goes thought the searched files in the pride repository PXD004732
 
 """
 
-import time
-import tempfile
-from contextlib import closing
-from typing import Callable
-from pathlib import Path
-import zipfile
 import shutil
-
+import tempfile
+import time
 import urllib.request as request
-
-import pandas as pd
-import numpy as np
-from tqdm.auto import tqdm
-
-from transprosit.encoding_decoding import encode_mod_seq
-
+import zipfile
 from argparse import ArgumentParser
+from contextlib import closing
+from pathlib import Path
+from typing import Callable
+
+import numpy as np
+import pandas as pd
+from tqdm.auto import tqdm
+from transprosit.encoding_decoding import encode_mod_seq
 
 parser = ArgumentParser()
 

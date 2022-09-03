@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -39,7 +39,7 @@ def calculate_file_iRT(file: Union[Path, str]) -> pd.DataFrame:
     return df.dropna().copy().reindex()
 
 
-def calculate_multifile_iRT(filelist: List[Union[str, Path]]):
+def calculate_multifile_iRT(filelist: list[Union[str, Path]]):
     out_dfs = (calculate_file_iRT(x) for x in tqdm(filelist))
 
     out_df = pd.concat(out_dfs)

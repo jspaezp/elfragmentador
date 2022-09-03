@@ -35,9 +35,7 @@ DEFAULT_LOGGER_BASIC_CONF = {
 
 
 def _common_checkpoint_args(parser):
-    """
-    Adds the common to handle model checkpoints to a parser.
-    """
+    """Adds the common to handle model checkpoints to a parser."""
     parser.add_argument(
         "--model_checkpoint",
         type=str,
@@ -64,18 +62,14 @@ def _setup_model(args):
         if "Missing key(s) in state_dict":
             logging.error(e)
             logging.error(
-                (
-                    "Attempting to go though with a bad model,"
-                    " DO NOT TRUST THESE RESULTS, "
-                    "try to change the checkpoint"
-                )
+                "Attempting to go though with a bad model,"
+                " DO NOT TRUST THESE RESULTS, "
+                "try to change the checkpoint"
             )
             raise RuntimeError(
-                (
-                    "The provided checkpoint does not match the version of"
-                    " the library, make sure you use a compatible checkpoint"
-                    " or you update/downgrade the library"
-                )
+                "The provided checkpoint does not match the version of"
+                " the library, make sure you use a compatible checkpoint"
+                " or you update/downgrade the library"
             )
         else:
             raise RuntimeError(e)
@@ -150,7 +144,8 @@ def _append_prediction_parser():
 @_gen_cli_help(_append_prediction_parser())
 def append_predictions():
     """
-    Appends the cosine similarity between the predicted and actual spectra to a
+    Appends the cosine similarity between the predicted and actual spectra to a.
+
     percolator input.
     """
     log_conf = DEFAULT_LOGGER_BASIC_CONF.copy()
@@ -195,9 +190,7 @@ def _predict_csv_parser():
 
 @_gen_cli_help(_predict_csv_parser())
 def predict_csv():
-    """
-    Predicts the peptides in a csv file.
-    """
+    """Predicts the peptides in a csv file."""
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     greeting()
 
@@ -261,9 +254,7 @@ def _predict_fasta_parser():
 
 @_gen_cli_help(_predict_fasta_parser())
 def predict_fasta():
-    """
-    Predicts the peptides in a fasta file.
-    """
+    """Predicts the peptides in a fasta file."""
     logging.basicConfig(**DEFAULT_LOGGER_BASIC_CONF)
     greeting()
 
@@ -328,7 +319,7 @@ def _convert_sptxt_parser():
 @_gen_cli_help(_convert_sptxt_parser())
 def convert_sptxt():
     """
-    convert_sptxt Provides a CLI to convert an sptxt to a csv for training.
+    Convert_sptxt Provides a CLI to convert an sptxt to a csv for training.
 
     provides a CLI for the sptxt_to_csv function, chek that guy out for
     the actual implementation

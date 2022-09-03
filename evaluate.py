@@ -9,7 +9,8 @@ call as:
 Note that it only takes absolute paths for the inputs... sorry
 """
 
-import sys, os
+import os
+import sys
 from pathlib import Path
 
 IPYNB_FILENAME = str(Path(__file__).parent) + "/templates/template_evaluation.ipynb"

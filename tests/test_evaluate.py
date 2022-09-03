@@ -1,6 +1,3 @@
-import warnings
-from pathlib import Path
-
 import elfragmentador as ef
 from elfragmentador import datamodules
 from elfragmentador.datasets import Predictor

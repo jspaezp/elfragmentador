@@ -10,7 +10,7 @@ in_tables
 in_df <- purrr::map_dfr(
   in_tables,
   ~ readr::read_csv(
-    .x, 
+    .x,
     col_types = readr::cols(
       `MS/MS Count` = col_double(),
       Intensity = col_double(),
@@ -111,7 +111,7 @@ qplot(data = in_df, x = recal_iRT, y = `Calibrated retention time`)
 
 in_df$iRT <- in_df$recal_iRT
 
-irt_lms <- split(in_df, in_df$`Raw file`) %>% 
+irt_lms <- split(in_df, in_df$`Raw file`) %>%
   purrr::map(~ lm(data = .x, `Calibrated retention time` ~ iRT)$coefficients)
 
 irt_slopes <- purrr::map_dbl(irt_lms, ~ .x[2])
@@ -120,9 +120,9 @@ irt_intercepts <- purrr::map_dbl(irt_lms, ~ .x[1])
 hist(irt_slopes)
 removable_runs <- irt_slopes[irt_slopes > 0.3 | irt_slopes < 0.21] %>% names()
 # [1] "01640c_BA9-Thermo_SRM_Pool_65_01_01-3xHCD-1h-R2"
-# [2] "01812a_GB3-TUM_third_pool_2_01_01-ETD-1h-R1"    
+# [2] "01812a_GB3-TUM_third_pool_2_01_01-ETD-1h-R1"
 
-plot(in_df$`Calibrated retention time`, in_df$iRT) 
+plot(in_df$`Calibrated retention time`, in_df$iRT)
 
 summ_in_df <- in_df %>%
   filter(! `Raw file` %in% removable_runs) %>%

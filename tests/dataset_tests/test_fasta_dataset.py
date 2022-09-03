@@ -1,5 +1,3 @@
-import os
-
 from elfragmentador.datasets.sequence_dataset import FastaDataset
 
 

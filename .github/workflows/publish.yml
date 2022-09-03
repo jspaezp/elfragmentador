@@ -1,5 +1,4 @@
 
-
 name: Upload Python Package
 
 on:
@@ -23,7 +22,7 @@ jobs:
           poetry-version: '1.1.14'
       - name: Install dependencies
         run: |
-          poetry install .
+          poetry install -n -vv
       - name: Build package
         run: |
           poetry build

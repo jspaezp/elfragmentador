@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Union
 
 import pandas as pd
 from pandas import DataFrame
@@ -19,7 +18,7 @@ from elfragmentador.utils import torch_batch_from_seq
 
 class SequenceDataset(DatasetBase):
     def __init__(
-        self, sequences: List[str], collision_energies: List[float], charges: List[int]
+        self, sequences: list[str], collision_energies: list[float], charges: list[int]
     ) -> None:
         """
         Dataset that contains sequences to be used to predict spectra.
@@ -134,7 +133,7 @@ class SequenceDataset(DatasetBase):
     def predict(
         self,
         model: PepTransformerModel,
-        predictor: Optional[Predictor] = None,
+        predictor: Predictor | None = None,
         batch_size: int = 4,
     ):
         if predictor is None:
@@ -169,8 +168,8 @@ class FastaDataset(SequenceDataset):
         enzyme="trypsin",
         missed_cleavages=2,
         min_length=5,
-        collision_energies: Union[List[float], float] = [27],
-        charges: Union[List[int], int] = [2, 3],
+        collision_energies: list[float] | float = [27],
+        charges: list[int] | int = [2, 3],
     ) -> None:
 
         charges = [charges] if isinstance(charges, int) else charges
@@ -181,12 +180,10 @@ class FastaDataset(SequenceDataset):
         fasta_file = Path(fasta_file)
 
         logging.info(
-            (
-                f"Processing file {fasta_file.name},"
-                f" with enzyme={enzyme}, "
-                f" missed_cleavages={missed_cleavages}"
-                f" min_length={min_length}"
-            )
+            f"Processing file {fasta_file.name},"
+            f" with enzyme={enzyme}, "
+            f" missed_cleavages={missed_cleavages}"
+            f" min_length={min_length}"
         )
 
         sequences = []

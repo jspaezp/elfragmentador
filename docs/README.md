@@ -43,7 +43,7 @@ You can check how fast the model is in you specific system.
 Right now it tests only on CPU, message me if you need GPU inference times
 
 ```shell
-poetry run pytest tests/test_model.py --benchmark-histogram 
+poetry run pytest tests/test_model.py --benchmark-histogram
 ```
 
 Currenty the inference time in an Intel i5-7260U is ~5.9ms, or ~167.44 predictions per second. On a GPU it is closer to ~1000 predictions per second.

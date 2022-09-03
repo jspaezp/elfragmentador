@@ -1,7 +1,7 @@
 import logging
 import math
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
-from typing import Dict, List, Union
+from typing import Union
 
 import pytorch_lightning as pl
 import torch
@@ -84,10 +84,10 @@ def build_train_parser() -> ArgumentParser:
 
 def get_callbacks(
     run_name: str, termination_patience: int = 20, wandb_project: str = "rttransformer"
-) -> Dict[
+) -> dict[
     str,
     Union[
-        WandbLogger, List[Union[LearningRateMonitor, ModelCheckpoint, EarlyStopping]]
+        WandbLogger, list[Union[LearningRateMonitor, ModelCheckpoint, EarlyStopping]]
     ],
 ]:
     complete_run_name = f"{ef.__version__}_{run_name}"

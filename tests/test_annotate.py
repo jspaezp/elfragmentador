@@ -82,7 +82,7 @@ def test_correct_masses_on_ions(peptide_string, ions_dict):
     # Note if not passing the parser, alias will not be searched correctly
     ions = annotate.get_peptide_ions(list(annotate.peptide_parser(peptide_string)))
     ions_joint = annotate.get_peptide_ions(
-        "".join((annotate.peptide_parser(peptide_string)))
+        "".join(annotate.peptide_parser(peptide_string))
     )
     for ion_name, ion_mass in ions_dict.items():
         assert abs(ions[ion_name] - ion_mass) < 0.001, {ion_name: ion_mass}

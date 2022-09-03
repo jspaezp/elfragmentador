@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -15,7 +15,8 @@ from elfragmentador import constants as CONSTANTS
 
 def collate_fun(batch):
     """
-    Collate function that first equalizes the length of tensors Modified from
+    Collate function that first equalizes the length of tensors Modified from.
+
     the pytorch implementation.
 
     Examples:
@@ -38,7 +39,8 @@ def collate_fun(batch):
 
 def cat_collate(batch):
     """
-    Collate function that concatenates the first dimension, instead of stacking
+    Collate function that concatenates the first dimension, instead of stacking.
+
     it.
 
     Examples:
@@ -63,7 +65,7 @@ def cat_collate(batch):
 
 def _convert_tensor_column(column, elem_function=float, verbose=True, *args, **kwargs):
     """
-    converts a series (column in a pandas dataframe) to a tensor.
+    Converts a series (column in a pandas dataframe) to a tensor.
 
     Expects a column whose character values actually represent lists of numbers
     for exmaple "[1,2,3,4]"
@@ -114,12 +116,12 @@ _to_numpy = lambda x: x if isinstance(x, np.ndarray) else np.array(x)  # noqa: E
 
 
 def _match_lengths(
-    nested_list: Union[List[List[Union[int, float]]], List[List[int]]],
+    nested_list: Union[list[list[Union[int, float]]], list[list[int]]],
     max_len: Optional[int] = None,
     name="Tensor",
 ) -> Tensor:
     """
-    match_lengths Matches the lengths of all tensors in a list.
+    Match_lengths Matches the lengths of all tensors in a list.
 
     Args:
         nested_list (List[np.ndarray]):
@@ -159,7 +161,7 @@ def _match_lengths(
     """
     logging.debug(f"Matching shapes of {name}")
 
-    lengths = np.array(list(set([x.shape for x in nested_list])))
+    lengths = np.array(list({x.shape for x in nested_list}))
     obs_max_lengths = lengths.max(axis=0)
 
     if max_len is None:
@@ -190,9 +192,9 @@ def _match_lengths(
     return torch.from_numpy(out)
 
 
-def _match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
+def _match_colnames(df: DataFrame) -> dict[str, Optional[str]]:
     """
-    match_colnames Tries to find aliases for columns names in a data frame.
+    Match_colnames Tries to find aliases for columns names in a data frame.
 
     Tries to find the following column aliases:
 
@@ -203,7 +205,6 @@ def _match_colnames(df: DataFrame) -> Dict[str, Optional[str]]:
     "iRT": Retention time
     "NCE": Collision Energy
     "Weight": Weight of each spectrum (will default to use Weight or reps columns)
-
 
     Args:
         df (DataFrame): Data frame to find columns for ...
@@ -278,7 +279,8 @@ def _convert_tensor_columns_df(df, verbose=True):
 
 def _filter_df_on_sequences(df: DataFrame, name: str = "") -> DataFrame:
     """
-    filter_df_on_sequences Filters a DataFrame for the peptides that correctly
+    Filter_df_on_sequences Filters a DataFrame for the peptides that correctly.
+
     match the expected lengths.
 
     Args:

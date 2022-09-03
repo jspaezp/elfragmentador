@@ -1,5 +1,6 @@
 """
-PredictionResults = irt + spec
+PredictionResults = irt + spec.
+
 ForwardBatch = seq + mods + charge + nce
 TrainBatch = PredictionResults + ForwardBatch + Weight
 
@@ -14,10 +15,8 @@ from torch import Tensor
 
 def _hash_tensors(tensor_tuple):
     return sum(
-        [
-            hash(x.data.tolist().__str__()) if isinstance(x, Tensor) else hash(x)
-            for x in tensor_tuple
-        ]
+        hash(x.data.tolist().__str__()) if isinstance(x, Tensor) else hash(x)
+        for x in tensor_tuple
     )
 
 
@@ -48,7 +47,8 @@ class PredictionResults(NamedTuple):
 
 class ForwardBatch(NamedTuple):
     """
-    Named Tuple that bundles all tensors needed for a forward pass in the
+    Named Tuple that bundles all tensors needed for a forward pass in the.
+
     model.
 
     Parameters:
@@ -79,7 +79,8 @@ charge=tensor([2., 2.]), nce=tensor([34., 34.]))
 
 class TrainBatch(NamedTuple):
     """
-    Named Tuple that bundles all tensors needed for a training step in the
+    Named Tuple that bundles all tensors needed for a training step in the.
+
     model.
 
     Parameters:
@@ -117,7 +118,8 @@ class TrainBatch(NamedTuple):
 
 
 class EvaluationLossBatch(NamedTuple):
-    """Named tuple that bundles losses from evaluating against a dataset
+    """Named tuple that bundles losses from evaluating against a dataset.
+
     Parameters:
         scaled_se_loss (Tensor):
             Squared error of the scaled versions of the input
@@ -129,7 +131,6 @@ class EvaluationLossBatch(NamedTuple):
             Squared error of the non-scaled retention times
         loss_angle (Tensor):
             1 - Spectral angle loss
-
     """
 
     scaled_se_loss: Tensor

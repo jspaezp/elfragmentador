@@ -1,0 +1,136 @@
+______________________________________________________________________
+
+## jupyter: python3 format: gfm
+
+```{python}
+from matplotlib import pyplot as plt
+import pandas as pd
+import seaborn as sns
+import numpy as np
+import torch
+```
+
+```{python}
+import elfragmentador
+
+elfragmentador.__version__
+```
+
+```{python}
+from elfragmentador.model import PepTransformerModel
+from elfragmentador import constants
+
+# CHECKPOINT = "https://github.com/jspaezp/elfragmentador-modelzoo/raw/main/0.50.0b14/0.50.0b14_onecycle_10e_64_120_val_l%3D0.141270_epoch%3D009.ckpt"
+CHECKPOINT = elfragmentador.DEFAULT_CHECKPOINT
+
+try:
+    model = PepTransformerModel.load_from_checkpoint(CHECKPOINT)
+except RuntimeError as e:
+    print(e)
+    saved_ckpt = torch.load(CHECKPOINT)
+    state_dict = saved_ckpt["state_dict"]
+    state_dict.pop("decoder.peak_decoder.layers.1.weight")
+    state_dict.pop("decoder.peak_decoder.layers.1.bias")
+    model = PepTransformerModel(**saved_ckpt["hyper_parameters"])
+    model.load_state_dict(state_dict=state_dict, strict=False)
+    print(model)
+
+model.eval()
+```
+
+```{python}
+_ = model.summarize(max_depth=2)
+```
+
+```{python}
+aa_weights_df, mod_weights_df = model.encoder.aa_encoder.as_DataFrames()
+aa_weights = aa_weights_df[(x for x in list(aa_weights_df) if x not in ["U", "EMPTY"])]
+p = sns.clustermap(
+    aa_weights,
+    z_score=None,
+    col_cluster=True,
+    cmap="viridis",
+    figsize=(6, 4),
+    dendrogram_ratio=(0.1, 0.1),
+    method="ward",
+    vmin=-0.05,
+    vmax=0.05,
+)
+```
+
+```{python}
+p = sns.clustermap(
+    mod_weights_df,
+    z_score=None,
+    col_cluster=True,
+    cmap="viridis",
+    figsize=(6, 4),
+    dendrogram_ratio=(0.1, 0.1),
+    method="ward",
+    vmin=-0.05,
+    vmax=0.05,
+)
+```
+
+```{python}
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+# Calculate the distance between each sample
+Z = linkage(aa_weights.T, "ward")
+
+# Make the dendro
+plt.subplots(figsize=(3, 6))
+dendrogram(
+    Z,
+    labels=aa_weights.T.index,
+    orientation="left",
+    color_threshold=1.8,
+    above_threshold_color="grey",
+    distance_sort="ascending",
+)
+plt.show()
+```
+
+```{python}
+x = StandardScaler().fit_transform(aa_weights.values)
+
+pca = PCA(n_components=2)
+pca_weights = pca.fit_transform(x.T)
+print(pca_weights.shape)
+
+plt.subplots(figsize=(6, 6))
+plt.scatter(pca_weights[..., 0], pca_weights[..., 1])
+for i in range(0, len(aa_weights.T)):
+    plt.text(pca_weights[i, 0] + 0.2, pca_weights[i, 1], aa_weights.T.index[i])
+
+plt.show()
+```
+
+```{python}
+from elfragmentador import visualization
+
+peptides = [
+    ["FELNDDYPSLPSMGWAS", 2, 30],
+    ["FELNDDYPSLPS[PHOSPHO]MGWAS", 2, 30],
+    ["FELNDDYPSLPSM[OXIDATION]GWAS", 2, 30],
+]
+
+with visualization.SelfAttentionExplorer(model) as sae:
+    for pep in peptides:
+        _ = model.predict_from_seq(*pep)
+
+sae
+```
+
+```{python}
+for i, pep in enumerate(peptides):
+    for lay in range(len(model.encoder.transformer_encoder.layers)):
+        attn_vals = sae.get_encoder_attn(layer=lay, index=i)
+        sns.heatmap(attn_vals, cmap="viridis")
+        plt.title(f"Attention layer {lay + 1}, peptide {pep[0]}")
+        plt.show()
+
+        visualization.plot_bipartite_seq(visualization.make_bipartite(attn_vals))
+```

@@ -1,6 +1,5 @@
 import logging
 from math import pi as PI
-from typing import Dict
 
 import pytorch_lightning as pl
 import torch
@@ -14,9 +13,7 @@ from elfragmentador.utils_data import cat_collate
 
 
 class CosineLoss(torch.nn.CosineSimilarity):
-    """
-    CosineLoss Implements a simple cosine similarity based loss.
-    """
+    """CosineLoss Implements a simple cosine similarity based loss."""
 
     def __init__(self, dim=1, eps=1e-8) -> None:
         """
@@ -139,7 +136,6 @@ class SpectralAngle(torch.nn.CosineSimilarity):
             >>> y = torch.tensor(y)
             >>> loss(x, y).round(decimals = 2).abs()
             tensor([[nan, 0.7100]])
-
         """
         out = super().forward(truth, prediction)
         out = 2 * (torch.acos(out) / PI)
@@ -208,9 +204,7 @@ class SpectralAngleLoss(SpectralAngle):
 
 
 class PearsonCorrelation(torch.nn.Module):
-    """
-    PearsonCorrelation Implements a simple pearson correlation.
-    """
+    """PearsonCorrelation Implements a simple pearson correlation."""
 
     def __init__(self, axis=1, eps=1e-4):
         """
@@ -303,7 +297,7 @@ class MetricCalculator(pl.LightningModule):
         )
         return spec
 
-    def test_step(self, batch: Dict[str, PredictionResults], batch_idx: int):
+    def test_step(self, batch: dict[str, PredictionResults], batch_idx: int):
         loss_irt, loss_angle, loss_cosine = self.calculate_metrics(
             gt=batch["gt"], pred=batch["pred"]
         )

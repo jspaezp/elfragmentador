@@ -4,7 +4,6 @@ import logging
 import warnings
 from os import PathLike
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -119,12 +118,10 @@ class PeptideDataset(DatasetBase):
         self.weights = torch.sqrt(self.weights)
 
         logging.info(
-            (
-                f"Dataset Initialized with {len(df)} entries."
-                f" Sequence length: {sequence_lengths}"
-                f" Spectra length: {spectra_lengths}"
-                f"; Average Peaks/spec: {avg_peaks}"
-            )
+            f"Dataset Initialized with {len(df)} entries."
+            f" Sequence length: {sequence_lengths}"
+            f" Spectra length: {spectra_lengths}"
+            f"; Average Peaks/spec: {avg_peaks}"
         )
         logging.info(">>> Done Initializing dataset\n")
 
@@ -133,9 +130,7 @@ class PeptideDataset(DatasetBase):
 
     @property
     def mod_sequences(self):
-        """
-        Returns the mod sequences as a list of strings
-        """
+        """Returns the mod sequences as a list of strings."""
         if not hasattr(self, "_mod_sequences"):
             self._mod_sequences = []
 
@@ -175,7 +170,7 @@ class PeptideDataset(DatasetBase):
 
     @staticmethod
     def from_csv(
-        filepath: Union[str, Path],
+        filepath: str | Path,
         max_spec: int = 1e6,
         filter_df: bool = True,
         keep_df: bool = False,

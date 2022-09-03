@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Union
 
 import numpy as np
 import torch
@@ -50,7 +50,8 @@ def nanmean(v, *args, inplace=False, **kwargs):
 
 def norm(x: ndarray) -> ndarray:
     """
-    Normalizes a numpy array by substracting mean and dividing by standard
+    Normalizes a numpy array by substracting mean and dividing by standard.
+
     deviation.
     """
     sd = np.nanstd(x)
@@ -64,10 +65,8 @@ def norm(x: ndarray) -> ndarray:
 # https://stackoverflow.com/questions/893657/
 def polyfit(
     x: ndarray, y: ndarray, degree: int = 1
-) -> Dict[str, Union[List[float], float64]]:
-    """
-    Fits a polynomial fit.
-    """
+) -> dict[str, Union[list[float], float64]]:
+    """Fits a polynomial fit."""
     results = {}
 
     coeffs = np.polyfit(x, y, degree)

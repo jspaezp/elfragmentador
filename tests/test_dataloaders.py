@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
@@ -10,8 +9,7 @@ from elfragmentador import constants, datamodules
 
 
 def check_type(i: NamedTuple):
-    expect_names = set(
-        [
+    expect_names = {
             "seq",
             "mods",
             "spectra",
@@ -19,8 +17,7 @@ def check_type(i: NamedTuple):
             "irt",
             "nce",
             "weight",
-        ]
-    )
+    }
     assert expect_names == set(i._fields)
 
 

@@ -1,16 +1,19 @@
 """
-Contains utilities to represent spectra as well as functions to read them in
+Contains utilities to represent spectra as well as functions to read them in.
+
 bulk from.
 
 .sptxt files
 """
 
 from __future__ import annotations
-# To be removed when pep-0563 gets implemented
 
 import logging
 from collections import defaultdict
 from os import PathLike
+
+# To be removed when pep-0563 gets implemented
+
 
 try:
     import matplotlib.pyplot as plt
@@ -18,7 +21,7 @@ except ImportError:
     plt = None
 
 import warnings
-from typing import Dict, Iterator, List, Optional, Union
+from collections.abc import Iterator
 
 import numpy as np
 import spectrum_utils.plot as sup
@@ -34,9 +37,7 @@ from elfragmentador.encoding_decoding import SequencePair, encode_fragments
 
 
 class Spectrum:
-    """
-    Represents Spectra and bundles methods to annotate peaks.
-    """
+    """Represents Spectra and bundles methods to annotate peaks."""
 
     __SPTXT_TEMPLATE = (
         "Name: {name}\n"
@@ -53,20 +54,21 @@ class Spectrum:
         self,
         sequence: str,
         charge: int,
-        parent_mz: Union[float, int],
-        mzs: Union[List[float], List[int]],
-        intensities: Union[List[float], List[int]],
-        nce: Optional[float],
-        modifications: Optional[str] = None,
+        parent_mz: float | int,
+        mzs: list[float] | list[int],
+        intensities: list[float] | list[int],
+        nce: float | None,
+        modifications: str | None = None,
         instrument: None = None,
         analyzer: str = "FTMS",
-        rt: Optional[float] = None,
-        irt: Optional[float] = None,
-        raw_spectra: Optional[str] = None,
-        nreps: Optional[int] = None,
+        rt: float | None = None,
+        irt: float | None = None,
+        raw_spectra: str | None = None,
+        nreps: int | None = None,
     ) -> None:
         """
-        Representation of spectra with methods to convert from and to
+        Representation of spectra with methods to convert from and to.
+
         encodings.
 
         This class provides a way to represent spectra and its associated peptide
@@ -156,7 +158,7 @@ class Spectrum:
         charge: int,
     ) -> Spectrum:
         """
-        theoretical_spectrum Generates theoretical spectra from sequences.
+        Theoretical_spectrum Generates theoretical spectra from sequences.
 
         Parameters
         ----------
@@ -211,8 +213,8 @@ class Spectrum:
     @classmethod
     def from_tensors(
         cls,
-        sequence_tensor: List[int],
-        fragment_tensor: List[int],
+        sequence_tensor: list[int],
+        fragment_tensor: list[int],
         mod_tensor: None = None,
         charge: int = 2,
         nce: float = 27.0,
@@ -221,7 +223,7 @@ class Spectrum:
         **kwargs,
     ) -> Spectrum:
         """
-        from_tensors Encodes iterables into a Spectrum object.
+        From_tensors Encodes iterables into a Spectrum object.
 
         This method is an utility function to create Spectrum objects from the encoded
         iterables or tensors. The encoding entail two iterables of integers,
@@ -289,7 +291,7 @@ class Spectrum:
 
     def precursor_error(self, error_type: str = "ppm") -> float:
         """
-        precursor_error Calculates the mass error of the precursor.
+        Precursor_error Calculates the mass error of the precursor.
 
         Calculates the mass error of the precursor, knowing the sequence,
         and modifications, in addition to the observed mass
@@ -373,11 +375,9 @@ class Spectrum:
 
         return self._delta_ascore
 
-    def encode_spectra(
-        self, dry: bool = False
-    ) -> Union[List[Union[int, float]], List[str]]:
+    def encode_spectra(self, dry: bool = False) -> list[int | float] | list[str]:
         """
-        encode_spectra Produce encoded sequences from your spectrum object.
+        Encode_spectra Produce encoded sequences from your spectrum object.
 
         It produces a list of integers that represents the spectrum,
         the labels correspond to the ones in CONSTANTS.FRAG_EMBEDING_LABELS,
@@ -396,7 +396,6 @@ class Spectrum:
             the labels for such ions,
             depending on wether the dry argument was passed or not
 
-
         Examples
         --------
         >>> myspec = Spectrum("AAAT[181]PAKKTVT[181]PAK", charge=3,\
@@ -413,7 +412,7 @@ class Spectrum:
         if self._annotated_peaks is None and not dry:
             self.annotated_peaks
             self.num_matching_peaks = sum(
-                [1 for x in self.annotated_peaks.values() if x > 0]
+                1 for x in self.annotated_peaks.values() if x > 0
             )
 
         if dry:
@@ -425,7 +424,8 @@ class Spectrum:
 
     def encode_sequence(self, enforce_length=True, pad_zeros=True) -> SequencePair:
         """
-        encode_sequence returns the encoded sequence of the
+        Encode_sequence returns the encoded sequence of the.
+
         aminoacids/modifications.
 
         It returns two lists representing the aminoacid and modification sequences, the
@@ -456,9 +456,9 @@ class Spectrum:
         )
 
     @property
-    def annotated_peaks(self) -> Dict[str, float]:
+    def annotated_peaks(self) -> dict[str, float]:
         """
-        annotated_peaks Peaks in the spectra annotated as ions.
+        Annotated_peaks Peaks in the spectra annotated as ions.
 
         Contains the annotated ions and its corresponding intensity, normalized
         to the highest one in the spectra
@@ -537,7 +537,7 @@ class Spectrum:
 
     def to_sptxt(self) -> str:
         """
-        to_sptxt Represents the spectrum for an sptxt file.
+        To_sptxt Represents the spectrum for an sptxt file.
 
         Returns
         -------
@@ -663,7 +663,7 @@ class Spectrum:
 
         return spectrum
 
-    def plot(self, mirror: Union[Spectrum, sus.MsmsSpectrum] = None, ax=None, **kwargs):
+    def plot(self, mirror: Spectrum | sus.MsmsSpectrum = None, ax=None, **kwargs):
         if mirror is None:
             sup.spectrum(self.sus_msms_spec, ax=ax, **kwargs)
         else:
@@ -693,21 +693,22 @@ class SptxtReader:
 
     def _get_sptxt_data(self):
         """
-        Goes through the file and gets the number of spectra and the
+        Goes through the file and gets the number of spectra and the.
+
         modifications present.
         """
         ptms = set()
         length = 0
-        with open(self.filepath, "r") as f:
+        with open(self.filepath) as f:
             for line in f:
                 if line.startswith("Name:"):
                     length += 1
                     seq = line.split(":")[1].strip().split("/")[0]
-                    ptms |= set(
+                    ptms |= {
                         x
                         for x in annotate.peptide_parser(seq, solve_aliases=True)
                         if "[" in x
-                    )
+                    }
 
         mods = defaultdict(lambda: "")
         for x in ptms:
@@ -717,12 +718,13 @@ class SptxtReader:
 
     # TODO consider if moving this parser to just use another dependency
     # ... pyteomics ??
-    def _chunk_sptxt(self) -> Iterator[List[str]]:
+    def _chunk_sptxt(self) -> Iterator[list[str]]:
         """
-        Reads an .sptxt and returns chunks of strings with each spectrum
+        Reads an .sptxt and returns chunks of strings with each spectrum.
+
         section.
         """
-        with open(self.filepath, "r") as f:
+        with open(self.filepath) as f:
             spectrum_section = []
             for line in f:
                 if line.startswith("#"):
@@ -734,7 +736,6 @@ class SptxtReader:
                             yield spectrum_section
                         except AssertionError as e:
                             warnings.warn(f"Skipping spectra with assertion error: {e}")
-                            pass
                         spectrum_section = (
                             [] if len(stripped_line) == 0 else [stripped_line]
                         )
@@ -752,7 +753,7 @@ class SptxtReader:
 
     def read(self) -> Iterator[Spectrum]:
         """
-        read_sptxt reads a spectra library file.
+        Read_sptxt reads a spectra library file.
 
         reads a spectral library file into a list of spectra objects
 
@@ -779,7 +780,7 @@ class SptxtReader:
 
     @staticmethod
     def _parse_spectra_sptxt(
-        x: List[str], instrument: None = None, analyzer: str = "FTMS", *args, **kwargs
+        x: list[str], instrument: None = None, analyzer: str = "FTMS", *args, **kwargs
     ) -> Spectrum:
         """
         Parse a single spectra into an object.
@@ -989,7 +990,8 @@ class SptxtReader:
             raise NotImplementedError
         else:
             """
-            warnings.warn( "No calculation function passed for iRT," " will
+            Warnings.warn( "No calculation function passed for iRT," " will.
+
             replace the column with missing" )
             """
             ret["iRT"] = np.nan

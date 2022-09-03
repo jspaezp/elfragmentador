@@ -1,5 +1,5 @@
 import math
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Union
 
 from numpy import float64
 
@@ -7,13 +7,13 @@ from elfragmentador import annotate, isoforms
 
 
 def get_site_localizing_ions(
-    seq: str, mod: List[str], aas: List[str]
+    seq: str, mod: list[str], aas: list[str]
 ) -> Union[
-    Tuple[Dict[str, Dict[Any, Any]], Dict[str, Dict[str, float64]]],
-    Tuple[Dict[str, Dict[str, float64]], Dict[str, Dict[str, float64]]],
+    tuple[dict[str, dict[Any, Any]], dict[str, dict[str, float64]]],
+    tuple[dict[str, dict[str, float64]], dict[str, dict[str, float64]]],
 ]:
     """
-    get_site_localizing_ions.
+    Get_site_localizing_ions.
 
     [extended_summary]
 
@@ -72,7 +72,7 @@ def get_site_localizing_ions(
     out_dict = {k: {} for k in mod_isoforms}
     for ion in mod_isoform_ions[mod_isoforms[0]]:
         unique_vals = list(
-            set([round(float(v[ion]), 10) for k, v in mod_isoform_ions.items()])
+            {round(float(v[ion]), 10) for k, v in mod_isoform_ions.items()}
         )
 
         for mi in mod_isoforms:
@@ -86,11 +86,11 @@ def get_site_localizing_ions(
 # TODO consider if this has to be a public API
 def calc_ascore(
     seq: str,
-    mod: List[str],
-    aas: List[str],
-    mzs: Union[List[float64], List[float]],
-    ints: Union[List[float], List[int]],
-) -> Dict[str, Union[float, int]]:
+    mod: list[str],
+    aas: list[str],
+    mzs: Union[list[float64], list[float]],
+    ints: Union[list[float], list[int]],
+) -> dict[str, Union[float, int]]:
     WINDOW_SIZE = 100  # daltons
     # BINNING = WINDOW_SIZE / (constants.TOLERANCE_FTMS / (1e6) )
     # aka, how many peaks can fit in a 100da window
@@ -135,7 +135,7 @@ def calc_ascore(
         # define best as highest cumulative score
         # deltascores = {k: sum(v) for k, v in scores.items()}
     except IndexError:
-        return {seq: max([x[0] for x in scores.values()]), "": 0}
+        return {seq: max(x[0] for x in scores.values()), "": 0}
 
     deltascores
     max_deltascores = max(deltascores.values())
@@ -156,10 +156,10 @@ def calc_ascore(
 
 def calc_delta_ascore(
     seq: str,
-    mod: List[str],
-    aas: List[str],
-    mzs: Union[List[float64], List[float]],
-    ints: Union[List[float], List[int]],
+    mod: list[str],
+    aas: list[str],
+    mzs: Union[list[float64], list[float]],
+    ints: Union[list[float], list[int]],
 ) -> float:
     ascores = calc_ascore(seq, mod, aas, mzs, ints)
     seq_score = ascores.pop(seq)
@@ -167,11 +167,11 @@ def calc_delta_ascore(
 
 
 def _calculate_scores_dict(
-    mzs: Union[List[float64], List[float]],
-    ints: List[int],
-    ions_dict: Dict[str, Dict[str, float64]],
+    mzs: Union[list[float64], list[float]],
+    ints: list[int],
+    ions_dict: dict[str, dict[str, float64]],
     prior: float,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     EPSILON = 1e-31
 
     scores = {k: None for k in ions_dict}

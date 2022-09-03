@@ -1,0 +1,148 @@
+---
+jupyter: python3
+---
+
+```{python}
+import random
+import time
+import torch
+from bayes_opt import BayesianOptimization
+
+from torch.utils.data.dataloader import DataLoader
+from torch.utils.data.dataset import TensorDataset
+
+from elfragmentador.utils import get_random_peptide
+from elfragmentador import model
+
+
+def concat_batches(batches):
+    out = []
+    for i, _ in enumerate(batches[0]):
+        out.append(torch.cat([b[i] for b in batches]))
+
+    return tuple(out)
+
+
+def prepare_input_tensors(num=50):
+    peps = [
+        {
+            "nce": 20 + (10 * random.random()),
+            "charge": random.randint(1, 5),
+            "seq": get_random_peptide(),
+        }
+        for _ in range(num)
+    ]
+
+    tensors = [model.PepTransformerModel.torch_batch_from_seq(**pep) for pep in peps]
+    tensors = TensorDataset(*concat_batches(batches=tensors))
+
+    return tensors
+
+
+NUM_PEPTIDES = 50
+input_tensors = prepare_input_tensors(NUM_PEPTIDES)
+batches = DataLoader(input_tensors, batch_size=1)
+```
+
+```{python}
+@torch.no_grad()
+def measure_time(model, batches):
+    model.eval()
+    st = time.time()
+    for b in batches:
+        _ = model(*b)
+
+    et = time.time() - st
+    return et
+
+
+def optimize_time_budget(budget, batches):
+    batches = batches
+    budget = budget
+
+    def _main(num_encoder_layers, num_decoder_layers, nhid, ninp, nhead):
+        stat_dict = {
+            "num_encoder_layers": int(num_encoder_layers),
+            "num_decoder_layers": int(num_encoder_layers + (num_decoder_layers)),
+            "nhid": int((nhid)),
+            "ninp": int((ninp)),
+            "nhead": int((nhead)),
+        }
+
+        stat_dict["ninp"] = (
+            int(stat_dict["ninp"] / stat_dict["nhead"]) * stat_dict["nhead"]
+        )
+        stat_dict["nhid"] = (
+            int(stat_dict["nhid"] / stat_dict["nhead"]) * stat_dict["nhead"]
+        )
+
+        try:
+            mod = model.PepTransformerModel(**stat_dict)
+        except AssertionError as e:
+            print(stat_dict)
+            raise (e)
+
+        et = measure_time(model=mod, batches=batches)
+
+        # This is the number of seconds per inference, per sample
+        et = et / len(batches)
+        mae = 1 - abs(budget - et)
+        return mae
+
+    return _main
+```
+
+```{python}
+import warnings
+
+warnings.simplefilter("ignore")
+
+import logging
+
+logging.getLogger("root").setLevel(logging.ERROR)
+
+import pandas as pd
+
+BOUNDS = {
+    "num_encoder_layers": (2, 6),
+    "num_decoder_layers": (1, 4),
+    "nhid": (64, 2048),
+    "ninp": (64, 2048),
+    "nhead": (2, 8),
+}
+
+BUDGET = 0.02
+
+optimizer = BayesianOptimization(
+    f=optimize_time_budget(budget=BUDGET, batches=batches),
+    pbounds=BOUNDS,
+)
+
+optimizer.maximize(
+    n_iter=500,
+)
+```
+
+```{python}
+x_obs = pd.DataFrame([res["params"] for res in optimizer.res])
+x_obs["Target"] = [res["target"] for res in optimizer.res]
+x_obs
+```
+
+```{python}
+# Allow 10% off the time budget
+df = (
+    x_obs[x_obs["Target"] > (1 - (BUDGET * 0.1))]
+    .sort_values("Target")
+    .reset_index(drop=True)
+)
+print(df)
+df.to_csv("bayes_opt_arches.csv", index=False)
+```
+
+```{python}
+df["nhead"] = df["nhead"].astype("int")
+df["nhid"] = (df["nhid"] / df["nhead"]).astype("int") * df["nhead"]
+df["ninp"] = (df["ninp"] / df["nhead"]).astype("int") * df["nhead"]
+df
+```

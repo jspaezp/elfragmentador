@@ -4,7 +4,6 @@ import logging
 import warnings
 from argparse import _ArgumentGroup
 from pathlib import Path, PosixPath
-from typing import Optional, Union
 
 import pandas as pd
 import pytorch_lightning as pl
@@ -19,7 +18,7 @@ class PeptideDataModule(pl.LightningDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        base_dir: Union[str, PosixPath] = ".",
+        base_dir: str | PosixPath = ".",
         drop_missing_vals: bool = False,
         max_spec=2_000_000,
     ) -> None:
@@ -67,7 +66,7 @@ class PeptideDataModule(pl.LightningDataModule):
         parser.add_argument("--max_spec", type=int, default=2000000)
         return parser
 
-    def setup(self, stage: Optional[str] = None) -> None:
+    def setup(self, stage: str | None = None) -> None:
         self.train_dataset = PeptideDataset(
             self.train_df,
             drop_missing_vals=self.drop_missing_vals,

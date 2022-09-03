@@ -16,7 +16,8 @@ from elfragmentador.model import PepTransformerModel
 
 class SelfAttentionExplorer(torch.no_grad):
     """
-    SelfAttentionExplorer lets you explore self-attention with a context
+    SelfAttentionExplorer lets you explore self-attention with a context.
+
     manager.
 
     It is a context manager that takes a PepTransformerModel and wraps the transformer
@@ -176,7 +177,8 @@ class SelfAttentionExplorer(torch.no_grad):
 
 def make_bipartite(x):
     """
-    Makes a bipartite graph from a data frame whose col and row indices are the
+    Makes a bipartite graph from a data frame whose col and row indices are the.
+
     same.
     """
 

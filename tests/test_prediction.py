@@ -13,7 +13,7 @@ def test_prediction_loop(datamodule, tiny_model):
     assert "irt" in out._fields and "spectra" in out._fields
 
     assert len(out) == 2
-    assert len(set([len(x) for x in out])) == 1
+    assert len({len(x) for x in out}) == 1
 
 
 def test_testing_loop(datamodule, tiny_model):

@@ -7,7 +7,8 @@
 
 import warnings
 from collections import defaultdict
-from typing import Callable, Dict, Iterator, List, Tuple, Union
+from collections.abc import Iterator
+from typing import Callable, Union
 
 import numpy
 import numpy as np
@@ -59,7 +60,7 @@ def _solve_alias(x: str) -> str:
 
 def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
     """
-    peptide_parser Parses peptides in a string to an iterable.
+    Peptide_parser Parses peptides in a string to an iterable.
 
     Args:
         p (str):
@@ -134,7 +135,8 @@ def peptide_parser(p: str, solve_aliases: bool = False) -> Iterator[str]:
 
 def mass_diff_encode_seq(seq: str) -> str:
     """
-    Solve peptide string so modifications are expressed as mass difference
+    Solve peptide string so modifications are expressed as mass difference.
+
     without the +
 
     "T[+80]" > "T[80]"
@@ -155,7 +157,7 @@ def mass_diff_encode_seq(seq: str) -> str:
 
 def canonicalize_seq(seq: str, robust: bool = False) -> str:
     """
-    canonicalize_seq Solves all modification aliases in a sequence.
+    Canonicalize_seq Solves all modification aliases in a sequence.
 
     Given a sequence, converts al supported modification aliases to the
     "canonical" version of them and returns the new version.
@@ -196,13 +198,14 @@ def get_theoretical_mass(peptide: str):
         1093.4637787
     """
     aas = peptide_parser(peptide, solve_aliases=True)
-    out = sum([constants.MOD_AA_MASSES[a] for a in aas])
+    out = sum(constants.MOD_AA_MASSES[a] for a in aas)
     return out
 
 
 def get_precursor_mz(peptide: str, charge: int):
     """
-    Calculates the theoretical mass/charge of a precursor peptide (assumes
+    Calculates the theoretical mass/charge of a precursor peptide (assumes.
+
     positive mode)
 
     Args:
@@ -219,7 +222,7 @@ def get_precursor_mz(peptide: str, charge: int):
     return (get_theoretical_mass(peptide) + charge * constants.PROTON) / charge
 
 
-def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
+def _get_forward_backward(peptide: str) -> tuple[ndarray, ndarray]:
     """
     Calculates masses forward and backwards from aminoacid sequences.
 
@@ -246,7 +249,8 @@ def _get_forward_backward(peptide: str) -> Tuple[ndarray, ndarray]:
 
 def _get_mzs(cumsum: ndarray, ion_type: str, z: int) -> np.float64:
     """
-    Gets the m/z values from a series after being provided with the cumulative
+    Gets the m/z values from a series after being provided with the cumulative.
+
     sums of the aminoacids in its series, meant for internal use.
     """
 
@@ -258,9 +262,10 @@ def _get_mzs(cumsum: ndarray, ion_type: str, z: int) -> np.float64:
 
 def _get_annotation(
     forward: ndarray, backward: ndarray, charge: int, ion_types: str
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
-    Calculates the ion annotations based on the forward and backward cumulative
+    Calculates the ion annotations based on the forward and backward cumulative.
+
     masses.
 
     Args:
@@ -288,7 +293,7 @@ def _get_annotation(
         elif ion_type in constants.BACKWARD:
             cummass = backward
         else:
-            raise ValueError("unknown ion_type: {}".format(ion_type))
+            raise ValueError(f"unknown ion_type: {ion_type}")
         masses = _get_mzs(cummass, ion_type, charge)
         d = {ion_type + str(i + 1): m for i, m in enumerate(np.nditer(masses))}
         all_.update(d)
@@ -296,7 +301,7 @@ def _get_annotation(
     return all_
 
 
-def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
+def get_peptide_ions(aa_seq: str) -> dict[str, float64]:
     """
     Gets the theoretical masses of fragment ions.
 
@@ -328,9 +333,9 @@ def get_peptide_ions(aa_seq: str) -> Dict[str, float64]:
 
 def _get_peptide_ions(
     aa_seq: str,
-    charges: Union[List[int], range] = range(1, 5),
-    ion_types: Union[str, List[str]] = "yb",
-) -> Dict[str, float64]:
+    charges: Union[list[int], range] = range(1, 5),
+    ion_types: Union[str, list[str]] = "yb",
+) -> dict[str, float64]:
     """
     Gets a dictionary of theoretical ion masses for a peptide.
 
@@ -363,7 +368,8 @@ def get_tolerance(
     theoretical: float64, tolerance: Union[float, int] = 25.0, unit: str = "ppm"
 ) -> float64:
     """
-    Calculates the toleranc in daltons from either a dalton tolerance or a ppm
+    Calculates the toleranc in daltons from either a dalton tolerance or a ppm.
+
     tolerance.
 
     Args:
@@ -379,7 +385,7 @@ def get_tolerance(
     elif unit == "da":
         return float(tolerance)
     else:
-        raise ValueError("unit {} not implemented".format(unit))
+        raise ValueError(f"unit {unit} not implemented")
 
 
 def is_in_tolerance(
@@ -405,15 +411,15 @@ def is_in_tolerance(
 
 def is_sorted(
     lst: Union[
-        List[List[Union[int, float]]],
-        List[List[float]],
-        List[List[Union[str, float64]]],
-        List[List[Union[float64, int]]],
+        list[list[Union[int, float]]],
+        list[list[float]],
+        list[list[Union[str, float64]]],
+        list[list[Union[float64, int]]],
     ],
     key: Callable = lambda x: x,
 ) -> bool:
     """
-    is_sorted Checks if a list is sorted.
+    Is_sorted Checks if a list is sorted.
 
     Args:
         lst (List): List to check if it is sorted
@@ -440,15 +446,15 @@ def is_sorted(
 
 def sort_if_needed(
     lst: Union[
-        List[List[Union[int, float]]],
-        List[List[float]],
-        List[List[Union[str, float64]]],
-        List[List[Union[float64, int]]],
+        list[list[Union[int, float]]],
+        list[list[float]],
+        list[list[Union[str, float64]]],
+        list[list[Union[float64, int]]],
     ],
     key: Callable = lambda x: x,
 ) -> None:
     """
-    sort_if_needed Sorts a list in place if it is not already sorted.
+    Sort_if_needed Sorts a list in place if it is not already sorted.
 
     Args:
         lst (List): List to be sorted
@@ -466,14 +472,14 @@ def sort_if_needed(
 
 
 def annotate_peaks(
-    theoretical_peaks: Dict[str, float64],
-    mzs: Union[List[float64], List[float]],
-    intensities: Union[List[float], List[int]],
+    theoretical_peaks: dict[str, float64],
+    mzs: Union[list[float64], list[float]],
+    intensities: Union[list[float], list[int]],
     tolerance: int = 25,
     unit: str = "ppm",
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
-    annotate_peaks Assigns m/z peaks to annotations.
+    Annotate_peaks Assigns m/z peaks to annotations.
 
     Args:
         theoretical_peaks (Dict[str, float64]):

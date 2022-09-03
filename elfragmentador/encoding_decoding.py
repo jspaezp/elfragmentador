@@ -1,6 +1,6 @@
 import logging
 from collections import namedtuple
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -82,7 +82,7 @@ def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePai
     return SequencePair(seq_out, mod_out)
 
 
-def clip_explicit_terminus(seq: Union[str, List]):
+def clip_explicit_terminus(seq: Union[str, list]):
     """
     Remove explicit terminus.
 
@@ -112,8 +112,8 @@ def clip_explicit_terminus(seq: Union[str, List]):
 
 
 def decode_mod_seq(
-    seq_encoding: List[int],
-    mod_encoding: Optional[List[int]] = None,
+    seq_encoding: list[int],
+    mod_encoding: Optional[list[int]] = None,
     clip_explicit_term=True,
 ) -> str:
     """
@@ -157,8 +157,8 @@ def decode_mod_seq(
 
 
 def encode_fragments(
-    annotated_peaks: Optional[Union[Dict[str, int], Dict[str, float]]]
-) -> Union[List[float], List[int]]:
+    annotated_peaks: Optional[Union[dict[str, int], dict[str, float]]]
+) -> Union[list[float], list[int]]:
     """
     Gets either the labels or an sequence that encodes a spectra.
 
@@ -178,10 +178,11 @@ def encode_fragments(
 @torch.no_grad()
 def decode_fragment_tensor(
     sequence: str,
-    tensor: Union[List[int], Tensor],
-) -> Dict[str, Union[List[str], np.float32]]:
+    tensor: Union[list[int], Tensor],
+) -> dict[str, Union[list[str], np.float32]]:
     """
-    Returns a data frame with annotations from sequence and a tensor encoding a
+    Returns a data frame with annotations from sequence and a tensor encoding a.
+
     spectra.
 
     Examples:

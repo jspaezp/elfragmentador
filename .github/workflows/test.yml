@@ -30,12 +30,14 @@ jobs:
       - name: View poetry --help
         run: poetry --help
       - name: Install deps
-        run: poetry install
+        run: poetry install -n -vv
       - name: Black
         run: poetry run python -m black . --check
+      - name: flake8
+        run: poetry run flake8 elfragmentador
+      - name: isort
+        run: poetry run isort . --check
       - name: Pytest
         run: poetry run python -m pytest
-      - name: flake8
-        run: poetry run flake8
       - name: mkdocs
         run: poetry run python -m mkdocs build

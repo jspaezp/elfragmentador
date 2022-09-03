@@ -23,16 +23,16 @@ irts
 # # A tibble: 215,908 x 9
 #    `Modified seque… Encoding `Leading protei…   mIRT  sdIRT   mRT   sdRT
 #    <chr>            <chr>    <chr>             <dbl>  <dbl> <dbl>  <dbl>
-#  1 _AAAAAAAAAAAAAA… [1, 1, … TUM_first_pool_… 118.   0.0227  47.0 0.178 
-#  2 _AAAAAAAAAAGAAG… [1, 1, … TUM_first_pool_…  13.4  0.227   21.5 0.138 
+#  1 _AAAAAAAAAAAAAA… [1, 1, … TUM_first_pool_… 118.   0.0227  47.0 0.178
+#  2 _AAAAAAAAAAGAAG… [1, 1, … TUM_first_pool_…  13.4  0.227   21.5 0.138
 #  3 _AAAAAAAAAAR_    [1, 1, … TUM_first_pool_… -13.6  1.87    14.3 0.0849
-#  4 _AAAAAAAAAKNGSS… [1, 1, … TUM_first_pool_… -22.6  5.04    11.5 0.956 
-#  5 _AAAAAAAAAVSR_   [1, 1, … TUM_first_pool_…   9.22 0       19.6 0     
-#  6 _AAAAAAAAGAFAGR_ [1, 1, … TUM_first_pool_…  38.7  0.202   27.1 0.482 
-#  7 _AAAAAAAAVPSAGP… [1, 1, … TUM_first_pool_…  38.9  0.773   27.6 0.397 
-#  8 _AAAAAAALQAK_    [1, 1, … TUM_first_pool_…  11.8  1.11    20.0 0.237 
-#  9 _AAAAAAAPSGGGGG… [1, 1, … TUM_first_pool_…   9.32 0.817   20.1 0.457 
-# 10 _AAAAAAARGSNSDS… [1, 1, … TUM_second_pool… -23.5  1.55    12.2 0.182 
+#  4 _AAAAAAAAAKNGSS… [1, 1, … TUM_first_pool_… -22.6  5.04    11.5 0.956
+#  5 _AAAAAAAAAVSR_   [1, 1, … TUM_first_pool_…   9.22 0       19.6 0
+#  6 _AAAAAAAAGAFAGR_ [1, 1, … TUM_first_pool_…  38.7  0.202   27.1 0.482
+#  7 _AAAAAAAAVPSAGP… [1, 1, … TUM_first_pool_…  38.9  0.773   27.6 0.397
+#  8 _AAAAAAALQAK_    [1, 1, … TUM_first_pool_…  11.8  1.11    20.0 0.237
+#  9 _AAAAAAAPSGGGGG… [1, 1, … TUM_first_pool_…   9.32 0.817   20.1 0.457
+# 10 _AAAAAAARGSNSDS… [1, 1, … TUM_second_pool… -23.5  1.55    12.2 0.182
 # # … with 215,898 more rows, and 2 more variables: nRUNS <dbl>,
 # #   nMSMS <dbl>
 

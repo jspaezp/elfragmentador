@@ -45,7 +45,7 @@ You can check how fast the model is in you specific system.
 Right now it tests only on CPU, message me if you need GPU inference times
 
 ```shell
-poetry run pytest tests/test_model.py --benchmark-histogram 
+poetry run pytest tests/test_model.py --benchmark-histogram
 ```
 
 Currenty the inference time in an Intel i5-7260U is ~5.9ms, or ~167.44 predictions per second. On a GPU it is closer to ~1000 predictions per second.
@@ -53,6 +53,7 @@ Currenty the inference time in an Intel i5-7260U is ~5.9ms, or ~167.44 predictio
 ## How big is it?
 
 I have explored many variations on the model but currently the one distributed is only ~4mb. Models up to 200mb have been tried and they don't really give a big improvement in performance.
+
 ## "Common" questions
 
 - What scale are the retention times predicted.
@@ -107,5 +108,5 @@ I have explored many variations on the model but currently the one distributed i
 ## Acknowledgements
 
 1. Purdue Univ for the computational resources for the preparation of the data (Brown Cluster).
-2. Pytorch Lightning Team ... without this being open sourced this would not be posible.
-3. Weights and Biases (same as above).
+1. Pytorch Lightning Team ... without this being open sourced this would not be posible.
+1. Weights and Biases (same as above).

@@ -55,5 +55,5 @@ def test_spectronaut_library_can_be_compared(shared_datadir, tmpdir):
     assert (tmpdir + ".feather").exists()
 
     # This entails it can be read
-    read_df = pd.read_csv(str(tmpdir) + ".csv")
-    read_df = pd.read_feather(str(tmpdir) + ".feather")
+    pd.read_csv(str(tmpdir) + ".csv")
+    pd.read_feather(str(tmpdir) + ".feather")

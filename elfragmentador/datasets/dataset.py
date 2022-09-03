@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from argparse import _ArgumentGroup
 from collections import defaultdict
 from os import PathLike
-from typing import Iterable, Iterator, List, NamedTuple, Optional, Union
+from typing import Iterable, Iterator, NamedTuple
 
 import numpy as np
 import torch
@@ -217,10 +217,8 @@ class NCEOffsetHolder(ABC):
             if score > best_score:
                 if i > 0:
                     logging.info(
-                        (
-                            f"Updating best offset (from {best} to {offset}) "
-                            f"because {best_score} < {score}"
-                        )
+                        f"Updating best offset (from {best} to {offset}) "
+                        f"because {best_score} < {score}"
                     )
                 best = offset
                 best_score = score
@@ -244,7 +242,7 @@ class DatasetBase(Dataset, NCEOffsetHolder):
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def __getitem__(self, index) -> Union[ForwardBatch, TrainBatch]:
+    def __getitem__(self, index) -> ForwardBatch | TrainBatch:
         raise NotImplementedError
 
     @abstractmethod
@@ -266,7 +264,7 @@ class IterableDatasetBase(IterableDataset, NCEOffsetHolder):
 
 
 class BatchDataset(DatasetBase):
-    def __init__(self, batches: List[ForwardBatch], *args, **kwargs):
+    def __init__(self, batches: list[ForwardBatch], *args, **kwargs):
         super().__init__(*args, **kwargs)
         logging.info("Initializing BatchDataset")
 
@@ -278,7 +276,7 @@ class BatchDataset(DatasetBase):
         info = {k: v.shape for k, v in self.batches._asdict().items()}
         logging.debug(f"Initialized BatchDataset with {info}")
 
-    def __getitem__(self, index: int) -> Union[ForwardBatch, TrainBatch]:
+    def __getitem__(self, index: int) -> ForwardBatch | TrainBatch:
         out = [x[index] for x in self.batches]
         out = self.batchtype(*out)
         return out
@@ -299,7 +297,7 @@ class BatchDataset(DatasetBase):
         raise RuntimeError
 
     @staticmethod
-    def cat_list(tensor_list: List[Tensor]):
+    def cat_list(tensor_list: list[Tensor]):
         lengths = np.array([x.shape for x in tensor_list])
         max_lenghts = lengths.max(axis=0)
         out = []
@@ -315,13 +313,13 @@ class BatchDataset(DatasetBase):
         return out
 
     @staticmethod
-    def cat_batch_list(batch_list: List[NamedTensorBatch]):
+    def cat_batch_list(batch_list: list[NamedTensorBatch]):
         elem = batch_list[0]
         batchtype = type(elem)
         for x in elem:
             assert isinstance(x, Tensor)
 
-        lens = list(set([len(x) for x in elem]))
+        lens = list({len(x) for x in elem})
         assert len(lens) == 1
 
         keep_batches = [
@@ -393,7 +391,7 @@ class ComparissonDataset(Dataset):
         return self.length
 
     @staticmethod
-    def _make_key(batch: Union[ForwardBatch, TrainBatch], ignore_nce=False):
+    def _make_key(batch: ForwardBatch | TrainBatch, ignore_nce=False):
         mods = F.pad(batch.mods, (0, batch.seq.size(-1) - batch.mods.size(-1)))
         mod_seq = encoding_decoding.decode_mod_seq(
             seq_encoding=batch.seq, mod_encoding=mods
@@ -474,9 +472,7 @@ class ComparissonDataset(Dataset):
         pred = PredictionResults(irt=outs["pred"].irt, spectra=outs["pred"].spectra)
         return {"gt": gt, "pred": pred}
 
-    def compare(
-        self, plot: Optional[bool] = False, predictor: Optional[Predictor] = None
-    ):
+    def compare(self, plot: bool | None = False, predictor: Predictor | None = None):
         if predictor is None:
             predictor = Predictor(batch_size=16)
 
@@ -488,9 +484,10 @@ class ComparissonDataset(Dataset):
         self.losses = losses
         return losses
 
-    def save_data(self, prefix: Optional[PathLike] = None):
+    def save_data(self, prefix: PathLike | None = None):
         """
-        Saves the data to a csv file if a path is provided, else it returns the
+        Saves the data to a csv file if a path is provided, else it returns the.
+
         data as a dataframe.
         """
 
@@ -529,18 +526,16 @@ class ComparissonDataset(Dataset):
 
 
 class Predictor(Trainer):
-    """
-    A class for testing a model and generating predictions.
-    """
+    """A class for testing a model and generating predictions."""
 
     def __init__(
         self,
-        gpus: Optional[Union[List[int], str, int]] = 0,
+        gpus: list[int] | str | int | None = 0,
         precision: int = 32,
         batch_size: int = 4,
     ):
         """
-        __init__
+        __init__.
 
         Initializes a Predictor object
 
@@ -584,10 +579,10 @@ class Predictor(Trainer):
     def predict_dataset(
         self,
         model: PepTransformerModel,
-        dataset: Union[DatasetBase, IterableDatasetBase],
+        dataset: DatasetBase | IterableDatasetBase,
     ) -> PredictionResults:
         """
-        predict_dataset.
+        Predict_dataset.
 
         Args:
             model (PepTransformerModel): A model to use for prediction
@@ -609,14 +604,14 @@ class Predictor(Trainer):
     def evaluate_dataset(
         self,
         model: PepTransformerModel,
-        dataset: Union[DatasetBase, IterableDatasetBase],
-        plot: Optional[bool] = True,
-        optimize_nce: Optional[Union[bool, Iterable[float]]] = range(-10, 10, 2),
-        keep_predictions: Optional[bool] = False,
-        save_prefix: Optional[PathLike] = None,
-    ) -> Union[EvaluationLossBatch, EvaluationPredictionBatch]:
+        dataset: DatasetBase | IterableDatasetBase,
+        plot: bool | None = True,
+        optimize_nce: bool | Iterable[float] | None = range(-10, 10, 2),
+        keep_predictions: bool | None = False,
+        save_prefix: PathLike | None = None,
+    ) -> EvaluationLossBatch | EvaluationPredictionBatch:
         """
-        evaluate_dataset.
+        Evaluate_dataset.
 
         Args:
             model (PepTransformerModel):

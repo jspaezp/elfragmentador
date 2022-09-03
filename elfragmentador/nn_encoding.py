@@ -1,5 +1,6 @@
 """
-Implements torch models to handle encoding and decoding of positions as well as
+Implements torch models to handle encoding and decoding of positions as well as.
+
 learnable embeddings for the aminoacids and ions.
 """
 
@@ -40,7 +41,7 @@ class SeqPositionalEmbed(torch.nn.Module):
 
     def forward(self, x: torch.LongTensor) -> Tensor:
         """
-        forward.
+        Forward.
 
         Returns the positional encoding for a sequence, expressed as integers
 
@@ -224,7 +225,7 @@ class PositionalEncoding(torch.nn.Module):
             >>> posencoder(x).shape
             torch.Size([2, 1, 20])
         """
-        super(PositionalEncoding, self).__init__()
+        super().__init__()
 
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)

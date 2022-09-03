@@ -5,7 +5,7 @@ import re
 import warnings
 from os import PathLike
 from pathlib import Path
-from typing import Generator, Iterator, NamedTuple, Optional, Union
+from typing import Generator, Iterator, NamedTuple, Optional
 
 import pandas as pd
 import torch
@@ -35,7 +35,7 @@ class PinDataset(IterableDatasetBase):
     def __init__(
         self,
         in_path: PathLike,
-        df: Optional[DataFrame] = None,
+        df: DataFrame | None = None,
         nce_offset: float = 0,
     ):
         """
@@ -214,11 +214,9 @@ class PinDataset(IterableDatasetBase):
             yield out
 
         logging.info(
-            (
-                f"{num_spec + 1} Spectra Yielded,"
-                f" {cached_batch_inputs} Cached inputs,"
-                f" {cached_reads} Cached Spectrum reads"
-            )
+            f"{num_spec + 1} Spectra Yielded,"
+            f" {cached_batch_inputs} Cached inputs,"
+            f" {cached_reads} Cached Spectrum reads"
         )
 
     def greedify(self):
@@ -264,7 +262,7 @@ class MokapotPSMDataset(PinDataset):
     def __init__(
         self,
         in_path: PathLike,
-        df: Optional[DataFrame] = None,
+        df: DataFrame | None = None,
         nce_offset: float = 0,
         max_q: float = 0.01,
         max_pep: float = 0.01,
@@ -316,8 +314,8 @@ class MokapotPSMDataset(PinDataset):
 
 @torch.no_grad()
 def append_preds(
-    in_pin: Union[Path, str],
-    out_pin: Union[Path, str],
+    in_pin: Path | str,
+    out_pin: Path | str,
     model: PepTransformerModel,
     predictor: Optional(Predictor) = None,
 ) -> pd.DataFrame:
