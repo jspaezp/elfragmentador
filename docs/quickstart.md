@@ -1,4 +1,3 @@
-
 # Quickstart
 
 ## Installation
@@ -281,7 +280,7 @@ import elfragmentador as ef
 from elfragmentador.model import PepTransformerModel
 
 checkpoint_path = "some/path/to/a/checkpoint"
-#or
+# or
 checkpoint_path = ef.DEFAULT_CHECKPOINT
 model = PepTransformerModel.load_from_checkpoint(checkpoint_path)
 
@@ -290,12 +289,14 @@ _ = model.eval()
 tensor_predictions = model.predict_from_seq("MYPEPTIDEK", charge=3, nce=27.0)
 # PredictionResults(irt=tensor([0.2022], grad_fn=<SqueezeBackward1>), spectra=tensor([0.0000e+00, ...grad_fn=<SqueezeBackward1>))
 
-#or ...
+# or ...
 import matplotlib.pyplot as plt
-spectrum_prediction = model.predict_from_seq("MYPEPTIDEK", charge=3, nce=27.0, as_spectrum=True)
-spectrum_prediction.plot(ax = ax)
-plt.show()
 
+spectrum_prediction = model.predict_from_seq(
+    "MYPEPTIDEK", charge=3, nce=27.0, as_spectrum=True
+)
+spectrum_prediction.plot(ax=ax)
+plt.show()
 ```
 
 ![](img/spectrum.png)

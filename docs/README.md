@@ -51,6 +51,7 @@ Currenty the inference time in an Intel i5-7260U is ~5.9ms, or ~167.44 predictio
 ## How big is it?
 
 I have explored many variations on the model but currently the one distributed is only ~4mb. Models up to 200mb have been tried and they don't really give a big improvement in performance.
+
 ## "Common" questions
 
 - What scale are the retention times predicted.
@@ -85,5 +86,5 @@ I have explored many variations on the model but currently the one distributed i
 ## Acknowledgements
 
 1. Purdue Univ for the computational resources for the preparation of the data (Brown Cluster).
-2. Pytorch Lightning Team ... without this being open sourced this would not be posible.
-3. Weights and Biases (same as above).
+1. Pytorch Lightning Team ... without this being open sourced this would not be posible.
+1. Weights and Biases (same as above).
