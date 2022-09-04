@@ -311,6 +311,21 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "docformatter"
+version = "1.5.0"
+description = "Formats docstrings to follow PEP 257"
+category = "dev"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+tomli = {version = ">=2.0.0,<3.0.0", markers = "python_version >= \"3.7\""}
+untokenize = ">=0.1.1,<0.2.0"
+
+[package.extras]
+tomli = ["tomli (<2.0.0)"]
+
+[[package]]
 name = "docker-pycreds"
 version = "0.4.0"
 description = "Python bindings for the docker credentials store API"
@@ -2310,6 +2325,14 @@ numpy = ">=1.15.0"
 dev = ["black", "mypy", "pytest (>=6.0.1)"]
 
 [[package]]
+name = "untokenize"
+version = "0.1.1"
+description = "Transforms tokens into original source code (while preserving whitespace)."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "urllib3"
 version = "1.25.11"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -2443,7 +2466,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "9f63ce475160d96c39ac335defecd5e1d6b61bebe28597515a54ce5070559c26"
+content-hash = "f173b9353449221857399098c8f7f8faa9b80413c4b117f63a781b7b829c8122"
 
 [metadata.files]
 absl-py = [
@@ -2788,6 +2811,10 @@ decorator = [
 defusedxml = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
+]
+docformatter = [
+    {file = "docformatter-1.5.0-py3-none-any.whl", hash = "sha256:ae56c64822c3184602ac83ec37650c9785e80dfec17b4eba4f49ad68815d71c0"},
+    {file = "docformatter-1.5.0.tar.gz", hash = "sha256:9dc71659d3b853c3018cd7b2ec34d5d054370128e12b79ee655498cb339cc711"},
 ]
 docker-pycreds = [
     {file = "docker-pycreds-0.4.0.tar.gz", hash = "sha256:6ce3270bcaf404cc4c3e27e4b6c70d3521deae82fb508767870fdbf772d584d4"},
@@ -4210,6 +4237,9 @@ uc-micro-py = [
 uniplot = [
     {file = "uniplot-0.3.5-py3-none-any.whl", hash = "sha256:5b875abfac8557f1bc895903929d9ffcd7a66c3a54314de212625a266fb1b949"},
     {file = "uniplot-0.3.5.tar.gz", hash = "sha256:f4987dd33f8ed5cb98bd095362fb3203825a75be7fa2690345a441ef03756176"},
+]
+untokenize = [
+    {file = "untokenize-0.1.1.tar.gz", hash = "sha256:3865dbbbb8efb4bb5eaa72f1be7f3e0be00ea8b7f125c69cbd1f5fda926f37a2"},
 ]
 urllib3 = [
     {file = "urllib3-1.25.11-py2.py3-none-any.whl", hash = "sha256:f5321fbe4bf3fefa0efd0bfe7fb14e90909eb62a48ccda331726b4319897dd5e"},
