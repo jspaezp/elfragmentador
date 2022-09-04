@@ -57,6 +57,11 @@ jobs:
         run: poetry run isort . --check
       - name: Pytest
         run: poetry run python -m pytest
+
+      # mdformat has to be run before building the docs, since auto generated docs
+      # do are not necessarily formatted
+      - name: mdformat
+        run: mdformat --check *.md docs notebooks notebooks/*/*.qmd tests
       - name: Build Notebooks
         run: bash docs/render_nbs.bash
       - name: mkdocs
