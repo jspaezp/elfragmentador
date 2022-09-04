@@ -30,7 +30,7 @@ wandb = "^0.10.13"
 autoflake = "^1.5.3"
 black = {extras = ["jupyter"], version = "^22.8.0"}
 flake8 = "^3.8.4"
-mdformat-gfm = "^0.3.5"
+isort = "^5.10.1"
 pydocstringformatter = "^0.7.2"
 pytest = "^6.2.1"
 pytest-benchmark = "^3.2.3"
@@ -38,8 +38,9 @@ pytest-codecov = "^0.3.0"
 pytest-cov = "^2.11.1"
 pytest-datadir = "^1.3.1"
 pyupgrade = "^2.37.3"
-isort = "^5.10.1"
+mdformat = "^0.7.16"
 mdformat-black = "^0.1.1"
+mdformat-gfm = "^0.3.5"
 
 
 
@@ -47,8 +48,7 @@ mdformat-black = "^0.1.1"
 seaborn = "^0.11.2"
 scikit-learn = "^1.1.2"
 scipy = "^1.9.1"
-
-[too.poetry.group.docs.dependencies]
+nbformat = "^5.4.0"
 jupyter = "^1.0.0"
 mkdocs = "^1.3.1"
 mkdocs-material = "^8.4.2"
@@ -56,6 +56,7 @@ mkdocs-pymdownx-material-extras = "^1.4"
 mkdocstrings = "^0.19.0"
 mkdocstrings-python = "^0.7.1"
 Jinja2 = "^3.1.2"
+
 
 [too.poetry.group.helper.dependencies]
 MonkeyType = "^20.5.0"
