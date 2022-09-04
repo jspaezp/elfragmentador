@@ -1,4 +1,3 @@
-
 # From sequences and spectra to tensors
 
 ![](../img/mermaid-diagram-20210823221411.png)

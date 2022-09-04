@@ -1,4 +1,3 @@
-
 # Intermediate files in a proteomics workflow for testing
 
 ## Generation
