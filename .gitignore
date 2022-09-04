@@ -1,5 +1,4 @@
 
-poetry.lock
 scratch.py
 ./*.csv
 *.ckpt
