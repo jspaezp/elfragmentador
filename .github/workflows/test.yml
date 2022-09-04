@@ -10,7 +10,7 @@ on:
   - cron: "4 5 4 1/1 *" # Run monthly.
 
 jobs:
-  cheapchecks:
+  cheap_checks:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v3
@@ -39,7 +39,7 @@ jobs:
         run: poetry run isort . --check
 
   ci:
-    needs: 'cheapcheks'
+    needs: cheap_checks
     strategy:
       fail-fast: false
       matrix:
