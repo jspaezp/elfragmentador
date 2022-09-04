@@ -10,7 +10,7 @@ on:
   - cron: "4 5 4 1/1 *" # Run monthly.
 
 jobs:
-  CheapChecks:
+  cheapchecks:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v3
@@ -37,7 +37,9 @@ jobs:
         run: poetry run flake8 elfragmentador
       - name: isort
         run: poetry run isort . --check
+
   ci:
+    needs: 'cheapcheks'
     strategy:
       fail-fast: false
       matrix:
