@@ -10,7 +10,7 @@ readme = "README.md"
 "Bug Tracker" = "https://github.com/jspaezp/elfragmentador/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.9,<3.12"
 pandas = "^1.0.0"
 numpy = "^1.23.2"
 torch = "^1.12.1"
