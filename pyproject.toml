@@ -24,7 +24,7 @@ tensorboard = "^2.10.0"
 torch = "^1.12.1"
 torchmetrics = "^0.9.3"
 uniplot = "^0.3.5"
-wandb = "^0.10.13"
+wandb = ">=0.10.13,<0.14.0"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "^1.5.3"
