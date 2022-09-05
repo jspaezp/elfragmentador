@@ -23,7 +23,7 @@ spectrum-utils = "^0.3.5"
 tensorboard = "^2.10.0"
 torch = "^1.12.1"
 torchmetrics = "^0.9.3"
-uniplot = "^0.3.5"
+uniplot = ">=0.3.5,<0.6.0"
 wandb = ">=0.10.13,<0.14.0"
 
 [tool.poetry.group.dev.dependencies]
