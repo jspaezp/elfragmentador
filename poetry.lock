@@ -2303,7 +2303,7 @@ test = ["coverage", "pytest", "pytest-cov"]
 
 [[package]]
 name = "uniplot"
-version = "0.3.5"
+version = "0.5.0"
 description = "Lightweight plotting to the terminal. 4x resolution via Unicode."
 category = "main"
 optional = false
@@ -2458,7 +2458,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "a1ca8d1aee4d62fe18d6402a95e1662a84a21b56229d3045385c496de126b4e3"
+content-hash = "bdf11d8cf260586cbb3a006a39d38ca36d9435200b29901b22ba57076cf34200"
 
 [metadata.files]
 absl-py = [
@@ -4280,8 +4280,8 @@ uc-micro-py = [
     {file = "uc_micro_py-1.0.1-py3-none-any.whl", hash = "sha256:316cfb8b6862a0f1d03540f0ae6e7b033ff1fa0ddbe60c12cbe0d4cec846a69f"},
 ]
 uniplot = [
-    {file = "uniplot-0.3.5-py3-none-any.whl", hash = "sha256:5b875abfac8557f1bc895903929d9ffcd7a66c3a54314de212625a266fb1b949"},
-    {file = "uniplot-0.3.5.tar.gz", hash = "sha256:f4987dd33f8ed5cb98bd095362fb3203825a75be7fa2690345a441ef03756176"},
+    {file = "uniplot-0.5.0-py3-none-any.whl", hash = "sha256:17d56520f2f44d5da09af9376c8a76c6bdc16438b92d3be1da0beae0d9c0f7e2"},
+    {file = "uniplot-0.5.0.tar.gz", hash = "sha256:3d9ea81e85546fae0ecedc72e914cfa2b1394d2554c16802fcc8d7139197882b"},
 ]
 untokenize = [
     {file = "untokenize-0.1.1.tar.gz", hash = "sha256:3865dbbbb8efb4bb5eaa72f1be7f3e0be00ea8b7f125c69cbd1f5fda926f37a2"},
