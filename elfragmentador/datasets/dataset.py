@@ -90,7 +90,6 @@ class NCEOffsetHolder(ABC):
 
             outs = sorted(list(set(flat_outs)), key=key_fun)
         else:
-
             outs = {entry_name: outs}
 
         return outs
@@ -501,7 +500,6 @@ class ComparissonDataset(Dataset):
         [df_dict.update({k: []}) for k, v in loss_dict.items()]
 
         for i, key in enumerate(self.mapping):
-
             split_key = key.split("/")
 
             df_dict["Sequence"].append(split_key[0])

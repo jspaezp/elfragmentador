@@ -10,8 +10,7 @@ readme = "README.md"
 "Bug Tracker" = "https://github.com/jspaezp/elfragmentador/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
-llvmlite = "^0.39.0"
+python = ">=3.9,<3.10"
 lxml = "^4.6.3"
 networkx = "^2.5"
 numpy = "^1.23.2"
@@ -23,13 +22,14 @@ spectrum-utils = "^0.3.5"
 tensorboard = "^2.10.0"
 torch = "^1.12.1"
 torchmetrics = "^0.9.3"
-uniplot = ">=0.3.5,<0.6.0"
-wandb = ">=0.10.13,<0.14.0"
+uniplot = "^0.6.0"
+wandb = "^0.13.0"
+llvmlite = "^0.39"
+numba = "^0.56.2"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "^1.5.3"
 black = {extras = ["jupyter"], version = "^22.8.0"}
-flake8 = "^3.8.4"
 isort = "^5.10.1"
 pydocstringformatter = "^0.7.2"
 pytest = "^6.2.1"
@@ -42,14 +42,16 @@ mdformat = "^0.7.16"
 mdformat-black = "^0.1.1"
 mdformat-gfm = "^0.3.5"
 docformatter = "^1.4"
+pytest-doctestplus = "^0.12.0"
 
 [tool.poetry.group.checks.dependencies]
 mdformat = "^0.7.16"
 mdformat-black = "^0.1.1"
 mdformat-gfm = "^0.3.5"
 black = {extras = ["jupyter"], version = "^22.8.0"}
-flake8 = "^3.8.4"
 isort = "^5.10.1"
+ruff = "^0.0.46"
+mdformat-sentencebreak = "^0.1.0"
 
 
 [tool.poetry.group.docs.dependencies]
@@ -112,7 +114,10 @@ filterwarnings=[
 ]
 
 [tool.black]
-target-version = [ "py310", ]
+target-version = [ "py39", ]
+line-length = 88
+
+[tool.ruff]
 line-length = 88
 
 [tool.isort]

@@ -92,11 +92,9 @@ class PeptideDataset(DatasetBase):
         if torch.any(self.nces.isnan()):
             # TODO decide if here should be the place to impute NCEs ... and warn ...
             warnings.warn(
-                (
-                    "Found missing values in NCEs, assuming 30."
-                    " Please fix the data for future use, "
-                    "since this imputation will be removed in the future"
-                ),
+                "Found missing values in NCEs, assuming 30."
+                " Please fix the data for future use, "
+                "since this imputation will be removed in the future",
                 FutureWarning,
             )
             self.nces = torch.where(self.nces.isnan(), torch.Tensor([30.0]), self.nces)

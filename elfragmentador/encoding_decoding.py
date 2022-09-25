@@ -66,7 +66,7 @@ def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePai
     try:
         if (len(seq_out_i) > len(seq_out)) and enforce_length:
             logging.warning(
-                f"Length of the encoded sequence"
+                "Length of the encoded sequence"
                 f" is more than the one allowed {CONSTANTS.MAX_SEQUENCE}."
                 f" Sequence={seq}, the remainder will be clipped"
             )

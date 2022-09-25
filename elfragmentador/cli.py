@@ -372,8 +372,7 @@ def _evaluate_parser():
         "--input",
         type=str,
         help=(
-            "Path to a file to use as a reference for the evaluation"
-            " (.sptxt generally)"
+            "Path to a file to use as a reference for the evaluation (.sptxt generally)"
         ),
     )
     parser.add_argument(

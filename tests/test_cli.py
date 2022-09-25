@@ -5,13 +5,13 @@ import pytest
 from elfragmentador import model, train
 
 cli_commands = [
-    ("elfragmentador_train"),
-    ("elfragmentador_evaluate"),
-    ("elfragmentador_convert_sptxt"),
-    ("elfragmentador_calculate_irt"),
-    ("elfragmentador_append_pin"),
-    ("elfragmentador_predict_csv"),
-    ("elfragmentador_predict_fasta"),
+    "elfragmentador_train",
+    "elfragmentador_evaluate",
+    "elfragmentador_convert_sptxt",
+    "elfragmentador_calculate_irt",
+    "elfragmentador_append_pin",
+    "elfragmentador_predict_csv",
+    "elfragmentador_predict_fasta",
 ]
 
 
@@ -64,7 +64,8 @@ def test_prediction_csv_cli(shared_datadir, csv, tmp_path, checkpoint):
     outfile = tmp_path / "foo.sptxt"
     print(csv_path)
     exit_code = os.system(
-        f"elfragmentador_predict_csv --model_checkpoint {checkpoint} --csv {csv_path} --out {outfile}"
+        f"elfragmentador_predict_csv --model_checkpoint {checkpoint} --csv"
+        f" {csv_path} --out {outfile}"
     )
 
     assert exit_code == 0
@@ -82,7 +83,8 @@ def test_evaluation_on_dataset_cli(shared_datadir, checkpoint, tmp_path):
     outfile = tmp_path / "foo.csv"
 
     exit_code = os.system(
-        f"elfragmentador_evaluate --model_checkpoint {checkpoint} --input {data} --out_csv {outfile} --screen_nce 1,2,3"
+        f"elfragmentador_evaluate --model_checkpoint {checkpoint} --input"
+        f" {data} --out_csv {outfile} --screen_nce 1,2,3"
     )
 
     assert exit_code == 0
@@ -102,7 +104,8 @@ def test_fasta_prediction_cli(shared_datadir, checkpoint, tmp_path):
     outfile = tmp_path / "foo.sptxt"
 
     exit_code = os.system(
-        f"elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint {checkpoint} --fasta {fasta_file} --out {outfile}"
+        "elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint"
+        f" {checkpoint} --fasta {fasta_file} --out {outfile}"
     )
 
     assert exit_code == 0
@@ -120,7 +123,8 @@ def test_fasta_prediction_cli_variable_batch_size(shared_datadir, checkpoint, tm
     outfile = tmp_path / "foo.sptxt"
 
     exit_code = os.system(
-        f"elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint {checkpoint} --fasta {fasta_file} --out {outfile} --batch_size 200"
+        "elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint"
+        f" {checkpoint} --fasta {fasta_file} --out {outfile} --batch_size 200"
     )
 
     assert exit_code == 0

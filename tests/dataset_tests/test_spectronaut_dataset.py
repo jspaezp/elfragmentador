@@ -40,7 +40,6 @@ def test_spectronaut_library_can_be_matched(shared_datadir):
 
 
 def test_spectronaut_library_can_be_compared(shared_datadir, tmpdir):
-
     path = shared_datadir / "spectronaut_csv/small_prositLib.csv"
     lib = SpectronautLibrary(path, nce=25)
     lib2 = SpectronautLibrary(path, nce=25)

@@ -1,5 +1,3 @@
-import pytorch_lightning as pl
-
 from elfragmentador.datasets import Predictor
 
 

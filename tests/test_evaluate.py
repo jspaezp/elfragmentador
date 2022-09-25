@@ -1,10 +1,8 @@
-import elfragmentador as ef
 from elfragmentador import datamodules
 from elfragmentador.datasets import Predictor
 
 
 def test_evaluation_on_dataset_works(shared_datadir, tiny_model):
-
     mod = tiny_model
     mod.eval()
     ds = datamodules.PeptideDataset.from_sptxt(

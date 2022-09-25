@@ -90,6 +90,8 @@ I have explored many variations on the model but currently the one distributed i
 #### Urgent
 
 - Decouple to a different package with less dependencies for the inference side of things
+- Remove numba from the dependencies ... right now it is only because spectrum utils requires it.
+- Move to PROFORMA compiance ...
 - Complete dosctrings and add those to documentation website
 - Refactor the package so the hierarchy makes more sense
 - Fix torchscript export ...

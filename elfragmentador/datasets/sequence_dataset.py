@@ -171,7 +171,6 @@ class FastaDataset(SequenceDataset):
         collision_energies: list[float] | float = [27],
         charges: list[int] | int = [2, 3],
     ) -> None:
-
         charges = [charges] if isinstance(charges, int) else charges
         collision_energies = (
             [collision_energies] if isinstance(charges, float) else collision_energies

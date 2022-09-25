@@ -29,7 +29,15 @@ def test_parse_spectrast():
         "PrecursorMZ: 671.3177",
         "Status: Normal",
         "FullName: K.ASTSDYQVISDR.Q/2 (HCD)",
-        "Comment: AvePrecursorMz=671.7060 BinaryFileOffset=401 CollisionEnergy=28.0 FracUnassigned=0.67,3/5;0.43,8/20;0.47,220/349 MassDiff=0.0012 Mods=0 NAA=12 NMC=0 NTT=2 Nreps=1/1 OrigMaxIntensity=2.1e+06 Parent=671.318 Pep=Tryptic PrecursorIntensity=5.1e+07 Prob=1.0000 Protein=1/sp|Q8NFH5|NUP35_HUMAN RawSpectrum=20161213_NGHF_DBJ_SA_Exp3A_HeLa_1ug_60min_15000_02.11507.11507 RetentionTime=600.1,600.1,600.1 Sample=1/_data_interact-20161213_NGHF_DBJ_SA_Exp3A_HeLa_1ug_60min_15000_02,1,1 Se=1^C1:pb=1.0000/0,fv=4.8531/0 Spec=Raw TotalIonCurrent=2.7e+07",
+        "Comment: AvePrecursorMz=671.7060 BinaryFileOffset=401 CollisionEnergy=28.0"
+        " FracUnassigned=0.67,3/5;0.43,8/20;0.47,220/349 MassDiff=0.0012 Mods=0 NAA=12"
+        " NMC=0 NTT=2 Nreps=1/1 OrigMaxIntensity=2.1e+06 Parent=671.318 Pep=Tryptic"
+        " PrecursorIntensity=5.1e+07 Prob=1.0000 Protein=1/sp|Q8NFH5|NUP35_HUMAN"
+        " RawSpectrum=20161213_NGHF_DBJ_SA_Exp3A_HeLa_1ug_60min_15000_02.11507.11507"
+        " RetentionTime=600.1,600.1,600.1"
+        " Sample=1/_data_interact-20161213_NGHF_"
+        "DBJ_SA_Exp3A_HeLa_1ug_60min_15000_02,1,1"
+        " Se=1^C1:pb=1.0000/0,fv=4.8531/0 Spec=Raw TotalIonCurrent=2.7e+07",  # noqa: E501
         "NumPeaks: 349",
         "101.0715\t343.6\tIQA/0.001\t",
         "101.1078\t54.2\t?\t",
@@ -64,7 +72,15 @@ def test_parse_phospho_spectrast():
         "PrecursorMZ: 505.5842",
         "Status: Normal",
         "FullName: K.AAAT[181]PAKKTVT[181]PAK.A/3 (HCD)",
-        "Comment: AvePrecursorMz=505.8650 BinaryFileOffset=620 CollisionEnergy=28.0 FracUnassigned=0.65,3/5;0.61,12/20;0.54,93/150 MassDiff=0.0003 Mods=2/3,T,Phospho/10,T,Phospho NAA=14 NMC=2 NTT=2 Nreps=1/1 OrigMaxIntensity=9.5e+05 Parent=505.584 Pep=Tryptic PrecursorIntensity=3.2e+07 Prob=0.9967 Protein=1/sp|P19338|NUCL_HUMAN RawSpectrum=20171122_QE3_nLC7_AH_LFQrep2_short90_C2.03163.03163 RetentionTime=605.4,605.4,605.4 Sample=1/_data_interact-20171122_QE3_nLC7_AH_LFQrep2_short90_C2,1,1 Se=1^C1:pb=0.9967/0,fv=2.0933/0 Spec=CONSENSUS TotalIonCurrent=1.8e+07",
+        "Comment: AvePrecursorMz=505.8650 BinaryFileOffset=620 CollisionEnergy=28.0"
+        " FracUnassigned=0.65,3/5;0.61,12/20;0.54,93/150 MassDiff=0.0003"
+        " Mods=2/3,T,Phospho/10,T,Phospho NAA=14 NMC=2 NTT=2 Nreps=1/1"
+        " OrigMaxIntensity=9.5e+05 Parent=505.584 Pep=Tryptic"
+        " PrecursorIntensity=3.2e+07 Prob=0.9967 Protein=1/sp|P19338|NUCL_HUMAN"
+        " RawSpectrum=20171122_QE3_nLC7_AH_LFQrep2_short90_C2.03163.03163"
+        " RetentionTime=605.4,605.4,605.4"
+        " Sample=1/_data_interact-20171122_QE3_nLC7_AH_LFQrep2_short90_C2,1,1"
+        " Se=1^C1:pb=0.9967/0,fv=2.0933/0 Spec=CONSENSUS TotalIonCurrent=1.8e+07",
         "NumPeaks: 150",
         "101.0713\t299.0\ty2-17^2/0.006\t",
         "143.0816\t5772.5\tb2/0.000,m2:3/0.000\t",
@@ -110,7 +126,10 @@ def test_benchmark_spectra_parsing(shared_datadir, benchmark):
         spec_chunk = list(f)
     spec = spectra.SptxtReader._parse_spectra_sptxt(spec_chunk)
     out = benchmark(
-        annotate.annotate_peaks, spec._theoretical_peaks, spec.mzs, spec.intensities
+        annotate.annotate_peaks,
+        spec._theoretical_peaks,
+        spec.mzs,
+        spec.intensities,
     )
     print(out)
 

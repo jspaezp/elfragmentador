@@ -217,7 +217,7 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
     ) -> None:
         super().__init__()
         logging.info(
-            f"Creating TransformerDecoder"
+            "Creating TransformerDecoder"
             f" nhid={nhid}, "
             f"d_model={d_model} "
             f"nhead={nhead} "
@@ -658,7 +658,6 @@ class PepTransformerModel(pl.LightningModule):
         # rt should be in seconds for spectrast ...
         # irt should be non-dimensional
         if as_spectrum:
-
             out = Spectrum.from_tensors(
                 sequence_tensor=in_batch.seq.squeeze().numpy(),
                 fragment_tensor=out.spectra / out.spectra.max(),
@@ -762,7 +761,7 @@ class PepTransformerModel(pl.LightningModule):
             type=str,
             default=PepTransformerModel.model_sections,
             help=(
-                f"Sections of the model to train, "
+                "Sections of the model to train, "
                 f"can be any subset of {PepTransformerModel.model_sections}"
             ),
         )
@@ -1114,7 +1113,6 @@ class PepTransformerModel(pl.LightningModule):
         return pred_out
 
     def on_after_backward(self):
-
         msg = []
         global_step = self.global_step
         if (global_step % 50) == 0:

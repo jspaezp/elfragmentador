@@ -280,7 +280,6 @@ class MetricCalculator(pl.LightningModule):
         return self.calculate_metrics(pred=pred, gt=gt)
 
     def calculate_metrics(self, pred: PredictionResults, gt: PredictionResults):
-
         yhat_irt, yhat_spectra = pred.irt.float(), F.normalize(
             torch.relu(self.pad_spectra(pred.spectra)), 2, 1
         )

@@ -41,8 +41,8 @@ jobs:
         run: poetry run mdformat --check *.md docs notebooks notebooks/*/*.qmd tests
       - name: Black
         run: poetry run python -m black . --check --diff
-      - name: flake8
-        run: poetry run flake8 elfragmentador
+      - name: ruff
+        run: poetry run ruff .
       - name: isort
         run: poetry run isort . --check
 

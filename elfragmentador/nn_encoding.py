@@ -313,7 +313,8 @@ class AASequenceEmbedding(torch.nn.Module):
 
         Returns:
             Tuple[DataFrame, DataFrame]:
-                A data frame of the aminoacid embeddings and the modification embeddings
+                A data frame of the aminoacid embeddings
+                and the modification embeddings
 
         Examples:
             >>> embed = AASequenceEmbedding(20)
