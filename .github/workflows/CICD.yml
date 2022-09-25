@@ -36,7 +36,7 @@ jobs:
       - name: View poetry --version
         run: poetry --version
       - name: Install Stuff
-        run: poetry install --no-root --only dev
+        run: poetry install --no-root --only check
       - name: mdformat
         run: poetry run mdformat --check *.md docs notebooks notebooks/*/*.qmd tests
       - name: Black
