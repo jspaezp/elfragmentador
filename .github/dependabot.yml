@@ -6,12 +6,14 @@
 version: 2
 updates:
   - package-ecosystem: "pip" # See documentation for possible values
+    target-branch: "devel"
     directory: "/" # Location of package manifests
     schedule:
       interval: "monthly"
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
+    target-branch: "devel"
     directory: "/"
     schedule:
       interval: "monthly"
