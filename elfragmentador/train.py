@@ -91,7 +91,9 @@ def get_callbacks(
     ],
 ]:
     complete_run_name = f"{ef.__version__}_{run_name}"
-    wandb_logger = WandbLogger(complete_run_name, project=wandb_project)
+    wandb_logger = WandbLogger(
+        complete_run_name, project=wandb_project, log_model="all"
+    )
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor()
     checkpointer = pl.callbacks.ModelCheckpoint(
         monitor="val_l",
