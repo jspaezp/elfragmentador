@@ -1,3 +1,12 @@
+
+![Pypi version](https://img.shields.io/pypi/v/elfragmentador?style=flat-square)
+![Pypi Downloads](https://img.shields.io/pypi/dm/elfragmentador?style=flat-square)
+![Github Activity](https://img.shields.io/github/last-commit/jspaezp/elfragmentador?style=flat-square)
+![Python versions](https://img.shields.io/pypi/pyversions/elfragmentador?style=flat-square)
+![GitHub Actions](https://img.shields.io/github/workflow/status/jspaezp/elfragmentador/CI%20Testing/release?style=flat-square)
+![License](https://img.shields.io/pypi/l/elfragmentador?style=flat-square)
+
+
 # ElFragmentador
 
 ## ElFragmentador
