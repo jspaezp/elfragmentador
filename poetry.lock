@@ -1459,8 +1459,8 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -2481,17 +2481,14 @@ test = ["coverage", "pytest", "pytest-cov"]
 
 [[package]]
 name = "uniplot"
-version = "0.7.0"
+version = "0.8.0"
 description = "Lightweight plotting to the terminal. 4x resolution via Unicode."
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 
 [package.dependencies]
-numpy = ">=1.15.0"
-
-[package.extras]
-dev = ["black", "mypy", "pytest (>=6.0.1)"]
+numpy = ">=1.20.0"
 
 [[package]]
 name = "untokenize"
@@ -2649,7 +2646,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "44056588c4123caf6042ca23454c6beb89cfdf836d0a5909981b7dc4068037b5"
+content-hash = "72c533dc0931ad255d450562984ee1a716c5eed36666eed23bf9c412b3163f54"
 
 [metadata.files]
 absl-py = [
@@ -4601,7 +4598,8 @@ uc-micro-py = [
     {file = "uc_micro_py-1.0.1-py3-none-any.whl", hash = "sha256:316cfb8b6862a0f1d03540f0ae6e7b033ff1fa0ddbe60c12cbe0d4cec846a69f"},
 ]
 uniplot = [
-    {file = "uniplot-0.7.0-py3-none-any.whl", hash = "sha256:b0700717f7d088e51c5ca31c00642a21718c2381bad30828fc77c2de4f8c78a9"},
+    {file = "uniplot-0.8.0-py3-none-any.whl", hash = "sha256:e836efd84fa1aba1e3d262fe7c8bfbcd096faae9e02c6eb96aa176368eed1404"},
+    {file = "uniplot-0.8.0.tar.gz", hash = "sha256:bc533bc00137c380cbd8d17b06a9ffdf5d648eb7c8143fe4ca1a35516fb3d6cb"},
 ]
 untokenize = [
     {file = "untokenize-0.1.1.tar.gz", hash = "sha256:3865dbbbb8efb4bb5eaa72f1be7f3e0be00ea8b7f125c69cbd1f5fda926f37a2"},
