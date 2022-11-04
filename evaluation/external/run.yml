@@ -1,0 +1,93 @@
+title: EfTestData
+default:
+  comet:
+    peptide_mass_tolerance: 20
+    num_threads: 5
+    isotope_error: 1
+    fragment_bin_tol: 0.02
+    fragment_bin_offset: 0.0
+    peptide_length_range: "6 35"
+    num_output_lines: 2
+    spectrum_batch_size: 5000            # max. # of spectra to search at a time; 0 to search the entire scan range in one loop
+  fasta:
+    type: uniprot
+    value: UP000005640
+  BiblioSpec:
+    cutoff: 0.99
+combine:
+  - name: HLAPeptides
+    experiments:
+      - [HLAPeptides]
+  - name: Arabidopsis
+    experiments:
+      - [Arabidopsis]
+  - name: EcoliTMT
+    experiments:
+      - [EcoliTMT]
+  - name: AcetylStrep
+    experiments:
+      - [AcetylStrep]
+experiments:
+  - name: HLApeptides
+    files:
+      - data/20180821_QE_HFX_LC2_SA_JMI_HLAIp_CRC-01_IFN1_R01.mzML
+    fasta:
+      type: uniprot
+      value: UP000005640
+    comet:
+      peptide_mass_tolerance: 20
+      num_threads: 5
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+      search_enzyme_number: 0
+      digest_mass_range: "700.0 2700.0"
+  - name: Arabidopsis
+    files:
+      - data/RV-Col_Dark-5C_DEX_XV15-A.mzML
+    fasta:
+      type: uniprot
+      value: UP000006548
+    comet:
+      peptide_mass_tolerance: 20
+      num_threads: 5
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+  - name: EcoliTMT
+    files:
+      - data/S0569_AM_Ecoli_meltome_exponential_n2_R1_F3.mzML
+    fasta:
+      type: uniprot
+      value: UP000000625
+    comet:
+      peptide_mass_tolerance: 20
+      num_threads: 5
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+      add_Nterm_peptide: 229.1629
+      add_K_lysine: 229.1629
+  - name: AcetylStrep
+    files:
+      - data/WA163LPAcR2_WT2.mzML
+    fasta:
+      type: uniprot
+      value: UP000001973
+    comet:
+      peptide_mass_tolerance: 20
+      num_threads: 5
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+      variable_mod02: 42.010565 nK 0 3 -1 0 0 0.0
+
+
+# # Human cell line TMT phospho 16plex not supported...
+# ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/06/PXD031277/20211105_EXPL2_Evo3_CLK_DDA_20SPD_45k_TMT16plex_200ug_STfrac_FT_1.raw
+# ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/06/PXD031277/20211105_EXPL2_Evo3_CLK_DDA_20SPD_45k_TMT16plex_200ug_STfrac_FT_2.raw
+# ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/06/PXD031277/20211105_EXPL2_Evo3_CLK_DDA_20SPD_45k_TMT16plex_200ug_STfrac_FT_3.raw

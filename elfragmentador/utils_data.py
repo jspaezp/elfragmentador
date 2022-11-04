@@ -162,7 +162,7 @@ def _match_lengths(
     logging.debug(f"Matching shapes of {name}")
 
     lengths = np.array(list({x.shape for x in nested_list}))
-    obs_max_lengths = lengths.max(axis=0)
+    obs_max_lengths = lengths.max(axis=0, keepdims=False)
 
     if max_len is None:
         max_len = obs_max_lengths
@@ -182,7 +182,11 @@ def _match_lengths(
         for x in nested_list:
             curr_shape = x.shape
             padding = tuple((0, d) for d in max_len - curr_shape)
-            out.append(np.pad(_to_numpy(x), padding, "constant"))
+            try:
+                out.append(np.pad(_to_numpy(x), padding, "constant"))
+            except ValueError:
+                # TODO fix this shit ...
+                out.append(float("nan") * np.ones_like(out[-1]))
 
         out = np.stack(out, axis=0)
 

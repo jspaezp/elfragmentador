@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "open-speclib-workflow"
+version = "0.1.0"
+description = ""
+authors = ["J. Sebastian Paez <jspaezp@users.noreply.github.com>"]
+license = "Apache 2.0"
+readme = "README.md"
+packages = [{include = "open_speclib_workflow"}]
+
+[tool.poetry.dependencies]
+python = ">3.8,<3.11"
+# snakemake = ">=7.0"
+snakemake = ">=7.0,<7.6.2" # There is an unsolved bug in snakemake
+tabulate = "<0.9.0" # Errors with snakemake ..
+connection_pool = "==0.0.3"
+mokapot = "^0.8.3"
+scipy = "==1.9.1"
+pandas = ">=1.3.0"
+numpy = "==1.23.3"
+loguru = "^0.6.0"
+
+[tool.poetry.group.dev.dependencies]
+snakefmt = "^0.6.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py{37,38,39,310}
+skip_missing_interpreters = True
+skipsdist = True
+isolated_build = True
+[testenv]
+allowlist_externals =
+    poetry
+commands_pre =
+    poetry install --no-root
+commands =
+    poetry run snakemake --verbose --cores 1 --directory $PWD -s snakefile.smk --configfile ./reference_files/run.yml --dry-run
+"""

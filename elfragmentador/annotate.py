@@ -507,11 +507,14 @@ def annotate_peaks(
 
     sort_if_needed(mz_pairs, key=lambda x: x[0])
     sort_if_needed(theo_peaks, key=lambda x: x[1])
-
-    theo_iter = iter(theo_peaks)
-    curr_theo_key, curr_theo_val = next(theo_iter)
-
     annots = defaultdict(lambda: 0)
+
+    try:
+        theo_iter = iter(theo_peaks)
+        curr_theo_key, curr_theo_val = next(theo_iter)
+    except StopIteration:
+        return annots
+
     for mz, inten in mz_pairs:
         deltamass = mz - curr_theo_val
         try:
