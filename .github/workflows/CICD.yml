@@ -36,7 +36,7 @@ jobs:
       - name: View poetry --version
         run: poetry --version
       - name: Install Stuff
-        run: poetry install --no-root --only check
+        run: poetry install --no-root --only checks
       - name: Black
         run: poetry run black . --check --diff
       - name: ruff
