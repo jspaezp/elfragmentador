@@ -37,8 +37,6 @@ jobs:
         run: poetry --version
       - name: Install Stuff
         run: poetry install --no-root --only check
-      - name: mdformat
-        run: poetry run mdformat --check *.md docs notebooks notebooks/*/*.qmd tests
       - name: Black
         run: poetry run python -m black . --check --diff
       - name: ruff
