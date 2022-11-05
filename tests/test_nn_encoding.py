@@ -1,6 +1,6 @@
 import torch
 
-from elfragmentador.nn_encoding import SeqPositionalEmbed
+from elfragmentador.model.nn_encoding import SeqPositionalEmbed
 
 
 def test_inverted_positional_encoder():

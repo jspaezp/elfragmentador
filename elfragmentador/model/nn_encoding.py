@@ -10,83 +10,11 @@ from typing import Literal, Tuple, Union
 import pandas as pd
 import torch
 import torch.nn.functional as F
+from loguru import logger
 from pandas import DataFrame
 from torch import Tensor, nn
 
-from elfragmentador import constants
-
 LiteralFalse = Literal[False]
-
-
-class SeqPositionalEmbed(torch.nn.Module):
-    def __init__(self, dims_add: int = 10, max_len: int = 30, inverted=True):
-        super().__init__()
-        pe = torch.zeros(max_len, dims_add)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-
-        div_term_enum = torch.arange(0, dims_add, 2).float()
-        div_term_denom = -math.log(10000.0) / dims_add + 1
-        div_term = torch.exp(div_term_enum * div_term_denom)
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe[0, :] = 0
-        self.register_buffer("pe", pe)
-        self.inverted = inverted
-
-    def forward(self, x: torch.LongTensor) -> Tensor:
-        """
-        Forward.
-
-        Returns the positional encoding for a sequence, expressed as integers
-
-        Parameters:
-            x (Tensor):
-                Integer Tensor of shape **[BatchSize, SequenceLength]**,
-                this should encode a sequence and be padded with zeros
-
-        Returns:
-            Tensor (Tensor), The positional encoding ...
-
-        Examples:
-            >>> encoder = SeqPositionalEmbed(6, 50, inverted=True)
-            >>> encoder2 = SeqPositionalEmbed(6, 50, inverted=False)
-            >>> x = torch.cat([
-            ... torch.ones(1,2),
-            ... torch.ones(1,2)*2,
-            ... torch.zeros((1,2))],
-            ... dim = -1).long()
-            >>> x[0]
-            tensor([1, 1, 2, 2, 0, 0])
-            >>> x.shape
-            torch.Size([1, 6])
-            >>> out = encoder(x)
-            >>> out2 = encoder2(x)
-            >>> out.shape
-            torch.Size([6, 1, 6])
-            >>> out
-            tensor([[[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]],
-                [[ 0.1411, -0.9900,  0.8567,  0.5158,  0.3456,  0.9384]],
-                [[ 0.9093, -0.4161,  0.6334,  0.7738,  0.2331,  0.9725]],
-                [[ 0.8415,  0.5403,  0.3363,  0.9418,  0.1174,  0.9931]],
-                [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]],
-                [[ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]])
-            >>> out2
-            tensor([[[ 0.8415,  0.5403,  0.3363,  0.9418,  0.1174,  0.9931]],
-                [[ 0.9093, -0.4161,  0.6334,  0.7738,  0.2331,  0.9725]],
-                [[ 0.1411, -0.9900,  0.8567,  0.5158,  0.3456,  0.9384]],
-                [[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]],
-                [[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]],
-                [[-0.7568, -0.6536,  0.9803,  0.1976,  0.4533,  0.8913]]])
-        """
-        vals = x.bool().long()
-        if self.inverted:
-            vals = vals.flip(1)
-
-        out = self.pe[vals.cumsum(1)]
-        if self.inverted:
-            out = out.flip(1)
-
-        return out.transpose(1, 0)
 
 
 class ConcatenationEncoder(torch.nn.Module):
@@ -179,14 +107,14 @@ class ConcatenationEncoder(torch.nn.Module):
         return x
 
 
-class PositionalEncoding(torch.nn.Module):
+class FourierPositionalEncoding(torch.nn.Module):
     def __init__(
         self,
         d_model: int,
         max_len: int = 5000,
         static_size: Union[LiteralFalse, int] = False,
     ) -> None:
-        r"""PositionalEncoding adds positional information to tensors.
+        r"""FourierPositionalEncoding adds positional information to tensors.
 
         Inject some information about the relative or absolute position of the tokens
         in the sequence. The positional encodings have the same dimension as
@@ -212,7 +140,7 @@ class PositionalEncoding(torch.nn.Module):
             Therefore encoding are **(seq_length, batch, encodings)**
 
         Examples:
-            >>> posencoder = PositionalEncoding(20, max_len=20)
+            >>> posencoder = FourierPositionalEncoding(20, max_len=20)
             >>> x = torch.ones((2,1,20)).float()
             >>> x.shape
             torch.Size([2, 1, 20])
@@ -220,6 +148,7 @@ class PositionalEncoding(torch.nn.Module):
             torch.Size([2, 1, 20])
         """
         super().__init__()
+        self.d_model = d_model
 
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -250,7 +179,7 @@ class PositionalEncoding(torch.nn.Module):
             >>> pl.seed_everything(42)
             42
             >>> x = torch.ones((4,1,6)).float()
-            >>> pos_encoder = PositionalEncoding(6, max_len=10)
+            >>> pos_encoder = FourierPositionalEncoding(6, max_len=10)
             >>> output = pos_encoder(x)
             >>> output.shape
             torch.Size([4, 1, 6])
@@ -268,31 +197,56 @@ class PositionalEncoding(torch.nn.Module):
         x = x + self.pe[:end_position, :]
         return x
 
+    def plot_encoding(self, ax=None):
+        if ax is None:
+            raise ValueError("Must pass an axis to plot on")
+        ax.imwhow(self.pe.clone().detach().numpy().squeeze().numpy())
+
 
 class AASequenceEmbedding(torch.nn.Module):
-    def __init__(self, d_model):
+    def __init__(
+        self, d_model, max_length, aa_names, mod_names, mod_pad_index=0, aa_pad_index=0
+    ):
+        logger.info("Initializing AASequenceEmbedding")
         super().__init__()
         # Positional information additions
-        self.position_embed = PositionalEncoding(
+        self.aa_names = aa_names
+        self.mod_names = mod_names
+
+        self.position_embed = FourierPositionalEncoding(
             d_model=d_model,
-            max_len=constants.MAX_TENSOR_SEQUENCE * 4,
+            max_len=max_length,
         )
 
         # Aminoacid embedding
-        self.aa_encoder = nn.Embedding(constants.AAS_NUM + 1, d_model, padding_idx=0)
+        self.aa_encoder = nn.Embedding(
+            len(self.aa_names) + 1, d_model, padding_idx=aa_pad_index
+        )
+        logger.debug(
+            "Aminoacid embedding will use: %s as the padding index",
+            aa_names[aa_pad_index],
+        )
+
         # PTM embedding
         self.mod_encoder = nn.Embedding(
-            len(constants.MODIFICATION) + 1, d_model, padding_idx=0
+            len(self.mod_names) + 1, d_model, padding_idx=mod_pad_index
+        )
+        logger.debug(
+            "Modification embedding will use: %s as the padding index",
+            mod_names[aa_pad_index],
         )
 
         # Weight Initialization
         self.init_weights()
 
     def init_weights(self) -> None:
+        logger.info("Initializing weights on AASequenceEmbedding")
         initrange = 0.1
         ptm_initrange = initrange * 0.01
         torch.nn.init.uniform_(self.aa_encoder.weight, -initrange, initrange)
+        self.initial_aa_weights = self.aa_encoder.weight.clone().detach().cpu()
         torch.nn.init.uniform_(self.mod_encoder.weight, -ptm_initrange, ptm_initrange)
+        self.initial_mod_weights = self.mod_encoder.weight.clone().detach().cpu()
 
     def forward(self, seq, mods):
         # seq and mod are [N, S] shaped
@@ -328,9 +282,9 @@ class AASequenceEmbedding(torch.nn.Module):
                 'LRGG', 'NITRO', 'BIOTINYL', 'TMT6PLEX']
         """
         df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
-        df_aa.columns = ["EMPTY"] + list(constants.ALPHABET.keys())
+        df_aa.columns = self.aa_names
 
         df_mod = pd.DataFrame(data=self.mod_encoder.weight.detach().cpu().numpy().T)
-        df_mod.columns = ["EMPTY"] + list(constants.MODIFICATION)
+        df_mod.columns = self.mod_names
 
         return df_aa, df_mod

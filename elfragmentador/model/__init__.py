@@ -1,17 +1,17 @@
+from __future__ import annotations
+
 import copy
-import logging
 
 try:
-    from typing import Literal, Optional, Union
+    from typing import Literal
 
     LiteralFalse = Literal[False]
 except ImportError:
     # Python pre-3.8 compatibility
-    from typing import NewType, Optional, Union
+    from typing import NewType
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
-import math
 import time
 import warnings
 from argparse import _ArgumentGroup
@@ -21,6 +21,8 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import uniplot
+from loguru import logger
+from ms2ml.landmarks import IRT_PEPTIDES
 from pytorch_lightning.utilities.model_summary import summarize
 from torch import Tensor, nn
 from torch.optim.adamw import AdamW
@@ -31,345 +33,22 @@ from torch.optim.lr_scheduler import (
 )
 
 import elfragmentador
-from elfragmentador import constants
+from elfragmentador.config import get_default_config
 from elfragmentador.math_utils import MissingDataAverager, polyfit
 from elfragmentador.metrics import CosineLoss, MetricCalculator, SpectralAngleLoss
 from elfragmentador.named_batches import ForwardBatch, PredictionResults, TrainBatch
-from elfragmentador.nn_encoding import AASequenceEmbedding, ConcatenationEncoder
 from elfragmentador.spectra import Spectrum
 from elfragmentador.utils import torch_batch_from_seq
 
+from .peptransformer import PepTransformerBase
 
-# TODO refactor this massive models into manageable sections
-class MLP(nn.Module):
-    def __init__(
-        self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int
-    ) -> None:
-        """
-        MLP implements a very simple multi-layer perceptron (also called FFN).
-
-        Concatenates hidden linear layers with activations for n layers.
-        This implementation uses gelu instead of relu
-        (linear > gelu) * (n-1) > linear
-
-        Based on: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
-
-        Parameters:
-            input_dim (int):
-                Expected dimensions for the input
-            hidden_dim (int):
-                Number of dimensions of the hidden layers
-            output_dim (int):
-                Output dimensions
-            num_layers (int):
-                Number of layers (total)
-        """
-        super().__init__()
-        self.num_layers = num_layers
-        h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(
-            nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
-        )
-
-    def forward(self, x: Tensor) -> Tensor:
-        """
-        Forward pass over the network.
-
-        Args:
-          x (Tensor):
-
-        Returns:
-            Tensor
-
-        Examples:
-            >>> pl.seed_everything(42)
-            42
-            >>> net = MLP(1000, 512, 2, 10)
-            >>> out = net.forward(torch.rand([5, 1000]))
-            >>> out
-            tensor([[-0.0061, -0.0219],
-                    [-0.0061, -0.0219],
-                    [-0.0061, -0.0220],
-                    [-0.0061, -0.0220],
-                    [-0.0061, -0.0219]], grad_fn=<AddmmBackward0>)
-            >>> out.shape
-            torch.Size([5, 2])
-        """
-        for i, layer in enumerate(self.layers):
-            x = (
-                torch.nn.functional.gelu(layer(x))
-                if i < self.num_layers - 1
-                else layer(x)
-            )
-        return x
-
-
-class _IRTDecoder(nn.Module):
-    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3, dropout=0.05):
-        super().__init__()
-        """Decode iRTs.
-
-        Args:
-            d_model (int):
-                Number of dimensions to expect as input
-            nhead (int):
-                Number of heads in the attention layers that decode the input.
-                defaults to 4
-            dim_feedforward (int, optional):
-                Number of hidden dimensions in the FFN that decodes the sequence.
-                Defaults to 224
-            n_layers (int, optional):
-                dropout to use in the multihead attention.
-                Defaults to 3
-        """
-
-        self.aa_embed = AASequenceEmbedding(d_model=d_model)
-        encoder_layers = nn.TransformerEncoderLayer(
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=dim_feedforward,
-            dropout=dropout,
-            activation="gelu",
-        )
-        self.encoder = nn.TransformerEncoder(
-            encoder_layer=encoder_layers, num_layers=n_layers
-        )
-        self.decoder = _LearnableEmbedTransformerDecoder(
-            d_model=d_model,
-            nhead=nhead,
-            nhid=dim_feedforward,
-            layers=n_layers,
-            dropout=dropout,
-            num_outputs=1,
-        )
-
-    def forward(self, seq, mods):
-        # seq [N, S], mods [N, S]
-        trans_encoder_mask = torch.zeros_like(seq, dtype=torch.float)
-        trans_encoder_mask = trans_encoder_mask.masked_fill(
-            seq <= 0, float("-inf")
-        ).masked_fill(seq > 0, float(0.0))
-        # mask [N, S]
-
-        embed_seq = self.aa_embed(seq=seq, mods=mods)  # [S, N, d_model]
-
-        memory = self.encoder(embed_seq, src_key_padding_mask=trans_encoder_mask)
-        out = self.decoder(memory, trans_encoder_mask)
-        return out
-
-
-class _PeptideTransformerEncoder(torch.nn.Module):
-    def __init__(
-        self, d_model: int, dropout: float, nhead: int, nhid: int, layers: int
-    ) -> None:
-        super().__init__()
-
-        # Aminoacid embedding
-        self.aa_encoder = AASequenceEmbedding(d_model=d_model)
-
-        # Transformer encoder sections
-        encoder_layers = nn.TransformerEncoderLayer(
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=nhid,
-            dropout=dropout,
-            activation="gelu",
-        )
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
-
-    def forward(self, seq: Tensor, mods: Tensor) -> Tensor:
-        # For the mask ....
-        # If a BoolTensor is provided, positions with True are not allowed
-        # to attend while False values will be unchanged <- form the pytorch docs
-
-        # [1,1,0]
-        # bool [True, True, False]
-        # ~    [False, False, True]
-        # [Attend, Attend, Dont Attend]
-
-        # seq shape [N, S]
-        trans_encoder_mask = torch.zeros_like(seq, dtype=torch.float)
-        trans_encoder_mask = trans_encoder_mask.masked_fill(
-            seq <= 0, float("-inf")
-        ).masked_fill(seq > 0, float(0.0))
-
-        x = self.aa_encoder(seq=seq, mods=mods)
-        # x shape [S, N, d_model]
-
-        trans_encoder_output = self.transformer_encoder(
-            x, src_key_padding_mask=trans_encoder_mask
-        )
-        # trans_encoder_output shape [S, N, d_model]
-
-        return trans_encoder_output, trans_encoder_mask
-
-
-class _LearnableEmbedTransformerDecoder(torch.nn.Module):
-    def __init__(
-        self,
-        d_model: int,
-        nhead: int,
-        nhid: int,
-        layers: int,
-        dropout: float,
-        num_outputs: int,
-        embed_dims: Optional[int] = None,
-    ) -> None:
-        super().__init__()
-        logging.info(
-            "Creating TransformerDecoder"
-            f" nhid={nhid}, "
-            f"d_model={d_model} "
-            f"nhead={nhead} "
-            f"layers={layers}"
-        )
-        decoder_layer = nn.TransformerDecoderLayer(
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=nhid,
-            dropout=dropout,
-            activation="gelu",
-        )
-        self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
-        # self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
-        self.peak_decoder = nn.Linear(d_model, 1)
-
-        logging.info(f"Creating embedding for spectra of length {num_outputs}")
-        self.trans_decoder_embedding = nn.Embedding(
-            num_embeddings=num_outputs,
-            embedding_dim=d_model if embed_dims is None else embed_dims,
-        )
-        self.init_weights()
-
-    def init_weights(self):
-        initrange = 0.1
-        nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
-
-    def get_learnable_query(self, batch_size):
-        trans_decoder_tgt = self.trans_decoder_embedding.weight.unsqueeze(1)
-        # [T, E2] > [T, 1, E2]
-        trans_decoder_tgt = trans_decoder_tgt.expand(-1, batch_size, -1)
-        return trans_decoder_tgt
-
-    def preprocess_query(self, query):
-        """Has to be implemente when subclassing."""
-        return query
-
-    def decoder_forward(
-        self, trans_decoder_tgt: Tensor, memory: Tensor, memory_key_padding_mask: Tensor
-    ):
-        spectra_output = self.trans_decoder(
-            memory=memory,
-            tgt=trans_decoder_tgt,
-            memory_key_padding_mask=memory_key_padding_mask,
-        )
-        # Shape is [NumFragments, Batch, NumEmbed]
-
-        spectra_output = self.peak_decoder(spectra_output)
-        # Shape is [NumFragments, Batch, 1]
-        spectra_output = spectra_output.squeeze(-1).permute(1, 0)
-        # Shape is [Batch, NumFragments]
-        return spectra_output
-
-    def forward(
-        self,
-        memory: Tensor,
-        memory_key_padding_mask: Tensor,
-    ) -> Tensor:
-        """Has to be implemente when subclassing."""
-        trans_decoder_tgt = self.get_learnable_query(batch_size=memory.size(1))
-        trans_decoder_tgt = self.preprocess_query(trans_decoder_tgt)
-
-        output = self.decoder_forward(
-            trans_decoder_tgt=trans_decoder_tgt,
-            memory=memory,
-            memory_key_padding_mask=memory_key_padding_mask,
-        )
-        return output
-
-
-class _PeptideTransformerDecoder(_LearnableEmbedTransformerDecoder):
-    def __init__(
-        self,
-        d_model: int,
-        nhead: int,
-        nhid: int,
-        layers: int,
-        dropout: float,
-        charge_dims_pct: float = 0.05,
-        nce_dims_pct: float = 0.05,
-    ) -> None:
-        charge_dims = math.ceil(d_model * charge_dims_pct)
-        nce_dims = math.ceil(d_model * nce_dims_pct)
-        n_embeds = d_model - (charge_dims + nce_dims)
-
-        super().__init__(
-            d_model=d_model,
-            embed_dims=n_embeds,
-            nhead=nhead,
-            nhid=nhid,
-            layers=layers,
-            dropout=dropout,
-            num_outputs=constants.NUM_FRAG_EMBEDINGS,
-        )
-
-        self.charge_encoder = ConcatenationEncoder(
-            dims_add=charge_dims, max_val=10.0, scaling=math.sqrt(d_model)
-        )
-        self.nce_encoder = ConcatenationEncoder(
-            dims_add=nce_dims, max_val=100.0, scaling=math.sqrt(d_model)
-        )
-        self.init_weights()
-
-    def init_weights(self):
-        initrange = 0.1
-        nn.init.uniform_(self.trans_decoder_embedding.weight, -initrange, initrange)
-
-    def preprocess_query(self, query, charge, nce):
-        # [T, B, E2]
-        trans_decoder_tgt = self.charge_encoder(query, charge)
-        # [T, B, E1]
-        trans_decoder_tgt = self.nce_encoder(trans_decoder_tgt, nce)
-        # [T, B, E]
-        return trans_decoder_tgt
-
-    def forward(
-        self,
-        memory: Tensor,
-        memory_key_padding_mask: Tensor,
-        charge: Tensor,
-        nce: Tensor,
-    ) -> Tensor:
-        trans_decoder_tgt = self.get_learnable_query(batch_size=charge.size(0))
-        trans_decoder_tgt = self.preprocess_query(
-            trans_decoder_tgt, nce=nce, charge=charge
-        )
-        # [T, B, E]
-
-        output = self.decoder_forward(
-            trans_decoder_tgt=trans_decoder_tgt,
-            memory=memory,
-            memory_key_padding_mask=memory_key_padding_mask,
-        )
-        return output
-
-
-_model_sections = [
-    "TransEncoder",
-    "TransDecoder",
-    "AAEmbedding",
-    "MODEmbedding",
-    "FragmentEmbedding",
-    "FragmentFFN",
-    "IrtDecoder",
-]
+CONFIG = get_default_config()
 
 
 class PepTransformerModel(pl.LightningModule):
     """PepTransformerModel Predicts retention times and HCD spectra from peptides."""
 
     accepted_schedulers = ["plateau", "cosine", "onecycle"]
-    model_sections = _model_sections
     __version__ = elfragmentador.__version__
 
     def __init__(
@@ -382,10 +61,9 @@ class PepTransformerModel(pl.LightningModule):
         dropout: float = 0.1,
         lr: float = 1e-4,
         scheduler: str = "plateau",
-        lr_ratio: Union[float, int] = 200,
+        lr_ratio: float | int = 200,
         steps_per_epoch: None = None,
         loss_ratio: float = 5,
-        trainable_sections: list[str] = _model_sections,
         *args,
         **kwargs,
     ) -> None:
@@ -435,40 +113,22 @@ class PepTransformerModel(pl.LightningModule):
                 spectra with respect to the retention time. By default 5
         """
         super().__init__()
+        self.ms2ml_config = CONFIG
+        self.NUM_FRAGMENT_EMBEDDINGS = self.ms2ml_config.num_fragment_embeddings
         self.save_hyperparameters()
-        logging.info(
+        logger.info(
             f"num_decoder_layers {num_decoder_layers} "
             f"num_encoder_layers {num_encoder_layers} "
             f"nhid {nhid} d_model {d_model} "
             f"nhead {nhead} dropout {dropout}"
         )
-
-        # Peptide encoder
-        self.encoder = _PeptideTransformerEncoder(
-            d_model=d_model,
-            dropout=dropout,
-            nhead=nhead,
+        self.main_model = PepTransformerBase(
+            num_fragments=self.NUM_FRAGMENT_EMBEDDINGS,
+            num_decoder_layers=num_decoder_layers,
+            num_encoder_layers=num_encoder_layers,
             nhid=nhid,
-            layers=num_encoder_layers,
-        )
-
-        # Peptide decoder
-        self.decoder = _PeptideTransformerDecoder(
             d_model=d_model,
             nhead=nhead,
-            nhid=nhid,
-            layers=num_decoder_layers,
-            dropout=dropout,
-        )
-
-        # On this implementation, the rt predictor is a simple MLP
-        # that combines the features from the transformer encoder
-
-        self.irt_decoder = _IRTDecoder(
-            d_model=d_model,
-            dim_feedforward=nhid,
-            nhead=nhead,
-            n_layers=num_encoder_layers,
             dropout=dropout,
         )
 
@@ -488,17 +148,6 @@ class PepTransformerModel(pl.LightningModule):
         self.steps_per_epoch = steps_per_epoch
         self.loss_ratio = loss_ratio
 
-        self.model_sections = {
-            "TransEncoder": self.encoder.transformer_encoder,
-            "TransDecoder": self.decoder.trans_decoder,
-            "AAEmbedding": self.encoder.aa_encoder.aa_encoder,
-            "MODEmbedding": self.encoder.aa_encoder.mod_encoder,
-            "FragmentEmbedding": self.decoder.trans_decoder_embedding,
-            "FragmentFFN": self.decoder.peak_decoder,
-            "IrtDecoder": self.irt_decoder,
-        }
-
-        # self.make_trainable_sections(trainable_sections)
         self.irt_metric = MissingDataAverager()
         self.loss_metric = MissingDataAverager()
         self.spectra_metric = MissingDataAverager()
@@ -513,44 +162,8 @@ class PepTransformerModel(pl.LightningModule):
         mods: Tensor,
         charge: Tensor,
         nce: Tensor,
-    ) -> PredictionResults:
-        """
-        Forward Generate predictions.
-
-        Privides the function for the forward pass to the model.
-
-        Parameters:
-            seq (Tensor): Encoded pepide sequence [B, L] (view details)
-            mods (Tensor): Encoded modification sequence [B, L], by default None
-            nce (Tensor): float Tensor with the charges [B, 1]
-            charge (Tensor): long Tensor with the charges [B, 1], by default None
-
-        Details:
-            seq:
-                The peptide is encoded as integers for the aminoacid.
-                "AAA" encoded for a max length of 5 would be
-                torch.Tensor([ 1,  1,  1,  0,  0]).long()
-            nce:
-                Normalized collision energy to use during the prediction.
-            charge:
-                A tensor corresponding to the charges of each of the
-                peptide precursors (long)
-            mods:
-                Modifications encoded as integers
-        """
-
-        trans_encoder_output, mem_mask = self.encoder(seq=seq, mods=mods)
-
-        rt_output = self.irt_decoder(seq=seq, mods=mods)
-
-        spectra_output = self.decoder(
-            memory=trans_encoder_output,
-            charge=charge,
-            nce=nce,
-            memory_key_padding_mask=mem_mask,
-        )
-
-        return PredictionResults(irt=rt_output, spectra=spectra_output)
+    ):
+        self.main_model.forward(seq=seq, mods=mods, charge=charge, nce=nce)
 
     @staticmethod
     def torch_batch_from_seq(*args, **kwargs) -> ForwardBatch:
@@ -575,10 +188,10 @@ class PepTransformerModel(pl.LightningModule):
         self.metric_calculator = None
 
         bkp_1 = self.decoder.nce_encoder.static_size
-        self.decoder.nce_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
+        self.decoder.nce_encoder.static_size = self.NUM_FRAG_EMBEDINGS
 
         bkp_2 = self.decoder.charge_encoder.static_size
-        self.decoder.charge_encoder.static_size = constants.NUM_FRAG_EMBEDINGS
+        self.decoder.charge_encoder.static_size = self.NUM_FRAG_EMBEDINGS
 
         script = super().to_torchscript(
             example_inputs=_fake_input_data_torchscript, method="trace"
@@ -597,7 +210,7 @@ class PepTransformerModel(pl.LightningModule):
         nce: float,
         as_spectrum=False,
         enforce_length=True,
-    ) -> Union[PredictionResults, Spectrum]:
+    ) -> PredictionResults | Spectrum:
         """
         Predict_from_seq Predicts spectra from a sequence as a string.
 
@@ -653,7 +266,7 @@ class PepTransformerModel(pl.LightningModule):
         out = PredictionResults(
             **{k: x.squeeze(0).cpu() for k, x in out._asdict().items()}
         )
-        logging.debug(out)
+        logger.debug(out)
 
         # rt should be in seconds for spectrast ...
         # irt should be non-dimensional
@@ -755,63 +368,83 @@ class PepTransformerModel(pl.LightningModule):
                 " with respect to the retention time loss)"
             ),
         )
-        parser.add_argument(
-            "--trainable_secions",
-            nargs="+",
-            type=str,
-            default=PepTransformerModel.model_sections,
-            help=(
-                "Sections of the model to train, "
-                f"can be any subset of {PepTransformerModel.model_sections}"
-            ),
-        )
 
         return parser
 
-    def make_trainable_sections(self, sections: list[str] = _model_sections) -> None:
-        """
-        Makes sections of the model trainable.
+    @staticmethod
+    def configure_scheduler_plateau(optimizer, lr_ratio):
+        assert lr_ratio < 1
+        scheduler_dict = {
+            "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer=optimizer,
+                mode="min",
+                factor=lr_ratio,
+                patience=2,
+                verbose=False,
+            ),
+            "interval": "epoch",
+            "monitor": "val_l",
+        }
+        return scheduler_dict
 
-        It freezes the whole model and makes the specified sections trainable
+    @staticmethod
+    def configure_scheduler_cosine(optimizer, lr_ratio, min_lr):
+        assert lr_ratio > 1
+        scheduler_dict = {
+            "scheduler": CosineAnnealingWarmRestarts(
+                optimizer=optimizer,
+                T_0=1,
+                T_mult=2,
+                eta_min=min_lr,
+                last_epoch=-1,
+                verbose=False,
+            ),
+            "interval": "step",
+        }
+        return scheduler_dict
 
-        Args:
-            sections (List[str]):
-                A list containing the model sections that should be set as trainable
-        """
+    @staticmethod
+    def configure_scheduler_oncecycle(
+        optimizer,
+        lr_ratio,
+        learning_rate,
+        steps_per_epoch,
+        accumulate_grad_batches,
+        max_epochs,
+    ):
+        max_lr = learning_rate * lr_ratio
+        spe = steps_per_epoch // accumulate_grad_batches
+        # 4k warmup steps / total number of steps
+        pct_start = 4000 / (spe * max_epochs)
 
-        def set_grad_section(model_section, trainable=True):
-            """
-            Freezes or unfreezes a model section.
+        logger.info(
+            f">> Scheduler setup: max_lr {max_lr}, "
+            f"Max Epochs: {max_epochs}, "
+            f"Steps per epoch: {steps_per_epoch}, "
+            f"SPE (after accum grad batches) {spe}, "
+            f"Percent Warmup {pct_start}, "
+            f"Accumulate Batches {accumulate_grad_batches}, "
+        )
 
-            Args:
-              model_section:
-              trainable: (Default value = True)
-
-            Returns:
-            """
-            for param in model_section.parameters():
-                param.requires_grad = trainable
-
-        logging.warning("Freezing the model")
-        set_grad_section(self, trainable=False)
-
-        for section in sections:
-            logging.warning(f"Unfreezing {section}")
-            try:
-                set_grad_section(self.model_sections[section], trainable=True)
-            except KeyError as e:
-                logging.error(
-                    f"{e} not found, please provide to the trainable"
-                    " sections one of {_model_sections}"
-                )
+        scheduler_dict = {
+            "scheduler": torch.optim.lr_scheduler.OneCycleLR(
+                optimizer=optimizer,
+                max_lr=max_lr,
+                epochs=max_epochs,
+                pct_start=pct_start,
+                steps_per_epoch=spe,
+            ),
+            "interval": "step",
+        }
+        return scheduler_dict
 
     def configure_optimizers(
         self,
-    ) -> Union[
-        tuple[list[AdamW], list[dict[str, Union[ReduceLROnPlateau, str]]]],
-        tuple[list[AdamW], list[dict[str, Union[CosineAnnealingWarmRestarts, str]]]],
-        tuple[list[AdamW], list[dict[str, Union[OneCycleLR, str]]]],
-    ]:
+    ) -> (
+        tuple[list[AdamW], list[dict[str, ReduceLROnPlateau | str]]]
+        | tuple[list[AdamW], list[dict[str, CosineAnnealingWarmRestarts | str]]]
+        | tuple[list[AdamW], list[dict[str, OneCycleLR | str]]]
+    ):
         """
         Configure_optimizers COnfigures the optimizers for training.
 
@@ -835,26 +468,11 @@ class PepTransformerModel(pl.LightningModule):
         )
 
         if self.scheduler == "plateau":
-            scheduler_dict = {
-                "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
-                    opt, mode="min", factor=0.5, patience=2, verbose=True
-                ),
-                "interval": "epoch",
-                "monitor": "val_l",
-            }
+            sched_dict = self.configure_scheduler_plateau(optimizer=opt)
         elif self.scheduler == "cosine":
-            assert self.lr_ratio > 1
-            scheduler_dict = {
-                "scheduler": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                    opt,
-                    T_0=1,
-                    T_mult=2,
-                    eta_min=self.lr / self.lr_ratio,
-                    last_epoch=-1,
-                    verbose=False,
-                ),
-                "interval": "step",
-            }
+            sched_dict = self.configure_scheduler_cosine(
+                optimizer=opt, lr_ratio=self.lr_ratio, min_lr=self.lr / self.lr_ratio
+            )
         elif self.scheduler == "onecycle":
             assert self.steps_per_epoch is not None, "Please set steps_per_epoch"
             if self.trainer.max_epochs == 1000:
@@ -865,30 +483,15 @@ class PepTransformerModel(pl.LightningModule):
                     " make sure you want that for the OneCycleLR scheduler"
                 )
                 time.sleep(3)  # just so the user has time to see the message...
-            max_lr = self.lr * self.lr_ratio
-            spe = self.steps_per_epoch // self.trainer.accumulate_grad_batches
-            # 4k warmup steps / total number of steps
-            pct_start = 4000 / (spe * self.trainer.max_epochs)
 
-            logging.info(
-                f">> Scheduler setup: max_lr {max_lr}, "
-                f"Max Epochs: {self.trainer.max_epochs}, "
-                f"Steps per epoch: {self.steps_per_epoch}, "
-                f"SPE (after accum grad batches) {spe}, "
-                f"Percent Warmup {pct_start}, "
-                f"Accumulate Batches {self.trainer.accumulate_grad_batches}, "
+            sched_dict = self.configure_scheduler_oncecycle(
+                optimizer=opt,
+                lr_ratio=self.lr_ratio,
+                learning_rate=self.lr,
+                steps_per_epoch=self.steps_per_epoch,
+                accumulate_grad_batches=self.trainer.accumulate_grad_batches,
+                max_epochs=self.trainer.max_epochs,
             )
-
-            scheduler_dict = {
-                "scheduler": torch.optim.lr_scheduler.OneCycleLR(
-                    optimizer=opt,
-                    max_lr=max_lr,
-                    epochs=self.trainer.max_epochs,
-                    pct_start=pct_start,
-                    steps_per_epoch=spe,
-                ),
-                "interval": "step",
-            }
 
         else:
             raise ValueError(
@@ -897,13 +500,38 @@ class PepTransformerModel(pl.LightningModule):
             )
         # TODO check if using different optimizers for different parts of the
         # model would work better
-        logging.info(f"\n\n>>> Setting up schedulers:\n\n{scheduler_dict}")
+        logger.info(f"\n\n>>> Setting up schedulers:\n\n{sched_dict}")
 
-        return [opt], [scheduler_dict]
+        return [opt], [sched_dict]
 
-    def _step(
-        self, batch: TrainBatch, batch_idx: int, layernorm=False
-    ) -> dict[str, Tensor]:
+    def plot_scheduler_lr(self):
+        """
+        Plot the learning rate of the scheduler.
+
+        This is useful to see how the learning rate changes during training,
+        and to make sure that the scheduler is working as intended.
+
+        Returns:
+            None
+        """
+        steps_per_epoch = self.steps_per_epoch
+        accumulate_grad_batches = self.trainer.accumulate_grad_batches
+        spe = steps_per_epoch // accumulate_grad_batches
+
+        optimizer, schedulers = self.configure_optimizers()
+        optimizer = optimizer[0]
+        scheduler = schedulers[0]["scheduler"]
+
+        xs = list(range(spe))
+        lrs = []
+        for i in xs:
+            optimizer.step()
+            lrs.append(optimizer.param_groups[0]["lr"])
+            scheduler.step()
+
+        uniplot.plot(lrs, xs, title="Learning Rate Schedule")
+
+    def _step(self, batch: TrainBatch, batch_idx: int) -> dict[str, Tensor]:
         """
         Run main functionality during training an testing steps.
 
@@ -922,16 +550,9 @@ class PepTransformerModel(pl.LightningModule):
 
         truth_spectra = F.pad(
             batch.spectra,
-            (0, constants.NUM_FRAG_EMBEDINGS - batch.spectra.size(1)),
+            (0, self.NUM_FRAGMENT_EMBEDDINGS - batch.spectra.size(1)),
             mode="constant",
         )
-
-        if layernorm:
-            scaling = 1 - (truth_spectra + 1e-8).mean(axis=0)
-            grandmean = scaling.mean()
-
-            yhat_spectra = scaling * yhat_spectra / grandmean
-            truth_spectra = scaling * truth_spectra / grandmean
 
         loss_irt = self.mse_loss(
             yhat_irt[~batch.irt.isnan()], batch.irt[~batch.irt.isnan()]
@@ -956,7 +577,7 @@ class PepTransformerModel(pl.LightningModule):
             # total_loss = total_loss / (self.loss_ratio + 1)
             total_loss = loss_irt + total_loss
         else:
-            logging.warning(
+            logger.warning(
                 f"Skipping addition of irt loss on batch {batch_idx} "
                 f"with value {loss_irt.flatten()}, "
                 f"preds: {yhat_irt.flatten()}"
@@ -976,7 +597,7 @@ class PepTransformerModel(pl.LightningModule):
             else:
                 self.num_failed = 1
 
-            logging.error(
+            logger.error(
                 f"Fail {self.num_failed} at... batch {batch_idx} \n"
                 f" Loss: {total_loss},\n"
                 f"\n loss_irt: {loss_irt.flatten()}\n"
@@ -989,10 +610,10 @@ class PepTransformerModel(pl.LightningModule):
 
             if self.num_failed > 2:
                 torch.save(self.cpu().state_dict(), "broken_state.pt")
-                logging.error(self.cpu().state_dict())
+                logger.error(self.cpu().state_dict())
 
-                logging.error("last succesfull state:")
-                logging.error(self.last_state)
+                logger.error("last succesfull state:")
+                logger.error(self.last_state)
                 raise RuntimeError(
                     "Too many nan in a row, dumping state to 'broken_state.pt'"
                 )
@@ -1000,16 +621,14 @@ class PepTransformerModel(pl.LightningModule):
         else:
             self.num_failed = 0
             if batch_idx % 50 == 0:
-                logging.debug("Saved state dict")
+                logger.debug("Saved state dict")
                 self.last_state = copy.deepcopy(self.state_dict())
 
         return losses
 
-    def training_step(
-        self, batch: TrainBatch, batch_idx: Optional[int] = None
-    ) -> Tensor:
+    def training_step(self, batch: TrainBatch, batch_idx: int | None = None) -> Tensor:
         """See pytorch_lightning documentation."""
-        step_out = self._step(batch, batch_idx=batch_idx, layernorm=False)
+        step_out = self._step(batch, batch_idx=batch_idx)
         log_dict = {"train_" + k: v for k, v in step_out.items()}
         log_dict.update({"LR": self.trainer.optimizers[0].param_groups[0]["lr"]})
 
@@ -1022,13 +641,13 @@ class PepTransformerModel(pl.LightningModule):
         return step_out["l"]
 
     def on_train_start(self) -> None:
-        logging.info("Weights before the start of the training epoch:")
+        logger.info("Weights before the start of the training epoch:")
         self.last_state = copy.deepcopy(self.state_dict())
-        logging.info(self.last_state)
+        logger.info(self.last_state)
         return super().on_train_start()
 
     def validation_step(
-        self, batch: TrainBatch, batch_idx: Optional[int] = None
+        self, batch: TrainBatch, batch_idx: int | None = None
     ) -> Tensor:
         """See pytorch_lightning documentation."""
         step_out = self._step(batch, batch_idx=batch_idx)
@@ -1064,7 +683,7 @@ class PepTransformerModel(pl.LightningModule):
     def _evaluation_step(
         self,
         batch: TrainBatch,
-        batch_idx: Optional[int],
+        batch_idx: int | None,
     ) -> dict[str, Tensor]:
         """
         Run main functionality during training an testing steps.
@@ -1095,7 +714,7 @@ class PepTransformerModel(pl.LightningModule):
         return losses, pred_out
 
     def test_step(
-        self, batch, batch_idx: Optional[int] = None
+        self, batch, batch_idx: int | None = None
     ) -> tuple[dict[str, Tensor], PredictionResults]:
         losses, pred_out = self._evaluation_step(batch=batch, batch_idx=batch_idx)
         return losses, pred_out.irt, batch.irt
@@ -1105,7 +724,7 @@ class PepTransformerModel(pl.LightningModule):
         self.metric_calculator.log_dict = self.log_dict
         return self.metric_calculator.test_epoch_end(results)
 
-    def predict_step(self, batch: TrainBatch, batch_idx: Optional[int] = None):
+    def predict_step(self, batch: TrainBatch, batch_idx: int | None = None):
         yhat_irt, yhat_spectra = self.forward(
             seq=batch.seq, mods=batch.mods, charge=batch.charge, nce=batch.nce
         )
@@ -1132,7 +751,7 @@ class PepTransformerModel(pl.LightningModule):
                             ):
                                 val = param.grad.abs().mean()
                                 if torch.any(torch.isnan(val)):
-                                    logging.error(
+                                    logger.error(
                                         f"nan mean gradient for {name}: {param.grad}"
                                     )
                                 self.log(name, val, prog_bar=True, on_step=True)
@@ -1142,7 +761,7 @@ class PepTransformerModel(pl.LightningModule):
                             msg.append(name)
 
         if len(msg) > 0:
-            logging.warning(
+            logger.warning(
                 " ".join(msg) + "Did not have gradients in step {global_step}"
             )
 
@@ -1158,29 +777,25 @@ class PepTransformerModel(pl.LightningModule):
 
 
 def evaluate_landmark_rt(model: PepTransformerModel):
-    """
-    Evaluate_landmark_rt Checks the prediction of the model on the iRT.
-
-    peptides.
+    """Checks the prediction of the model on the iRT peptides.
 
     Predicts all the procal and Biognosys iRT peptides and checks the correlation
     of the theoretical iRT values and the predicted ones
 
-    Parameters
-    ----------
-    model : PepTransformerModel
-        A model to test the predictions on
+    Parameters:
+        model: PepTransformerModel
+            A model to test the predictions on
     """
     model.eval()
     real_rt = []
     pred_rt = []
-    for seq, desc in constants.IRT_PEPTIDES.items():
+    for seq, desc in IRT_PEPTIDES.items():
         with torch.no_grad():
             out = model.predict_from_seq(seq, 2, 25, enforce_length=False)
             pred_rt.append(out.irt.numpy())
             real_rt.append(np.array(desc["irt"]))
 
     fit = polyfit(np.array(real_rt).flatten(), np.array(pred_rt).flatten())
-    logging.info(fit)
+    logger.info(fit)
     uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())
     return fit
