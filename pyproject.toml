@@ -10,7 +10,7 @@ readme = "README.md"
 "Bug Tracker" = "https://github.com/jspaezp/elfragmentador/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.11"
+python = ">=3.9,<3.12"
 lxml = "^4.6.3"
 networkx = "^2.5"
 numpy = "^1.23.2"
@@ -27,6 +27,8 @@ numba = "^0.56.2"
 # BLocking torch 1.13 update until poetry fixes it
 # https://github.com/python-poetry/poetry/issues/6939
 torch = ">=1.12.0,<1.13.0"
+ms2ml = "^0.0.15"
+loguru = "^0.6.0"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "^1.5.3"
