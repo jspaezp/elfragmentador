@@ -6,14 +6,11 @@ import numpy as np
 import torch
 from torch import Tensor
 
-import elfragmentador.constants as CONSTANTS
-from elfragmentador import annotate
-
 SequencePair = namedtuple("SequencePair", "aas, mods")
 SequencePair.__doc__ = """
 Named Tuple that bundles aminoacid tensor encodings and its corresponding modifications.
 
-Example for the following sequence `_AAIFVVAR_`:
+Example for the following sequence `AAIFVVAR`:
 > SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0], mods=[0, 0, 0, 0,..., 0, 0])
 """
 
@@ -33,9 +30,7 @@ def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePai
             is longer than the maximum allowed for the model.
 
     Examples:
-        >>> samp_seq = "_AAIFVVAR_"
-        >>> print(CONSTANTS.MAX_TENSOR_SEQUENCE)
-        32
+        >>> samp_seq = "AAIFVVAR"
         >>> out = encode_mod_seq(samp_seq)
         >>> out
         SequencePair(aas=[23, 1, 1, 8, 5, 19, 19, 1, 15, ..., 0],
@@ -82,35 +77,6 @@ def encode_mod_seq(seq: str, enforce_length=True, pad_zeros=True) -> SequencePai
     return SequencePair(seq_out, mod_out)
 
 
-def clip_explicit_terminus(seq: Union[str, list]):
-    """
-    Remove explicit terminus.
-
-    Args:
-        seq (Union[str, List]): Sequence to be stripped form eplicit termini
-
-    Returns:
-        Sequence (Union[str, List]):
-            Same as sequence input but removing explicit n and c termini
-
-    Examples:
-        >>> clip_explicit_terminus("PEPTIDEPINK")
-        'PEPTIDEPINK'
-        >>> clip_explicit_terminus("nPEPTIDEPINKc")
-        'PEPTIDEPINK'
-        >>> clip_explicit_terminus("n[ACETYL]PEPTIDEPINKc")
-        'n[ACETYL]PEPTIDEPINK'
-    """
-
-    if seq[0] == "n" and not seq[1].startswith("["):
-        seq = seq[1:]
-
-    if seq[-1] == "c":
-        seq = seq[:-1]
-
-    return seq
-
-
 def decode_mod_seq(
     seq_encoding: list[int],
     mod_encoding: Optional[list[int]] = None,
@@ -154,25 +120,6 @@ def decode_mod_seq(
     if clip_explicit_term:
         out = clip_explicit_terminus(out)
     return "".join(out)
-
-
-def encode_fragments(
-    annotated_peaks: Optional[Union[dict[str, int], dict[str, float]]]
-) -> Union[list[float], list[int]]:
-    """
-    Gets either the labels or an sequence that encodes a spectra.
-
-    # TODO split this into different functions ...
-
-    Examples:
-        >>> encode_fragments({'z1y2': 100, 'z2y2': 52})
-        [0, 0, 0, 100, ..., 0, 52, ...]
-    """
-
-    # TODO implement neutral losses ...  if needed
-    encoding = [annotated_peaks.get(key, 0) for key in CONSTANTS.FRAG_EMBEDING_LABELS]
-
-    return encoding
 
 
 @torch.no_grad()

@@ -193,6 +193,7 @@ def setup_model(tiny_model):
     tiny_model.eval()
 
     # TODO make this a test ...
+    # ALso make gettting the random peptides a testing function
     seqs = [efu.get_random_peptide() for _ in range(100)]
     charges = [torch.tensor([[random.randint(2, 6)]]).long() for _ in seqs]
     nces = [torch.tensor([[random.uniform(20, 40)]]).float() for _ in seqs]

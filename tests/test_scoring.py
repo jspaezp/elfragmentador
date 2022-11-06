@@ -1,13 +1,11 @@
 import random
 
-from elfragmentador import encoding_decoding
 from elfragmentador.annotate import get_peptide_ions
 from elfragmentador.scoring import (
     calc_ascore,
     calc_delta_ascore,
     get_site_localizing_ions,
 )
-from elfragmentador.spectra import Spectrum
 
 
 def test_ascore_calculation_works():
@@ -123,7 +121,7 @@ Spectrum.from_tensors(
     mod_tensor=[
         0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
 )
-"""
+"""  # noqa
 
 spectrum_2_string = """
 Spectrum.from_tensors(
@@ -136,7 +134,7 @@ Spectrum.from_tensors(
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
     mod_tensor=[
         0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],)
-"""
+"""  # noqa
 
 
 def test_ascore_ascore_calculates_correctly_best_annotation():

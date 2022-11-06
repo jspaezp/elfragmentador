@@ -1,24 +1,19 @@
 import argparse
 import logging
 import logging.config
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from pathlib import Path
-
-import elfragmentador
-
-try:
-    from argparse import BooleanOptionalAction
-except ImportError:
-    # Exception for py <3.8 compatibility ...
-    BooleanOptionalAction = "store_true"
-
-
 import warnings
+from argparse import (
+    ArgumentDefaultsHelpFormatter,
+    ArgumentParser,
+    BooleanOptionalAction,
+)
+from pathlib import Path
 
 import pandas as pd
 import pytorch_lightning as pl
 import torch
 
+import elfragmentador
 from elfragmentador import rt
 from elfragmentador.datasets import Predictor
 from elfragmentador.datasets.peptide_dataset import PeptideDataset

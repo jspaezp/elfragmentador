@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from ms2ml import Spectrum
 from ms_transformer_layers import (
     _IRTDecoder,
     _PeptideTransformerDecoder,
@@ -156,3 +157,83 @@ class PeptransformerBase(nn.Module):
         )
 
         return PredictionResults(irt=rt_output, spectra=spectra_output)
+
+    def predict_from_seq(
+        self,
+        seq: str,
+        charge: int,
+        nce: float,
+        as_spectrum=False,
+        enforce_length=True,
+    ) -> PredictionResults | Spectrum:
+        """
+        Predict_from_seq Predicts spectra from a sequence as a string.
+
+        Utility method that gets a sequence as a string, encodes it internally
+        to the correct input form and outputs the predicted spectra.
+
+        Note that the spectra is not decoded as an output, please check
+        `elfragmentador.encoding_decoding.decode_fragment_tensor` for the
+        decoding.
+
+        The irt is scaled by 100 and is in the Biognosys scale.
+
+        TODO: consider if the output should be decoded ...
+
+        Parameters:
+            seq (str):
+                Sequence to use for prediction, supports modifications in the form
+                of S[PHOSPHO], S[+80] and T[181]
+            charge (int):
+                Precursor charge to be assumed during the fragmentation
+            nce (float):
+                Normalized collision energy to use during the prediction
+            as_spectrum (bool, optional):
+                Wether to return a Spectrum object instead of the raw tensor predictions
+                (Default value = False)
+
+        Returns:
+          PredictionResults: A named tuple with two named results; irt and spectra
+          Spectrum: A spectrum object with the predicted spectrum
+
+        Examples:
+            >>> pl.seed_everything(42)
+            42
+            >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
+            >>> _ = my_model.eval()
+            >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
+            PredictionResults(irt=tensor(..., grad_fn=<SqueezeBackward1>), \
+            spectra=tensor([...], grad_fn=<SqueezeBackward1>))
+            >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, \
+            as_spectrum=True)
+            >>> type(out)
+            <class 'elfragmentador.spectra.Spectrum'>
+            >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
+        """
+
+        in_batch = self.torch_batch_from_seq(
+            seq, nce, charge, enforce_length=enforce_length
+        )
+
+        in_batch_dict = {k: v.to(self.device) for k, v in in_batch._asdict().items()}
+
+        out = self.forward(**in_batch_dict)
+        out = PredictionResults(
+            **{k: x.squeeze(0).cpu() for k, x in out._asdict().items()}
+        )
+        logger.debug(out)
+
+        # rt should be in seconds for spectrast ...
+        # irt should be non-dimensional
+        if as_spectrum:
+            out = Spectrum.from_tensors(
+                sequence_tensor=in_batch.seq.squeeze().numpy(),
+                fragment_tensor=out.spectra / out.spectra.max(),
+                mod_tensor=in_batch.mods.squeeze().numpy(),
+                charge=charge,
+                nce=nce,
+                rt=float(out.irt),
+                irt=float(out.irt),  # * 100,
+            )
+
+        return out

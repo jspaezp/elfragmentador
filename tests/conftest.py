@@ -1,12 +1,29 @@
+import random
 import warnings
 
 import pytest
 import torch
 from pytorch_lightning import Trainer
+from torch.utils.data.dataset import TensorDataset
 
 from elfragmentador import datamodules
 from elfragmentador.model import PepTransformerModel
-from elfragmentador.utils import prepare_fake_tensor_dataset
+
+
+def prepare_fake_tensor_dataset(num=50):
+    peps = [
+        {
+            "nce": 20 + (10 * random.random()),
+            "charge": random.randint(1, 5),
+            "seq": get_random_peptide(),
+        }
+        for _ in range(num)
+    ]
+
+    tensors = [torch_batch_from_seq(**pep) for pep in peps]
+    tensors = TensorDataset(*_concat_batches(batches=tensors))
+
+    return tensors
 
 
 @pytest.fixture(params=["csv", "csv.gz"])

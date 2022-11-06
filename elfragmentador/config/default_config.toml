@@ -52,7 +52,6 @@ fragment_positions = [
     27,
     28,
     29,
-    30,
 ]
 ion_series = "yb"
 ion_charges = [
@@ -72,9 +71,9 @@ mod_fixed_mods = [
     "[U:4]@C",
 ]
 encoding_aa_order = [
-    "n_term",
+    "__missing__",
     "A",
-    "B",
+    # "B",
     "C",
     "D",
     "E",
@@ -82,25 +81,25 @@ encoding_aa_order = [
     "G",
     "H",
     "I",
-    "J",
+    # "J",
     "K",
     "L",
     "M",
     "N",
-    "O",
+    # "O",
     "P",
     "Q",
     "R",
     "S",
     "T",
-    "U",
+    # "U",
     "V",
     "W",
     "X",
     "Y",
-    "Z",
+    # "Z",
     "c_term",
-    "__missing__",
+    "n_term",
 ]
 # [Carbamido] 4
 # 78316 [OXIDATION] 35
@@ -148,4 +147,3 @@ Methyl = "[U:34]"
 Dimethyl = "[U:36]"
 GG = "[U:121]"
 Nitro = "[U:354]"
-Deamidation = "[U:7]"

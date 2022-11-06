@@ -45,7 +45,8 @@ def test_getting_ions():
     assert all([abs(x - y) <= 1 for x, y in zip(expected_mpep, rounded_out)])
 
 
-# Ground truth as defined in http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
+# Ground truth as defined in
+# http://db.systemsbiology.net:8080/proteomicsToolkit/FragIonServlet.html
 parametrized_peptides = (
     (
         "PEPICNK",
