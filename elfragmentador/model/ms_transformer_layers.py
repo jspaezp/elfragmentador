@@ -8,10 +8,20 @@ from .nn_encoding import AASequenceEmbedding, ConcatenationEncoder
 from .transformer_layers import _LearnableEmbedTransformerDecoder
 
 
-class _IRTDecoder(nn.Module):
-    def __init__(self, d_model, dim_feedforward=224, nhead=4, n_layers=3, dropout=0.05):
+class IRTDecoder(nn.Module):
+    def __init__(
+        self,
+        d_model,
+        dim_feedforward=224,
+        nhead=4,
+        n_layers=3,
+        dropout=0.05,
+        final_decoder="linear",
+    ):
         super().__init__()
         """Decode iRTs.
+
+        It is technically an encoder-decoder...
 
         Args:
             d_model (int):
@@ -45,6 +55,7 @@ class _IRTDecoder(nn.Module):
             layers=n_layers,
             dropout=dropout,
             num_outputs=1,
+            final_decoder=final_decoder,
         )
 
     def forward(self, seq, mods):
@@ -62,14 +73,14 @@ class _IRTDecoder(nn.Module):
         return out
 
 
-class _PeptideTransformerEncoder(torch.nn.Module):
+class PeptideTransformerEncoder(torch.nn.Module):
     def __init__(
         self, d_model: int, dropout: float, nhead: int, nhid: int, layers: int
     ) -> None:
         super().__init__()
 
         # Aminoacid embedding
-        self.aa_encoder = AASequenceEmbedding(d_model=d_model)
+        self.aa_embed = AASequenceEmbedding(d_model=d_model)
 
         # Transformer encoder sections
         encoder_layers = nn.TransformerEncoderLayer(
@@ -79,7 +90,7 @@ class _PeptideTransformerEncoder(torch.nn.Module):
             dropout=dropout,
             activation="gelu",
         )
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, layers)
+        self.encoder = nn.TransformerEncoder(encoder_layers, layers)
 
     def forward(self, seq: Tensor, mods: Tensor) -> Tensor:
         # For the mask ....
@@ -97,18 +108,16 @@ class _PeptideTransformerEncoder(torch.nn.Module):
             seq <= 0, float("-inf")
         ).masked_fill(seq > 0, float(0.0))
 
-        x = self.aa_encoder(seq=seq, mods=mods)
+        x = self.aa_embed(seq=seq, mods=mods)
         # x shape [S, N, d_model]
 
-        trans_encoder_output = self.transformer_encoder(
-            x, src_key_padding_mask=trans_encoder_mask
-        )
+        trans_encoder_output = self.encoder(x, src_key_padding_mask=trans_encoder_mask)
         # trans_encoder_output shape [S, N, d_model]
 
         return trans_encoder_output, trans_encoder_mask
 
 
-class _FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
+class FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
     def __init__(
         self,
         d_model: int,
@@ -119,6 +128,7 @@ class _FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
         num_fragments: int,
         charge_dims_pct: float = 0.05,
         nce_dims_pct: float = 0.05,
+        final_decoder: str = "linear",
     ) -> None:
         charge_dims = math.ceil(d_model * charge_dims_pct)
         nce_dims = math.ceil(d_model * nce_dims_pct)
@@ -132,6 +142,7 @@ class _FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
             layers=layers,
             dropout=dropout,
             num_outputs=num_fragments,
+            final_decoder=final_decoder,
         )
 
         self.charge_encoder = ConcatenationEncoder(

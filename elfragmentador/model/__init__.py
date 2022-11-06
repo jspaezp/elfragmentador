@@ -59,6 +59,9 @@ class PepTransformerModel(pl.LightningModule):
         d_model: int = 516,
         nhead: int = 4,
         dropout: float = 0.1,
+        combine_embeds: bool = True,
+        combine_encoders: bool = True,
+        final_decoder: str = "linear",
         lr: float = 1e-4,
         scheduler: str = "plateau",
         lr_ratio: float | int = 200,
@@ -87,6 +90,11 @@ class PepTransformerModel(pl.LightningModule):
                 Number of multi-attention heads in the transformer, by default 4
             dropout : float, optional
                 dropout, by default 0.1
+            combine_embeds: bool, optional
+                Whether the embeddings for modifications and sequences should be shared
+                for irt and fragment predictions
+            combine_encoders: bool = True,
+                Whether the transformer encoders for for irt and fragments should be shared.
             lr : float, optional
                 Learning rate, by default 1e-4
             scheduler : str, optional
@@ -130,6 +138,9 @@ class PepTransformerModel(pl.LightningModule):
             d_model=d_model,
             nhead=nhead,
             dropout=dropout,
+            combine_embeds=combine_embeds,
+            combine_encoders=combine_encoders,
+            final_decoder=final_decoder,
         )
 
         self.metric_calculator = MetricCalculator()
@@ -269,6 +280,33 @@ class PepTransformerModel(pl.LightningModule):
             "--nhead", default=12, type=int, help="Number of attention heads"
         )
         parser.add_argument("--dropout", default=0.1, type=float)
+        parser.add_argument(
+            "--combine_embeds",
+            default=True,
+            type=bool,
+            help=(
+                "Whether the embeddings for aminoacid and modifications"
+                " should be shared between the irt and fragment sections"
+            ),
+        )
+        parser.add_argument(
+            "--combine_encoders",
+            default=True,
+            type=bool,
+            help=(
+                "Whether the encoders for aminoacid and modifications"
+                " should be shared between the irt and fragment sections"
+            ),
+        )
+        parser.add_argument(
+            "--final_decoder",
+            default="mlp",
+            type=str,
+            help=(
+                "What kind of final layer should the docer have to"
+                " output a single number, options are 'mlp' and 'linear'"
+            ),
+        )
         parser.add_argument("--lr", default=1e-4, type=float)
         parser.add_argument(
             "--scheduler",

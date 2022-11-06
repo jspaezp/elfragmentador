@@ -1,9 +1,72 @@
-from typing import Optional
+from typing import Literal, Optional
 
 import torch
 import torch.nn as nn
 from loguru import logger
 from torch import Tensor
+
+
+class MLP(nn.Module):
+    def __init__(
+        self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int
+    ) -> None:
+        """
+        MLP implements a very simple multi-layer perceptron (also called FFN).
+
+        Concatenates hidden linear layers with activations for n layers.
+        This implementation uses gelu instead of relu
+        (linear > gelu) * (n-1) > linear
+
+        Based on: https://github.com/facebookresearch/detr/blob/models/detr.py#L289
+
+        Parameters:
+            input_dim (int):
+                Expected dimensions for the input
+            hidden_dim (int):
+                Number of dimensions of the hidden layers
+            output_dim (int):
+                Output dimensions
+            num_layers (int):
+                Number of layers (total)
+        """
+        super().__init__()
+        self.num_layers = num_layers
+        h = [hidden_dim] * (num_layers - 1)
+        self.layers = nn.ModuleList(
+            nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        """
+        Forward pass over the network.
+
+        Args:
+          x (Tensor):
+
+        Returns:
+            Tensor
+
+        Examples:
+            >>> pl.seed_everything(42)
+            42
+            >>> net = MLP(1000, 512, 2, 10)
+            >>> out = net.forward(torch.rand([5, 1000]))
+            >>> out
+            tensor([[-0.0061, -0.0219],
+                    [-0.0061, -0.0219],
+                    [-0.0061, -0.0220],
+                    [-0.0061, -0.0220],
+                    [-0.0061, -0.0219]], grad_fn=<AddmmBackward0>)
+            >>> out.shape
+            torch.Size([5, 2])
+        """
+        for i, layer in enumerate(self.layers):
+            x = (
+                torch.nn.functional.gelu(layer(x))
+                if i < self.num_layers - 1
+                else layer(x)
+            )
+        return x
 
 
 class _LearnableEmbedTransformerDecoder(torch.nn.Module):
@@ -16,6 +79,7 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
         dropout: float,
         num_outputs: int,
         embed_dims: Optional[int] = None,
+        final_decoder: Literal["linear", "mlp"] = "mlp",
     ) -> None:
         """Implements a transformer decoder with a learnable embedding layer."""
         super().__init__()
@@ -34,8 +98,12 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
             activation="gelu",
         )
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
-        # self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
-        self.peak_decoder = nn.Linear(d_model, 1)
+        if final_decoder == "linear":
+            self.peak_decoder = nn.Linear(d_model, 1)
+        elif final_decoder == "mlp":
+            self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
+        else:
+            raise ValueError(f"final_decoder must be one of ['linear', 'mlp']")
 
         logger.info(f"Creating embedding for spectra of length {num_outputs}")
         self.trans_decoder_embedding = nn.Embedding(
