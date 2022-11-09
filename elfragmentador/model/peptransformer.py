@@ -1,17 +1,18 @@
 import torch.nn as nn
 from loguru import logger
 from ms2ml import Spectrum
-from ms_transformer_layers import (
-    IRTDecoder,
-    PeptideTransformerDecoder,
-    PeptideTransformerEncoder,
-)
 from torch import Tensor
 
 from elfragmentador.named_batches import PredictionResults
 
+from .ms_transformer_layers import (
+    FragmentTransformerDecoder,
+    IRTDecoder,
+    PeptideTransformerEncoder,
+)
 
-class PeptransformerBase(nn.Module):
+
+class PepTransformerBase(nn.Module):
     def __init__(
         self,
         num_fragments,
@@ -36,7 +37,7 @@ class PeptransformerBase(nn.Module):
         )
 
         # Peptide decoder
-        self.decoder = PeptideTransformerDecoder(
+        self.decoder = FragmentTransformerDecoder(
             d_model=d_model,
             nhead=nhead,
             nhid=nhid,

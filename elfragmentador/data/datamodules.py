@@ -10,7 +10,6 @@ import pytorch_lightning as pl
 from torch.utils.data.dataloader import DataLoader
 
 from elfragmentador import utils_data
-from elfragmentador.datasets.peptide_dataset import PeptideDataset
 from elfragmentador.utils_data import _convert_tensor_columns_df
 
 
