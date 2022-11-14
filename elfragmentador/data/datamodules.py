@@ -1,100 +1,77 @@
 from __future__ import annotations
 
-import logging
 import warnings
 from argparse import _ArgumentGroup
 from pathlib import Path, PosixPath
 
-import pandas as pd
 import pytorch_lightning as pl
+import torch
+from loguru import logger as lg_logger
 from torch.utils.data.dataloader import DataLoader
 
-from elfragmentador import utils_data
-from elfragmentador.utils_data import _convert_tensor_columns_df
+from elfragmentador.data.torch_datasets import (
+    SplitSet,
+    TupleTensorDataset,
+    _split_tuple,
+    concat_batches,
+    read_cached_parquet,
+)
+from elfragmentador.named_batches import TrainBatch
 
 
-class PeptideDataModule(pl.LightningDataModule):
+class TrainingDataModule(pl.LightningDataModule):
     def __init__(
         self,
         batch_size: int = 64,
         base_dir: str | PosixPath = ".",
-        drop_missing_vals: bool = False,
-        max_spec=2_000_000,
     ) -> None:
         super().__init__()
-        logging.info("Initializing DataModule")
-        self.batch_size = batch_size
-        self.drop_missing_vals = drop_missing_vals
-        self.max_spec = max_spec
+        lg_logger.info("Initializing DataModule")
         base_dir = Path(base_dir)
+        paths = list(base_dir.rglob("*.parquet"))
 
-        if len(list(base_dir.glob("*.feather"))) > 0:
-            reader = pd.read_feather
-            glob_str = "feather"
-        else:
-            reader = pd.read_csv
-            glob_str = "csv"
+        lg_logger.info(f"Found {len(paths)} parquet files: {paths}")
+        batches = concat_batches([read_cached_parquet(x) for x in paths])
 
-        train_path = list(base_dir.glob(f"*train*.{glob_str}*"))
-        val_path = list(base_dir.glob(f"*val*.{glob_str}*"))
+        lg_logger.info("Splitting train/test/val")
 
-        assert (
-            len(train_path) > 0
-        ), f"Train File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
-        assert (
-            len(val_path) > 0
-        ), f"Val File not found in '{base_dir}'\nFound {list(base_dir.glob('*'))}"
-
-        logging.info("Starting loading of the data")
-        train_df = pd.concat(
-            [_convert_tensor_columns_df(reader(str(x))) for x in train_path]
-        )
-        val_df = pd.concat(
-            [_convert_tensor_columns_df(reader(str(x))) for x in val_path]
-        )
-
-        # TODO reconsider if storing this dataframe as is is required
-        self.train_df = train_df
-        self.val_df = val_df
+        self.batches = _split_tuple(batches)
+        self.batch_size = batch_size
 
     @staticmethod
     def add_model_specific_args(parser: _ArgumentGroup) -> _ArgumentGroup:
         parser.add_argument("--batch_size", type=int, default=64)
         parser.add_argument("--data_dir", type=str, default=".")
-        parser.add_argument("--drop_missing_vals", type=bool, default=False)
-        parser.add_argument("--max_spec", type=int, default=2000000)
         return parser
-
-    def setup(self, stage: str | None = None) -> None:
-        self.train_dataset = PeptideDataset(
-            self.train_df,
-            drop_missing_vals=self.drop_missing_vals,
-            max_spec=self.max_spec,
-        )
-        self.val_dataset = PeptideDataset(
-            self.val_df,
-            drop_missing_vals=self.drop_missing_vals,
-            max_spec=self.max_spec,
-        )
 
     def train_dataloader(self) -> DataLoader:
         warnings.filterwarnings(
             "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
-        return self.train_dataset.as_dataloader(
-            num_workers=0,
-            batch_size=self.batch_size,
-            shuffle=True,
-            collate_fn=utils_data.collate_fun,
-        )
+        return self.get_batch_dataloader("Train")
 
     def val_dataloader(self) -> DataLoader:
         warnings.filterwarnings(
             "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
-        return self.val_dataset.as_dataloader(
-            num_workers=0,
-            batch_size=self.batch_size,
-            shuffle=False,
-            collate_fn=utils_data.collate_fun,
+        return self.get_batch_dataloader("Val")
+
+    def test_dataloader(self) -> DataLoader:
+        warnings.filterwarnings(
+            "ignore", message=".*The dataloader.*workers.*bottleneck.*"
         )
+        return self.get_batch_dataloader("Test")
+
+    def get_batch_set(self, subset: SplitSet = "Train"):
+        tmp = self.batches[subset]
+        out = TrainBatch(*[torch.from_numpy(x) for x in tmp])
+        return out
+
+    def get_batch_dataloader(self, subset: SplitSet = "Train"):
+        tmp = self.get_batch_set(subset=subset)
+        shuffle = subset == "Train"
+        out = TupleTensorDataset(tmp).as_dataloader(
+            batch_size=self.batch_size,
+            shuffle=shuffle,
+        )
+        return out

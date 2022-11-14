@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 import pytorch_lightning as pl
 
-from elfragmentador import datamodules, model
+from elfragmentador import model
+from elfragmentador.data import datamodules
 
 
 def test_mod_train_base(datamodule):

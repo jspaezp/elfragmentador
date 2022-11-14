@@ -11,7 +11,7 @@ from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 
 import elfragmentador as ef
-from elfragmentador import datamodules
+from elfragmentador.data import datamodules
 from elfragmentador.model import PepTransformerModel, model
 
 

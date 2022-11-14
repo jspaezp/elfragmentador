@@ -103,7 +103,7 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
         elif final_decoder == "mlp":
             self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
         else:
-            raise ValueError(f"final_decoder must be one of ['linear', 'mlp']")
+            raise ValueError("final_decoder must be one of ['linear', 'mlp']")
 
         logger.info(f"Creating embedding for spectra of length {num_outputs}")
         self.trans_decoder_embedding = nn.Embedding(

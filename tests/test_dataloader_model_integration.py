@@ -1,7 +1,8 @@
 import torch
 from torch.utils.data.dataloader import DataLoader
 
-from elfragmentador import datamodules, model
+from elfragmentador import model
+from elfragmentador.data import datamodules
 
 
 def test_dataset_input_works_on_model(shared_datadir):

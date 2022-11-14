@@ -1,4 +1,4 @@
-from elfragmentador import datamodules
+from elfragmentador.data import datamodules
 from elfragmentador.datasets import Predictor
 
 

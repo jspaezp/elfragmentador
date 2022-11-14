@@ -2,7 +2,7 @@ from typing import NamedTuple
 
 import pandas as pd
 
-from elfragmentador import datamodules
+from elfragmentador.data import datamodules
 
 
 def check_type(i: NamedTuple):
@@ -22,12 +22,6 @@ def test_dataset_outputs_correct_type(shared_datadir):
     df = pd.read_csv(str(shared_datadir) + "/train_data_sample/combined_val.csv")
     dataset = datamodules.PeptideDataset(df, filter_df=True)
     i = dataset[0]
-    for x in i:
-        print(">>>")
-        print(x)
-        print(type(x))
-        print(x.data)
-
     check_type(i)
 
 

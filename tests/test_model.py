@@ -7,10 +7,11 @@ import pytorch_lightning as pl
 import torch
 from torch.utils.data.dataloader import DataLoader
 
-from elfragmentador import constants, datamodules
+from elfragmentador import constants
 from elfragmentador import encoding_decoding as efe
 from elfragmentador import model
 from elfragmentador import utils as efu
+from elfragmentador.data import datamodules
 from elfragmentador.model import ForwardBatch
 
 pl.seed_everything(42)

@@ -91,10 +91,11 @@ class PepTransformerModel(pl.LightningModule):
             dropout : float, optional
                 dropout, by default 0.1
             combine_embeds: bool, optional
-                Whether the embeddings for modifications and sequences should be shared
-                for irt and fragment predictions
+                Whether the embeddings for modifications and sequences
+                should be shared for irt and fragment predictions
             combine_encoders: bool = True,
-                Whether the transformer encoders for for irt and fragments should be shared.
+                Whether the transformer encoders for for irt and
+                fragments should be shared.
             lr : float, optional
                 Learning rate, by default 1e-4
             scheduler : str, optional
