@@ -10,8 +10,11 @@ import numpy as np
 import pandas as pd
 import torch
 
-from elfragmentador import annotate, constants, encoding_decoding
-from elfragmentador.model import PepTransformerModel
+from elfragmentador.config import get_default_config
+from elfragmentador.data.converter import DeTensorizer
+from elfragmentador.model import PepTransformerBase, PepTransformerModel
+
+DEFAULT_CONFIG = get_default_config()
 
 
 class SelfAttentionExplorer(torch.no_grad):
@@ -32,8 +35,8 @@ class SelfAttentionExplorer(torch.no_grad):
     >>> model = PepTransformerModel() # Or load the model from a checkpoint
     >>> _ = model.eval()
     >>> with SelfAttentionExplorer(model) as sea:
-    ...     _ = model.predict_from_seq(seq="MYPEPTIDEK",charge= 2, nce=30)
-    ...     _ = model.predict_from_seq(seq="MY[PHOSPHO]PEPTIDEK", charge=2, nce=30)
+    ...     _ = model.predict_from_seq(seq="MYPEPTIDEK/2", nce=30)
+    ...     _ = model.predict_from_seq(seq="MY[U:21]PEPTIDEK/2", nce=30)
     >>> out = sea.get_encoder_attn(layer=0, index=0)
     >>> type(out)
     <class 'pandas.core.frame.DataFrame'>
@@ -43,12 +46,17 @@ class SelfAttentionExplorer(torch.no_grad):
     >>> type(out)
     <class 'pandas.core.frame.DataFrame'>
     >>> list(out)[:5]
-    ['z1b1', 'z1b2', 'z1b3', 'z1b4', 'z1b5']
+    ['y1^1', 'y1^2', 'y1^3', 'y2^1', 'y2^2']
     """
 
-    def __init__(self, model: PepTransformerModel):
+    def __init__(self, model: PepTransformerModel | PepTransformerBase):
         logging.info("Initializing SelfAttentionExplorer")
         super().__init__()
+
+        if isinstance(model, PepTransformerModel):
+            model = model.main_model
+
+        self.detensorizer = DeTensorizer()
 
         self.encoder_viz = {}
         self.decoder_viz = {}
@@ -56,8 +64,9 @@ class SelfAttentionExplorer(torch.no_grad):
         self.charges = {}
         self.handles = []
 
-        encoder = model.encoder.transformer_encoder
+        encoder = model.encoder.encoder
         decoder = model.decoder.trans_decoder
+        aa_embed = model.encoder.aa_embed
 
         encoder_hook = self._make_hook_transformer_layer(self.encoder_viz)
         for layer in range(0, len(encoder.layers)):
@@ -72,7 +81,7 @@ class SelfAttentionExplorer(torch.no_grad):
             self.handles.append(handle)
 
         aa_hook = self._make_hook_aa_layer(self.aa_seqs)
-        handle = model.encoder.aa_encoder.aa_encoder.register_forward_hook(aa_hook)
+        handle = aa_embed.aa_encoder.register_forward_hook(aa_hook)
         self.handles.append(handle)
 
         charge_hook = self._make_hook_charge(self.charges)
@@ -127,11 +136,10 @@ class SelfAttentionExplorer(torch.no_grad):
         def hook_fn(m, i, o):
             if target.get(m, None) is None:
                 target[m] = []
-            target[m].append(
-                encoding_decoding.decode_mod_seq(
-                    [int(x) for x in i[0]], clip_explicit_term=False
-                )
+            pep = DeTensorizer.make_peptide(
+                seq=i[0], mod=torch.ones_like(i[0]), charge=0
             )
+            target[m].append("n" + pep.stripped_sequence + "c")
 
         return hook_fn
 
@@ -161,15 +169,11 @@ class SelfAttentionExplorer(torch.no_grad):
 
     def get_decoder_attn(self, layer: int, index: int = 0, norm=True) -> pd.DataFrame:
         attn = list(self.decoder_viz.values())[layer][index].clone().detach().numpy()
-        seq = list(self.aa_seqs.values())[0][index]
-        charge = list(self.charges.values())[0][index]
-        theo_ions = list(annotate.get_peptide_ions(seq).keys())
-        theo_ions = [x for x in theo_ions if int(x[1]) <= charge]
+        theo_ions = DEFAULT_CONFIG.fragment_labels
         if norm:
             attn = self._norm(attn)
 
-        names = constants.FRAG_EMBEDING_LABELS
-        attn = pd.DataFrame(attn, index=names, columns=names)
+        attn = pd.DataFrame(attn, index=theo_ions, columns=theo_ions)
 
         # TODO add charge filtering
         return attn[theo_ions].loc[theo_ions][::-1]

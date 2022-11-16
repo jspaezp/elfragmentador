@@ -1,0 +1,20 @@
+# Append correlation with prediction to a .pin
+
+```{shell}
+elfragmentador append_pin --help
+```
+
+
+```{shell}
+elfragmentador evaluate --help
+```
+
+
+```{shell}
+elfragmentador predict --help
+```
+
+
+```{shell}
+elfragmentador train --help
+```

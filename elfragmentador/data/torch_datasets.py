@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from loguru import logger as lg_logger
 from ms2ml import Peptide
-from ms2ml.data.adapters import BaseAdapter
 from torch.utils.data import DataLoader, TensorDataset
 
 from elfragmentador.config import get_default_config
@@ -66,7 +65,6 @@ SplitSet = Literal["Train", "Test", "Val"]
 
 def _select_split(pep: Peptide) -> SplitSet:
     num_hash = hash(pep.stripped_sequence)
-    lg_logger.debug(f"{pep.stripped_sequence()}: {num_hash}")
     number = num_hash / 1e4
     number = number % 1
 
@@ -101,5 +99,5 @@ class PeptideDataset(TupleTensorDataset):
     def __init__(self, peptide_list: Iterable[Peptide], nce=None, charge=None):
         converter = Tensorizer(nce=nce)
         tmp = [converter(x) for x in peptide_list]
-        tensor_tuple = combine_batches(tmp)
+        tensor_tuple = concat_batches(tmp)
         super().__init__(tensor_tuple)

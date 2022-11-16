@@ -8,3 +8,6 @@ from ms2ml.config import Config
 def get_default_config():
     with resources.path("elfragmentador.config", "default_config.toml") as f:
         return Config.from_toml(f)
+
+
+CONFIG = get_default_config()

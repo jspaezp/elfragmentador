@@ -47,6 +47,7 @@ class MLP(nn.Module):
             Tensor
 
         Examples:
+            >>> import pytorch_lightning as pl
             >>> pl.seed_everything(42)
             42
             >>> net = MLP(1000, 512, 2, 10)

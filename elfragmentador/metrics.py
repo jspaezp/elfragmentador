@@ -9,7 +9,6 @@ from torch import Tensor, nn
 
 from elfragmentador.config import get_default_config
 from elfragmentador.named_batches import EvaluationLossBatch, PredictionResults
-from elfragmentador.utils_data import cat_collate
 
 DEFAULT_CONFIG = get_default_config()
 
@@ -229,7 +228,7 @@ class MetricCalculator(pl.LightningModule):
         return losses, batch["pred"].irt, batch["gt"].irt
 
     def test_epoch_end(self, outputs):
-        losses = cat_collate([x[0] for x in outputs])
+        losses = {k: torch.cat([x[0][k] for x in outputs]) for k in outputs[0]}
         pred_irt_outs = torch.cat([x[1] for x in outputs])
         truth_irt = torch.cat([x[2] for x in outputs])
 

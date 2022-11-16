@@ -1,4 +1,0 @@
-# Append correlation with prediction to a .pin
-
-```{shell}
-```

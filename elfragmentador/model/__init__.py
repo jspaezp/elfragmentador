@@ -34,15 +34,12 @@ from torch.optim.lr_scheduler import (
 )
 
 import elfragmentador
-from elfragmentador.config import get_default_config
+from elfragmentador.config import CONFIG
 from elfragmentador.math_utils import MissingDataAverager, polyfit
 from elfragmentador.metrics import CosineLoss, MetricCalculator, SpectralAngleLoss
+from elfragmentador.model.peptransformer import PepTransformerBase
 from elfragmentador.named_batches import ForwardBatch, PredictionResults, TrainBatch
 from elfragmentador.utils import torch_batch_from_seq
-
-from .peptransformer import PepTransformerBase
-
-CONFIG = get_default_config()
 
 
 class PepTransformerModel(pl.LightningModule):
@@ -180,17 +177,13 @@ class PepTransformerModel(pl.LightningModule):
     def predict_from_seq(
         self,
         seq: str,
-        charge: int,
         nce: float,
         as_spectrum=False,
-        enforce_length=True,
     ) -> PredictionResults | Spectrum:
         return self.main_model.predict_from_seq(
             seq=seq,
-            charge=charge,
             nce=nce,
             as_spectrum=as_spectrum,
-            enforce_length=enforce_length,
         )
 
     @staticmethod
@@ -209,25 +202,26 @@ class PepTransformerModel(pl.LightningModule):
         <class 'torch.jit._trace.TopLevelTracedModule'>
         """
         _fake_input_data_torchscript = self.torch_batch_from_seq(
-            seq="MYM[OXIDATION]DIFIEDPEPTYDE", charge=3, nce=27.0
+            seq="MYM[U:35]DIFIEDPEPTYDE", charge=3, nce=27.0
         )
 
         backup_calculator = self.metric_calculator
         self.metric_calculator = None
 
-        bkp_1 = self.decoder.nce_encoder.static_size
-        self.decoder.nce_encoder.static_size = self.NUM_FRAG_EMBEDINGS
-
-        bkp_2 = self.decoder.charge_encoder.static_size
-        self.decoder.charge_encoder.static_size = self.NUM_FRAG_EMBEDINGS
+        bkp_1 = self.main_model.decoder.nce_encoder.static_size
+        self.main_model.decoder.nce_encoder.static_size = self.NUM_FRAGMENT_EMBEDDINGS
+        bkp_2 = self.main_model.decoder.charge_encoder.static_size
+        self.main_model.decoder.charge_encoder.static_size = (
+            self.NUM_FRAGMENT_EMBEDDINGS
+        )
 
         script = super().to_torchscript(
             example_inputs=_fake_input_data_torchscript, method="trace"
         )
 
-        self.decoder.nce_encoder.static_size = bkp_1
-        self.decoder.charge_encoder.static_size = bkp_2
-        self.metric_calculator = backup_calculator
+        self.main_model.decoder.nce_encoder.static_size = bkp_1
+        self.main_model.decoder.charge_encoder.static_size = bkp_2
+        self.main_model.metric_calculator = backup_calculator
 
         return script
 

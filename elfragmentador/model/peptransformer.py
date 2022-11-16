@@ -1,15 +1,16 @@
+import torch
 import torch.nn as nn
 from loguru import logger
-from ms2ml import Spectrum
+from ms2ml import AnnotatedPeptideSpectrum
 from torch import Tensor
 
-from elfragmentador.named_batches import PredictionResults
-
-from .ms_transformer_layers import (
+from elfragmentador.data.converter import DeTensorizer, Tensorizer
+from elfragmentador.model.ms_transformer_layers import (
     FragmentTransformerDecoder,
     IRTDecoder,
     PeptideTransformerEncoder,
 )
+from elfragmentador.named_batches import PredictionResults
 
 
 class PepTransformerBase(nn.Module):
@@ -110,11 +111,9 @@ class PepTransformerBase(nn.Module):
     def predict_from_seq(
         self,
         seq: str,
-        charge: int,
         nce: float,
         as_spectrum=False,
-        enforce_length=True,
-    ) -> PredictionResults | Spectrum:
+    ) -> PredictionResults | AnnotatedPeptideSpectrum:
         """
         Predict_from_seq Predicts spectra from a sequence as a string.
 
@@ -133,8 +132,6 @@ class PepTransformerBase(nn.Module):
             seq (str):
                 Sequence to use for prediction, supports modifications in the form
                 of S[PHOSPHO], S[+80] and T[181]
-            charge (int):
-                Precursor charge to be assumed during the fragmentation
             nce (float):
                 Normalized collision energy to use during the prediction
             as_spectrum (bool, optional):
@@ -146,25 +143,24 @@ class PepTransformerBase(nn.Module):
           Spectrum: A spectrum object with the predicted spectrum
 
         Examples:
+            >>> import pytorch_lightning as pl
             >>> pl.seed_everything(42)
             42
-            >>> my_model = PepTransformerModel() # Or load the model from a checkpoint
+            >>> my_model = PepTransformerBase(num_fragments=CONFIG.num_fragment_embeddings) # Or load the model from a checkpoint
             >>> _ = my_model.eval()
-            >>> my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
+            >>> my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27)
             PredictionResults(irt=tensor(..., grad_fn=<SqueezeBackward1>), \
             spectra=tensor([...], grad_fn=<SqueezeBackward1>))
-            >>> out = my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27, \
+            >>> out = my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27, \
             as_spectrum=True)
             >>> type(out)
-            <class 'elfragmentador.spectra.Spectrum'>
-            >>> # my_model.predict_from_seq("MYPEPT[PHOSPHO]IDEK", 3, 27)
-        """
+            <class 'ms2ml.spectrum.AnnotatedPeptideSpectrum'>
+            >>> # my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27)
+        """  # noqa
 
-        in_batch = self.torch_batch_from_seq(
-            seq, nce, charge, enforce_length=enforce_length
-        )
-
-        in_batch_dict = {k: v.to(self.device) for k, v in in_batch._asdict().items()}
+        in_batch = Tensorizer().convert_string(data=seq, nce=nce)
+        device = next(self.parameters()).device
+        in_batch_dict = {k: v.clone().to(device) for k, v in in_batch._asdict().items()}
 
         out = self.forward(**in_batch_dict)
         out = PredictionResults(
@@ -172,17 +168,18 @@ class PepTransformerBase(nn.Module):
         )
         logger.debug(out)
 
-        # rt should be in seconds for spectrast ...
-        # irt should be non-dimensional
         if as_spectrum:
-            out = Spectrum.from_tensors(
-                sequence_tensor=in_batch.seq.squeeze().numpy(),
-                fragment_tensor=out.spectra / out.spectra.max(),
-                mod_tensor=in_batch.mods.squeeze().numpy(),
-                charge=charge,
-                nce=nce,
-                rt=float(out.irt),
-                irt=float(out.irt),  # * 100,
+            spec = DeTensorizer.make_spectrum(
+                seq=in_batch.seq.squeeze().clone().detach().cpu().numpy(),
+                mod=in_batch.mods.squeeze().clone().detach().cpu().numpy(),
+                charge=in_batch.charge.squeeze().clone().detach().cpu().numpy(),
+                fragment_vector=(torch.relu(out.spectra) / out.spectra.max())
+                .clone()
+                .detach()
+                .cpu()
+                .numpy(),
             )
+            spec.retention_time = float(out.irt)
+            out = spec
 
         return out

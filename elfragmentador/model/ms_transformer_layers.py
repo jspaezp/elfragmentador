@@ -4,8 +4,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from .nn_encoding import AASequenceEmbedding, ConcatenationEncoder
-from .transformer_layers import _LearnableEmbedTransformerDecoder
+from elfragmentador.config import get_default_config
+from elfragmentador.model.nn_encoding import AASequenceEmbedding, ConcatenationEncoder
+from elfragmentador.model.transformer_layers import _LearnableEmbedTransformerDecoder
+
+CONFIG = get_default_config()
 
 
 class IRTDecoder(nn.Module):
@@ -37,7 +40,12 @@ class IRTDecoder(nn.Module):
                 Defaults to 3
         """
 
-        self.aa_embed = AASequenceEmbedding(d_model=d_model)
+        self.aa_embed = AASequenceEmbedding(
+            d_model=d_model,
+            aa_names=CONFIG.encoding_aa_order,
+            mod_names=CONFIG.encoding_mod_order,
+            max_length=100,
+        )
         encoder_layers = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead,
@@ -80,7 +88,12 @@ class PeptideTransformerEncoder(torch.nn.Module):
         super().__init__()
 
         # Aminoacid embedding
-        self.aa_embed = AASequenceEmbedding(d_model=d_model)
+        self.aa_embed = AASequenceEmbedding(
+            d_model=d_model,
+            aa_names=CONFIG.encoding_aa_order,
+            mod_names=CONFIG.encoding_mod_order,
+            max_length=100,
+        )
 
         # Transformer encoder sections
         encoder_layers = nn.TransformerEncoderLayer(

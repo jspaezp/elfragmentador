@@ -220,20 +220,20 @@ class AASequenceEmbedding(torch.nn.Module):
 
         # Aminoacid embedding
         self.aa_encoder = nn.Embedding(
-            len(self.aa_names) + 1, d_model, padding_idx=aa_pad_index
+            len(self.aa_names), d_model, padding_idx=aa_pad_index
         )
         logger.debug(
-            "Aminoacid embedding will use: %s as the padding index",
-            aa_names[aa_pad_index],
+            "Aminoacid embedding will use:"
+            f" {aa_names[aa_pad_index]} as the padding index",
         )
 
         # PTM embedding
         self.mod_encoder = nn.Embedding(
-            len(self.mod_names) + 1, d_model, padding_idx=mod_pad_index
+            len(self.mod_names), d_model, padding_idx=mod_pad_index
         )
         logger.debug(
-            "Modification embedding will use: %s as the padding index",
-            mod_names[aa_pad_index],
+            "Modification embedding will use:"
+            f" {mod_names[aa_pad_index]} as the padding index",
         )
 
         # Weight Initialization
@@ -271,15 +271,20 @@ class AASequenceEmbedding(torch.nn.Module):
                 and the modification embeddings
 
         Examples:
-            >>> embed = AASequenceEmbedding(20)
+            >>> from elfragmentador.config import CONFIG
+            >>> embed = AASequenceEmbedding(
+            ...     d_model=20,
+            ...     aa_names=CONFIG.encoding_aa_order,
+            ...     mod_names=CONFIG.encoding_mod_order,
+            ...     max_length=100,)
             >>> aa_embed, mod_embed = embed.as_DataFrames()
             >>> list(aa_embed)
-            ['EMPTY', 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',\
-                'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'c', 'n']
+            ['__missing__', 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K',
+             'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y',
+             'c_term', 'n_term']
             >>> list(mod_embed)
-            ['EMPTY', 'CARBAMIDOMETHYL', 'ACETYL', 'DEAMIDATED', 'OXIDATION', \
-                'PHOSPHO', 'METHYL', 'DIMETHYL', 'TRIMETHYL', 'FORMYL', 'GG', \
-                'LRGG', 'NITRO', 'BIOTINYL', 'TMT6PLEX']
+            [None, '[U:4]', '[U:35]', '[U:21]', '[U:121]', '[U:737]', '[U:1]',
+             '[U:34]', '[U:36]', '[U:37]', '[U:354]', '[U:7]', '__unknown1__']
         """
         df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
         df_aa.columns = self.aa_names

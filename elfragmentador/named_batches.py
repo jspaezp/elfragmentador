@@ -14,9 +14,13 @@ from torch import Tensor
 
 
 def _hash_tensors(tensor_tuple):
-    return sum(
-        hash(x.data.tolist().__str__()) if isinstance(x, Tensor) else hash(x)
-        for x in tensor_tuple
+    return hash(
+        str(
+            [
+                hash(x.data.tolist().__str__()) if isinstance(x, Tensor) else hash(x)
+                for x in tensor_tuple
+            ]
+        )
     )
 
 
