@@ -111,7 +111,7 @@ def test_fasta_prediction_cli(shared_datadir, tmp_path):
 def test_pin_append_cli(shared_datadir, tmp_path):
     pin_file = (
         shared_datadir
-        / "01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1/01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1.pin"
+        / "01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1/01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1.pin"  # noqa
     )
     raw_location = (
         shared_datadir / "/01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1"

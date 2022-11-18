@@ -1,4 +1,6 @@
-from typing import Iterable, Literal
+from __future__ import annotations
+
+from typing import Iterable, Literal, Union
 
 import numpy as np
 import pandas as pd
@@ -52,7 +54,7 @@ def read_cached_parquet(path) -> TrainBatch:
     return TrainBatch(**fields)
 
 
-BatchList = list[TrainBatch] | list[ForwardBatch]
+BatchList = Union[list[TrainBatch], list[ForwardBatch]]
 
 
 def concat_batches(batches: BatchList) -> NamedTensorBatch:
@@ -71,7 +73,8 @@ def select_split(pep: Peptide | AnnotatedPeptideSpectrum | str) -> SplitSet:
     The rest of the peptides are hashed based on their stripped sequence (no mods).
     It is done on a semi-random basis
 
-    This function does not strup the sequences, so if passing a string make sure it does not have them.
+    This function does not strup the sequences, so if passing a string make sure it does
+    not have them.
 
     Args:
         pep (Peptide | AnnotatedPeptideSpectrum | str): Peptide to assign to a split set

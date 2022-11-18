@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import torch
 from loguru import logger
 from ms2ml import AnnotatedPeptideSpectrum, Peptide

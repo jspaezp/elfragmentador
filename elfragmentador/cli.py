@@ -208,7 +208,10 @@ def add_evaluate_parser_args(parser):
     parser.add_argument(
         "--assure_notrain",
         type=bool,
-        help="Whether to remove all sequences that could be assigned to the training set",
+        help=(
+            "Whether to remove all sequences that "
+            "could be assigned to the training set"
+        ),
         default=False,
     )
     common_checkpoint_args(parser)

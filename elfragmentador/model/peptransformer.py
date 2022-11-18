@@ -1,10 +1,10 @@
-import torch
+from __future__ import annotations
+
 import torch.nn as nn
 from loguru import logger
 from ms2ml import AnnotatedPeptideSpectrum
 from torch import Tensor
 
-from elfragmentador.config import CONFIG
 from elfragmentador.data.converter import DeTensorizer, Tensorizer
 from elfragmentador.model.ms_transformer_layers import (
     FragmentTransformerDecoder,
