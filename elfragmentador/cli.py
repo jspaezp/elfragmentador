@@ -119,13 +119,13 @@ def append_predictions(args):
     model = setup_model(args)
 
     predictor = Predictor(model=model)
-    df = predictor.compare(adapter=args.input, nce=args.nce)
-    df2 = comet_pin_to_df(args.pin)
+    df = predictor.compare(adapter=args.pin, nce=args.nce)
+    df_orig = comet_pin_to_df(args.pin)
     for col in df.columns:
-        df.insert(loc=4, column=col, value=df2[col])
+        df_orig.insert(loc=7, column=col, value=df[col])
 
-    logger.info(df)
-    df.to_csv(args.out, sep="\t", index=False)
+    logger.info(df_orig)
+    df_orig.to_csv(args.out, sep="\t", index=False)
 
 
 def add_predict_parser_args(parser):
@@ -205,6 +205,12 @@ def add_evaluate_parser_args(parser):
         help="Comma delimited series of collision energies to use",
     )
     parser.add_argument("--out", type=str, help="csv file to output results to")
+    parser.add_argument(
+        "--assure_notrain",
+        type=bool,
+        help="Whether to remove all sequences that could be assigned to the training set",
+        default=False,
+    )
     common_checkpoint_args(parser)
     return parser
 
@@ -215,7 +221,12 @@ def evaluate_checkpoint(args):
     nces = [float(x) for x in args.nce.split(",")]
 
     predictor = Predictor(model=model)
-    predictor.compare_to_file(adapter=args.input, out_filepath=args.out, nce=nces)
+    predictor.compare_to_file(
+        adapter=args.input,
+        out_filepath=args.out,
+        nce=nces,
+        drop_train=args.assure_notrain,
+    )
 
 
 def train(args):
@@ -261,8 +272,8 @@ add_train_parser_args(parser=parser_train)
 parser_train.set_defaults(func=train)
 
 
-def main_cli():
-    args = parser.parse_args()
+def main_cli(*args):
+    args = parser.parse_args(*args)
     args.func(args)
 
 

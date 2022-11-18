@@ -3,7 +3,8 @@ from typing import Iterable, Literal
 import numpy as np
 import pandas as pd
 from loguru import logger as lg_logger
-from ms2ml import Peptide
+from ms2ml import AnnotatedPeptideSpectrum, Peptide
+from ms2ml.landmarks import IRT_PEPTIDES
 from torch.utils.data import DataLoader, TensorDataset
 
 from elfragmentador.config import get_default_config
@@ -63,12 +64,74 @@ def concat_batches(batches: BatchList) -> NamedTensorBatch:
 SplitSet = Literal["Train", "Test", "Val"]
 
 
-def _select_split(pep: Peptide) -> SplitSet:
-    num_hash = hash(pep.stripped_sequence)
+def select_split(pep: Peptide | AnnotatedPeptideSpectrum | str) -> SplitSet:
+    """Assigns a peptide to a split set based on its sequence
+
+    It selects all iRT peptides to the 'Val' set.
+    The rest of the peptides are hashed based on their stripped sequence (no mods).
+    It is done on a semi-random basis
+
+    This function does not strup the sequences, so if passing a string make sure it does not have them.
+
+    Args:
+        pep (Peptide | AnnotatedPeptideSpectrum | str): Peptide to assign to a split set
+
+    Returns:
+        SplitSet: Split set to assign the peptide to.
+            This is either one of "Train", "Test" or "Val"
+
+    Examples:
+        >>> select_split("AAA")
+        'Train'
+        >>> select_split("AAAK")
+        'Test'
+        >>> select_split("AAAKK")
+        'Train'
+        >>> select_split("AAAMTKK")
+        'Train'
+
+    """
+    if isinstance(pep, AnnotatedPeptideSpectrum):
+        pep = pep.precursor_peptide
+
+    if isinstance(pep, Peptide):
+        pep = pep.stripped_sequence
+
+    # Generated using {x:hash(x) for x in CONFIG.encoding_aa_order}
+    hashdict = {
+        "__missing__": 7761068247417658572,
+        "A": 8990350376580739186,
+        "C": -5648131828304525110,
+        "D": 6043088297348140225,
+        "E": 2424930106316864185,
+        "F": 7046537624574876942,
+        "G": 3340710540999258202,
+        "H": 6743161139278114243,
+        "I": -3034276714411840744,
+        "K": -6360745720327592128,
+        "L": -5980349674681488316,
+        "M": -5782039407703521972,
+        "N": -5469935875943994788,
+        "P": -9131389159066742055,
+        "Q": -3988780601193558504,
+        "R": -961126793936120965,
+        "S": 8601576106333056321,
+        "T": -826347925826021181,
+        "V": 6418718798924587169,
+        "W": -3331112299842267173,
+        "X": -7457703884378074688,
+        "Y": 2606728663468607544,
+        "c_term": 2051117526323448742,
+        "n_term": 5536535514417012570,
+    }
+    num_hash = sum(hashdict[x] for x in pep)
+
+    in_landmark = pep in IRT_PEPTIDES
     number = num_hash / 1e4
     number = number % 1
+    assert 0 <= number <= 1
 
-    if number > 0.8:
+    if number > 0.8 or in_landmark:
         return "Val"
     elif number > 0.6:
         return "Test"
@@ -84,7 +147,7 @@ def _split_tuple(
         return Peptide.decode_vector(seq=x, mod=np.zeros_like(x), config=DEFAULT_CONFIG)
 
     tuple_type = type(batches_tuple)
-    assigned_set = np.array([_select_split(pep_builder(x)) for x in batches_tuple.seq])
+    assigned_set = np.array([select_split(pep_builder(x)) for x in batches_tuple.seq])
     counts = np.unique(assigned_set, return_counts=True)
     lg_logger.info(f"Splitting dataset into train/test/val groups: {counts}")
 

@@ -17,7 +17,7 @@ def check_type(i: NamedTuple):
 
 
 def test_dataset_outputs_correct_type(shared_datadir):
-    dm = datamodules.TrainingDataModule(shared_datadir / "parquet")
+    dm = datamodules.TrainingDataModule(10, base_dir=shared_datadir / "parquet")
     check_type(next(iter(dm.train_dataloader())))
     check_type(next(iter(dm.test_dataloader())))
     check_type(next(iter(dm.val_dataloader())))

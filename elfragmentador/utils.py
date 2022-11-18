@@ -31,10 +31,10 @@ def torch_batch_from_seq(
 
     Examples:
         >>> torch_batch_from_seq("PEPTIDEPINK", 27.0, 3)
-        ForwardBatch(seq=tensor([[ 0, 16,  5, 16, 20,  9,  4,  5, 16,  9, 14, 11, 27]]),
-            mods=tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]),
-            charge=tensor([[3]]),
-            nce=tensor([[27.]]))
+        ForwardBatch(seq=tensor([[23, 13,  4, 13, 17,
+        8,  3,  4, 13,  8, 12,  9, 22]]),
+        mods=tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]),
+        charge=tensor([[3]]), nce=tensor([[27.]]))
     """
     pep = Peptide.from_proforma_seq(seq, config=DEFAULT_CONFIG)
     encoded_seq, encoded_mods = pep.aa_to_vector(), pep.mod_to_vector()

@@ -4,6 +4,7 @@ from loguru import logger
 from ms2ml import AnnotatedPeptideSpectrum
 from torch import Tensor
 
+from elfragmentador.config import CONFIG
 from elfragmentador.data.converter import DeTensorizer, Tensorizer
 from elfragmentador.model.ms_transformer_layers import (
     FragmentTransformerDecoder,
@@ -149,8 +150,8 @@ class PepTransformerBase(nn.Module):
             >>> my_model = PepTransformerBase(num_fragments=CONFIG.num_fragment_embeddings) # Or load the model from a checkpoint
             >>> _ = my_model.eval()
             >>> my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27)
-            PredictionResults(irt=tensor(..., grad_fn=<SqueezeBackward1>), \
-            spectra=tensor([...], grad_fn=<SqueezeBackward1>))
+            PredictionResults(irt=tensor(..., grad_fn=<PermuteBackward0>), \
+            spectra=tensor([...], grad_fn=<PermuteBackward0>))
             >>> out = my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27, \
             as_spectrum=True)
             >>> type(out)
@@ -171,7 +172,7 @@ class PepTransformerBase(nn.Module):
                 mod=in_batch.mods,
                 charge=in_batch.charge,
                 fragment_vector=out.spectra,
-                rt=out.irt * 100,
+                irt=out.irt,
             )
             out = spec
 

@@ -1,6 +1,6 @@
 import logging
 import math
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace
 from typing import Union
 
 import pytorch_lightning as pl
@@ -66,18 +66,11 @@ def add_train_parser_args(parser) -> ArgumentParser:
 
     # add all the available trainer options to argparse
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
-    t_parser = ArgumentParser(add_help=False)
-    t_parser = pl.Trainer.add_argparse_args(t_parser)
+    t_parser = pl.Trainer.add_argparse_args(parser)
 
     if torch.cuda.is_available():
         t_parser.set_defaults(gpus=-1)
         t_parser.set_defaults(precision=16)
-
-    parser = ArgumentParser(
-        parents=[t_parser, parser],
-        add_help=False,
-        formatter_class=ArgumentDefaultsHelpFormatter,
-    )
 
     return parser
 
@@ -120,14 +113,12 @@ def get_callbacks(
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
     # TODO add loggging levela and a more structured logger ...
     logging.info(model)
-    datamodule = datamodules.PeptideDataModule(
+    datamodule = datamodules.TrainingDataModule(
         batch_size=args.batch_size,
         base_dir=args.data_dir,
-        drop_missing_vals=args.drop_missing_vals,
-        max_spec=args.max_spec,
     )
     datamodule.setup("train")
-    spe = math.ceil(len(datamodule.train_dataset) / datamodule.batch_size)
+    spe = math.ceil(datamodule.len_train / datamodule.batch_size)
     logging.info(f">>> TRAIN: Setting steps per epoch to {spe}")
     model.steps_per_epoch = spe
 
@@ -148,5 +139,8 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
     )
 
     model.summarize(max_depth=3)
+    model.trainer = trainer
+    model.plot_scheduler_lr()
+    model.configure_optimizers()
 
     trainer.fit(model, datamodule)

@@ -7,15 +7,27 @@ import pytorch_lightning as pl
 from elfragmentador import model
 from elfragmentador.data import datamodules
 
+from .tiny_model import datamodule_builder, tiny_model_builder
 
-def test_mod_train_base(datamodule):
-    mod = model.PepTransformerModel(nhead=4, d_model=64)
 
+@pytest.fixture
+def datamodule(shared_datadir):
+    return datamodule_builder(shared_datadir)
+
+
+@pytest.fixture
+def tiny_model():
+    return tiny_model_builder()
+
+
+def test_mod_train_base(shared_datadir):
+    dm = datamodule_builder(shared_datadir)
+    mod = tiny_model_builder()
     trainer = pl.Trainer(fast_dev_run=True)
-    trainer.fit(mod, datamodule)
+    trainer.fit(mod, dm)
 
     trainer = pl.Trainer(max_epochs=2)
-    trainer.fit(mod, datamodule)
+    trainer.fit(mod, dm)
 
 
 def test_mod_can_overfit(datamodule, tiny_model):
@@ -33,9 +45,7 @@ def test_base_train_works_on_schdulers(datamodule, scheduler, tiny_model):
     lr_monitor = pl.callbacks.lr_monitor.LearningRateMonitor(logging_interval="step")
     trainer = pl.Trainer(max_epochs=10, callbacks=[lr_monitor], limit_train_batches=1)
     mod = tiny_model
-    mod.steps_per_epoch = math.ceil(
-        len(datamodule.train_dataset) / datamodule.batch_size
-    )
+    mod.steps_per_epoch = math.ceil(datamodule.len_train / datamodule.batch_size)
     trainer.fit(mod, datamodule)
 
 

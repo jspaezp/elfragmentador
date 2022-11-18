@@ -137,7 +137,7 @@ class SelfAttentionExplorer(torch.no_grad):
             if target.get(m, None) is None:
                 target[m] = []
             pep = DeTensorizer.make_peptide(
-                seq=i[0], mod=torch.ones_like(i[0]), charge=0
+                seq=i[0], mod=torch.ones_like(i[0]), charge=torch.zeros(1)
             )
             target[m].append("n" + pep.stripped_sequence + "c")
 

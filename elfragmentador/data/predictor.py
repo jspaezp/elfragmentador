@@ -7,7 +7,8 @@ from typing import Generator, Iterable, Literal
 import pandas as pd
 import torch
 import uniplot
-from ms2ml import AnnotatedPeptideSpectrum
+from loguru import logger
+from ms2ml import AnnotatedPeptideSpectrum, Peptide
 from ms2ml.data.adapters import BaseAdapter, read_data
 from ms2ml.data.parsing.encyclopedia import write_encyclopedia
 from ms2ml.metrics.base import spectral_angle
@@ -16,6 +17,7 @@ from tqdm.auto import tqdm
 
 from elfragmentador.config import CONFIG
 from elfragmentador.data.converter import DeTensorizer, Tensorizer
+from elfragmentador.data.torch_datasets import select_split
 from elfragmentador.model import PepTransformerBase, PepTransformerModel
 from elfragmentador.version import __version__
 
@@ -50,11 +52,11 @@ class Predictor:
         yield from adapter_iter
 
     def screen_nce(self, adapter, nce_list, *args, **kwargs) -> pd.DataFrame:
-        best_nce = None
+        best_nce = nce_list[0]
         best_sa = 0
         for nce in nce_list:
-            outs = (
-                self.compare(adapter=adapter, nce=nce, max_spec=1000, *args, **kwargs),
+            outs = self.compare(
+                adapter=adapter, nce=nce, max_spec=1000, *args, **kwargs
             )
             med_sa = outs["spectral angle"].median()
             if med_sa > best_sa:
@@ -64,7 +66,14 @@ class Predictor:
         return best_nce
 
     def compare(
-        self, adapter, nce, config=CONFIG, max_spec=float("inf"), *args, **kwargs
+        self,
+        adapter,
+        nce,
+        config=CONFIG,
+        max_spec=float("inf"),
+        drop_train=False,
+        *args,
+        **kwargs,
     ) -> pd.DataFrame:
         if isinstance(nce, Iterable):
             if len(nce) > 1:
@@ -78,14 +87,23 @@ class Predictor:
             mode="compare",
             nce=nce,
             config=config,
+            drop_train=drop_train,
             *args,
             **kwargs,
         )
         out = []
-        for i, x in enumerate(adapter_iter):
-            out.append(x)
+        i = 0
+        skipped = 0
+        for x in adapter_iter:
+            if x is not None:
+                out.append(x)
+                i += 1
+            else:
+                skipped += 1
             if i > max_spec:
                 break
+
+        logger.info(f"Skipped {skipped}/{i+skipped} spectra")
         df = pd.DataFrame(out)
 
         uniplot.plot(ys=df["pred rt"], xs=df["rt"], title="Pred RT (y) vs RT (x)")
@@ -95,13 +113,17 @@ class Predictor:
         )
         return df
 
-    def compare_to_file(self, adapter, out_filepath, nce, *args, **kwargs) -> None:
+    def compare_to_file(
+        self, adapter, out_filepath, nce, drop_train, *args, **kwargs
+    ) -> None:
         if not str(out_filepath).endswith(".csv"):
             raise ValueError(
                 "The output file for the comparison must be 'csv' to denote it as a"
                 "comma-separated values file"
             )
-        df = self.compare(adapter=adapter, nce=nce, *args, **kwargs)
+        df = self.compare(
+            adapter=adapter, nce=nce, drop_train=drop_train, *args, **kwargs
+        )
         df.to_csv(out_filepath)
 
     def predict_to_file(
@@ -127,6 +149,7 @@ class Predictor:
         nce,
         charges=None,
         config=CONFIG,
+        drop_train=False,
         *args,
         **kwargs,
     ) -> BaseAdapter:
@@ -145,23 +168,38 @@ class Predictor:
 
         if mode == "predict":
             adapter.out_hook = self.adapter_out_hook_predict_factory(
-                model=model, nce=nce
+                model=model, nce=nce, drop_train=drop_train
             )
         elif mode == "compare":
             adapter.out_hook = self.adapter_out_hook_compare_factory(
-                model=model, nce=nce
+                model=model, nce=nce, drop_train=drop_train
             )
         return tqdm(adapter.parse(), total=length)
 
     @staticmethod
-    def adapter_out_hook_predict_factory(model, nce):
+    def adapter_out_hook_predict_factory(model, nce, drop_train):
         tmp_tensorizer = Tensorizer()
         tmp_detensorizer = DeTensorizer()
+        if drop_train:
+            logger.info("Setting up the adapter to drop training spectra")
+        else:
+            logger.info("Setting up the adapter to keep training spectra")
+        drop_train = drop_train
 
         @torch.no_grad()
         def adapter_out_hook_predict(
-            spec: AnnotatedPeptideSpectrum,
+            spec: AnnotatedPeptideSpectrum | Peptide,
         ) -> AnnotatedPeptideSpectrum:
+            if drop_train:
+                if isinstance(spec, AnnotatedPeptideSpectrum):
+                    pepseq = spec.precursor_peptide.stripped_sequence
+                else:
+                    pepseq = spec.stripped_sequence
+
+                if select_split(pepseq) == "Train":
+                    logger.debug(f"Skipping {pepseq} because it is in the training set")
+                    return None
+
             tensor_batch = tmp_tensorizer(spec, nce=nce)
             pred = model.forward(
                 seq=tensor_batch.seq,
@@ -183,12 +221,16 @@ class Predictor:
         return adapter_out_hook_predict
 
     @staticmethod
-    def adapter_out_hook_compare_factory(model, nce):
-        pred_fun = Predictor.adapter_out_hook_predict_factory(model, nce=nce)
+    def adapter_out_hook_compare_factory(model, nce, drop_train):
+        pred_fun = Predictor.adapter_out_hook_predict_factory(
+            model, nce=nce, drop_train=drop_train
+        )
 
         def adapter_out_hook_compare(spec: AnnotatedPeptideSpectrum):
             # predict
             pred_spec = pred_fun(spec)
+            if pred_spec is None:
+                return None
             # compare predictions ...
             ints = allign_intensities(
                 mz1=spec.mz,

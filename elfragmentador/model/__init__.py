@@ -383,8 +383,7 @@ class PepTransformerModel(pl.LightningModule):
     ):
         max_lr = learning_rate * lr_ratio
         spe = steps_per_epoch // accumulate_grad_batches
-        # 4k warmup steps / total number of steps
-        pct_start = 4000 / (spe * max_epochs)
+        pct_start = 0.3
 
         logger.info(
             f">> Scheduler setup: max_lr {max_lr}, "
@@ -437,7 +436,9 @@ class PepTransformerModel(pl.LightningModule):
         )
 
         if self.scheduler == "plateau":
-            sched_dict = self.configure_scheduler_plateau(optimizer=opt)
+            sched_dict = self.configure_scheduler_plateau(
+                optimizer=opt, lr_ratio=self.lr_ratio
+            )
         elif self.scheduler == "cosine":
             sched_dict = self.configure_scheduler_cosine(
                 optimizer=opt, lr_ratio=self.lr_ratio, min_lr=self.lr / self.lr_ratio
@@ -484,7 +485,12 @@ class PepTransformerModel(pl.LightningModule):
             None
         """
         steps_per_epoch = self.steps_per_epoch
-        accumulate_grad_batches = self.trainer.accumulate_grad_batches
+        if steps_per_epoch is None:
+            steps_per_epoch = 1000
+        try:
+            accumulate_grad_batches = self.trainer.accumulate_grad_batches
+        except RuntimeError:
+            accumulate_grad_batches = 1
         spe = steps_per_epoch // accumulate_grad_batches
 
         optimizer, schedulers = self.configure_optimizers()
@@ -496,9 +502,9 @@ class PepTransformerModel(pl.LightningModule):
         for i in xs:
             optimizer.step()
             lrs.append(optimizer.param_groups[0]["lr"])
-            scheduler.step()
+            scheduler.step(1)
 
-        uniplot.plot(lrs, xs, title="Learning Rate Schedule")
+        uniplot.plot(np.log1p(np.array(lrs)), xs, title="Learning Rate Schedule")
 
     def _step(self, batch: TrainBatch, batch_idx: int) -> dict[str, Tensor]:
         """
@@ -760,7 +766,7 @@ def evaluate_landmark_rt(model: PepTransformerModel):
     pred_rt = []
     for seq, desc in IRT_PEPTIDES.items():
         with torch.no_grad():
-            out = model.predict_from_seq(seq, 2, 25, enforce_length=False)
+            out = model.predict_from_seq(f"{seq}/2", 25)
             pred_rt.append(out.irt.numpy())
             real_rt.append(np.array(desc["irt"]))
 

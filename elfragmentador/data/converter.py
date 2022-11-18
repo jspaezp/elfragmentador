@@ -18,7 +18,7 @@ class Tensorizer:
         >>> converter = Tensorizer()
         >>> spec = AnnotatedPeptideSpectrum._sample()
         >>> spec.config = get_default_config()
-        >>> converter(spec) # doctest: +ELLIPSIS
+        >>> converter(spec, nce=27) # doctest: +ELLIPSIS
         TrainBatch(seq=tensor([[ 0, 16,  5, 16, 16,  9, 14, 11, 27]]),
             mods=tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0]]),
             charge=tensor([[2.]]),

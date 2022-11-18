@@ -1,95 +1,79 @@
-import os
+import sqlite3
 
+import pandas as pd
 import pytest
 
-from elfragmentador import model, train
+from elfragmentador.cli import comet_pin_to_df, main_cli
 
-cli_commands = [
-    "elfragmentador_train",
-    "elfragmentador_evaluate",
-    "elfragmentador_convert_sptxt",
-    "elfragmentador_calculate_irt",
-    "elfragmentador_append_pin",
-    "elfragmentador_predict_csv",
-    "elfragmentador_predict_fasta",
+cli_args_help = [
+    ("predict", "--help"),
+    ("train", "--help"),
+    ("evaluate", "--help"),
+    ("append_pin", "--help"),
 ]
 
 
 @pytest.mark.parametrize(
-    "command_name",
-    cli_commands,
+    "args",
+    cli_args_help,
 )
-def test_cli_help(command_name):
-    exit_code = os.system(f"{command_name} --help")
-    assert exit_code == 0
+def test_cli_help(args):
+    with pytest.raises(SystemExit) as error:
+        main_cli(list(args))
+
+    assert error.value.code == 0
 
 
-args = [
-    "--max_epochs 2 --d_model 64 --nhid 120 --nhead 2",
-    "--max_epochs 2 --d_model 64 --nhid 120 --nhead 2 --max_spec 20",
-]
-
-
-@pytest.mark.parametrize("arguments", args)
-def test_cli_train(shared_datadir, arguments):
+def test_cli_train(shared_datadir):
     # Set up wandb to pretend that we are already logged in.
     # On a real world setting we would use $ wandb login
     import wandb
 
     wandb.init(mode="offline")
-    wandb.login(anonymous="true", key="A" * 40)
 
+    arguments = (
+        "--max_epochs",
+        "200",
+        "--d_model",
+        "64",
+        "--nhid",
+        "120",
+        "--nhead",
+        "2",
+        "--lr_ratio",
+        "50",
+        "--scheduler",
+        "onecycle",
+        "--fast_dev_run",
+    )
     # Actual cli call
-    parser = train.build_train_parser()
-    args = parser.parse_args(
-        [
-            *arguments.split(),
-            "--data_dir",
-            str(shared_datadir / "train_data_sample"),
-        ]
+    args = (
+        ["train", "--limit_train_batches", "2"]
+        + list(arguments)
+        + ["--data_dir", str(shared_datadir / "parquet")]
     )
-    dict_args = vars(args)
-    for k, v in dict_args.items():
-        print(f">> {k}: {v}")
-
-    mod = model.PepTransformerModel(**dict_args)
-    train.main_train(mod, args)
+    main_cli(args)
 
 
-@pytest.mark.parametrize(
-    "csv", ["sample_prediction_csv_2.csv", "sample_prediction_csv_2.csv"]
-)
-def test_prediction_csv_cli(shared_datadir, csv, tmp_path, checkpoint):
-    csv_path = (shared_datadir / "prediction_csv") / csv
-    outfile = tmp_path / "foo.sptxt"
-    print(csv_path)
-    exit_code = os.system(
-        f"elfragmentador_predict_csv --model_checkpoint {checkpoint} --csv"
-        f" {csv_path} --out {outfile}"
-    )
-
-    assert exit_code == 0
-
-    with open(outfile, "r") as f:
-        contents = list(f)
-
-    # print("".join(contents))
-
-    assert len(contents) > 0
-
-
-def test_evaluation_on_dataset_cli(shared_datadir, checkpoint, tmp_path):
-    data = str(shared_datadir) + "/small_phospho_spectrast.sptxt"
+def test_evaluation_on_dataset_cli(shared_datadir, tmp_path):
+    data = str(shared_datadir) + "/dlib/small_yeast.dlib"
     outfile = tmp_path / "foo.csv"
 
-    exit_code = os.system(
-        f"elfragmentador_evaluate --model_checkpoint {checkpoint} --input"
-        f" {data} --out_csv {outfile} --screen_nce 1,2,3"
+    main_cli(
+        [
+            "evaluate",
+            "--model_checkpoint",
+            "RANDOM",
+            "--input",
+            f"{data}",
+            "--out",
+            f"{outfile}",
+            "--nce",
+            "25,30",
+        ]
     )
 
-    assert exit_code == 0
-
-    with open(outfile, "r") as f:
+    with open(outfile) as f:
         contents = list(f)
 
     print("".join(contents))
@@ -97,39 +81,61 @@ def test_evaluation_on_dataset_cli(shared_datadir, checkpoint, tmp_path):
     assert len(contents) > 0
 
 
-def test_fasta_prediction_cli(shared_datadir, checkpoint, tmp_path):
-    fasta_file = (
-        shared_datadir / "fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta"
-    )
-    outfile = tmp_path / "foo.sptxt"
+def test_fasta_prediction_cli(shared_datadir, tmp_path):
+    fasta_file = shared_datadir / "fasta/P0DTC4.fasta"
+    outfile = tmp_path / "foo.dlib"
 
-    exit_code = os.system(
-        "elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint"
-        f" {checkpoint} --fasta {fasta_file} --out {outfile}"
-    )
-
-    assert exit_code == 0
-
-    with open(outfile, "r") as f:
-        contents = list(f)
-
-    assert len(contents) > 1
-
-
-def test_fasta_prediction_cli_variable_batch_size(shared_datadir, checkpoint, tmp_path):
-    fasta_file = (
-        shared_datadir / "fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta"
-    )
-    outfile = tmp_path / "foo.sptxt"
-
-    exit_code = os.system(
-        "elfragmentador_predict_fasta --nce 27 --charges 2,3 --model_checkpoint"
-        f" {checkpoint} --fasta {fasta_file} --out {outfile} --batch_size 200"
+    main_cli(
+        [
+            "predict",
+            "--nce",
+            "27",
+            "--charges",
+            "2,3",
+            "--model_checkpoint",
+            "RANDOM",
+            "--fasta",
+            f"{str(fasta_file)}",
+            "--out",
+            f"{outfile}",
+        ]
     )
 
-    assert exit_code == 0
+    con = sqlite3.Connection(outfile)
+    df = pd.read_sql_query("SELECT * from entries", con)
+    con.close()
 
-    with open(outfile, "r") as f:
-        contents = list(f)
+    assert len(df) > 1
 
-    assert len(contents) > 0
+
+def test_pin_append_cli(shared_datadir, tmp_path):
+    pin_file = (
+        shared_datadir
+        / "01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1/01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1.pin"
+    )
+    raw_location = (
+        shared_datadir / "/01625b_GA1-TUM_first_pool_1_01_01-2xIT_2xHCD-1h-R1"
+    )
+    outfile = tmp_path / "foo.pin"
+
+    main_cli(
+        [
+            "append_pin",
+            "--nce",
+            "27",
+            "--model_checkpoint",
+            "RANDOM",
+            "--pin",
+            f"{str(pin_file)}",
+            "--rawfile_location",
+            f"{str(raw_location)}",
+            "--out",
+            f"{str(outfile)}",
+        ]
+    )
+
+    orig_df = comet_pin_to_df(str(pin_file))
+    df = comet_pin_to_df(str(outfile))
+
+    assert len(df) == len(orig_df)
+    assert len(df.columns) > len(orig_df.columns)
