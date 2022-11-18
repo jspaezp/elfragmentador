@@ -1151,7 +1151,7 @@ docs = ["ipykernel (>=5.3.0)", "nbsphinx (>=0.7.1)", "numpydoc (>=1.0.0)", "reco
 
 [[package]]
 name = "ms2ml"
-version = "0.0.19"
+version = "0.0.21"
 description = "Provides an intermediate layer between mass spec data and ML applications, such as encoding."
 category = "main"
 optional = false
@@ -1842,7 +1842,7 @@ six = ">=1.5"
 
 [[package]]
 name = "pytorch-lightning"
-version = "1.8.1"
+version = "1.8.2"
 description = "PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers. Scale your models. Write less boilerplate."
 category = "main"
 optional = false
@@ -1861,17 +1861,17 @@ tqdm = ">=4.57.0"
 typing-extensions = ">=4.0.0"
 
 [package.extras]
-all = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "colossalai (>=0.1.10)", "coverage (==6.4.2)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "fastapi", "gym[classic-control] (>=0.17.0)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)", "hydra-core (>=1.0.5)", "ipython[all]", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "protobuf (<=3.20.1)", "psutil", "pytest (==7.1.3)", "pytest-cov (==4.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "torchvision (>=0.10)", "uvicorn"]
+all = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "colossalai (>=0.1.10)", "coverage (==6.5.0)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "fastapi", "gym[classic-control] (>=0.17.0)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)", "hydra-core (>=1.0.5)", "ipython[all]", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "protobuf (<=3.20.1)", "psutil", "pytest (==7.1.3)", "pytest-cov (==4.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "torchvision (>=0.10)", "uvicorn"]
 colossalai = ["colossalai (>=0.1.10)"]
 deepspeed = ["deepspeed (>=0.6.0)"]
-dev = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "coverage (==6.4.2)", "fastapi", "hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "protobuf (<=3.20.1)", "psutil", "pytest (==7.1.3)", "pytest-cov (==4.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "uvicorn"]
+dev = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "coverage (==6.5.0)", "fastapi", "hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "protobuf (<=3.20.1)", "psutil", "pytest (==7.1.3)", "pytest-cov (==4.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "uvicorn"]
 examples = ["gym[classic-control] (>=0.17.0)", "ipython[all]", "torchvision (>=0.10)"]
 extra = ["hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "protobuf (<=3.20.1)", "rich (>=10.14.0,!=10.15.0.a)"]
 fairscale = ["fairscale (>=0.4.5)"]
 hivemind = ["hivemind (>=1.0.1)"]
 horovod = ["horovod (>=0.21.2,!=0.24.0)"]
 strategies = ["colossalai (>=0.1.10)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)"]
-test = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "coverage (==6.4.2)", "fastapi", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "psutil", "pytest (==7.1.3)", "pytest-cov (==4.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "scikit-learn (>0.22.1)", "uvicorn"]
+test = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "coverage (==6.5.0)", "fastapi", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "psutil", "pytest (==7.1.3)", "pytest-cov (==4.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "scikit-learn (>0.22.1)", "uvicorn"]
 
 [[package]]
 name = "pytz"
@@ -2667,7 +2667,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "c9c617b0666b57ea7e0bad1d49c8835e1a0e1f29c90cea177ffaaa849375ebdb"
+content-hash = "90bd64db35b455156f16146c427cad75cefcb4c9c579563e3e6f0b2b693586d6"
 
 [metadata.files]
 absl-py = [
@@ -3717,8 +3717,8 @@ mokapot = [
     {file = "mokapot-0.7.4.tar.gz", hash = "sha256:759d49141b4078a5728b1d238867afc5f5788bb36cad852882b19a2a75cec87d"},
 ]
 ms2ml = [
-    {file = "ms2ml-0.0.19-py3-none-any.whl", hash = "sha256:c8cd446c80c9f5a4abba42c3150538d68f9dfb92ad71b02ef622fc14dcf77b2e"},
-    {file = "ms2ml-0.0.19.tar.gz", hash = "sha256:0fd165311341fa6ed4cf1f4de1a018e5bb000cdc99406c19b1603c3c6eb8c77f"},
+    {file = "ms2ml-0.0.21-py3-none-any.whl", hash = "sha256:b6c286b2474ef3168a512dd3381a62ba7dc3c9574c8ff74e98a7e9365b7f60e7"},
+    {file = "ms2ml-0.0.21.tar.gz", hash = "sha256:bf773261032ace9bb16ad120526a78635e8f52ca9df176c6d73578dcc5fdf2af"},
 ]
 multidict = [
     {file = "multidict-6.0.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:0b9e95a740109c6047602f4db4da9949e6c5945cefbad34a1299775ddc9a62e2"},
@@ -4196,8 +4196,8 @@ python-dateutil = [
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
 ]
 pytorch-lightning = [
-    {file = "pytorch-lightning-1.8.1.tar.gz", hash = "sha256:5b60e5eb84dd16ee8dc408286f0074ab475bed385b09a702d678ccbde91e4818"},
-    {file = "pytorch_lightning-1.8.1-py3-none-any.whl", hash = "sha256:19b3fe28524cdfc4297e3b71490032a738c327668076ed0fce63a0c5f08cd45f"},
+    {file = "pytorch-lightning-1.8.2.tar.gz", hash = "sha256:480f3396cd63888c4e5ec2f21c02fe662a2b035d9634e6f31fcf1197a36ebd15"},
+    {file = "pytorch_lightning-1.8.2-py3-none-any.whl", hash = "sha256:bdedce5dd4f597d473b8bd60aec6e7d442e2aac9378aebd52f0da4db44dd31f6"},
 ]
 pytz = [
     {file = "pytz-2022.6-py2.py3-none-any.whl", hash = "sha256:222439474e9c98fced559f1709d89e6c9cbf8d79c794ff3eb9f8800064291427"},

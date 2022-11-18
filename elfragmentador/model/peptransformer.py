@@ -163,23 +163,16 @@ class PepTransformerBase(nn.Module):
         in_batch_dict = {k: v.clone().to(device) for k, v in in_batch._asdict().items()}
 
         out = self.forward(**in_batch_dict)
-        out = PredictionResults(
-            **{k: x.squeeze(0).cpu() for k, x in out._asdict().items()}
-        )
         logger.debug(out)
 
         if as_spectrum:
             spec = DeTensorizer.make_spectrum(
-                seq=in_batch.seq.squeeze().clone().detach().cpu().numpy(),
-                mod=in_batch.mods.squeeze().clone().detach().cpu().numpy(),
-                charge=in_batch.charge.squeeze().clone().detach().cpu().numpy(),
-                fragment_vector=(torch.relu(out.spectra) / out.spectra.max())
-                .clone()
-                .detach()
-                .cpu()
-                .numpy(),
+                seq=in_batch.seq,
+                mod=in_batch.mods,
+                charge=in_batch.charge,
+                fragment_vector=out.spectra,
+                rt=out.irt * 100,
             )
-            spec.retention_time = float(out.irt)
             out = spec
 
         return out

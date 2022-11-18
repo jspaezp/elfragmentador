@@ -1,5 +1,7 @@
 import torch
+from loguru import logger
 from ms2ml import AnnotatedPeptideSpectrum, Peptide
+from ms2ml.annotation_classes import RetentionTime
 
 from elfragmentador.config import CONFIG
 from elfragmentador.named_batches import ForwardBatch, TrainBatch
@@ -61,6 +63,12 @@ class Tensorizer:
             data=Peptide.from_proforma_seq(data, config=cls.CONFIG), nce=nce
         )
 
+    def __call__(self, data, nce):
+        if isinstance(data, Peptide):
+            return self.convert_peptide(data, nce)
+        if isinstance(data, AnnotatedPeptideSpectrum):
+            return self.convert_annotated_spectrum(data, nce)
+
 
 class DeTensorizer:
     """Converts tensors to spectra or peptides"""
@@ -68,16 +76,30 @@ class DeTensorizer:
     CONFIG = CONFIG
 
     @classmethod
-    def make_spectrum(cls, seq, mod, charge, fragment_vector):
+    def make_spectrum(cls, seq, mod, charge, fragment_vector, irt):
+        fragment_vector = torch.relu(fragment_vector) / fragment_vector.max()
+        fragment_vector = fragment_vector.clone().detach().cpu().numpy().squeeze()
         spec = AnnotatedPeptideSpectrum.decode_fragments(
             fragment_vector=fragment_vector,
             peptide=cls.make_peptide(seq=seq, mod=mod, charge=charge),
         )
+        if irt > 2:
+            logger.warning(
+                f"Passed Retention time {irt} is >2, this might be correct"
+                "but could also mean that the rt is not scaled"
+                " (as expected by the converter)."
+                "RTs are expected to be biognosys-irt/100"
+            )
+        spec.retention_time = RetentionTime(float(irt) * 100 * 60, "s")
         return spec
 
     @classmethod
     def make_peptide(cls, seq, mod, charge: int | None = None):
+        seq = seq.squeeze().clone().detach().cpu().numpy()
+        mods = mod.squeeze().clone().detach().cpu().numpy()
+        charge = charge.squeeze().clone().detach().cpu().numpy()
+
         peptide = Peptide.decode_vector(
-            config=cls.CONFIG, seq=seq, mod=mod, charge=int(charge)
+            config=cls.CONFIG, seq=seq, mod=mods, charge=int(charge)
         )
         return peptide

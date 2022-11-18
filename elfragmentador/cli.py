@@ -1,12 +1,15 @@
+import dataclasses
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
-import pandas as pd
 import pytorch_lightning as pl
 import torch
 from loguru import logger
+from ms2ml.data.parsing.pin import comet_pin_to_df
 
 import elfragmentador
+from elfragmentador.config import CONFIG
+from elfragmentador.data.predictor import Predictor
 from elfragmentador.model import PepTransformerModel
 from elfragmentador.train import add_train_parser_args, main_train
 
@@ -34,7 +37,17 @@ def setup_model(args):
     torch.set_num_threads(args.threads)
     try:
         logger.info(f"Loading model from {args.model_checkpoint}")
-        model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
+        if args.model_checkpoint == "RANDOM":
+            logger.info("Using random model")
+            model = PepTransformerModel(
+                combine_embeds=True,
+                num_decoder_layers=3,
+                num_encoder_layers=2,
+                nhid=48 * 2,
+                d_model=48,
+            )
+        else:
+            model = PepTransformerModel.load_from_checkpoint(args.model_checkpoint)
     except RuntimeError as e:
         if "Missing key(s) in state_dict":
             logger.error(e)
@@ -51,7 +64,7 @@ def setup_model(args):
         else:
             raise RuntimeError(e)
 
-    model.eval()
+    model = model.eval()
     return model
 
 
@@ -77,6 +90,17 @@ def add_pin_append_parser_args(parser):
         help="Input percolator file",
     )
     parser.add_argument(
+        "--nce",
+        type=float,
+        help="Collision energy to use for the prediction",
+        default="32",
+    )
+    parser.add_argument(
+        "--rawfile_locations",
+        type=str,
+        help="Locations to look for the raw files",
+    )
+    parser.add_argument(
         "--out",
         type=str,
         help="Input percolator file",
@@ -87,17 +111,21 @@ def add_pin_append_parser_args(parser):
 
 @startup_setup
 def append_predictions(args):
-    """
-    Appends the cosine similarity between the predicted and actual spectra to a.
+    """Appends data to a pin file
 
+    Appends the cosine similarity between the predicted and actual spectra to a
     percolator input.
     """
     model = setup_model(args)
 
-    out_df = append_preds(
-        in_pin=args.pin, out_pin=args.out, model=model, predictor=predictor
-    )
-    logger.info(out_df)
+    predictor = Predictor(model=model)
+    df = predictor.compare(adapter=args.input, nce=args.nce)
+    df2 = comet_pin_to_df(args.pin)
+    for col in df.columns:
+        df.insert(loc=4, column=col, value=df2[col])
+
+    logger.info(df)
+    df.to_csv(args.out, sep="\t", index=False)
 
 
 def add_predict_parser_args(parser):
@@ -114,9 +142,9 @@ def add_predict_parser_args(parser):
     )
     parser.add_argument(
         "--nce",
-        type=str,
-        help="Comma delimited series of collision energies to use",
-        default="27,30",
+        type=float,
+        help="Collision energy to use for the prediction",
+        default="32",
     )
     parser.add_argument(
         "--charges",
@@ -136,41 +164,31 @@ def add_predict_parser_args(parser):
     parser.add_argument(
         "--out",
         type=str,
-        help="Output .sptxt file",
+        help="Output .dlib file",
     )
     common_checkpoint_args(parser)
     return parser
 
 
 @startup_setup
-def predict_csv(args):
-    """Predicts the peptides in a csv file."""
-    model = setup_model(args)
-    # predictor = Predictor.from_argparse_args(args)
-    ds = SequenceDataset.from_csv(args.csv)
-
-    ds.predict(model=model, predictor=predictor, batch_size=args.batch_size)
-    ds.generate_sptxt(args.out)
-
-
-@startup_setup
-def predict_fasta(args):
+def predict(args):
     """Predicts the peptides in a fasta file."""
     model = setup_model(args)
-    # predictor = Predictor.from_argparse_args(args)
-    nces = [float(x) for x in args.nce.split(",")]
-    charges = [float(x) for x in args.charges.split(",")]
-    ds = FastaDataset(
-        fasta_file=args.fasta,
-        enzyme=args.enzyme,
-        missed_cleavages=args.missed_cleavages,
-        min_length=args.min_length,
-        collision_energies=nces,
-        charges=charges,
-    )
+    charges = [int(x) for x in args.charges.split(",")]
 
-    ds.predict(model=model, predictor=predictor, batch_size=args.batch_size)
-    ds.generate_sptxt(args.out)
+    config = dataclasses.replace(CONFIG)
+    config.charges = charges
+    config.peptide_length_range = (args.min_length, config.peptide_length_range[1])
+    if args.enzyme != "trypsin":
+        ValueError("Only trypsin is supported for now")
+
+    if args.missed_cleavages != 2:
+        ValueError("Only 2 missed cleavages is supported for now")
+
+    predictor = Predictor(model=model)
+    predictor.predict_to_file(
+        adapter=args.fasta, out_filepath=args.out, nce=args.nce, charges=charges
+    )
 
 
 def add_evaluate_parser_args(parser):
@@ -182,94 +200,22 @@ def add_evaluate_parser_args(parser):
         ),
     )
     parser.add_argument(
-        "--screen_nce",
+        "--nce",
         type=str,
         help="Comma delimited series of collision energies to use",
     )
-    parser.add_argument(
-        "--max_spec",
-        default=1e6,
-        type=int,
-        help="Maximum number of spectra to read",
-    )
-    parser.add_argument(
-        "--out_csv", type=str, help="Optional csv file to output results to"
-    )
+    parser.add_argument("--out", type=str, help="csv file to output results to")
     common_checkpoint_args(parser)
     return parser
 
 
 @startup_setup
 def evaluate_checkpoint(args):
-    dict_args = vars(args)
-    logger.info(dict_args)
-    # predictor = Predictor.from_argparse_args(args)
     model = setup_model(args)
+    nces = [float(x) for x in args.nce.split(",")]
 
-    input_file = str(dict_args["input"])
-    if input_file.endswith("csv"):
-        ds = PeptideDataset.from_csv(
-            input_file,
-            max_spec=args.max_spec,
-            filter_df=False,
-            keep_df=True,
-        )
-    elif input_file.endswith("sptxt") or input_file.endswith("mgf"):
-        ds = PeptideDataset.from_sptxt(
-            input_file,
-            max_spec=args.max_spec,
-            filter_df=False,
-            keep_df=True,
-            min_peaks=0,
-            min_delta_ascore=0,
-            enforce_length=False,
-            pad_zeros=False,
-        )
-    elif input_file.endswith("feather"):
-        ds = PeptideDataset.from_feather(
-            input_file,
-            max_spec=args.max_spec,
-            filter_df=False,
-            keep_df=True,
-        )
-    elif input_file.endswith(".psms.txt"):
-        ds = MokapotPSMDataset(
-            in_path=input_file,
-        )
-    else:
-        msg = "Input file should have the extension .feather, .csv, .mgf or .sptxt"
-        raise ValueError(msg)
-
-    if dict_args["out_csv"] is None:
-        logger.warning(
-            "No output will be generated because the out_csv argument was not passed"
-        )
-
-    if dict_args["screen_nce"] is not None:
-        nces = [float(x) for x in dict_args["screen_nce"].split(",")]
-    else:
-        nces = False
-
-    outs = predictor.evaluate_dataset(
-        dataset=ds,
-        model=model,
-        optimize_nce=nces,
-        plot=True,
-        keep_predictions=True,
-        save_prefix=dict_args["out_csv"],
-    )
-
-    summ_out = {"median_" + k: v.median() for k, v in outs._asdict().items()}
-
-    res = pd.DataFrame()
-    for k, v in outs._asdict().items():
-        res[k] = [x.squeeze().numpy().tolist() for x in v]
-
-    logger.info(summ_out)
-
-    if dict_args["out_csv"] is not None:
-        logger.info(f"Writting results to {dict_args['out_csv']}")
-        res.to_csv(dict_args["out_csv"], index=False)
+    predictor = Predictor(model=model)
+    predictor.compare_to_file(adapter=args.input, out_filepath=args.out, nce=nces)
 
 
 def train(args):
@@ -308,11 +254,17 @@ parser_evaluate.set_defaults(func=evaluate_checkpoint)
 
 parser_predict = subparsers.add_parser("predict")
 add_predict_parser_args(parser=parser_predict)
-parser_predict.set_defaults(func=predict_fasta)
+parser_predict.set_defaults(func=predict)
 
 parser_train = subparsers.add_parser("train")
 add_train_parser_args(parser=parser_train)
 parser_train.set_defaults(func=train)
 
+
+def main_cli():
+    args = parser.parse_args()
+    args.func(args)
+
+
 if __name__ == "__main__":
-    parser.parse_args()
+    main_cli()
