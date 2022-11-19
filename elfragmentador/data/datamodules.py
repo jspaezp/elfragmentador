@@ -11,6 +11,7 @@ import torch
 import uniplot
 from loguru import logger as lg_logger
 from torch.utils.data.dataloader import DataLoader
+from tqdm.auto import tqdm
 
 from elfragmentador.config import CONFIG
 from elfragmentador.data.torch_datasets import (
@@ -36,7 +37,7 @@ class TrainingDataModule(pl.LightningDataModule):
 
         lg_logger.info(f"Found {len(paths)} parquet files: {paths}")
         batches = None
-        for x in paths:
+        for x in tqdm(paths):
             tmp = read_cached_parquet(x)
             if batches is None:
                 batches = tmp
