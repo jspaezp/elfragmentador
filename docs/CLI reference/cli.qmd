@@ -1,20 +1,20 @@
-# Append correlation with prediction to a .pin
+# Usage of the multiple command line interface options ...
 
-```{shell}
-elfragmentador append_pin --help
+```{python}
+! elfragmentador append_pin --help
 ```
 
 
-```{shell}
-elfragmentador evaluate --help
+```{python}
+! elfragmentador evaluate --help
 ```
 
 
-```{shell}
-elfragmentador predict --help
+```{python}
+! elfragmentador predict --help
 ```
 
 
-```{shell}
-elfragmentador train --help
+```{python}
+! elfragmentador train --help
 ```

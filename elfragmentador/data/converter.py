@@ -37,13 +37,14 @@ class Tensorizer:
     def convert_annotated_spectrum(
         cls, data: AnnotatedPeptideSpectrum, nce: float
     ) -> TrainBatch:
+        irt = RTConverter.to_tensor(data.retention_time)
         out = TrainBatch(
             seq=torch.from_numpy(data.precursor_peptide.aa_to_vector()).unsqueeze(0),
             mods=torch.from_numpy(data.precursor_peptide.mod_to_vector()).unsqueeze(0),
             charge=torch.Tensor([data.precursor_peptide.charge]).unsqueeze(0),
             nce=torch.Tensor([nce]).unsqueeze(0),
             spectra=torch.from_numpy(data.encode_fragments()).unsqueeze(0),
-            irt=torch.Tensor([data.retention_time.minutes() / 100]).unsqueeze(0),
+            irt=irt,
             weight=torch.Tensor([1]).unsqueeze(0),
         )
         return out
@@ -72,10 +73,42 @@ class Tensorizer:
             return self.convert_annotated_spectrum(data, nce)
 
 
+class RTConverter:
+    warned_once = False
+
+    @classmethod
+    def to_tensor(cls, rt: RetentionTime | float) -> torch.Tensor:
+        try:
+            irt = torch.Tensor([rt.minutes() / 100]).unsqueeze(0)
+        except AttributeError:
+            if not cls.warned_once:
+                logger.warning(
+                    "Retention time was not correctly encoded in the data, seconds"
+                    "and minutes might be mixed up. Please report the issue"
+                )
+                cls.warned_once = True
+            irt = torch.Tensor([rt]).unsqueeze(0)
+        return irt
+
+    @classmethod
+    def to_seconds(cls, rt: RetentionTime | float) -> float:
+        try:
+            return rt.minutes() * 60
+        except AttributeError:
+            if not cls.warned_once:
+                logger.warning(
+                    "Retention time was not correctly encoded in the data, seconds"
+                    "and minutes might be mixed up. Please report the issue"
+                )
+                cls.warned_once = True
+        return float(rt)
+
+
 class DeTensorizer:
     """Converts tensors to spectra or peptides"""
 
     CONFIG = CONFIG
+    warned_once_rt = False
 
     @classmethod
     def make_spectrum(cls, seq, mod, charge, fragment_vector, irt):
@@ -85,13 +118,14 @@ class DeTensorizer:
             fragment_vector=fragment_vector,
             peptide=cls.make_peptide(seq=seq, mod=mod, charge=charge),
         )
-        if irt > 2:
+        if irt > 2 and not cls.warned_once_rt:
             logger.warning(
                 f"Passed Retention time {irt} is >2, this might be correct"
-                "but could also mean that the rt is not scaled"
+                " but could also mean that the rt is not scaled"
                 " (as expected by the converter)."
                 "RTs are expected to be biognosys-irt/100"
             )
+            cls.warned_once_rt = True
         spec.retention_time = RetentionTime(float(irt) * 100 * 60, "s")
         return spec
 

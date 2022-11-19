@@ -39,7 +39,7 @@ On the transformer side of things I must admit that many of the elements of this
 
 ## Why the name?
 
-Two main reasons ... it translates to 'The fragmenter' in spanish and the project intends to predic framgnetations. On the other hand ... The name was free in pypi.
+Two main reasons ... it translates to 'The fragmenter' in spanish and the project intends to predict fragmentation. On the other hand ... The name was free in pypi.
 
 ## Resources on transformers
 

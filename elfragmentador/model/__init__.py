@@ -488,7 +488,7 @@ class PepTransformerModel(pl.LightningModule):
             steps_per_epoch = 1000
         try:
             accumulate_grad_batches = self.trainer.accumulate_grad_batches
-            max_epochs = (self.trainer.max_epochs,)
+            max_epochs = self.trainer.max_epochs
         except RuntimeError:
             accumulate_grad_batches = 1
             max_epochs = 10
@@ -505,7 +505,11 @@ class PepTransformerModel(pl.LightningModule):
             lrs.append(optimizer.param_groups[0]["lr"])
             scheduler.step()
 
-        uniplot.plot(np.log1p(np.array(lrs)), xs, title="Learning Rate Schedule")
+        str_list = uniplot.plot_to_string(
+            np.log1p(np.array(lrs)), xs, title="Learning Rate Schedule"
+        )
+        plot_str = "\n".join(str_list)
+        logger.info(f"\n\n{plot_str}\n\n")
 
     def _step(self, batch: TrainBatch, batch_idx: int) -> dict[str, Tensor]:
         """
@@ -764,5 +768,10 @@ def evaluate_landmark_rt(model: PepTransformerModel):
 
     fit = polyfit(np.array(real_rt).flatten(), np.array(pred_rt).flatten())
     logger.info(fit)
-    uniplot.plot(xs=np.array(real_rt).flatten(), ys=np.array(pred_rt).flatten())
-    return fit
+    plot_str = uniplot.plot_to_string(
+        xs=np.array(real_rt).flatten(),
+        ys=np.array(pred_rt).flatten(),
+        title="Prediction vs real iRT of biognosys and procal peptides",
+    )
+    logger.info("\n" + "\n".join(plot_str), "\n")
+    return fit, plot_str
