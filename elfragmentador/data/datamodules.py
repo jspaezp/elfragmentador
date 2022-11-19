@@ -35,7 +35,13 @@ class TrainingDataModule(pl.LightningDataModule):
         paths = list(base_dir.rglob("*.parquet"))
 
         lg_logger.info(f"Found {len(paths)} parquet files: {paths}")
-        batches = concat_batches([read_cached_parquet(x) for x in paths])
+        batches = None
+        for x in paths:
+            tmp = read_cached_parquet(x)
+            if batches is None:
+                batches = tmp
+            else:
+                batches = concat_batches([batches, tmp])
 
         lg_logger.info("Splitting train/test/val")
 

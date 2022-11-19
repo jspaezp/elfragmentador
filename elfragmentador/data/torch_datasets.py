@@ -151,7 +151,8 @@ def _split_tuple(
 ) -> dict[SplitSet, ForwardBatch | TrainBatch]:
     def pep_builder(x):
         x = x[x > 0]
-        return Peptide.decode_vector(seq=x, mod=np.zeros_like(x), config=DEFAULT_CONFIG)
+        pep = Peptide.decode_vector(seq=x, mod=np.zeros_like(x), config=DEFAULT_CONFIG)
+        return pep.stripped_sequence
 
     tuple_type = type(batches_tuple)
     assigned_set = np.array([select_split(pep_builder(x)) for x in batches_tuple.seq])
