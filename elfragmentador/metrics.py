@@ -7,9 +7,10 @@ import torch.nn.functional as F
 import uniplot
 from torch import Tensor, nn
 
-from elfragmentador import constants
+from elfragmentador.config import get_default_config
 from elfragmentador.named_batches import EvaluationLossBatch, PredictionResults
-from elfragmentador.utils_data import cat_collate
+
+DEFAULT_CONFIG = get_default_config()
 
 
 class CosineLoss(torch.nn.CosineSimilarity):
@@ -42,39 +43,6 @@ class CosineLoss(torch.nn.CosineSimilarity):
             >>> calc_loss = loss(x, y)
             >>> calc_loss.round(decimals = 2)
             tensor([[0., 0., 0., 0., 0.]])
-            >>> # Uniform tensors give low loss
-
-            >>> loss(x, 5*x).round(decimals = 2)
-            tensor([[0., 0., 0., 0., 0.]])
-
-            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
-
-            >>> loss = CosineLoss(dim=2, eps=1e-4)
-            >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
-            >>> x = torch.tensor(x)
-            >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
-            >>> y = torch.tensor(y)
-            >>> x.shape
-            torch.Size([1, 2, 3])
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.0100, 0.0000]])
-
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
-            >>> x = torch.tensor(x)
-            >>> y = torch.tensor(y)
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.0000, 0.4900]])
-
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
-            >>> # The first tensor is a scaled version, and the second
-            >>> # has a missmatch
-            >>> x = torch.tensor(x)
-            >>> y = torch.tensor(y)
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.000, 0.1000]])
         """
         out = super().forward(truth, prediction)
         out = 1 - out
@@ -104,38 +72,6 @@ class SpectralAngle(torch.nn.CosineSimilarity):
             >>> calc_loss = loss(x, y)
             >>> calc_loss.round(decimals = 2)
             tensor([[1., 1., 1., 1., 1.]])
-
-            >>> loss(x, 5*x).round(decimals = 2)
-            tensor([[1., 1., 1., 1., 1.]])
-
-            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[0., 0., 0., 0., 0.]])
-
-            >>> loss = SpectralAngle(dim=2, eps=1e-4)
-            >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
-            >>> x = torch.tensor(x)
-            >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
-            >>> y = torch.tensor(y)
-            >>> x.shape
-            torch.Size([1, 2, 3])
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.9200, 1.000]])
-
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
-            >>> x = torch.tensor(x)
-            >>> y = torch.tensor(y)
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[1.000, 0.3400]])
-
-            >>> x = [[[0.2, 0.4, 2],[2, 0.4, 1.0]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
-            >>> # The first tensor is a scaled version, and the second
-            >>> # has a missmatch
-            >>> x = torch.tensor(x)
-            >>> y = torch.tensor(y)
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[1.000, 0.7100]])
         """
         out = super().forward(truth, prediction)
 
@@ -171,38 +107,6 @@ class SpectralAngleLoss(SpectralAngle):
             >>> calc_loss = loss(x, y)
             >>> calc_loss.round(decimals = 2)
             tensor([[0., 0., 0., 0., 0.]])
-
-            >>> loss(x, 5*x).round(decimals = 2)
-            tensor([[0., 0., 0., 0., 0.]])
-
-            >>> loss(torch.zeros([1,2,5]), torch.zeros([1,2,5]))
-            tensor([[1., 1., 1., 1., 1.]])
-
-            >>> loss = SpectralAngleLoss(dim=2, eps=1e-4)
-            >>> x = [[[0.1, 0.2, 1],[1, 0.2, 0.1]]]
-            >>> x = torch.tensor(x)
-            >>> y = [[[0.2, 0.3, 1],[1, 0.2, 0.1]]]
-            >>> y = torch.tensor(y)
-            >>> x.shape
-            torch.Size([1, 2, 3])
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.0800, 0.000]])
-
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 13.0]]]
-            >>> x = torch.tensor(x)
-            >>> y = torch.tensor(y)
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.000, 0.6600]])
-
-            >>> x = [[[0.2, 0.4, 2],[1, 0.2, 0.5]]]
-            >>> y = [[[0.1, 0.2, 1],[1, 0.2, 0.0]]]
-            >>> # The first tensor is a scaled version, and the second
-            >>> # has a missmatch
-            >>> x = torch.tensor(x)
-            >>> y = torch.tensor(y)
-            >>> loss(x, y).round(decimals = 2).abs()
-            tensor([[0.000, 0.2900]])
         """
         return 1 - super().forward(truth, prediction)
 
@@ -269,7 +173,11 @@ class PearsonCorrelation(torch.nn.Module):
 
 
 class MetricCalculator(pl.LightningModule):
+    config = DEFAULT_CONFIG
+
     def __init__(self) -> None:
+        """Implements a dummy nn.Module to calculate metrics."""
+
         super().__init__()
 
         self.mse_loss = nn.MSELoss(reduction="none")
@@ -280,11 +188,21 @@ class MetricCalculator(pl.LightningModule):
         return self.calculate_metrics(pred=pred, gt=gt)
 
     def calculate_metrics(self, pred: PredictionResults, gt: PredictionResults):
-        yhat_irt, yhat_spectra = pred.irt.float(), F.normalize(
-            torch.relu(self.pad_spectra(pred.spectra)), 2, 1
+        yhat_spectra = self.pad_spectra(
+            pred.spectra, self.config.num_fragment_embeddings
         )
-        irt, spectra = gt.irt.float(), F.normalize(
-            torch.relu(self.pad_spectra(gt.spectra)), 2, 1
+        yhat_irt = pred.irt.float()
+        yhat_spectra = F.normalize(
+            torch.relu(yhat_spectra),
+            2,
+            1,
+        )
+        spectra = self.pad_spectra(gt.spectra, self.config.num_fragment_embeddings)
+        irt = gt.irt.float()
+        spectra = F.normalize(
+            torch.relu(spectra),
+            2,
+            1,
         )
 
         loss_irt = self.mse_loss(yhat_irt, irt)
@@ -294,10 +212,8 @@ class MetricCalculator(pl.LightningModule):
         return loss_irt, loss_angle, loss_cosine
 
     @staticmethod
-    def pad_spectra(spec):
-        spec = F.pad(
-            spec, (0, constants.NUM_FRAG_EMBEDINGS - spec.size(1)), mode="constant"
-        )
+    def pad_spectra(spec, num_frag_embeddings):
+        spec = F.pad(spec, (0, num_frag_embeddings - spec.size(1)), mode="constant")
         return spec
 
     def test_step(self, batch: dict[str, PredictionResults], batch_idx: int):
@@ -312,7 +228,7 @@ class MetricCalculator(pl.LightningModule):
         return losses, batch["pred"].irt, batch["gt"].irt
 
     def test_epoch_end(self, outputs):
-        losses = cat_collate([x[0] for x in outputs])
+        losses = {k: torch.cat([x[0][k] for x in outputs]) for k in outputs[0]}
         pred_irt_outs = torch.cat([x[1] for x in outputs])
         truth_irt = torch.cat([x[2] for x in outputs])
 

@@ -1,0 +1,20 @@
+# Usage of the multiple command line interface options ...
+
+```{python}
+! elfragmentador append_pin --help
+```
+
+
+```{python}
+! elfragmentador evaluate --help
+```
+
+
+```{python}
+! elfragmentador predict --help
+```
+
+
+```{python}
+! elfragmentador train --help
+```

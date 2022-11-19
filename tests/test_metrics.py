@@ -4,6 +4,13 @@ import torch
 
 import elfragmentador.metrics as EFM
 
+from .tiny_model import datamodule_builder
+
+
+@pytest.fixture
+def datamodule(shared_datadir):
+    return datamodule_builder(shared_datadir)
+
 
 @pytest.fixture
 def batch(datamodule):

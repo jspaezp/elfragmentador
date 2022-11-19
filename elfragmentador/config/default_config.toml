@@ -1,0 +1,152 @@
+g_tolerances = [
+    5,
+    0.02,
+]
+g_tolerance_units = [
+    "ppm",
+    "da",
+]
+g_isotopes = [
+    0,
+    0,
+]
+peptide_length_range = [
+    5,
+    30,
+]
+precursor_charges = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+]
+fragment_positions = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+]
+ion_series = "yb"
+ion_charges = [
+    1,
+    2,
+    3,
+]
+ion_neutral_losses = []
+ion_encoding_nesting = [
+    "ion_charges",
+    "fragment_positions",
+    "ion_series",
+]
+ion_naming_convention = "{ion_series}{fragment_positions}^{ion_charges}"
+mod_ambiguity_threshold = 0.99
+mod_fixed_mods = [
+    "[U:4]@C",
+]
+encoding_aa_order = [
+    "__missing__",
+    "A",
+    # "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    # "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    # "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    # "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    # "Z",
+    "c_term",
+    "n_term",
+]
+# [Carbamido] 4
+# 78316 [OXIDATION] 35
+# 4046 [PHOSPHO] 21
+# 27983 [GG] 121
+# 106394 [TMT6PLEX] 737
+#  66 [ACETYL] 1
+#  125 [METHYL] 34
+#  150 [DIMETHYL] 36
+#   53 [TRIMETHYL] 37
+#   39 [NITRO] 354
+# Deamidation [7]
+encoding_mod_order = [
+    "__NONE__",
+    "[U:4]",
+    "[U:35]",
+    "[U:21]",
+    "[U:121]",
+    "[U:737]",
+    "[U:1]",
+    "[U:34]",
+    "[U:36]",
+    "[U:37]",
+    "[U:354]",
+    "[U:7]",
+    "__unknown1__",
+]
+encoding_spec_bin_start = 0.0
+encoding_spec_bin_end = 2000.0
+encoding_spec_bin_binsize = 0.1
+encoding_spec_bin_n_bins = "__NONE__"
+encoding_spec_bin_relative = false
+encoding_spec_bin_offset = 0.0
+
+[encoding_mod_alias]
+Phospho = "[U:21]"
+TMT6plex = "[U:737]"
+TMT10plex = "[U:737]"
+Deamidation = "[U:7]"
+Acetyl = "[U:1]"
+Oxidation = "[U:35]"
+Hydroxilation = "[U:35]"
+Trimethyl = "[U:37]"
+Methyl = "[U:34]"
+Dimethyl = "[U:36]"
+GG = "[U:121]"
+Nitro = "[U:354]"
+"+57.021464" = "[U:4]"
+"15.9949" = "[U:35]"
+"+16" = "[U:35]"
