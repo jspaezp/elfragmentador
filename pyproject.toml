@@ -25,7 +25,7 @@ numba = "^0.56.2"
 # BLocking torch 1.13 update until poetry fixes it
 # https://github.com/python-poetry/poetry/issues/6939
 # https://github.com/pytorch/pytorch/pull/88826
-torch = {version = ">=1.12.0,<1.13.0", python = ">=3.9,<3.11"}
+torch = {version = ">=1.12.0,<1.14.0", python = ">=3.9,<3.11"}
 ms2ml = "^0.0.21"
 loguru = "^0.6.0"
 
