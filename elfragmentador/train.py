@@ -42,7 +42,7 @@ def add_train_parser_args(parser) -> ArgumentParser:
     program_parser.add_argument(
         "--wandb_project",
         type=str,
-        default="rttransformer",
+        default="elfragmentador",
         help="Wandb project to log to, check out wandb... please",
     )
     trainer_parser.add_argument(
