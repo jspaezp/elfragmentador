@@ -54,6 +54,10 @@ def read_cached_parquet(path) -> TrainBatch:
             x = [np.pad(y, pad_width=(0, MAX_LENGTH - len(y))) for y in x]
             x = np.stack(x)
             fields[col] = x
+        if col in ["irt"]:
+            if np.any(df[col][~df[col].isna()].values > 20):
+                fields[col] = df[col].values / 100
+            fields[col] = df[col].array
         else:
             fields[col] = np.stack(df[col].array)
 

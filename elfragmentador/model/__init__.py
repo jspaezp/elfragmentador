@@ -127,6 +127,7 @@ class PepTransformerModel(pl.LightningModule):
             f"num_encoder_layers {num_encoder_layers} "
             f"nhid {nhid} d_model {d_model} "
             f"nhead {nhead} dropout {dropout}"
+            f"combined embeds {combine_embeds} combined encoders {combine_encoders}"
         )
         self.main_model = PepTransformerBase(
             num_fragments=self.NUM_FRAGMENT_EMBEDDINGS,
@@ -487,15 +488,17 @@ class PepTransformerModel(pl.LightningModule):
             steps_per_epoch = 1000
         try:
             accumulate_grad_batches = self.trainer.accumulate_grad_batches
+            max_epochs = (self.trainer.max_epochs,)
         except RuntimeError:
             accumulate_grad_batches = 1
+            max_epochs = 10
         spe = steps_per_epoch // accumulate_grad_batches
 
         optimizer, schedulers = self.configure_optimizers()
         optimizer = optimizer[0]
         scheduler = schedulers[0]["scheduler"]
 
-        xs = list(range(spe))
+        xs = list(range(spe * max_epochs))
         lrs = []
         for i in xs:
             optimizer.step()
@@ -585,17 +588,9 @@ class PepTransformerModel(pl.LightningModule):
                 torch.save(self.cpu().state_dict(), "broken_state.pt")
                 logger.error(self.cpu().state_dict())
 
-                logger.error("last succesfull state:")
-                logger.error(self.last_state)
                 raise RuntimeError(
                     "Too many nan in a row, dumping state to 'broken_state.pt'"
                 )
-
-        else:
-            self.num_failed = 0
-            if batch_idx % 50 == 0:
-                logger.debug("Saved state dict")
-                self.last_state = copy.deepcopy(self.state_dict())
 
         return losses
 
@@ -615,8 +610,7 @@ class PepTransformerModel(pl.LightningModule):
 
     def on_train_start(self) -> None:
         logger.info("Weights before the start of the training epoch:")
-        self.last_state = copy.deepcopy(self.state_dict())
-        logger.info(self.last_state)
+        logger.info(copy.deepcopy(self.state_dict()))
         return super().on_train_start()
 
     def validation_step(

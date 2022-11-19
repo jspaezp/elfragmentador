@@ -1,10 +1,10 @@
-import logging
 import math
 from argparse import ArgumentParser, Namespace
 from typing import Union
 
 import pytorch_lightning as pl
 import torch
+from loguru import logging
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
