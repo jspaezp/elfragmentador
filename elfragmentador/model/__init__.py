@@ -12,6 +12,7 @@ except ImportError:
 
     LiteralFalse = NewType("LiteralFalse", bool)
 
+import argparse
 import time
 import warnings
 from argparse import _ArgumentGroup
@@ -278,8 +279,7 @@ class PepTransformerModel(pl.LightningModule):
         parser.add_argument("--dropout", default=0.1, type=float)
         parser.add_argument(
             "--combine_embeds",
-            default=True,
-            type=bool,
+            action=argparse.BooleanOptionalAction,
             help=(
                 "Whether the embeddings for aminoacid and modifications"
                 " should be shared between the irt and fragment sections"
@@ -287,8 +287,7 @@ class PepTransformerModel(pl.LightningModule):
         )
         parser.add_argument(
             "--combine_encoders",
-            default=True,
-            type=bool,
+            action=argparse.BooleanOptionalAction,
             help=(
                 "Whether the encoders for aminoacid and modifications"
                 " should be shared between the irt and fragment sections"
