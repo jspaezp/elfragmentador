@@ -4,7 +4,7 @@ from typing import Union
 
 import pytorch_lightning as pl
 import torch
-from loguru import logging
+from loguru import logger
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
@@ -112,14 +112,14 @@ def get_callbacks(
 
 def main_train(model: PepTransformerModel, args: Namespace) -> None:
     # TODO add loggging levela and a more structured logger ...
-    logging.info(model)
+    logger.info(model)
     datamodule = datamodules.TrainingDataModule(
         batch_size=args.batch_size,
         base_dir=args.data_dir,
     )
     datamodule.setup("train")
     spe = math.ceil(datamodule.len_train / datamodule.batch_size)
-    logging.info(f">>> TRAIN: Setting steps per epoch to {spe}")
+    logger.info(f">>> TRAIN: Setting steps per epoch to {spe}")
     model.steps_per_epoch = spe
 
     callbacks = get_callbacks(
