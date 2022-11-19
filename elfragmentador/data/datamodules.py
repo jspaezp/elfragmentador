@@ -44,6 +44,10 @@ class TrainingDataModule(pl.LightningDataModule):
             else:
                 batches = concat_batches([batches, tmp])
 
+        if np.any(batches.irt > 50):
+            lg_logger.warning("Found irt > 50, dividing by 100")
+            batches = batches._replace(irt=batches.irt / 100)
+
         lg_logger.info("Splitting train/test/val")
 
         self.batches = _split_tuple(batches)
