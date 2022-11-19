@@ -500,7 +500,7 @@ class PepTransformerModel(pl.LightningModule):
         for i in xs:
             optimizer.step()
             lrs.append(optimizer.param_groups[0]["lr"])
-            scheduler.step(1)
+            scheduler.step()
 
         uniplot.plot(np.log1p(np.array(lrs)), xs, title="Learning Rate Schedule")
 
