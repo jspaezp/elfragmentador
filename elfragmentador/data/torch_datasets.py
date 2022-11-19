@@ -72,7 +72,7 @@ def concat_batches(batches: BatchList) -> NamedTensorBatch:
 SplitSet = Literal["Train", "Test", "Val"]
 
 HASHDICT = {
-    "__missing__": 7761068247417658572,
+    "__missing__": 0,  # Added manually
     "A": 8990350376580739186,
     "C": -5648131828304525110,
     "D": 6043088297348140225,

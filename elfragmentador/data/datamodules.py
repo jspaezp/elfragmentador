@@ -47,7 +47,7 @@ class TrainingDataModule(pl.LightningDataModule):
         lg_logger.info("Splitting train/test/val")
 
         self.batches = _split_tuple(batches)
-        self.len_train = len(self.batches["Train"])
+        self.len_train = len(self.batches["Train"][0])
         self.batch_size = batch_size
 
     @staticmethod
