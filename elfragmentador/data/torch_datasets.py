@@ -42,6 +42,10 @@ def read_cached_parquet(path) -> TrainBatch:
 
     fields = {}
 
+    above_max = np.array([len(x) for x in df["seq"]]) > MAX_LENGTH
+    lg_logger.info(f"Removing {above_max.sum()}/{len(df)} peptides above max length")
+    df = df[~above_max]
+
     for col in TrainBatch._fields:
         if col in ["seq", "mods"]:
             x = df[col].array
