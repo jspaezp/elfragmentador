@@ -8,26 +8,37 @@ extra:
     provider: google
     property: G-QKEQ9R2MR7
 
+
 markdown_extensions:
-  - pymdownx.arithmatex:
-      generic: true
-
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-
-extra_javascript:
-  - javascripts/config.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-
-watch:
-  - elfragmentador
-
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 plugins:
   - search
   - autorefs
-  - mkdocstrings
+  - mkquartodocs:
+      keep_output: false
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_members_full_path: true
+            show_object_full_path: false
+            show_category_heading: true
+            docstring_style: google
+            line_length: 120
+            members_order: source
+            show_if_no_docstring: true
+            show_signature_annotations: true
+            annotations_path: source
+            docstring_section_style: spacy
+            docstring_options:
+              ignore_init_summary: no
+            merge_init_into_class: yes

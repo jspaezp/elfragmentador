@@ -1,28 +1,12 @@
-from elfragmentador.datasets import Predictor
+from elfragmentador.data.predictor import Predictor
+from elfragmentador.model import PepTransformerModel
 
 
-def test_prediction_loop(datamodule, tiny_model):
-    trainer = Predictor()
-    out = trainer.predict(tiny_model, datamodule.train_dataloader())
-
-    assert isinstance(out, tuple)
-    assert hasattr(out, "_fields")
-
-    assert "irt" in out._fields and "spectra" in out._fields
-
-    assert len(out) == 2
-    assert len({len(x) for x in out}) == 1
-
-
-def test_testing_loop(datamodule, tiny_model):
-    trainer = Predictor()
-    out = trainer.test(
-        tiny_model, datamodule.train_dataloader(), ckpt_path=None, plot=False
-    )
-
-    assert isinstance(out, tuple)
-    assert hasattr(out, "_fields")
-    assert len(out) == 4
-
-    expected_outs = ["scaled_se_loss", "loss_cosine", "loss_irt", "loss_angle"]
-    assert all([x in out._fields for x in expected_outs])
+def test_prediction_loop(shared_datadir, tmpdir):
+    fasta_file = shared_datadir / "fasta/P0DTC4.fasta"
+    out_dlib = tmpdir / "out.dlib"
+    model = PepTransformerModel(d_model=96)
+    model = model.eval()
+    predictor = Predictor(model=model)
+    predictor.predict_to_file(fasta_file, out_dlib, nce=30, charges=[2])
+    predictor.compare(str(out_dlib), nce=30)

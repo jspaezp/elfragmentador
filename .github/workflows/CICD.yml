@@ -18,7 +18,7 @@ jobs:
       # Python setup
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.10'
 
       - name: Debug Info
         run: echo ${{ github.ref }} ${{ github.event_name }} ${{ endsWith(github.ref, 'heads/release') && (github.event_name == 'push') }}
@@ -31,16 +31,14 @@ jobs:
       - name: Python Poetry Action
         uses: abatilo/actions-poetry@v2.1.6
         with:
-          poetry-version: '1.2.0'
+          poetry-version: '1.2.2'
 
       - name: View poetry --version
         run: poetry --version
       - name: Install Stuff
-        run: poetry install --no-root --only check
-      - name: mdformat
-        run: poetry run mdformat --check *.md docs notebooks notebooks/*/*.qmd tests
+        run: poetry install --no-root --only checks
       - name: Black
-        run: poetry run python -m black . --check --diff
+        run: poetry run black . --check --diff
       - name: ruff
         run: poetry run ruff .
       - name: isort
@@ -51,8 +49,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.x', '3.9']
-        poetry-version: ['1.2.0',]
+        python-version: ['3.10', '3.9']
+        poetry-version: ['1.2.2',]
         os: ['ubuntu-latest', 'macos-latest']
     runs-on: ${{ matrix.os }}
     steps:
@@ -116,7 +114,7 @@ jobs:
       # Python setup
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.10'
       - name: View Python --version
         run: python --version
 
@@ -124,7 +122,7 @@ jobs:
       - name: Python Poetry Action
         uses: abatilo/actions-poetry@v2.1.6
         with:
-          poetry-version: '1.2.0'
+          poetry-version: '1.2.2'
       - name: View poetry --version
         run: poetry --version
 
@@ -133,8 +131,6 @@ jobs:
         run: poetry install -n -v --all-extras
 
       # Build
-      - name: Build Notebooks
-        run: bash docs/render_nbs.bash
       - name: Build package
         run: |
           poetry build
