@@ -138,7 +138,7 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
         callbacks=callbacks["callbacks"],
     )
 
-    model.summarize(max_depth=3)
+    model.summarize(max_depth=4)
     model.trainer = trainer
     model.plot_scheduler_lr()
     model.configure_optimizers()

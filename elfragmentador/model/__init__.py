@@ -162,8 +162,8 @@ class PepTransformerModel(pl.LightningModule):
         self.spectra_metric = MissingDataAverager()
         self.spectra_metric2 = MissingDataAverager()
 
-    def summarize(self, max_depth=2):
-        return summarize(self.main_model, max_depth)
+    def summarize(self, max_depth=3):
+        return summarize(self, max_depth)
 
     def forward(
         self,
