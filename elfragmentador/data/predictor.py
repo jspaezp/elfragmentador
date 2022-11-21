@@ -60,8 +60,9 @@ class Predictor:
             outs = self.compare(
                 adapter=adapter,
                 nce=nce,
-                max_spec=1000,
+                max_spec=500,
                 drop_train=drop_train,
+                plot=False,
                 *args,
                 **kwargs,
             )
@@ -81,6 +82,7 @@ class Predictor:
         config=CONFIG,
         max_spec=float("inf"),
         drop_train=False,
+        plot=True,
         *args,
         **kwargs,
     ) -> pd.DataFrame:
@@ -116,17 +118,40 @@ class Predictor:
 
         logger.info(f"Skipped {skipped}/{i+skipped} spectra")
         df = pd.DataFrame(out)
+        if max(df["pred rt"]) / max(df["rt"]) > 1.5:
+            logger.warning(
+                "I think that the RTs are not in seconds,"
+                " will scale the predictions to minutes."
+                "If this is not the case, please report the issue :) thanks"
+            )
+            df["pred rt"] = df["pred rt"] / 60
 
-        uniplot.plot(ys=df["pred rt"], xs=df["rt"], title="Pred RT (y) vs RT (x)")
+        if plot:
+            uniplot.plot(ys=df["pred rt"], xs=df["rt"], title="Pred RT (y) vs RT (x)")
 
-        uniplot.histogram(
-            df["spectral angle"], title="Histogram of the spectral angles"
-        )
+            uniplot.histogram(
+                df["spectral angle"],
+                title="\n".join(
+                    [
+                        "Histogram of the spectral angles",
+                        f"Median: {df['spectral angle'].median():.2f}",
+                        f"Q1: {df['spectral angle'].quantile(0.25):.2f}",
+                        f"Q3: {df['spectral angle'].quantile(0.75):.2f}",
+                    ]
+                ),
+            )
 
-        uniplot.histogram(
-            df["fragment spectral angle"],
-            title="Histogram of the spectral angles of fragment ions",
-        )
+            uniplot.histogram(
+                df["fragment spectral angle"],
+                title="\n".join(
+                    [
+                        "Histogram of the spectral angles of only the fragment ions",
+                        f"Median: {df['fragment spectral angle'].median():.2f}",
+                        f"Q1: {df['fragment spectral angle'].quantile(0.25):.2f}",
+                        f"Q3: {df['fragment spectral angle'].quantile(0.75):.2f}",
+                    ]
+                ),
+            )
         return df
 
     def compare_to_file(
@@ -217,7 +242,12 @@ class Predictor:
                     logger.debug(f"Skipping {pepseq} because it is in the training set")
                     return None
 
-            tensor_batch = tmp_tensorizer(spec, nce=nce)
+            try:
+                tensor_batch = tmp_tensorizer(spec, nce=nce)
+            except KeyError as e:
+                logger.warning(f"Skipping {spec.precursor_peptide} because of {e}")
+                return None
+
             pred = model.forward(
                 seq=tensor_batch.seq,
                 mods=tensor_batch.mods,

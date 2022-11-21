@@ -2,7 +2,7 @@ title: EfTestData
 default:
   comet:
     peptide_mass_tolerance: 20
-    num_threads: 5
+    num_threads: 7
     isotope_error: 1
     fragment_bin_tol: 0.02
     fragment_bin_offset: 0.0
@@ -36,11 +36,10 @@ experiments:
       value: UP000005640
     comet:
       peptide_mass_tolerance: 20
-      num_threads: 5
       isotope_error: 1
       fragment_bin_tol: 0.02
       fragment_bin_offset: 0.0
-      peptide_length_range: "6 35"
+      peptide_length_range: "7 25"
       search_enzyme_number: 0
       digest_mass_range: "700.0 2700.0"
   - name: Arabidopsis
@@ -51,7 +50,6 @@ experiments:
       value: UP000006548
     comet:
       peptide_mass_tolerance: 20
-      num_threads: 5
       isotope_error: 1
       fragment_bin_tol: 0.02
       fragment_bin_offset: 0.0
@@ -64,13 +62,11 @@ experiments:
       value: UP000000625
     comet:
       peptide_mass_tolerance: 20
-      num_threads: 5
       isotope_error: 1
       fragment_bin_tol: 0.02
       fragment_bin_offset: 0.0
       peptide_length_range: "6 35"
-      add_Nterm_peptide: 229.1629
-      add_K_lysine: 229.1629
+      variable_mod02: 229.1629 nK 1 3 -1 0 0 0.0
   - name: AcetylStrep
     files:
       - data/WA163LPAcR2_WT2.mzML
@@ -79,15 +75,57 @@ experiments:
       value: UP000001973
     comet:
       peptide_mass_tolerance: 20
-      num_threads: 5
       isotope_error: 1
       fragment_bin_tol: 0.02
       fragment_bin_offset: 0.0
       peptide_length_range: "6 35"
       variable_mod02: 42.010565 nK 0 3 -1 0 0 0.0
+  - name: PhospoTMT
+    files:
+      - data/20160411_QE5_nLC5_AH_Bench_2mg_phos_TMT_Frac09.mzML
+    fasta:
+      type: uniprot
+      value: UP000005640 # hooman
+    comet:
+      peptide_mass_tolerance: 20
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+      variable_mod02: 79.966331 STY 0 3 -1 0 0 0.0
+      variable_mod03: 229.1629 nK 1 3 -1 0 0 0.0
+  - name: PhospoAHLFQ
+    files:
+      - data/20171122_QE3_nLC7_AH_LFQrep2_short30_X1.mzML
+    fasta:
+      type: uniprot
+      value: UP000005640 # hooman
+    comet:
+      peptide_mass_tolerance: 20
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+      variable_mod02: 79.966331 STY 0 3 -1 0 0 0.0
+  - name: CElegansGG
+    files:
+      - data/N2_d5_01_20170807_Q1_AWH_ColID_398_ProjID_724_Vilchez_13.mzML
+    fasta:
+      type: uniprot
+      value: UP000001940 # c.elegans
+    comet:
+      peptide_mass_tolerance: 20
+      isotope_error: 1
+      fragment_bin_tol: 0.02
+      fragment_bin_offset: 0.0
+      peptide_length_range: "6 35"
+      variable_mod02: 114.042927 K 0 3 -1 0 0 0.0 # GG leftover
 
 
 # # Human cell line TMT phospho 16plex not supported...
 # ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/06/PXD031277/20211105_EXPL2_Evo3_CLK_DDA_20SPD_45k_TMT16plex_200ug_STfrac_FT_1.raw
 # ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/06/PXD031277/20211105_EXPL2_Evo3_CLK_DDA_20SPD_45k_TMT16plex_200ug_STfrac_FT_2.raw
 # ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/06/PXD031277/20211105_EXPL2_Evo3_CLK_DDA_20SPD_45k_TMT16plex_200ug_STfrac_FT_3.raw
+# -rw-r--r-- 1 jspaezp jspaezp 1.8G 21.11.2022 03:31 data/N2_d5_01_20170807_Q1_AWH_ColID_398_ProjID_724_Vilchez_13.raw
+# -rw-r--r-- 1 jspaezp jspaezp 657M 21.11.2022 03:27 data/20171122_QE3_nLC7_AH_LFQrep2_short30_X1.raw
+# -rw-r--r-- 1 jspaezp jspaezp 1.4G 21.11.2022 03:26 data/20160411_QE5_nLC5_AH_Bench_2mg_phos_TMT_Frac09.raw
