@@ -537,6 +537,9 @@ multidict==6.0.2 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:fd9fc9c4849a07f3635ccffa895d57abce554b467d611a5009ba4f39b78a8849 \
     --hash=sha256:feba80698173761cddd814fa22e88b0661e98cb810f9f986c54aa34d281e4937 \
     --hash=sha256:feea820722e69451743a3d56ad74948b68bf456984d63c1a92e8347b7b88452d
+networkx==2.8.8 ; python_version >= "3.9" and python_version < "3.11" \
+    --hash=sha256:230d388117af870fce5647a3c52401fcf753e94720e6ea6b4197a5355648885e \
+    --hash=sha256:e435dfa75b1d7195c7b8378c3859f0445cd88c6b0375c181ed66823a9ceb7524
 numba==0.56.4 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:0240f9026b015e336069329839208ebd70ec34ae5bfbf402e4fcc8e06197528e \
     --hash=sha256:03634579d10a6129181129de293dd6b5eaabee86881369d24d63f8fe352dd6cb \

@@ -1312,7 +1312,7 @@ python-versions = ">=3.5"
 name = "networkx"
 version = "2.8.8"
 description = "Python package for creating and manipulating graphs and networks"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 
@@ -2727,7 +2727,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "5668ab15702b9b24c2b08d311d47294bf8f583c440def023bf4d5fc3f27d391f"
+content-hash = "57c01698766096836088224a86218b09e533259eb32e2a9ce739abcaae91bc13"
 
 [metadata.files]
 absl-py = [
