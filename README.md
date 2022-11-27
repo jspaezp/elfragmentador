@@ -51,13 +51,22 @@ Two main reasons ... it translates to 'The fragmenter' in spanish and the projec
 ## How fast is it?
 
 You can check how fast the model is in you specific system.
-Right now it tests only on CPU, message me if you need GPU inference times
+Right now the CLI tests the speed only on CPU (the model can be run in GPU).
+
+Here I will predict the fasta file for SARS-COV2
 
 ```shell
-poetry run pytest tests/test_model.py --benchmark-histogram
+poetry run elfragmentador predict --fasta tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta --nce 32 --charges 2 --missed_cleavages 0 --min_length 20 --out foo.dlib
 ```
 
-Currenty the inference time in an Intel i5-7260U is ~5.9ms, or ~167.44 predictions per second. On a GPU it is closer to ~1000 predictions per second.
+```
+...
+ 99%|█████████▉| 1701/1721 [00:14<00:00, 118.30it/s]
+...
+```
+
+~100 predictions per second including pre-post processing and writting the enciclopeDIA library.
+On a GPU it is closer to ~1000 preds/sec
 
 ## How big is it?
 
@@ -89,32 +98,6 @@ I have explored many variations on the model but currently the one distributed i
   - Not really ... I think all of those are interesting questions but
     AS IT IS RIGHT NOW it is not within the scope of the project. If you want
     to discuss it, write an issue in the repo and we can see if it is feasible.
-
-### Known Issues
-
-- When setting `--max_spec` on `elfragmentador_evaluate --sptxt`, the retention time accuracy is not calculated correctly because the retention times are scaled within the selected range. Since the spectra are subset in their import order, therefore only the first-eluting peptides are used.
-
-### TODO list
-
-#### Urgent
-
-- Decouple to a different package with less dependencies for the inference side of things
-- Remove numba from the dependencies ... right now it is only because spectrum utils requires it.
-- Move to PROFORMA compiance ...
-- Complete dosctrings and add those to documentation website
-- Refactor the package so the hierarchy makes more sense
-- Fix torchscript export ...
-
-#### Possible
-
-- Add neutral losses specific to some PTMs
-- consider if using pyteomics as  a backend for most ms-related tasks
-- Translate annotation functions (getting ions) to numpy/torch (if 3k/seconds is too slow ...)
-- Add weights during training so psms that are more likely to be false positives weight less (singletons or high Q-val)
-
-#### If I get time
-
-- Write ablation models and benchmark them (remove parts of the model and see how much worse it gets without it)
 
 ## Acknowledgements
 

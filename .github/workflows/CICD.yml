@@ -87,8 +87,6 @@ jobs:
       - name: Pytest
         run: poetry run python -m pytest
 
-      - name: Build Notebooks
-        run: bash docs/render_nbs.bash
       - name: mkdocs
         run: poetry run python -m mkdocs build --strict
 

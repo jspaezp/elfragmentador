@@ -5,13 +5,236 @@
 ```
 
 
+# Evaluating prediction data with your own data!
+
 ```{python}
 ! elfragmentador evaluate --help
 ```
 
 
+## Example
+
+You can use several spectral library formats for compare
+the predictions from ElFragmentador with your data.
+
+In this case we will use the .peptides.txt file that mokapor uses
+as a default output!
+This also requires having the .mzML with the spectra in the same directory. (if it is not there it will try to find them in a couple of other directories).
+
+This will go over the different nces provided, find the one that matches the
+best the data provided (the first couple hundred spectra).
+Then it will use that that nce to predict all spectra in the file and compare them
+to the real one.
+It finally shows some "plots" on the performance and a csv file with
+the calculated metrics.
+
+Note that the --assure_notrain flag can be used to ignore in the similarity calculations
+all peptides that even had a chance to be in the training of the model.
+
+```log
+$ poetry run elfragmentador evaluate --input mokapot.peptides.txt.evaluation.log --nce 24,28,30,32,34,38,42 --out evaluation.csv --assure_notrain 1
+
+
+Global seed set to 2020
+2022-11-21 07:42:50.131 | INFO     | elfragmentador.cli:greeting:72 - ElFragmentador version: 0.55.0a1
+2022-11-21 07:42:50.131 | INFO     | elfragmentador.cli:setup_model:39 - Loading model from https://github.com/jspaezp/elfragmentador-modelzoo/raw/9e6ee76cde441d2459ec52418ec6f874e69f9a7b/0.55.0a2/0.55.0a2_ef_21e_4h_64_120_nel5ndl6_500_lmlp_sim01_val_l%3D0.129946_epoch%3D020.ckpt
+2022-11-21 07:42:50.159 | INFO     | elfragmentador.model:__init__:126 - num_decoder_layers 6 num_encoder_layers 5 nhid 120 d_model 64 nhead 4 dropout 0.02combined embeds True combined encoders False
+2022-11-21 07:42:50.159 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+2022-11-21 07:42:50.164 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+2022-11-21 07:42:50.167 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=6
+2022-11-21 07:42:50.171 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 174
+2022-11-21 07:42:50.172 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+2022-11-21 07:42:50.172 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+2022-11-21 07:42:50.175 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=5
+2022-11-21 07:42:50.180 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 1
+2022-11-21 07:42:50.804 | INFO     | elfragmentador.model:evaluate_landmark_rt:769 - {'polynomial': [0.010075807176896115, -0.0008703060814287248], 'determination': 0.9961272999162974}
+2022-11-21 07:42:50.820 | INFO     | elfragmentador.model:evaluate_landmark_rt:775 -
+   Prediction vs real iRT of biognosys and procal peptides
+┌────────────────────────────────────────────────────────────┐
+│                │                                        ▗▖▐│ 1
+│                │                                     ▗▖ ▗ ▝│
+│                │                                  ▖▞ ▀     │
+│                │                              ▄▄▚▖         │
+│                │                          ▄▝▖ ▘            │
+│                │                       ▗▙▝▝                │
+│                │                    ▖▝▘▘                   │
+│                │                 ▞▝  ▘                     │
+│                │             ▟▗▘                           │
+│                │        ▖ ▐▗                               │
+│                │      ▝▐                                   │
+│                │ ▗▄▝▝▝                                     │
+│▁▁▁▁▁▁▁▁▁▁▁▁▁▁▗▁▚▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁│ 0
+│            ▖ ▞ │                                           │
+│        ▗       │                                           │
+│        ▘       │                                           │
+│▖▗   ▘          │                                           │
+└────────────────────────────────────────────────────────────┘
+       -20       0      20       40       60       80      100
+2022-11-21 07:42:50.821 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:42:55.007 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:43:03.947 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:43:03.953 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:43:07.883 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:43:16.347 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:43:16.349 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:43:20.260 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:43:28.969 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:43:28.977 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:43:32.877 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:43:41.633 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:43:41.647 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:43:45.604 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:43:54.175 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:43:54.190 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:43:58.125 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:44:06.524 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:44:06.526 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:44:10.412 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+2022-11-21 07:44:18.825 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+2022-11-21 07:44:18.827 | INFO     | elfragmentador.data.predictor:screen_nce:74 - Best NCE: 30.0, with median spectral angle: 0.4119728918060316
+2022-11-21 07:44:18.827 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using <class 'ms2ml.data.adapters.mokapot.MokapotPSMAdapter'>
+2022-11-21 07:44:22.865 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+100%|██████████| 3618/3618 [00:13<00:00, 273.69it/s]
+2022-11-21 07:44:36.086 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 2790/3618 spectra
+                    Pred RT (y) vs RT (x)
+┌────────────────────────────────────────────────────────────┐
+│                                                      ▗▛▛▘ ▝│
+│                                                      █▙   ▖│ 6,000
+│                                                  ▄ ▗▟▘▝    │
+│                                             ▗ ▟▞▐▙▜█▛▘     │
+│                                         ▗▖▐▄▟██▛▛▛▘▝▝      │
+│                                    ▞ ▄▄▝▙█▞██▐ ▖           │ 4,000
+│                 ▖             ▗ ▐▟▄▟█▞▌██ ▘                │
+│             ▘             ▗▄▌▛████▀▛▀                      │
+│                      ▝ ▞▐▟█▛▟█▛▛▛▖ ▘                       │ 2,000
+│                ▗▖ ▝▙█▐███▛▛▘▝▝                             │
+│         ▖  ▖  ▄▖█▗██▛▜▀▘                                   │
+│▁▁▗▁▖▁▁▖▁▁▗▙▖██████▀▌▝▘▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁│ 0
+│   ▗▖▖ ▟▄▞▟███▀▀▝▘▘                                         │
+│  ▌▙▀▜▗█▟▛▛▀▖   ▗         ▝                                 │
+│ ▐▙███▜▘▘ ▘      ▝                                          │
+│▀▝▛▘                                                        │ -2,000
+│ ▗                                                          │
+└────────────────────────────────────────────────────────────┘
+        1,000      2,000      3,000      4,000       5,000
+               Histogram of the spectral angles
+               Median: 0.33
+               Q1: 0.22
+               Q3: 0.47
+┌────────────────────────────────────────────────────────────┐
+│  │               ▛▀▀▀▀▀▌                                   │ 80
+│  │            ▄▄▄▌     ▀▀▀▌                                │
+│  │         ▄▄▄▌           ▀▀▀▀▀▜                           │
+│  │         ▌                   ▐                           │
+│  │         ▌                   ▐                           │
+│  │         ▌                   ▐                           │
+│  │         ▌                   ▝▀▀▜                        │
+│  │      ▛▀▀▘                      ▐▄▄▄                     │
+│  │      ▌                            ▝▀▀▜                  │ 40
+│  │      ▌                               ▝▀▀▜               │
+│  │      ▌                                  ▐               │
+│  │      ▌                                  ▝▀▀▜            │
+│  │      ▌                                     ▐            │
+│  │   ▄▄▄▌                                     ▐            │
+│  │   ▌                                        ▝▀▀▜         │
+│  │▄▄▄▌                                           ▐▄▄▄      │
+│▄▄▄▌▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▐▄▄▄▄▄▄│ 0
+└────────────────────────────────────────────────────────────┘
+   0            0.2          0.4           0.6           0.8
+  Histogram of the spectral angles of only the fragment ions
+  Median: 0.85
+  Q1: 0.79
+  Q3: 0.90
+┌────────────────────────────────────────────────────────────┐
+│                                               ▐▀▀▜         │
+│                                            ▗▄▄▟  ▐         │ 200
+│                                            ▐     ▐         │
+│                                            ▐     ▐         │
+│                                            ▐     ▐         │
+│                                            ▐     ▐         │
+│                                            ▐     ▝▀▀▜      │
+│                                         ▗▄▄▟        ▐      │
+│                                         ▐           ▐      │
+│                                         ▐           ▐      │ 100
+│                                         ▐           ▐      │
+│                                         ▐           ▐      │
+│                                      ▐▀▀▀           ▐      │
+│                                      ▐              ▐      │
+│                                      ▐              ▐      │
+│                              ▄▄▄▄▄▟▀▀▀              ▐      │
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▛▀▀▙▄▄▄▄▄▌▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▐▄▄▄▄▄▄│ 0
+└────────────────────────────────────────────────────────────┘
+           0.2            0.5            0.8             1
+
+
+```
+
+
+## Predicting peptides directly from a fasta file
+
+To get the help for the function run ...
+
 ```{python}
 ! elfragmentador predict --help
+```
+
+### Example
+
+```log
+$ elfragmentador predict --fasta tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta --nce 32 --charges 2 --missed_cleavages 0 --min_length 7 --out foo.dlib
+
+Global seed set to 2020
+2022-11-26 21:39:39.072 | INFO     | elfragmentador.cli:greeting:72 - ElFragmentador version: 0.55.0a1
+2022-11-26 21:39:39.072 | INFO     | elfragmentador.cli:setup_model:39 - Loading model from https://github.com/jspaezp/elfragmentador-modelzoo/raw/9e6ee76cde441d2459ec52418ec6f874e69f9a7b/0.55.0a2/0.55.0a2_ef_21e_4h_64_120_nel5ndl6_500_lmlp_sim01_val_l%3D0.129946_epoch%3D020.ckpt
+2022-11-26 21:39:39.092 | INFO     | elfragmentador.model:__init__:126 - num_decoder_layers 6 num_encoder_layers 5 nhid 120 d_model 64 nhead 4 dropout 0.02combined embeds True combined encoders False
+2022-11-26 21:39:39.092 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+2022-11-26 21:39:39.104 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+2022-11-26 21:39:39.107 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=6
+2022-11-26 21:39:39.110 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 174
+2022-11-26 21:39:39.111 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+2022-11-26 21:39:39.111 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+2022-11-26 21:39:39.113 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=5
+2022-11-26 21:39:39.115 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 1
+2022-11-26 21:39:39.797 | INFO     | elfragmentador.model:evaluate_landmark_rt:769 - {'polynomial': [0.010075807176896115, -0.0008703060814287248], 'determination': 0.9961272999162974}
+2022-11-26 21:39:39.813 | INFO     | elfragmentador.model:evaluate_landmark_rt:775 -
+   Prediction vs real iRT of biognosys and procal peptides
+┌────────────────────────────────────────────────────────────┐
+│                │                                        ▗▖▐│ 1
+│                │                                     ▗▖ ▗ ▝│
+│                │                                  ▖▞ ▀     │
+│                │                              ▄▄▚▖         │
+│                │                          ▄▝▖ ▘            │
+│                │                       ▗▙▝▝                │
+│                │                    ▖▝▘▘                   │
+│                │                 ▞▝  ▘                     │
+│                │             ▟▗▘                           │
+│                │        ▖ ▐▗                               │
+│                │      ▝▐                                   │
+│                │ ▗▄▝▝▝                                     │
+│▁▁▁▁▁▁▁▁▁▁▁▁▁▁▗▁▚▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁│ 0
+│            ▖ ▞ │                                           │
+│        ▗       │                                           │
+│        ▘       │                                           │
+│▖▗   ▘          │                                           │
+└────────────────────────────────────────────────────────────┘
+       -20       0      20       40       60       80      100
+2022-11-26 21:39:39.816 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta using <class 'ms2ml.data.adapters.fasta.FastaAdapter'>
+2022-11-26 21:39:39.816 | INFO     | ms2ml.data.parsing.fasta:parse_file:52 - Processing file tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta, with enzyme=trypsin,  missed_cleavages=0 min_length=7 max_length=30
+2022-11-26 21:39:39.823 | INFO     | ms2ml.data.parsing.fasta:parse_file:82 - Done, 468 sequences
+2022-11-26 21:39:39.823 | INFO     | ms2ml.data.parsing.fasta:parse_file:84 - Removed 205 duplicates
+2022-11-26 21:39:39.823 | INFO     | ms2ml.data.adapters.fasta:parse:86 - Number of peptides: 468
+2022-11-26 21:39:39.824 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:228 - Setting up the adapter to keep training spectra
+
+  0%|          | 0/468 [00:00<?, ?it/s]2022-11-26 21:39:39.831 | INFO     | ms2ml.data.parsing.fasta:parse_file:52 - Processing file tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta, with enzyme=trypsin,  missed_cleavages=0 min_length=7 max_length=30
+
+ 98%|█████████▊| 457/468 [00:04<00:00, 114.90it/s]2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.fasta:parse_file:82 - Done, 468 sequences
+2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.fasta:parse_file:84 - Removed 205 duplicates
+2022-11-26 21:39:44.393 | INFO     | ms2ml.data.adapters.fasta:parse:86 - Number of peptides: 468
+
+100%|██████████| 468/468 [00:04<00:00, 102.56it/s]
+2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.encyclopedia:write_encyclopedia:182 - Finished writing EncyclopeDIA database to foo.dlib
+2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.encyclopedia:write_encyclopedia:183 - Wrote 468 spectra
+
 ```
 
 

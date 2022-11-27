@@ -1,5 +1,13 @@
 
 bin/
 data/
-results/
+**.mzML
+results/*/*/*.mzML
+results/*/*/*.txt
+results/*/*/*.pin
+results/*/*/*.ssl
+results/*/*/*config
+results/*/*/*fasta
+results/*/*params
+results/*/*/*.blib
 requirements.txt

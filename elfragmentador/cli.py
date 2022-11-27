@@ -179,15 +179,16 @@ def predict(args):
     config = dataclasses.replace(CONFIG)
     config.charges = charges
     config.peptide_length_range = (args.min_length, config.peptide_length_range[1])
-    if args.enzyme != "trypsin":
-        ValueError("Only trypsin is supported for now")
-
-    if args.missed_cleavages != 2:
-        ValueError("Only 2 missed cleavages is supported for now")
 
     predictor = Predictor(model=model)
     predictor.predict_to_file(
-        adapter=args.fasta, out_filepath=args.out, nce=args.nce, charges=charges
+        adapter=args.fasta,
+        out_filepath=args.out,
+        nce=args.nce,
+        charges=charges,
+        missed_cleavages=args.missed_cleavages,
+        enzyme=args.enzyme,
+        config=config,
     )
 
 
@@ -276,7 +277,11 @@ parser_train.set_defaults(func=train)
 
 
 def main_cli(*args):
-    args = parser.parse_args(*args)
+    args, unknownargs = parser.parse_known_args(*args)
+    if unknownargs:
+        logger.error(f"Unknown args: {unknownargs}")
+        raise ValueError(f"Unknown args: {unknownargs}")
+
     args.func(args)
 
 

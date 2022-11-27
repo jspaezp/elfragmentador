@@ -1,0 +1,63 @@
+---
+format:
+  html:
+    embed-resources: true
+    self-contained-math: true
+---
+
+
+Render Like this ...
+
+    quarto render template.qmd -P csv_file:results/PhospoTMT/mokapot/*.evaluation.csv
+
+```{python}
+#| tags: [parameters]
+csv_file = "/Users/sebastianpaez/git/elfragmentador/evaluation/results/PhospoTMT/mokapot/mokapot.peptides.txt.evaluation.csv"
+```
+
+```{python}
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import re
+from collections import defaultdict
+from pathlib import Path
+
+print(Path(csv_file).parent.parent.stem)
+
+sns.set_theme(style='dark')
+
+mod_regex = re.compile(r"\[[+0-9.]*\]")
+mod_count = defaultdict(lambda: 0)
+```
+
+```{python}
+df = pd.read_csv(csv_file)
+for x in df['peptide sequence']:
+    for y in mod_regex.findall(x):
+        mod_count[y] += 1
+mod_count = {k:v for k, v in mod_count.items() if v > 1}
+mods = list(mod_count) + [""]
+mod_count
+```
+
+```{python}
+for x in mods:
+    if x:
+        sdf = df[[x in y for y in df['peptide sequence']]]
+    else:
+        sdf = df
+        x = "Anything"
+    sns.histplot(data=sdf, x='spectral angle', bins=50)
+    plt.title(f"Peptides containing {x}")
+    plt.show()
+
+    sns.histplot(data=sdf, x='fragment spectral angle', bins=50)
+    plt.title(f"Peptides containing {x}")
+    plt.show()
+
+    sns.scatterplot(x=sdf['pred rt'], y=sdf['rt'], s=5, color="0.15")
+    sns.histplot(x=sdf['pred rt'], y=sdf['rt'], bins=50, cmap="viridis", linewidths=1, pthresh=0.01)
+    plt.title(f"Peptides containing {x}")
+    plt.show()
+```
