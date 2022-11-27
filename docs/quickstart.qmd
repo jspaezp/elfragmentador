@@ -1,0 +1,120 @@
+# Quickstart
+
+For a more detailed overview of how to use the command line, check the *CLI Reference* section of the documentation
+
+If you woul like any help/would like something implemented, feel free to open a github issue or message me :)
+
+## Installation
+
+This is currently being distributed as a pypi package, to get the latest version
+use the following ...
+
+User Install:
+
+```shell
+pip install elfragmentador
+```
+
+Development install:
+
+```shell
+git clone https://github.com/jspaezp/elfragmentador.git
+cd elfragmentador
+
+pip install /content/elfragmentador
+# or ...
+poetry install
+```
+
+## Usage
+
+### Prediction
+
+
+```shell
+$ elfragmentador predict --fasta tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta --nce 32 --charges 2 --missed_cleavages 0 --min_length 7 --out foo.dlib
+```
+
+
+### Rescoring
+
+This will add a couple of columns to a percolator input file, which can be used before you run
+it though percolator or mokapot!
+
+```shell
+elfragmentador append_pin --pin {input .pin} --out {output .pin} --nce 30.0
+```
+
+### Check performance
+
+I have implemented a way to compare the predictions of
+the model with an several spectral librariy-related files.
+The easiest one for is the mokapot .peptides.txt file after
+a comet search.
+
+```shell
+$ poetry run elfragmentador evaluate --input mokapot.peptides.txt.evaluation.log --nce 24,28,30,32,34,38,42 --out evaluation.csv --assure_notrain 1
+```
+
+#### Predict Spectra
+
+You can use it from python like so ...
+
+```python
+import elfragmentador as ef
+from elfragmentador.model import PepTransformerModel
+
+checkpoint_path = "some/path/to/a/checkpoint"
+# or
+checkpoint_path = ef.DEFAULT_CHECKPOINT
+model = PepTransformerModel.load_from_checkpoint(checkpoint_path)
+
+# Set the model as evaluation mode
+_ = model.eval()
+tensor_predictions = model.predict_from_seq("MYPEPTIDEK", charge=3, nce=27.0)
+# PredictionResults(irt=tensor([0.2022], grad_fn=<SqueezeBackward1>), spectra=tensor([0.0000e+00, ...grad_fn=<SqueezeBackward1>))
+
+# or ...
+import matplotlib.pyplot as plt
+
+spectrum_prediction = model.predict_from_seq(
+    "MYPEPTIDEK", charge=3, nce=27.0, as_spectrum=True
+)
+spectrum_prediction.plot(ax=ax)
+plt.show()
+```
+
+![](img/spectrum.png)
+
+
+### Training
+
+Training is handled by calling a training script from the shell... this would be an example.
+
+```shell
+# Be a good person and keep track of your experiments, use wandb
+$ wandb login
+```
+
+```shell
+elfragmentador_train \
+     --run_name onecycle_5e_petite_ndl4 \
+     --scheduler onecycle \
+     --max_epochs 5 \
+     --lr_ratio 25 \
+     --terminator_patience 20 \
+     --lr 0.00005 \
+     --gradient_clip_val 1.0 \
+     --dropout 0.1 \
+     --nhead 4 \
+     --nhid 512 \
+     --ninp 224 \
+     --num_decoder_layers 4 \
+     --num_encoder_layers 2 \
+     --batch_size 400 \
+     --accumulate_grad_batches 1 \
+     --precision 16 \
+     --gpus 1 \
+     --progress_bar_refresh_rate 5 \
+     --data_dir  /content/20210217-traindata
+```
