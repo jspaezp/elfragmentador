@@ -12,7 +12,7 @@ from ms2ml import AnnotatedPeptideSpectrum, Peptide
 from ms2ml.data.adapters import BaseAdapter, read_data
 from ms2ml.data.parsing.encyclopedia import write_encyclopedia
 from ms2ml.metrics.base import spectral_angle
-from ms2ml.utils import allign_intensities
+from ms2ml.utils.mz_utils import allign_intensities
 from tqdm.auto import tqdm
 
 from elfragmentador.config import CONFIG
