@@ -112,6 +112,7 @@ class DeTensorizer:
 
     @classmethod
     def make_spectrum(cls, seq, mod, charge, fragment_vector, irt):
+        # TODO add option to pass the peptide so it does not have to be reconstructed
         fragment_vector = torch.relu(fragment_vector) / fragment_vector.max()
         fragment_vector = fragment_vector.clone().detach().cpu().numpy().squeeze()
         spec = AnnotatedPeptideSpectrum.decode_fragments(
@@ -127,6 +128,9 @@ class DeTensorizer:
             )
             cls.warned_once_rt = True
         spec.retention_time = RetentionTime(float(irt) * 100 * 60, "s")
+        spec = spec.normalize_intensity(method="max")
+        spec.intensity = spec.intensity * 1000
+        spec = spec.intensity_cutoff(0.99)
         return spec
 
     @classmethod

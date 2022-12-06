@@ -1,7 +1,13 @@
+import pytorch_lightning as pl
+from flaky import flaky
+
 from elfragmentador.data.predictor import Predictor
 from elfragmentador.model import PepTransformerModel
 
+pl.seed_everything(420)
 
+
+@flaky(max_runs=6, min_passes=2)
 def test_prediction_loop(shared_datadir, tmpdir):
     fasta_file = shared_datadir / "fasta/P0DTC4.fasta"
     out_dlib = tmpdir / "out.dlib"

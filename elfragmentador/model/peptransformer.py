@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import torch
 import torch.nn as nn
 from loguru import logger
 from ms2ml import AnnotatedPeptideSpectrum
@@ -109,6 +110,7 @@ class PepTransformerBase(nn.Module):
 
         return PredictionResults(irt=rt_output, spectra=spectra_output)
 
+    @torch.no_grad()
     def predict_from_seq(
         self,
         seq: str,
@@ -151,8 +153,7 @@ class PepTransformerBase(nn.Module):
             >>> my_model = PepTransformerBase(num_fragments=CONFIG.num_fragment_embeddings) # Or load the model from a checkpoint
             >>> _ = my_model.eval()
             >>> my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27)
-            PredictionResults(irt=tensor(..., grad_fn=<PermuteBackward0>), \
-            spectra=tensor([...], grad_fn=<PermuteBackward0>))
+            PredictionResults(irt=tensor(...), spectra=tensor([...]))
             >>> out = my_model.predict_from_seq("MYPEPT[U:21]IDEK/3", 27, \
             as_spectrum=True)
             >>> type(out)
@@ -172,7 +173,7 @@ class PepTransformerBase(nn.Module):
                 seq=in_batch.seq,
                 mod=in_batch.mods,
                 charge=in_batch.charge,
-                fragment_vector=out.spectra,
+                fragment_vector=out.spectra * 100,
                 irt=out.irt,
             )
             out = spec

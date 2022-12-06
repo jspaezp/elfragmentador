@@ -60,7 +60,10 @@ $ poetry run elfragmentador evaluate --input mokapot.peptides.txt.evaluation.log
 
 You can use it from python like so ...
 
-```python
+... Note: The main branch right now has a problem where spectrum plotting (exporting to spectrum_utils is broken)
+
+```{python}
+import torch
 import elfragmentador as ef
 from elfragmentador.model import PepTransformerModel
 
@@ -71,16 +74,22 @@ model = PepTransformerModel.load_from_checkpoint(checkpoint_path)
 
 # Set the model as evaluation mode
 _ = model.eval()
-tensor_predictions = model.predict_from_seq("MYPEPTIDEK", charge=3, nce=27.0)
+
+with torch.no_grad():
+    tensor_predictions = model.predict_from_seq("MYPEPTIDEK/2", nce=27.0)
 # PredictionResults(irt=tensor([0.2022], grad_fn=<SqueezeBackward1>), spectra=tensor([0.0000e+00, ...grad_fn=<SqueezeBackward1>))
 
 # or ...
 import matplotlib.pyplot as plt
 
 spectrum_prediction = model.predict_from_seq(
-    "MYPEPTIDEK", charge=3, nce=27.0, as_spectrum=True
+    "MYPEPTIDEK/3", nce=27.0, as_spectrum=True
 )
-spectrum_prediction.plot(ax=ax)
+
+spectrum_prediction = model.predict_from_seq(
+    "AAESLQRAEATNAELER/2", nce=30.0, as_spectrum=True
+)
+spectrum_prediction.plot()
 plt.show()
 ```
 
