@@ -1,6 +1,7 @@
 import sys
 
 import numpy as np
+import pytest
 from loguru import logger
 from ms2ml.data.adapters import MSPAdapter
 
@@ -10,12 +11,17 @@ from elfragmentador.data.converter import DeTensorizer, Tensorizer
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
-speclist = list(
-    MSPAdapter(
-        config=CONFIG,
-        file="/Users/sebastianpaez/Downloads/FTMS_HCD_20_annotated_2019-11-12_filtered.msp",
-    ).parse()
-)
+
+@pytest.fixture
+def speclist(shared_datadir):
+    file = shared_datadir / "FTMS_HCD_20_annotated_2019-11-12_filtered.msp"
+    speclist = list(
+        MSPAdapter(
+            config=CONFIG,
+            file=str(file),
+        ).parse()
+    )
+    return speclist
 
 
 def back_and_forth(spec):
@@ -34,19 +40,20 @@ def back_and_forth(spec):
     return spec
 
 
-for spec in speclist:
-    spec = speclist[0].normalize_intensity()
-    round1 = back_and_forth(spec)
-    round2 = back_and_forth(round1)
+def test_back_and_forth(speclist):
+    for spec in speclist:
+        spec = speclist[0].normalize_intensity()
+        round1 = back_and_forth(spec)
+        round2 = back_and_forth(round1)
 
-    assert np.allclose(round1.mz, round2.mz)
-    assert len(round1.fragment_intensities) > 5
+        assert np.allclose(round1.mz, round2.mz)
+        assert len(round1.fragment_intensities) > 5
 
-    all_ints = np.array(
-        [(spec[x], round1[x], round2[x]) for x in round1.fragment_intensities]
-    )
-    all_ints = all_ints / all_ints.max(axis=0)
+        all_ints = np.array(
+            [(spec[x], round1[x], round2[x]) for x in round1.fragment_intensities]
+        )
+        all_ints = all_ints / all_ints.max(axis=0)
 
-    assert np.allclose(
-        np.min(all_ints, axis=1), np.max(all_ints, axis=1)
-    ), spec.precursor_peptide.to_proforma()
+        assert np.allclose(
+            np.min(all_ints, axis=1), np.max(all_ints, axis=1)
+        ), spec.precursor_peptide.to_proforma()
