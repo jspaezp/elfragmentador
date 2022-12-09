@@ -81,7 +81,7 @@ jobs:
 
       # Package Setup
       - name: Install deps
-        run: poetry install -n -v --all-extras
+        run: poetry install -n -v --with=plotting,dev,docs 
 
       # CI checks
       - name: Pytest
