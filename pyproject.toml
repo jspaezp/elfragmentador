@@ -30,26 +30,21 @@ ms2ml = ">=0.0.29"
 loguru = "^0.6.0"
 networkx = "^2.8.8"
 
-
 [tool.poetry.group.plotting.dependencies]
-networkx = "^2.5"
+networkx = "^2.8.8"
 spectrum-utils = "^0.4.1"
 llvmlite = { version = "^0.39", python = "<3.11" }
 
 [tool.poetry.group.dev.dependencies]
-autoflake = "^1.5.3"
-black = {extras = ["jupyter"], version = "^22.8.0"}
-isort = "^5.10.1"
-pydocstringformatter = "^0.7.2"
 pytest = "^6.2.1"
+flaky = "^3.7.0"
 pytest-benchmark = "^3.2.3"
 pytest-cov = "^4.0.0"
 pytest-datadir = "^1.3.1"
-pyupgrade = "^2.37.3"
 pytest-doctestplus = "^0.12.0"
 
 [tool.poetry.group.checks.dependencies]
-black = {extras = ["jupyter"], version = "^22.8.0"}
+black = {extras = ["jupyter"], version = "^22.10.0"}
 isort = "^5.10.1"
 ruff = "^0.0.46"
 
@@ -76,13 +71,10 @@ pyteomics = "^4.4.1"
 ipykernel = "^5.4.3"
 seaborn = "^0.11.0"
 matplotlib = "^3.3.0"
-mokapot = "^0.7.3"
+mokapot = "^0.9.0"
 bayesian-optimization = "^1.2.0"
 pytest-doctestplus = "^0.12.0"
 
-
-[tool.poetry.group.test.dependencies]
-flaky = "^3.7.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

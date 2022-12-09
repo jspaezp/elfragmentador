@@ -160,18 +160,6 @@ tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900
 tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
 
 [[package]]
-name = "autoflake"
-version = "1.7.8"
-description = "Removes unused imports and unused variables"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-pyflakes = ">=1.1.0,<3"
-tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
-
-[[package]]
 name = "backcall"
 version = "0.2.0"
 description = "Specifications for callback functions passed in to an API"
@@ -1180,20 +1168,21 @@ pytest-cov = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "mokapot"
-version = "0.7.4"
+version = "0.9.0"
 description = "Fast and flexible semi-supervised learning for peptide detection"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
+joblib = ">=1.1.0"
 lxml = ">=4.6.2"
 matplotlib = ">=3.1.3"
 numba = ">=0.48.0"
 numpy = ">=1.18.1"
 pandas = ">=1.0.3"
 scikit-learn = ">=0.22.1"
-triqler = ">=0.3.0"
+triqler = ">=0.6.2"
 
 [package.extras]
 dev = ["black (>=19.10b0)", "pre-commit (>=2.7.1)"]
@@ -1718,25 +1707,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
-name = "pydocstringformatter"
-version = "0.7.2"
-description = "A tool to automatically format Python docstrings that tries to follow recommendations from PEP 8 and PEP 257."
-category = "dev"
-optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
-
-[[package]]
-name = "pyflakes"
-version = "2.5.0"
-description = "passive checker of Python programs"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
 name = "pygments"
 version = "2.13.0"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -1935,17 +1905,6 @@ description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "pyupgrade"
-version = "2.38.4"
-description = "A tool to automatically upgrade syntax for newer versions."
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-tokenize-rt = "<5"
 
 [[package]]
 name = "pywin32"
@@ -2407,11 +2366,11 @@ test = ["flake8", "isort", "pytest"]
 
 [[package]]
 name = "tokenize-rt"
-version = "4.2.1"
+version = "5.0.0"
 description = "A wrapper around the stdlib `tokenize` which roundtrips."
 category = "dev"
 optional = false
-python-versions = ">=3.6.1"
+python-versions = ">=3.7"
 
 [[package]]
 name = "toml"
@@ -2708,7 +2667,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "5b6035df290f614fcdb83b6e86af8f4523669d2b2dc5f46cccc4639971af5c28"
+content-hash = "fa0c90cdba428eef7648ac11edc061f8ebd3ab77c439270922dc151551ab0fd2"
 
 [metadata.files]
 aiohttp = [
@@ -2865,10 +2824,6 @@ atomicwrites = [
 attrs = [
     {file = "attrs-22.1.0-py2.py3-none-any.whl", hash = "sha256:86efa402f67bf2df34f51a335487cf46b1ec130d02b8d39fd248abfd30da551c"},
     {file = "attrs-22.1.0.tar.gz", hash = "sha256:29adc2665447e5191d0e7c568fde78b21f9672d344281d0c6e1ab085429b22b6"},
-]
-autoflake = [
-    {file = "autoflake-1.7.8-py3-none-any.whl", hash = "sha256:46373ef69b6714f5064c923bb28bd797c4f8a9497f557d87fc36665c6d956b39"},
-    {file = "autoflake-1.7.8.tar.gz", hash = "sha256:e7e46372dee46fa1c97acf310d99d922b63d369718a270809d7c278d34a194cf"},
 ]
 backcall = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
@@ -3765,8 +3720,8 @@ mkquartodocs = [
     {file = "mkquartodocs-0.5.7.tar.gz", hash = "sha256:4f6c989da307fd2fc91a56f421d23cfbd9c1ece15d9f4a57c06c222936976323"},
 ]
 mokapot = [
-    {file = "mokapot-0.7.4-py3-none-any.whl", hash = "sha256:36b1b11e81aaba8f4db58a262b7f11ad548b182144b84038ef4897e17679b44e"},
-    {file = "mokapot-0.7.4.tar.gz", hash = "sha256:759d49141b4078a5728b1d238867afc5f5788bb36cad852882b19a2a75cec87d"},
+    {file = "mokapot-0.9.0-py3-none-any.whl", hash = "sha256:b144b76685392d4b2f53e2029eac97967db27044b8f64d5eb4eabf571dae5ff0"},
+    {file = "mokapot-0.9.0.tar.gz", hash = "sha256:a8603bbab2f1e83e502262a25e93f71556c7ac4e99109cea066ca3dc7d6153df"},
 ]
 ms2ml = [
     {file = "ms2ml-0.0.29-py3-none-any.whl", hash = "sha256:babefecf0029188af98b23295a27d9af038ab735ba4fdfd3bc05bea4252e1d70"},
@@ -4184,14 +4139,6 @@ pycparser = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
 ]
-pydocstringformatter = [
-    {file = "pydocstringformatter-0.7.2-py3-none-any.whl", hash = "sha256:91e958da895c18e0b9b17e00842902c5922dd26b4fb7cd1a6ab39f655614d87f"},
-    {file = "pydocstringformatter-0.7.2.tar.gz", hash = "sha256:9309049697d5f3e0b4a0a8f7b51496a9ead04f16b78276368695d3ff7a95ebb0"},
-]
-pyflakes = [
-    {file = "pyflakes-2.5.0-py2.py3-none-any.whl", hash = "sha256:4579f67d887f804e67edb544428f264b7b24f435b263c4614f384135cea553d2"},
-    {file = "pyflakes-2.5.0.tar.gz", hash = "sha256:491feb020dca48ccc562a8c0cbe8df07ee13078df59813b83959cbdada312ea3"},
-]
 pygments = [
     {file = "Pygments-2.13.0-py3-none-any.whl", hash = "sha256:f643f331ab57ba3c9d89212ee4a2dabc6e94f117cf4eefde99a0574720d14c42"},
     {file = "Pygments-2.13.0.tar.gz", hash = "sha256:56a8508ae95f98e2b9bdf93a6be5ae3f7d8af858b43e02c5a2ff083726be40c1"},
@@ -4267,10 +4214,6 @@ pytorch-lightning = [
 pytz = [
     {file = "pytz-2022.6-py2.py3-none-any.whl", hash = "sha256:222439474e9c98fced559f1709d89e6c9cbf8d79c794ff3eb9f8800064291427"},
     {file = "pytz-2022.6.tar.gz", hash = "sha256:e89512406b793ca39f5971bc999cc538ce125c0e51c27941bef4568b460095e2"},
-]
-pyupgrade = [
-    {file = "pyupgrade-2.38.4-py2.py3-none-any.whl", hash = "sha256:944ff993c396ddc2b9012eb3de4cda138eb4c149b22c6c560d4c8bfd0e180982"},
-    {file = "pyupgrade-2.38.4.tar.gz", hash = "sha256:1eb43a49f416752929741ba4d706bf3f33593d3cac9bdc217fc1ef55c047c1f4"},
 ]
 pywin32 = [
     {file = "pywin32-305-cp310-cp310-win32.whl", hash = "sha256:421f6cd86e84bbb696d54563c48014b12a23ef95a14e0bdba526be756d89f116"},
@@ -4684,8 +4627,8 @@ tinycss2 = [
     {file = "tinycss2-1.2.1.tar.gz", hash = "sha256:8cff3a8f066c2ec677c06dbc7b45619804a6938478d9d73c284b29d14ecb0627"},
 ]
 tokenize-rt = [
-    {file = "tokenize_rt-4.2.1-py2.py3-none-any.whl", hash = "sha256:08a27fa032a81cf45e8858d0ac706004fcd523e8463415ddf1442be38e204ea8"},
-    {file = "tokenize_rt-4.2.1.tar.gz", hash = "sha256:0d4f69026fed520f8a1e0103aa36c406ef4661417f20ca643f913e33531b3b94"},
+    {file = "tokenize_rt-5.0.0-py2.py3-none-any.whl", hash = "sha256:c67772c662c6b3dc65edf66808577968fb10badfc2042e3027196bed4daf9e5a"},
+    {file = "tokenize_rt-5.0.0.tar.gz", hash = "sha256:3160bc0c3e8491312d0485171dea861fc160a240f5f5766b72a1165408d10740"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

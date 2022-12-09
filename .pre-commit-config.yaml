@@ -8,14 +8,9 @@ repos:
   - id: end-of-file-fixer
     exclude: ".*.svg"
   - id: trailing-whitespace
-- repo: https://github.com/asottile/pyupgrade
-  rev: v3.2.3
-  hooks:
-  - id: pyupgrade
-- repo: https://github.com/PyCQA/autoflake
-  rev: v2.0.0
-  hooks:
-  - id: autoflake
+  - id: check-toml
+  - id: end-of-file-fixer
+  - id: detect-private-key
 - repo: https://github.com/charliermarsh/ruff-pre-commit
   rev: v0.0.146
   hooks:
@@ -26,6 +21,11 @@ repos:
   hooks:
     - id: black
       language_version: python3.9
+- repo: https://github.com/pycqa/isort
+  rev: 5.10.1
+  hooks:
+    - id: isort
+      name: isort (python)
 - repo: https://github.com/python-poetry/poetry
   rev: 1.2.2  # add version here
   hooks:
@@ -35,12 +35,6 @@ repos:
       args: ["-f", "requirements.txt", "-o", "requirements.txt"]
 - repo: local
   hooks:
-  - id: isort
-    name: isort
-    entry: poetry run isort .
-    language: system
-    always_run: true
-    pass_filenames: false
   - id: pytest
     name: pytest-check
     entry: poetry run python -m pytest -x
