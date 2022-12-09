@@ -283,8 +283,9 @@ class AASequenceEmbedding(torch.nn.Module):
              'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y',
              'c_term', 'n_term']
             >>> list(mod_embed)
-            [None, '[U:4]', '[U:35]', '[U:21]', '[U:121]', '[U:737]', '[U:1]',
-             '[U:34]', '[U:36]', '[U:37]', '[U:354]', '[U:7]', '__unknown1__']
+            [None, '[UNIMOD:4]', '[UNIMOD:35]', '[UNIMOD:21]', '[UNIMOD:121]',
+            '[UNIMOD:737]', '[UNIMOD:1]', '[UNIMOD:34]', '[UNIMOD:36]',
+            '[UNIMOD:37]', '[UNIMOD:354]', '[UNIMOD:7]', '__unknown1__']
         """
         df_aa = pd.DataFrame(data=self.aa_encoder.weight.detach().numpy().T)
         df_aa.columns = self.aa_names

@@ -162,6 +162,12 @@ def add_predict_parser_args(parser):
         "--min_length", type=int, help="Minimum peptide length to consider", default=5
     )
     parser.add_argument(
+        "--min_mz", type=float, help="Minimum precursor mz to use", default=399.5
+    )
+    parser.add_argument(
+        "--max_mz", type=float, help="Maximum precursor mz to use", default=1000.5
+    )
+    parser.add_argument(
         "--out",
         type=str,
         help="Output .dlib file",
@@ -179,6 +185,7 @@ def predict(args):
     config = dataclasses.replace(CONFIG)
     config.charges = charges
     config.peptide_length_range = (args.min_length, config.peptide_length_range[1])
+    config.peptide_mz_range = (args.min_mz, args.max_mz)
 
     predictor = Predictor(model=model)
     predictor.predict_to_file(

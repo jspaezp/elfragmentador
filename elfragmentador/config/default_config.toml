@@ -114,17 +114,17 @@ encoding_aa_order = [
 # Deamidation [7]
 encoding_mod_order = [
     "__NONE__",
-    "[U:4]",
-    "[U:35]",
-    "[U:21]",
-    "[U:121]",
-    "[U:737]",
-    "[U:1]",
-    "[U:34]",
-    "[U:36]",
-    "[U:37]",
-    "[U:354]",
-    "[U:7]",
+    "[UNIMOD:4]",
+    "[UNIMOD:35]",
+    "[UNIMOD:21]",
+    "[UNIMOD:121]",
+    "[UNIMOD:737]",
+    "[UNIMOD:1]",
+    "[UNIMOD:34]",
+    "[UNIMOD:36]",
+    "[UNIMOD:37]",
+    "[UNIMOD:354]",
+    "[UNIMOD:7]",
     "__unknown1__",
 ]
 encoding_spec_bin_start = 0.0
@@ -135,24 +135,24 @@ encoding_spec_bin_relative = false
 encoding_spec_bin_offset = 0.0
 
 [encoding_mod_alias]
-Phospho = "[U:21]"
-TMT6plex = "[U:737]"
-TMT10plex = "[U:737]"
-Deamidation = "[U:7]"
-Acetyl = "[U:1]"
-Oxidation = "[U:35]"
-Hydroxilation = "[U:35]"
-Trimethyl = "[U:37]"
-Methyl = "[U:34]"
-Dimethyl = "[U:36]"
-GG = "[U:121]"
-Nitro = "[U:354]"
-"+57.021464" = "[U:4]"
-"15.9949" = "[U:35]"
-"+15.9949" = "[U:35]"
-"+16" = "[U:35]"
-"+42.0106" = "[U:1]"
-"42.0106" = "[U:1]"
-"229.1629" = "[U:737]"
-"114.0429" = "[U:121]"
-"79.9663" = "[U:21]"
+Phospho = "[UNIMOD:21]"
+TMT6plex = "[UNIMOD:737]"
+TMT10plex = "[UNIMOD:737]"
+Deamidation = "[UNIMOD:7]"
+Acetyl = "[UNIMOD:1]"
+Oxidation = "[UNIMOD:35]"
+Hydroxilation = "[UNIMOD:35]"
+Trimethyl = "[UNIMOD:37]"
+Methyl = "[UNIMOD:34]"
+Dimethyl = "[UNIMOD:36]"
+GG = "[UNIMOD:121]"
+Nitro = "[UNIMOD:354]"
+"+57.021464" = "[UNIMOD:4]"
+"15.9949" = "[UNIMOD:35]"
+"+15.9949" = "[UNIMOD:35]"
+"+16" = "[UNIMOD:35]"
+"+42.0106" = "[UNIMOD:1]"
+"42.0106" = "[UNIMOD:1]"
+"229.1629" = "[UNIMOD:737]"
+"114.0429" = "[UNIMOD:121]"
+"79.9663" = "[UNIMOD:21]"
