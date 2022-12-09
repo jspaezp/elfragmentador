@@ -113,8 +113,6 @@ colorama==0.4.6 ; python_version >= "3.9" and python_version < "3.11" and sys_pl
 docker-pycreds==0.4.0 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:6ce3270bcaf404cc4c3e27e4b6c70d3521deae82fb508767870fdbf772d584d4 \
     --hash=sha256:7266112468627868005106ec19cd0d722702d2b7d5912a28e19b826c3d37af49
-fire==0.4.0 ; python_version >= "3.9" and python_version < "3.11" \
-    --hash=sha256:c5e2b8763699d1142393a46d0e3e790c5eb2f0706082df8f647878842c216a62
 frozenlist==1.3.3 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:008a054b75d77c995ea26629ab3a0c0d7281341f2fa7e1e85fa6153ae29ae99c \
     --hash=sha256:02c9ac843e3390826a265e331105efeab489ffaf4dd86384595ee8ce6d35ae7f \
@@ -266,9 +264,9 @@ idna==3.4 ; python_version >= "3.9" and python_version < "3.11" \
 lark==1.1.5 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:4b534eae1f9af5b4ea000bea95776350befe1981658eea3820a01c37e504bb4d \
     --hash=sha256:8476f9903e93fbde4f6c327f74d79e9b4bd0ed9294c5dfa3164ab8c581b5de2a
-lightning-utilities==0.3.0 ; python_version >= "3.9" and python_version < "3.11" \
-    --hash=sha256:1ae9bdd8f1be3c81b1ac4820f6eeddcbafcc2505c57a5940054466f4763bc22d \
-    --hash=sha256:d769ab9b76ebdee3243d1051d509aafee57d7947734ddc22977deef8a6427f2f
+lightning-utilities==0.4.2 ; python_version >= "3.9" and python_version < "3.11" \
+    --hash=sha256:397fd573b406408e9d3d376b2b728dba44b0517dd487401a3117f96e434d0afc \
+    --hash=sha256:dc6696ab180117f7e97b5488dac1d77765ab891022f7521a97a39e10d362bdb8
 llvmlite==0.39.1 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:03aee0ccd81735696474dc4f8b6be60774892a2929d6c05d093d17392c237f32 \
     --hash=sha256:1578f5000fdce513712e99543c50e93758a954297575610f48cb1fd71b27c08a \
@@ -625,9 +623,9 @@ pyteomics==4.5.6 ; python_version >= "3.9" and python_version < "3.11" \
 python-dateutil==2.8.2 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86 \
     --hash=sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9
-pytorch-lightning==1.8.3.post1 ; python_version >= "3.9" and python_version < "3.11" \
-    --hash=sha256:2b04cdb876f4e8749161510712b22081dab8db3e6548530608680a415844b6e3 \
-    --hash=sha256:4a1804d55c3aa675a2dd21ee17282cad0bc703dfeace70e75dc956f1faf31411
+pytorch-lightning==1.8.4 ; python_version >= "3.9" and python_version < "3.11" \
+    --hash=sha256:9ef0af4c02f20c46572168f6a64c0b6bc18a7a065a5943d430e1d4aaf9a69e91 \
+    --hash=sha256:c2771f966fc1b909cdfd1d603a87b8c84a3d5ff7aacf35b2c0260f697ec0c8be
 pytz==2022.6 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:222439474e9c98fced559f1709d89e6c9cbf8d79c794ff3eb9f8800064291427 \
     --hash=sha256:e89512406b793ca39f5971bc999cc538ce125c0e51c27941bef4568b460095e2
@@ -796,9 +794,6 @@ sqlalchemy==1.4.44 ; python_version >= "3.9" and python_version < "3.11" \
 tensorboardx==2.5.1 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:8808133ccca673cd04076f6f2a85cf2d39bb2d0393a0f20d0f9cbb06d472b57e \
     --hash=sha256:ea85a3446f22ce8a917fe4fa4d8a7a96222ef84ac835267d038c34bb99f6d61b
-termcolor==2.1.1 ; python_version >= "3.9" and python_version < "3.11" \
-    --hash=sha256:67cee2009adc6449c650f6bcf3bdeed00c8ba53a8cda5362733c53e0a39fb70b \
-    --hash=sha256:fa852e957f97252205e105dd55bbc23b419a70fec0085708fc0515e399f304fd
 tomli-w==1.0.0 ; python_version >= "3.9" and python_version < "3.11" \
     --hash=sha256:9f2a07e8be30a0729e533ec968016807069991ae2fd921a78d42f429ae5f4463 \
     --hash=sha256:f463434305e0336248cac9c2dc8076b707d8a12d019dd349f5c1e382dd1ae1b9
