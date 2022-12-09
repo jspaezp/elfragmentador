@@ -44,7 +44,7 @@ pytest-datadir = "^1.3.1"
 pytest-doctestplus = "^0.12.0"
 
 [tool.poetry.group.checks.dependencies]
-black = {extras = ["jupyter"], version = "^22.10.0"}
+black = {extras = ["jupyter"], version = "^22.1.0"}
 isort = "^5.10.1"
 ruff = "^0.0.46"
 
