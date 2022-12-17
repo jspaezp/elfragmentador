@@ -173,7 +173,7 @@ class PepTransformerBase(nn.Module):
                 seq=in_batch.seq,
                 mod=in_batch.mods,
                 charge=in_batch.charge,
-                fragment_vector=out.spectra * 100,
+                fragment_vector=out.spectra,
                 irt=out.irt,
             )
             out = spec

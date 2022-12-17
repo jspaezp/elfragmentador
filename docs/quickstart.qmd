@@ -63,9 +63,15 @@ You can use it from python like so ...
 ... Note: The main branch right now has a problem where spectrum plotting (exporting to spectrum_utils is broken)
 
 ```{python}
+import sys
 import torch
 import elfragmentador as ef
 from elfragmentador.model import PepTransformerModel
+
+from loguru import logger
+
+logger.remove()
+logger.add(sys.stderr, level="INFO")
 
 checkpoint_path = "some/path/to/a/checkpoint"
 # or
@@ -92,8 +98,6 @@ spectrum_prediction = model.predict_from_seq(
 spectrum_prediction.plot()
 plt.show()
 ```
-
-![](img/spectrum.png)
 
 
 ### Training
