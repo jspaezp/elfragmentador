@@ -1,0 +1,1068 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-8.5.10">
+    
+    
+      
+        <title>Usage of the multiple command line interface options ... - ElFragmentador Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.975780f9.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+
+  <script id="__analytics">function __md_analytics(){function n(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],n("js",new Date),n("config","G-QKEQ9R2MR7"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&n("event","search",{search_term:this.value})}),document$.subscribe(function(){var a=document.forms.feedback;if(void 0!==a)for(var e of a.querySelectorAll("[type=submit]"))e.addEventListener("click",function(e){e.preventDefault();var t=document.location.pathname,e=this.getAttribute("data-md-value");n("event","feedback",{page:t,data:e}),a.firstElementChild.disabled=!0;e=a.querySelector(".md-feedback__note [data-md-value='"+e+"']");e&&(e.hidden=!1)}),a.hidden=!1}),location$.subscribe(function(e){n("config","G-QKEQ9R2MR7",{page_path:e.pathname})})});var e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-QKEQ9R2MR7",document.getElementById("__analytics").insertAdjacentElement("afterEnd",e)}</script>
+
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="None" data-md-color-accent="None">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#usage-of-the-multiple-command-line-interface-options" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ElFragmentador Documentation" class="md-header__button md-logo" aria-label="ElFragmentador Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ElFragmentador Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Usage of the multiple command line interface options ...
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ElFragmentador Documentation" class="md-nav__button md-logo" aria-label="ElFragmentador Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    ElFragmentador Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        Quickstart
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          API reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          API reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../API%20reference/PepTransformerModel/" class="md-nav__link">
+        PepTransformerModel
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          CLI reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="CLI reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          CLI reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Usage of the multiple command line interface options ...
+      </a>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="usage-of-the-multiple-command-line-interface-options">Usage of the multiple command line interface options ...</h1>
+<div class="cell-code highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="err">!</span> <span class="n">elfragmentador</span> <span class="n">append_pin</span> <span class="o">--</span><span class="n">help</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">output</p>
+<p>usage: elfragmentador append_pin [-h] [--pin PIN] [--nce NCE]
+                                 [--rawfile_locations RAWFILE_LOCATIONS]
+                                 [--out OUT]
+                                 [--model_checkpoint MODEL_CHECKPOINT]
+                                 [--threads THREADS]</p>
+<p>options:
+  -h, --help            show this help message and exit
+  --pin PIN             Input percolator file
+  --nce NCE             Collision energy to use for the prediction
+  --rawfile_locations RAWFILE_LOCATIONS
+                        Locations to look for the raw files
+  --out OUT             Input percolator file
+  --model_checkpoint MODEL_CHECKPOINT
+                        Model checkpoint to use for the prediction, if nothing
+                        is passed will download a pretrained model
+  --threads THREADS     Number of threads to use during inference</p>
+</div>
+<h1 id="evaluating-prediction-data-with-your-own-data">Evaluating prediction data with your own data!</h1>
+<div class="cell-code highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="err">!</span> <span class="n">elfragmentador</span> <span class="n">evaluate</span> <span class="o">--</span><span class="n">help</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">output</p>
+<p>usage: elfragmentador evaluate [-h] [--input INPUT] [--nce NCE] [--out OUT]
+                               [--assure_notrain ASSURE_NOTRAIN]
+                               [--model_checkpoint MODEL_CHECKPOINT]
+                               [--threads THREADS]</p>
+<p>options:
+  -h, --help            show this help message and exit
+  --input INPUT         Path to a file to use as a reference for the
+                        evaluation (.sptxt generally)
+  --nce NCE             Comma delimited series of collision energies to use
+  --out OUT             csv file to output results to
+  --assure_notrain ASSURE_NOTRAIN
+                        Whether to remove all sequences that could be assigned
+                        to the training set
+  --model_checkpoint MODEL_CHECKPOINT
+                        Model checkpoint to use for the prediction, if nothing
+                        is passed will download a pretrained model
+  --threads THREADS     Number of threads to use during inference</p>
+</div>
+<h2 id="example">Example</h2>
+<p>You can use several spectral library formats for compare the predictions
+from ElFragmentador with your data.</p>
+<p>In this case we will use the .peptides.txt file that mokapor uses as a
+default output! This also requires having the .mzML with the spectra in
+the same directory. (if it is not there it will try to find them in a
+couple of other directories).</p>
+<p>This will go over the different nces provided, find the one that matches
+the best the data provided (the first couple hundred spectra). Then it
+will use that that nce to predict all spectra in the file and compare
+them to the real one. It finally shows some "plots" on the performance
+and a csv file with the calculated metrics.</p>
+<p>Note that the --assure_notrain flag can be used to ignore in the
+similarity calculations all peptides that even had a chance to be in the
+training of the model.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ poetry run elfragmentador evaluate --input mokapot.peptides.txt.evaluation.log --nce 24,28,30,32,34,38,42 --out evaluation.csv --assure_notrain 1
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Global seed set to 2020
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>2022-11-21 07:42:50.131 | INFO     | elfragmentador.cli:greeting:72 - ElFragmentador version: 0.55.0a1
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>2022-11-21 07:42:50.131 | INFO     | elfragmentador.cli:setup_model:39 - Loading model from https://github.com/jspaezp/elfragmentador-modelzoo/raw/9e6ee76cde441d2459ec52418ec6f874e69f9a7b/0.55.0a2/0.55.0a2_ef_21e_4h_64_120_nel5ndl6_500_lmlp_sim01_val_l%3D0.129946_epoch%3D020.ckpt
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>2022-11-21 07:42:50.159 | INFO     | elfragmentador.model:__init__:126 - num_decoder_layers 6 num_encoder_layers 5 nhid 120 d_model 64 nhead 4 dropout 0.02combined embeds True combined encoders False
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>2022-11-21 07:42:50.159 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>2022-11-21 07:42:50.164 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>2022-11-21 07:42:50.167 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=6
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>2022-11-21 07:42:50.171 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 174
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>2022-11-21 07:42:50.172 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>2022-11-21 07:42:50.172 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>2022-11-21 07:42:50.175 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=5
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>2022-11-21 07:42:50.180 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 1
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>2022-11-21 07:42:50.804 | INFO     | elfragmentador.model:evaluate_landmark_rt:769 - {&#39;polynomial&#39;: [0.010075807176896115, -0.0008703060814287248], &#39;determination&#39;: 0.9961272999162974}
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>2022-11-21 07:42:50.820 | INFO     | elfragmentador.model:evaluate_landmark_rt:775 -
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>   Prediction vs real iRT of biognosys and procal peptides
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>┌────────────────────────────────────────────────────────────┐
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>│                │                                        ▗▖▐│ 1
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>│                │                                     ▗▖ ▗ ▝│
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>│                │                                  ▖▞ ▀     │
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>│                │                              ▄▄▚▖         │
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>│                │                          ▄▝▖ ▘            │
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>│                │                       ▗▙▝▝                │
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>│                │                    ▖▝▘▘                   │
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>│                │                 ▞▝  ▘                     │
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>│                │             ▟▗▘                           │
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>│                │        ▖ ▐▗                               │
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>│                │      ▝▐                                   │
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>│                │ ▗▄▝▝▝                                     │
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>│▁▁▁▁▁▁▁▁▁▁▁▁▁▁▗▁▚▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁│ 0
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>│            ▖ ▞ │                                           │
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>│        ▗       │                                           │
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>│        ▘       │                                           │
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>│▖▗   ▘          │                                           │
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>└────────────────────────────────────────────────────────────┘
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>       -20       0      20       40       60       80      100
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>2022-11-21 07:42:50.821 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>2022-11-21 07:42:55.007 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>2022-11-21 07:43:03.947 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>2022-11-21 07:43:03.953 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>2022-11-21 07:43:07.883 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>2022-11-21 07:43:16.347 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>2022-11-21 07:43:16.349 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>2022-11-21 07:43:20.260 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>2022-11-21 07:43:28.969 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>2022-11-21 07:43:28.977 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>2022-11-21 07:43:32.877 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>2022-11-21 07:43:41.633 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>2022-11-21 07:43:41.647 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>2022-11-21 07:43:45.604 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>2022-11-21 07:43:54.175 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>2022-11-21 07:43:54.190 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>2022-11-21 07:43:58.125 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>2022-11-21 07:44:06.524 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>2022-11-21 07:44:06.526 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>2022-11-21 07:44:10.412 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>2022-11-21 07:44:18.825 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 1955/2456 spectra
+<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a>2022-11-21 07:44:18.827 | INFO     | elfragmentador.data.predictor:screen_nce:74 - Best NCE: 30.0, with median spectral angle: 0.4119728918060316
+<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a>2022-11-21 07:44:18.827 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from evaluation/results/CElegansGG/mokapot/mokapot.peptides.txt using &lt;class &#39;ms2ml.data.adapters.mokapot.MokapotPSMAdapter&#39;&gt;
+<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>2022-11-21 07:44:22.865 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:218 - Setting up the adapter to drop training spectra
+<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>100%|██████████| 3618/3618 [00:13&lt;00:00, 273.69it/s]
+<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>2022-11-21 07:44:36.086 | INFO     | elfragmentador.data.predictor:compare:119 - Skipped 2790/3618 spectra
+<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>                    Pred RT (y) vs RT (x)
+<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>┌────────────────────────────────────────────────────────────┐
+<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a>│                                                      ▗▛▛▘ ▝│
+<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>│                                                      █▙   ▖│ 6,000
+<a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>│                                                  ▄ ▗▟▘▝    │
+<a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a>│                                             ▗ ▟▞▐▙▜█▛▘     │
+<a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a>│                                         ▗▖▐▄▟██▛▛▛▘▝▝      │
+<a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a>│                                    ▞ ▄▄▝▙█▞██▐ ▖           │ 4,000
+<a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a>│                 ▖             ▗ ▐▟▄▟█▞▌██ ▘                │
+<a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a>│             ▘             ▗▄▌▛████▀▛▀                      │
+<a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a>│                      ▝ ▞▐▟█▛▟█▛▛▛▖ ▘                       │ 2,000
+<a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a>│                ▗▖ ▝▙█▐███▛▛▘▝▝                             │
+<a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a>│         ▖  ▖  ▄▖█▗██▛▜▀▘                                   │
+<a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a>│▁▁▗▁▖▁▁▖▁▁▗▙▖██████▀▌▝▘▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁│ 0
+<a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a>│   ▗▖▖ ▟▄▞▟███▀▀▝▘▘                                         │
+<a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a>│  ▌▙▀▜▗█▟▛▛▀▖   ▗         ▝                                 │
+<a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>│ ▐▙███▜▘▘ ▘      ▝                                          │
+<a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a>│▀▝▛▘                                                        │ -2,000
+<a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a>│ ▗                                                          │
+<a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a>└────────────────────────────────────────────────────────────┘
+<a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a>        1,000      2,000      3,000      4,000       5,000
+<a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a>               Histogram of the spectral angles
+<a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a>               Median: 0.33
+<a id="__codelineno-2-88" name="__codelineno-2-88" href="#__codelineno-2-88"></a>               Q1: 0.22
+<a id="__codelineno-2-89" name="__codelineno-2-89" href="#__codelineno-2-89"></a>               Q3: 0.47
+<a id="__codelineno-2-90" name="__codelineno-2-90" href="#__codelineno-2-90"></a>┌────────────────────────────────────────────────────────────┐
+<a id="__codelineno-2-91" name="__codelineno-2-91" href="#__codelineno-2-91"></a>│  │               ▛▀▀▀▀▀▌                                   │ 80
+<a id="__codelineno-2-92" name="__codelineno-2-92" href="#__codelineno-2-92"></a>│  │            ▄▄▄▌     ▀▀▀▌                                │
+<a id="__codelineno-2-93" name="__codelineno-2-93" href="#__codelineno-2-93"></a>│  │         ▄▄▄▌           ▀▀▀▀▀▜                           │
+<a id="__codelineno-2-94" name="__codelineno-2-94" href="#__codelineno-2-94"></a>│  │         ▌                   ▐                           │
+<a id="__codelineno-2-95" name="__codelineno-2-95" href="#__codelineno-2-95"></a>│  │         ▌                   ▐                           │
+<a id="__codelineno-2-96" name="__codelineno-2-96" href="#__codelineno-2-96"></a>│  │         ▌                   ▐                           │
+<a id="__codelineno-2-97" name="__codelineno-2-97" href="#__codelineno-2-97"></a>│  │         ▌                   ▝▀▀▜                        │
+<a id="__codelineno-2-98" name="__codelineno-2-98" href="#__codelineno-2-98"></a>│  │      ▛▀▀▘                      ▐▄▄▄                     │
+<a id="__codelineno-2-99" name="__codelineno-2-99" href="#__codelineno-2-99"></a>│  │      ▌                            ▝▀▀▜                  │ 40
+<a id="__codelineno-2-100" name="__codelineno-2-100" href="#__codelineno-2-100"></a>│  │      ▌                               ▝▀▀▜               │
+<a id="__codelineno-2-101" name="__codelineno-2-101" href="#__codelineno-2-101"></a>│  │      ▌                                  ▐               │
+<a id="__codelineno-2-102" name="__codelineno-2-102" href="#__codelineno-2-102"></a>│  │      ▌                                  ▝▀▀▜            │
+<a id="__codelineno-2-103" name="__codelineno-2-103" href="#__codelineno-2-103"></a>│  │      ▌                                     ▐            │
+<a id="__codelineno-2-104" name="__codelineno-2-104" href="#__codelineno-2-104"></a>│  │   ▄▄▄▌                                     ▐            │
+<a id="__codelineno-2-105" name="__codelineno-2-105" href="#__codelineno-2-105"></a>│  │   ▌                                        ▝▀▀▜         │
+<a id="__codelineno-2-106" name="__codelineno-2-106" href="#__codelineno-2-106"></a>│  │▄▄▄▌                                           ▐▄▄▄      │
+<a id="__codelineno-2-107" name="__codelineno-2-107" href="#__codelineno-2-107"></a>│▄▄▄▌▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▐▄▄▄▄▄▄│ 0
+<a id="__codelineno-2-108" name="__codelineno-2-108" href="#__codelineno-2-108"></a>└────────────────────────────────────────────────────────────┘
+<a id="__codelineno-2-109" name="__codelineno-2-109" href="#__codelineno-2-109"></a>   0            0.2          0.4           0.6           0.8
+<a id="__codelineno-2-110" name="__codelineno-2-110" href="#__codelineno-2-110"></a>  Histogram of the spectral angles of only the fragment ions
+<a id="__codelineno-2-111" name="__codelineno-2-111" href="#__codelineno-2-111"></a>  Median: 0.85
+<a id="__codelineno-2-112" name="__codelineno-2-112" href="#__codelineno-2-112"></a>  Q1: 0.79
+<a id="__codelineno-2-113" name="__codelineno-2-113" href="#__codelineno-2-113"></a>  Q3: 0.90
+<a id="__codelineno-2-114" name="__codelineno-2-114" href="#__codelineno-2-114"></a>┌────────────────────────────────────────────────────────────┐
+<a id="__codelineno-2-115" name="__codelineno-2-115" href="#__codelineno-2-115"></a>│                                               ▐▀▀▜         │
+<a id="__codelineno-2-116" name="__codelineno-2-116" href="#__codelineno-2-116"></a>│                                            ▗▄▄▟  ▐         │ 200
+<a id="__codelineno-2-117" name="__codelineno-2-117" href="#__codelineno-2-117"></a>│                                            ▐     ▐         │
+<a id="__codelineno-2-118" name="__codelineno-2-118" href="#__codelineno-2-118"></a>│                                            ▐     ▐         │
+<a id="__codelineno-2-119" name="__codelineno-2-119" href="#__codelineno-2-119"></a>│                                            ▐     ▐         │
+<a id="__codelineno-2-120" name="__codelineno-2-120" href="#__codelineno-2-120"></a>│                                            ▐     ▐         │
+<a id="__codelineno-2-121" name="__codelineno-2-121" href="#__codelineno-2-121"></a>│                                            ▐     ▝▀▀▜      │
+<a id="__codelineno-2-122" name="__codelineno-2-122" href="#__codelineno-2-122"></a>│                                         ▗▄▄▟        ▐      │
+<a id="__codelineno-2-123" name="__codelineno-2-123" href="#__codelineno-2-123"></a>│                                         ▐           ▐      │
+<a id="__codelineno-2-124" name="__codelineno-2-124" href="#__codelineno-2-124"></a>│                                         ▐           ▐      │ 100
+<a id="__codelineno-2-125" name="__codelineno-2-125" href="#__codelineno-2-125"></a>│                                         ▐           ▐      │
+<a id="__codelineno-2-126" name="__codelineno-2-126" href="#__codelineno-2-126"></a>│                                         ▐           ▐      │
+<a id="__codelineno-2-127" name="__codelineno-2-127" href="#__codelineno-2-127"></a>│                                      ▐▀▀▀           ▐      │
+<a id="__codelineno-2-128" name="__codelineno-2-128" href="#__codelineno-2-128"></a>│                                      ▐              ▐      │
+<a id="__codelineno-2-129" name="__codelineno-2-129" href="#__codelineno-2-129"></a>│                                      ▐              ▐      │
+<a id="__codelineno-2-130" name="__codelineno-2-130" href="#__codelineno-2-130"></a>│                              ▄▄▄▄▄▟▀▀▀              ▐      │
+<a id="__codelineno-2-131" name="__codelineno-2-131" href="#__codelineno-2-131"></a>│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▛▀▀▙▄▄▄▄▄▌▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▐▄▄▄▄▄▄│ 0
+<a id="__codelineno-2-132" name="__codelineno-2-132" href="#__codelineno-2-132"></a>└────────────────────────────────────────────────────────────┘
+<a id="__codelineno-2-133" name="__codelineno-2-133" href="#__codelineno-2-133"></a>           0.2            0.5            0.8             1
+</code></pre></div>
+<h2 id="predicting-peptides-directly-from-a-fasta-file">Predicting peptides directly from a fasta file</h2>
+<p>To get the help for the function run ...</p>
+<div class="cell-code highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="err">!</span> <span class="n">elfragmentador</span> <span class="n">predict</span> <span class="o">--</span><span class="n">help</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">output</p>
+<p>usage: elfragmentador predict [-h] [--fasta FASTA] [--enzyme ENZYME]
+                              [--nce NCE] [--charges CHARGES]
+                              [--missed_cleavages MISSED_CLEAVAGES]
+                              [--min_length MIN_LENGTH] [--min_mz MIN_MZ]
+                              [--max_mz MAX_MZ] [--out OUT]
+                              [--model_checkpoint MODEL_CHECKPOINT]
+                              [--threads THREADS]</p>
+<p>options:
+  -h, --help            show this help message and exit
+  --fasta FASTA         Input fasta file
+  --enzyme ENZYME       Enzyme to use to digest the fasta file
+  --nce NCE             Collision energy to use for the prediction
+  --charges CHARGES     Comma delimited series of charges to use
+  --missed_cleavages MISSED_CLEAVAGES
+                        Maximum number of missed clevages
+  --min_length MIN_LENGTH
+                        Minimum peptide length to consider
+  --min_mz MIN_MZ       Minimum precursor mz to use
+  --max_mz MAX_MZ       Maximum precursor mz to use
+  --out OUT             Output .dlib file
+  --model_checkpoint MODEL_CHECKPOINT
+                        Model checkpoint to use for the prediction, if nothing
+                        is passed will download a pretrained model
+  --threads THREADS     Number of threads to use during inference</p>
+</div>
+<h3 id="example_1">Example</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ elfragmentador predict --fasta tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta --nce 32 --charges 2 --missed_cleavages 0 --min_length 7 --out foo.dlib
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Global seed set to 2020
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>2022-11-26 21:39:39.072 | INFO     | elfragmentador.cli:greeting:72 - ElFragmentador version: 0.55.0a1
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>2022-11-26 21:39:39.072 | INFO     | elfragmentador.cli:setup_model:39 - Loading model from https://github.com/jspaezp/elfragmentador-modelzoo/raw/9e6ee76cde441d2459ec52418ec6f874e69f9a7b/0.55.0a2/0.55.0a2_ef_21e_4h_64_120_nel5ndl6_500_lmlp_sim01_val_l%3D0.129946_epoch%3D020.ckpt
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>2022-11-26 21:39:39.092 | INFO     | elfragmentador.model:__init__:126 - num_decoder_layers 6 num_encoder_layers 5 nhid 120 d_model 64 nhead 4 dropout 0.02combined embeds True combined encoders False
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>2022-11-26 21:39:39.092 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>2022-11-26 21:39:39.104 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>2022-11-26 21:39:39.107 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=6
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>2022-11-26 21:39:39.110 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 174
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>2022-11-26 21:39:39.111 | INFO     | elfragmentador.model.nn_encoding:__init__:210 - Initializing AASequenceEmbedding
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>2022-11-26 21:39:39.111 | INFO     | elfragmentador.model.nn_encoding:init_weights:243 - Initializing weights on AASequenceEmbedding
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>2022-11-26 21:39:39.113 | INFO     | elfragmentador.model.transformer_layers:__init__:87 - Creating TransformerDecoder nhid=120, d_model=64 nhead=4 layers=5
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>2022-11-26 21:39:39.115 | INFO     | elfragmentador.model.transformer_layers:__init__:109 - Creating embedding for spectra of length 1
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>2022-11-26 21:39:39.797 | INFO     | elfragmentador.model:evaluate_landmark_rt:769 - {&#39;polynomial&#39;: [0.010075807176896115, -0.0008703060814287248], &#39;determination&#39;: 0.9961272999162974}
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>2022-11-26 21:39:39.813 | INFO     | elfragmentador.model:evaluate_landmark_rt:775 -
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>   Prediction vs real iRT of biognosys and procal peptides
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>┌────────────────────────────────────────────────────────────┐
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>│                │                                        ▗▖▐│ 1
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>│                │                                     ▗▖ ▗ ▝│
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>│                │                                  ▖▞ ▀     │
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>│                │                              ▄▄▚▖         │
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>│                │                          ▄▝▖ ▘            │
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>│                │                       ▗▙▝▝                │
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>│                │                    ▖▝▘▘                   │
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>│                │                 ▞▝  ▘                     │
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>│                │             ▟▗▘                           │
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>│                │        ▖ ▐▗                               │
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>│                │      ▝▐                                   │
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>│                │ ▗▄▝▝▝                                     │
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>│▁▁▁▁▁▁▁▁▁▁▁▁▁▁▗▁▚▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁│ 0
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>│            ▖ ▞ │                                           │
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>│        ▗       │                                           │
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>│        ▘       │                                           │
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>│▖▗   ▘          │                                           │
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>└────────────────────────────────────────────────────────────┘
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>       -20       0      20       40       60       80      100
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>2022-11-26 21:39:39.816 | INFO     | ms2ml.data.adapters:read_data:52 - Reading data from tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta using &lt;class &#39;ms2ml.data.adapters.fasta.FastaAdapter&#39;&gt;
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>2022-11-26 21:39:39.816 | INFO     | ms2ml.data.parsing.fasta:parse_file:52 - Processing file tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta, with enzyme=trypsin,  missed_cleavages=0 min_length=7 max_length=30
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>2022-11-26 21:39:39.823 | INFO     | ms2ml.data.parsing.fasta:parse_file:82 - Done, 468 sequences
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>2022-11-26 21:39:39.823 | INFO     | ms2ml.data.parsing.fasta:parse_file:84 - Removed 205 duplicates
+<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>2022-11-26 21:39:39.823 | INFO     | ms2ml.data.adapters.fasta:parse:86 - Number of peptides: 468
+<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>2022-11-26 21:39:39.824 | INFO     | elfragmentador.data.predictor:adapter_out_hook_predict_factory:228 - Setting up the adapter to keep training spectra
+<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>
+<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>  0%|          | 0/468 [00:00&lt;?, ?it/s]2022-11-26 21:39:39.831 | INFO     | ms2ml.data.parsing.fasta:parse_file:52 - Processing file tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta, with enzyme=trypsin,  missed_cleavages=0 min_length=7 max_length=30
+<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>
+<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a> 98%|█████████▊| 457/468 [00:04&lt;00:00, 114.90it/s]2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.fasta:parse_file:82 - Done, 468 sequences
+<a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.fasta:parse_file:84 - Removed 205 duplicates
+<a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>2022-11-26 21:39:44.393 | INFO     | ms2ml.data.adapters.fasta:parse:86 - Number of peptides: 468
+<a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a>
+<a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>100%|██████████| 468/468 [00:04&lt;00:00, 102.56it/s]
+<a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a>2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.encyclopedia:write_encyclopedia:182 - Finished writing EncyclopeDIA database to foo.dlib
+<a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a>2022-11-26 21:39:44.393 | INFO     | ms2ml.data.parsing.encyclopedia:write_encyclopedia:183 - Wrote 468 spectra
+</code></pre></div>
+<div class="cell-code highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="err">!</span> <span class="n">elfragmentador</span> <span class="n">train</span> <span class="o">--</span><span class="n">help</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">output</p>
+<p>usage: elfragmentador train [-h] [--run_name RUN_NAME]
+                            [--wandb_project WANDB_PROJECT]
+                            [--terminator_patience TERMINATOR_PATIENCE]
+                            [--from_checkpoint FROM_CHECKPOINT]
+                            [--num_queries NUM_QUERIES]
+                            [--num_decoder_layers NUM_DECODER_LAYERS]
+                            [--num_encoder_layers NUM_ENCODER_LAYERS]
+                            [--nhid NHID] [--d_model D_MODEL] [--nhead NHEAD]
+                            [--dropout DROPOUT]
+                            [--combine_embeds | --no-combine_embeds]
+                            [--combine_encoders | --no-combine_encoders]
+                            [--final_decoder FINAL_DECODER] [--lr LR]
+                            [--scheduler SCHEDULER] [--lr_ratio LR_RATIO]
+                            [--loss_ratio LOSS_RATIO]
+                            [--batch_size BATCH_SIZE] [--data_dir DATA_DIR]
+                            [--logger [LOGGER]]
+                            [--enable_checkpointing [ENABLE_CHECKPOINTING]]
+                            [--default_root_dir DEFAULT_ROOT_DIR]
+                            [--gradient_clip_val GRADIENT_CLIP_VAL]
+                            [--gradient_clip_algorithm GRADIENT_CLIP_ALGORITHM]
+                            [--num_nodes NUM_NODES]
+                            [--num_processes NUM_PROCESSES]
+                            [--devices DEVICES] [--gpus GPUS]
+                            [--auto_select_gpus [AUTO_SELECT_GPUS]]
+                            [--tpu_cores TPU_CORES] [--ipus IPUS]
+                            [--enable_progress_bar [ENABLE_PROGRESS_BAR]]
+                            [--overfit_batches OVERFIT_BATCHES]
+                            [--track_grad_norm TRACK_GRAD_NORM]
+                            [--check_val_every_n_epoch CHECK_VAL_EVERY_N_EPOCH]
+                            [--fast_dev_run [FAST_DEV_RUN]]
+                            [--accumulate_grad_batches ACCUMULATE_GRAD_BATCHES]
+                            [--max_epochs MAX_EPOCHS]
+                            [--min_epochs MIN_EPOCHS] [--max_steps MAX_STEPS]
+                            [--min_steps MIN_STEPS] [--max_time MAX_TIME]
+                            [--limit_train_batches LIMIT_TRAIN_BATCHES]
+                            [--limit_val_batches LIMIT_VAL_BATCHES]
+                            [--limit_test_batches LIMIT_TEST_BATCHES]
+                            [--limit_predict_batches LIMIT_PREDICT_BATCHES]
+                            [--val_check_interval VAL_CHECK_INTERVAL]
+                            [--log_every_n_steps LOG_EVERY_N_STEPS]
+                            [--accelerator ACCELERATOR] [--strategy STRATEGY]
+                            [--sync_batchnorm [SYNC_BATCHNORM]]
+                            [--precision PRECISION]
+                            [--enable_model_summary [ENABLE_MODEL_SUMMARY]]
+                            [--num_sanity_val_steps NUM_SANITY_VAL_STEPS]
+                            [--resume_from_checkpoint RESUME_FROM_CHECKPOINT]
+                            [--profiler PROFILER] [--benchmark [BENCHMARK]]
+                            [--reload_dataloaders_every_n_epochs RELOAD_DATALOADERS_EVERY_N_EPOCHS]
+                            [--auto_lr_find [AUTO_LR_FIND]]
+                            [--replace_sampler_ddp [REPLACE_SAMPLER_DDP]]
+                            [--detect_anomaly [DETECT_ANOMALY]]
+                            [--auto_scale_batch_size [AUTO_SCALE_BATCH_SIZE]]
+                            [--plugins PLUGINS] [--amp_backend AMP_BACKEND]
+                            [--amp_level AMP_LEVEL]
+                            [--move_metrics_to_cpu [MOVE_METRICS_TO_CPU]]
+                            [--multiple_trainloader_mode MULTIPLE_TRAINLOADER_MODE]
+                            [--inference_mode [INFERENCE_MODE]]</p>
+<p>options:
+  -h, --help            show this help message and exit</p>
+<p>Program Parameters:
+  Program level parameters, these should not change the outcome of the run</p>
+<p>--run_name RUN_NAME   Name to be given to the run (logging)
+  --wandb_project WANDB_PROJECT
+                        Wandb project to log to, check out wandb... please</p>
+<p>Model Parameters:
+  Parameters that modify the model or its training (learn rate, scheduler,
+  layers, dimension ...)</p>
+<p>--num_queries NUM_QUERIES
+                        Expected encoding length of the spectra
+  --num_decoder_layers NUM_DECODER_LAYERS
+                        Number of sub-encoder-layers in the encoder
+  --num_encoder_layers NUM_ENCODER_LAYERS
+                        Number of sub-encoder-layers in the decoder
+  --nhid NHID           Dimension of the feedforward networks
+  --d_model D_MODEL     Number of input features to the transformer encoder
+  --nhead NHEAD         Number of attention heads
+  --dropout DROPOUT
+  --combine_embeds, --no-combine_embeds
+                        Whether the embeddings for aminoacid and modifications
+                        should be shared between the irt and fragment sections
+  --combine_encoders, --no-combine_encoders
+                        Whether the encoders for aminoacid and modifications
+                        should be shared between the irt and fragment sections
+  --final_decoder FINAL_DECODER
+                        What kind of final layer should the docer have to
+                        output a single number, options are 'mlp' and 'linear'
+  --lr LR
+  --scheduler SCHEDULER
+                        Scheduler to use during training, either of
+                        ['plateau', 'cosine', 'onecycle']
+  --lr_ratio LR_RATIO   For cosine annealing: Ratio of the initial learning
+                        rate to use with cosine annealing for instance a lr or
+                        1 and a ratio of 10 would have a minimum learning rate
+                        of 0.1 For onecycle: Ratio of the initial lr and and
+                        maximum one, for instance if lr is 0.1 and ratio is
+                        10, the max learn ratewould be 1.0
+  --loss_ratio LOSS_RATIO
+                        Ratio between the retention time and the spectrum loss
+                        (higher values mean more weight to the spectra loss
+                        with respect to the retention time loss)</p>
+<p>Data Parameters:
+  Parameters for the loading of data</p>
+<p>--batch_size BATCH_SIZE
+  --data_dir DATA_DIR</p>
+<p>Trainer Parameters:
+  Parameters that modify the model or its training</p>
+<p>--terminator_patience TERMINATOR_PATIENCE
+                        Patience for early termination
+  --from_checkpoint FROM_CHECKPOINT
+                        The path of a checkpoint to copy weights from before
+                        training</p>
+<p>pl.Trainer:
+  --logger [LOGGER]     Logger (or iterable collection of loggers) for
+                        experiment tracking. A <code>True</code> value uses the default
+                        <code>TensorBoardLogger</code> if it is installed, otherwise
+                        <code>CSVLogger</code>. <code>False</code> will disable logging. If
+                        multiple loggers are provided, local files
+                        (checkpoints, profiler traces, etc.) are saved in the
+                        <code>log_dir</code> of he first logger. Default: <code>True</code>.
+  --enable_checkpointing [ENABLE_CHECKPOINTING]
+                        If <code>True</code>, enable checkpointing. It will configure a
+                        default ModelCheckpoint callback if there is no user-
+                        defined ModelCheckpoint in :paramref:<code>~pytorch_lightni
+                        ng.trainer.trainer.Trainer.callbacks</code>. Default:
+                        <code>True</code>.
+  --default_root_dir DEFAULT_ROOT_DIR
+                        Default path for logs and weights when no
+                        logger/ckpt_callback passed. Default: <code>os.getcwd()</code>.
+                        Can be remote file paths such as <code>s3://mybucket/path</code>
+                        or 'hdfs://path/'
+  --gradient_clip_val GRADIENT_CLIP_VAL
+                        The value at which to clip gradients. Passing
+                        <code>gradient_clip_val=None</code> disables gradient clipping.
+                        If using Automatic Mixed Precision (AMP), the
+                        gradients will be unscaled before. Default: <code>None</code>.
+  --gradient_clip_algorithm GRADIENT_CLIP_ALGORITHM
+                        The gradient clipping algorithm to use. Pass
+                        <code>gradient_clip_algorithm="value"</code> to clip by value,
+                        and <code>gradient_clip_algorithm="norm"</code> to clip by
+                        norm. By default it will be set to <code>"norm"</code>.
+  --num_nodes NUM_NODES
+                        Number of GPU nodes for distributed training. Default:
+                        <code>1</code>.
+  --num_processes NUM_PROCESSES
+                        Number of processes for distributed training with
+                        <code>accelerator="cpu"</code>. Default: <code>1</code>. .. deprecated::
+                        v1.7 <code>num_processes</code> has been deprecated in v1.7 and
+                        will be removed in v2.0. Please use
+                        <code>accelerator='cpu'</code> and <code>devices=x</code> instead.
+  --devices DEVICES     Will be mapped to either <code>gpus</code>, <code>tpu_cores</code>,
+                        <code>num_processes</code> or <code>ipus</code>, based on the accelerator
+                        type.
+  --gpus GPUS           Number of GPUs to train on (int) or which GPUs to
+                        train on (list or str) applied per node Default:
+                        <code>None</code>. .. deprecated:: v1.7 <code>gpus</code> has been
+                        deprecated in v1.7 and will be removed in v2.0. Please
+                        use <code>accelerator='gpu'</code> and <code>devices=x</code> instead.
+  --auto_select_gpus [AUTO_SELECT_GPUS]
+                        If enabled and <code>gpus</code> or <code>devices</code> is an integer,
+                        pick available gpus automatically. This is especially
+                        useful when GPUs are configured to be in "exclusive
+                        mode", such that only one process at a time can access
+                        them. Default: <code>False</code>. .. deprecated:: v1.9
+                        <code>auto_select_gpus</code> has been deprecated in v1.9.0 and
+                        will be removed in v2.0.0. Please use the function :fu
+                        nc:<code>~lightning_fabric.accelerators.cuda.find_usable_cu
+                        da_devices</code> instead.
+  --tpu_cores TPU_CORES
+                        How many TPU cores to train on (1 or 8) / Single TPU
+                        to train on (1) Default: <code>None</code>. .. deprecated::
+                        v1.7 <code>tpu_cores</code> has been deprecated in v1.7 and
+                        will be removed in v2.0. Please use
+                        <code>accelerator='tpu'</code> and <code>devices=x</code> instead.
+  --ipus IPUS           How many IPUs to train on. Default: <code>None</code>. ..
+                        deprecated:: v1.7 <code>ipus</code> has been deprecated in v1.7
+                        and will be removed in v2.0. Please use
+                        <code>accelerator='ipu'</code> and <code>devices=x</code> instead.
+  --enable_progress_bar [ENABLE_PROGRESS_BAR]
+                        Whether to enable to progress bar by default. Default:
+                        <code>True</code>.
+  --overfit_batches OVERFIT_BATCHES
+                        Overfit a fraction of training/validation data (float)
+                        or a set number of batches (int). Default: <code>0.0</code>.
+  --track_grad_norm TRACK_GRAD_NORM
+                        -1 no tracking. Otherwise tracks that p-norm. May be
+                        set to 'inf' infinity-norm. If using Automatic Mixed
+                        Precision (AMP), the gradients will be unscaled before
+                        logging them. Default: <code>-1</code>.
+  --check_val_every_n_epoch CHECK_VAL_EVERY_N_EPOCH
+                        Perform a validation loop every after every <code>N</code>
+                        training epochs. If <code>None</code>, validation will be done
+                        solely based on the number of training batches,
+                        requiring <code>val_check_interval</code> to be an integer
+                        value. Default: <code>1</code>.
+  --fast_dev_run [FAST_DEV_RUN]
+                        Runs n if set to <code>n</code> (int) else 1 if set to <code>True</code>
+                        batch(es) of train, val and test to find any bugs (ie:
+                        a sort of unit test). Default: <code>False</code>.
+  --accumulate_grad_batches ACCUMULATE_GRAD_BATCHES
+                        Accumulates grads every k batches or as set up in the
+                        dict. Default: <code>None</code>.
+  --max_epochs MAX_EPOCHS
+                        Stop training once this number of epochs is reached.
+                        Disabled by default (None). If both max_epochs and
+                        max_steps are not specified, defaults to <code>max_epochs
+                        = 1000</code>. To enable infinite training, set
+                        <code>max_epochs = -1</code>.
+  --min_epochs MIN_EPOCHS
+                        Force training for at least these many epochs.
+                        Disabled by default (None).
+  --max_steps MAX_STEPS
+                        Stop training after this number of steps. Disabled by
+                        default (-1). If <code>max_steps = -1</code> and <code>max_epochs =
+                        None</code>, will default to <code>max_epochs = 1000</code>. To
+                        enable infinite training, set <code>max_epochs</code> to
+                        <code>-1</code>.
+  --min_steps MIN_STEPS
+                        Force training for at least these number of steps.
+                        Disabled by default (<code>None</code>).
+  --max_time MAX_TIME   Stop training after this amount of time has passed.
+                        Disabled by default (<code>None</code>). The time duration can
+                        be specified in the format DD:HH:MM:SS (days, hours,
+                        minutes seconds), as a :class:<code>datetime.timedelta</code>, or
+                        a dictionary with keys that will be passed to
+                        :class:<code>datetime.timedelta</code>.
+  --limit_train_batches LIMIT_TRAIN_BATCHES
+                        How much of training dataset to check (float =
+                        fraction, int = num_batches). Default: <code>1.0</code>.
+  --limit_val_batches LIMIT_VAL_BATCHES
+                        How much of validation dataset to check (float =
+                        fraction, int = num_batches). Default: <code>1.0</code>.
+  --limit_test_batches LIMIT_TEST_BATCHES
+                        How much of test dataset to check (float = fraction,
+                        int = num_batches). Default: <code>1.0</code>.
+  --limit_predict_batches LIMIT_PREDICT_BATCHES
+                        How much of prediction dataset to check (float =
+                        fraction, int = num_batches). Default: <code>1.0</code>.
+  --val_check_interval VAL_CHECK_INTERVAL
+                        How often to check the validation set. Pass a
+                        <code>float</code> in the range [0.0, 1.0] to check after a
+                        fraction of the training epoch. Pass an <code>int</code> to
+                        check after a fixed number of training batches. An
+                        <code>int</code> value can only be higher than the number of
+                        training batches when
+                        <code>check_val_every_n_epoch=None</code>, which validates
+                        after every <code>N</code> training batches across epochs or
+                        during iteration-based training. Default: <code>1.0</code>.
+  --log_every_n_steps LOG_EVERY_N_STEPS
+                        How often to log within steps. Default: <code>50</code>.
+  --accelerator ACCELERATOR
+                        Supports passing different accelerator types ("cpu",
+                        "gpu", "tpu", "ipu", "hpu", "mps", "auto") as well as
+                        custom accelerator instances.
+  --strategy STRATEGY   Supports different training strategies with aliases as
+                        well custom strategies. Default: <code>None</code>.
+  --sync_batchnorm [SYNC_BATCHNORM]
+                        Synchronize batch norm layers between process
+                        groups/whole world. Default: <code>False</code>.
+  --precision PRECISION
+                        Double precision (64), full precision (32), half
+                        precision (16) or bfloat16 precision (bf16). Can be
+                        used on CPU, GPU, TPUs, HPUs or IPUs. Default: <code>32</code>.
+  --enable_model_summary [ENABLE_MODEL_SUMMARY]
+                        Whether to enable model summarization by default.
+                        Default: <code>True</code>.
+  --num_sanity_val_steps NUM_SANITY_VAL_STEPS
+                        Sanity check runs n validation batches before starting
+                        the training routine. Set it to <code>-1</code> to run all
+                        batches in all validation dataloaders. Default: <code>2</code>.
+  --resume_from_checkpoint RESUME_FROM_CHECKPOINT
+                        Path/URL of the checkpoint from which training is
+                        resumed. If there is no checkpoint file at the path,
+                        an exception is raised. If resuming from mid-epoch
+                        checkpoint, training will start from the beginning of
+                        the next epoch. .. deprecated:: v1.5
+                        <code>resume_from_checkpoint</code> is deprecated in v1.5 and
+                        will be removed in v2.0. Please pass the path to
+                        <code>Trainer.fit(..., ckpt_path=...)</code> instead.
+  --profiler PROFILER   To profile individual steps during training and assist
+                        in identifying bottlenecks. Default: <code>None</code>.
+  --benchmark [BENCHMARK]
+                        The value (<code>True</code> or <code>False</code>) to set
+                        <code>torch.backends.cudnn.benchmark</code> to. The value for
+                        <code>torch.backends.cudnn.benchmark</code> set in the current
+                        session will be used (<code>False</code> if not manually set).
+                        If :paramref:<code>~pytorch_lightning.trainer.Trainer.deter
+                        ministic</code> is set to <code>True</code>, this will default to
+                        <code>False</code>. Override to manually set a different value.
+                        Default: <code>None</code>.
+  --reload_dataloaders_every_n_epochs RELOAD_DATALOADERS_EVERY_N_EPOCHS
+                        Set to a non-negative integer to reload dataloaders
+                        every n epochs. Default: <code>0</code>.
+  --auto_lr_find [AUTO_LR_FIND]
+                        If set to True, will make trainer.tune() run a
+                        learning rate finder, trying to optimize initial
+                        learning for faster convergence. trainer.tune() method
+                        will set the suggested learning rate in self.lr or
+                        self.learning_rate in the LightningModule. To use a
+                        different key set a string instead of True with the
+                        key name. Default: <code>False</code>.
+  --replace_sampler_ddp [REPLACE_SAMPLER_DDP]
+                        Explicitly enables or disables sampler replacement. If
+                        not specified this will toggled automatically when DDP
+                        is used. By default it will add <code>shuffle=True</code> for
+                        train sampler and <code>shuffle=False</code> for val/test
+                        sampler. If you want to customize it, you can set
+                        <code>replace_sampler_ddp=False</code> and add your own
+                        distributed sampler.
+  --detect_anomaly [DETECT_ANOMALY]
+                        Enable anomaly detection for the autograd engine.
+                        Default: <code>False</code>.
+  --auto_scale_batch_size [AUTO_SCALE_BATCH_SIZE]
+                        If set to True, will <code>initially</code> run a batch size
+                        finder trying to find the largest batch size that fits
+                        into memory. The result will be stored in
+                        self.batch_size in the LightningModule or
+                        LightningDataModule depending on your setup.
+                        Additionally, can be set to either <code>power</code> that
+                        estimates the batch size through a power search or
+                        <code>binsearch</code> that estimates the batch size through a
+                        binary search. Default: <code>False</code>.
+  --plugins PLUGINS     Plugins allow modification of core behavior like ddp
+                        and amp, and enable custom lightning plugins. Default:
+                        <code>None</code>.
+  --amp_backend AMP_BACKEND
+                        The mixed precision backend to use ("native" or
+                        "apex"). Default: <code>'native''</code>. .. deprecated:: v1.9
+                        Setting <code>amp_backend</code> inside the <code>Trainer</code> is
+                        deprecated in v1.8.0 and will be removed in v2.0.0.
+                        This argument was only relevant for apex which is
+                        being removed.
+  --amp_level AMP_LEVEL
+                        The optimization level to use (O1, O2, etc...). By
+                        default it will be set to "O2" if <code>amp_backend</code> is
+                        set to "apex". .. deprecated:: v1.8 Setting
+                        <code>amp_level</code> inside the <code>Trainer</code> is deprecated in
+                        v1.8.0 and will be removed in v2.0.0.
+  --move_metrics_to_cpu [MOVE_METRICS_TO_CPU]
+                        Whether to force internal logged metrics to be moved
+                        to cpu. This can save some gpu memory, but can make
+                        training slower. Use with attention. Default:
+                        <code>False</code>.
+  --multiple_trainloader_mode MULTIPLE_TRAINLOADER_MODE
+                        How to loop over the datasets when there are multiple
+                        train loaders. In 'max_size_cycle' mode, the trainer
+                        ends one epoch when the largest dataset is traversed,
+                        and smaller datasets reload when running out of their
+                        data. In 'min_size' mode, all the datasets reload when
+                        reaching the minimum length of datasets. Default:
+                        <code>"max_size_cycle"</code>.
+  --inference_mode [INFERENCE_MODE]
+                        Whether to use :func:<code>torch.inference_mode</code> or
+                        :func:<code>torch.no_grad</code> during evaluation
+                        (<code>validate</code>/<code>test</code>/<code>predict</code>).</p>
+</div>
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../../API%20reference/PepTransformerModel/" class="md-footer__link md-footer__link--prev" aria-label="Previous: PepTransformerModel" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              PepTransformerModel
+            </div>
+          </div>
+        </a>
+      
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      
+    
+    
+  </body>
+</html>

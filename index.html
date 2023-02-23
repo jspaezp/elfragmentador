@@ -1,0 +1,675 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-8.5.10">
+    
+    
+      
+        <title>ElFragmentador Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.975780f9.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.2505c338.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+
+  <script id="__analytics">function __md_analytics(){function n(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],n("js",new Date),n("config","G-QKEQ9R2MR7"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&n("event","search",{search_term:this.value})}),document$.subscribe(function(){var a=document.forms.feedback;if(void 0!==a)for(var e of a.querySelectorAll("[type=submit]"))e.addEventListener("click",function(e){e.preventDefault();var t=document.location.pathname,e=this.getAttribute("data-md-value");n("event","feedback",{page:t,data:e}),a.firstElementChild.disabled=!0;e=a.querySelector(".md-feedback__note [data-md-value='"+e+"']");e&&(e.hidden=!1)}),a.hidden=!1}),location$.subscribe(function(e){n("config","G-QKEQ9R2MR7",{page_path:e.pathname})})});var e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-QKEQ9R2MR7",document.getElementById("__analytics").insertAdjacentElement("afterEnd",e)}</script>
+
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="None" data-md-color-accent="None">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#elfragmentador" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="ElFragmentador Documentation" class="md-header__button md-logo" aria-label="ElFragmentador Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ElFragmentador Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="ElFragmentador Documentation" class="md-nav__button md-logo" aria-label="ElFragmentador Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    ElFragmentador Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Home
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        Home
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elfragmentador_1" class="md-nav__link">
+    ElFragmentador
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-transformers" class="md-nav__link">
+    Why transformers?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inspiration-for-this-project" class="md-nav__link">
+    Inspiration for this project
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-name" class="md-nav__link">
+    Why the name?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-on-transformers" class="md-nav__link">
+    Resources on transformers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-fast-is-it" class="md-nav__link">
+    How fast is it?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-big-is-it" class="md-nav__link">
+    How big is it?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-questions" class="md-nav__link">
+    "Common" questions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    Acknowledgements
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="quickstart/" class="md-nav__link">
+        Quickstart
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          API reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          API reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="API%20reference/PepTransformerModel/" class="md-nav__link">
+        PepTransformerModel
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          CLI reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="CLI reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          CLI reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="CLI%20reference/cli/" class="md-nav__link">
+        Usage of the multiple command line interface options ...
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elfragmentador_1" class="md-nav__link">
+    ElFragmentador
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-transformers" class="md-nav__link">
+    Why transformers?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inspiration-for-this-project" class="md-nav__link">
+    Inspiration for this project
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-name" class="md-nav__link">
+    Why the name?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-on-transformers" class="md-nav__link">
+    Resources on transformers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-fast-is-it" class="md-nav__link">
+    How fast is it?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-big-is-it" class="md-nav__link">
+    How big is it?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-questions" class="md-nav__link">
+    "Common" questions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    Acknowledgements
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<p><img alt="Pypi version" src="https://img.shields.io/pypi/v/elfragmentador?style=flat-square" />
+<img alt="Pypi Downloads" src="https://img.shields.io/pypi/dm/elfragmentador?style=flat-square" />
+<img alt="Github Activity" src="https://img.shields.io/github/last-commit/jspaezp/elfragmentador?style=flat-square" />
+<img alt="Python versions" src="https://img.shields.io/pypi/pyversions/elfragmentador?style=flat-square" />
+<img alt="GitHub Actions" src="https://img.shields.io/github/workflow/status/jspaezp/elfragmentador/CI%20Testing/release?style=flat-square" />
+<img alt="License" src="https://img.shields.io/pypi/l/elfragmentador?style=flat-square" /></p>
+<h1 id="elfragmentador">ElFragmentador</h1>
+<h2 id="elfragmentador_1">ElFragmentador</h2>
+<p>This repository attempts to implement a neural net that leverages the transformer architecture to predict peptide
+properties (retention time and fragmentation).</p>
+<p><img alt="" src="img/schematic.png" /></p>
+<h2 id="usage">Usage</h2>
+<p>Please check out <a href="quickstart/">The Quickstart guide</a> for usage instructions.</p>
+<p><img alt="" src="img/spectrum.png" /></p>
+<h2 id="why-transformers">Why transformers?</h2>
+<p>Because we can... Just kidding</p>
+<p>The transformer architecture provides several benefits over the standard approach on fragment prediction (LSTM/RNN). On the training side it allows the parallel computation of whole sequences, whilst in LSTMs one element has to be passed at a time. In addition it gives the model itself a better chance to study the direct interactions between the elements that are being passed.</p>
+<p>On the other hand, it allows a much better interpretability of the model, since the 'self-attention' can be visualized on the input and in that way see what the model is focusing on while generating the prediction.</p>
+<h2 id="inspiration-for-this-project">Inspiration for this project</h2>
+<p>Many of the elements from this project are actually a combination of the principles shown in the <a href="https://www.nature.com/articles/s41592-019-0426-7"><em>Prosit</em> paper</a> and the <a href="https://skyline.ms/_webdav/home/software/Skyline/%40files/2019-ASBMB-Rohde.pdf">Skyline poster</a> on some of the elements to encode the peptides and the output fragment ions.</p>
+<p>On the transformer side of things I must admit that many of the elements of this project are derived from <a href="https://github.com/facebookresearch/detr">DETR:  End to end detection using transformers</a> in particular the trainable embeddings as an input for the decoder and some of the concepts discussed about it on <a href="https://youtu.be/T35ba_VXkMY">Yannic Kilcher's Youtube channel</a> (which I highly recommend).</p>
+<h2 id="why-the-name">Why the name?</h2>
+<p>Two main reasons ... it translates to 'The fragmenter' in spanish and the project intends to predict fragmentation. On the other hand ... The name was free in pypi.</p>
+<h2 id="resources-on-transformers">Resources on transformers</h2>
+<ul>
+<li>An amazing illustrated guide to understand the transformer architecture: <a href="http://jalammar.github.io/illustrated-transformer/">http://jalammar.github.io/illustrated-transformer/</a></li>
+<li>Full implementation of a transformer in pytorch with the explanation of each part: <a href="https://nlp.seas.harvard.edu/2018/04/03/attention.html">https://nlp.seas.harvard.edu/2018/04/03/attention.html</a></li>
+<li>Official pytorch implementation of the transformer: <a href="https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html">https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html</a></li>
+</ul>
+<h2 id="how-fast-is-it">How fast is it?</h2>
+<p>You can check how fast the model is in you specific system.
+Right now the CLI tests the speed only on CPU (the model can be run in GPU).</p>
+<p>Here I will predict the fasta file for SARS-COV2</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>elfragmentador<span class="w"> </span>predict<span class="w"> </span>--fasta<span class="w"> </span>tests/data/fasta/uniprot-proteome_UP000464024_reviewed_yes.fasta<span class="w"> </span>--nce<span class="w"> </span><span class="m">32</span><span class="w"> </span>--charges<span class="w"> </span><span class="m">2</span><span class="w"> </span>--missed_cleavages<span class="w"> </span><span class="m">0</span><span class="w"> </span>--min_length<span class="w"> </span><span class="m">20</span><span class="w"> </span>--out<span class="w"> </span>foo.dlib
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>...
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a> 99%|█████████▉| 1701/1721 [00:14&lt;00:00, 118.30it/s]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>...
+</code></pre></div>
+<p>~100 predictions per second including pre-post processing and writting the enciclopeDIA library.
+On a GPU it is closer to ~1000 preds/sec</p>
+<h2 id="how-big-is-it">How big is it?</h2>
+<p>I have explored many variations on the model but currently the one distributed is only ~4mb. Models up to 200mb have been tried and they don't really give a big improvement in performance.</p>
+<h2 id="common-questions">"Common" questions</h2>
+<ul>
+<li>What scale are the retention times predicted.</li>
+<li>Out of the model it uses a scaled version of the Biognosys retention time
+    scale, so if using the base model, you will need to multiply by 100 and then
+    you will get something compatible with the iRT kit.</li>
+<li>Is it any good?</li>
+<li>Well ... yes but if you want to see if it is good for you own data I have
+    added an API to test the model on a spectral library (made with spectrast).
+    Just get a checkpoint of the model,
+    run the command: <code>elfragmentador_evaluate {your_checkpoint.ckpt} {your_splib.sptxt}</code></li>
+<li>TODO add some benchmarking metrics to this readme ...</li>
+<li>Crosslinked peptides?</li>
+<li>No</li>
+<li>ETD ?</li>
+<li>No</li>
+<li>CID ?</li>
+<li>No</li>
+<li>Glycosilation ?</li>
+<li>No</li>
+<li>Negative Mode ?</li>
+<li>No</li>
+<li>No ?</li>
+<li>Not really ... I think all of those are interesting questions but
+    AS IT IS RIGHT NOW it is not within the scope of the project. If you want
+    to discuss it, write an issue in the repo and we can see if it is feasible.</li>
+</ul>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<ol>
+<li>Purdue Univ for the computational resources for the preparation of the data (Brown Cluster).</li>
+<li>Pytorch Lightning Team ... without this being open sourced this would not be posible.</li>
+<li>Weights and Biases (same as above).</li>
+</ol>
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+      
+        
+        <a href="quickstart/" class="md-footer__link md-footer__link--next" aria-label="Next: Quickstart" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Quickstart
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      
+    
+    
+  </body>
+</html>
