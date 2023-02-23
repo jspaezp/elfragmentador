@@ -23,7 +23,7 @@ uniplot = "^0.7.0"
 wandb = "^0.13.0"
 numba = "^0.56.2"
 torch = "^1.13.1"
-ms2ml = ">=0.0.29"
+ms2ml = "~0.0.34"
 loguru = "^0.6.0"
 networkx = "^2.8.8"
 
@@ -46,6 +46,8 @@ isort = "^5.10.1"
 ruff = "^0.0.46"
 
 [tool.poetry.group.docs.dependencies]
+# Righh now this needs to be pinned for spectrum-utils
+matplotlib = ">=3.4.0,<3.5.0"
 seaborn = "^0.11.2"
 scikit-learn = "^1.1.2"
 scipy = "^1.9.1"
@@ -67,7 +69,8 @@ optional = true
 pyteomics = "^4.4.1"
 ipykernel = "^5.4.3"
 seaborn = "^0.11.0"
-matplotlib = "^3.3.0"
+# Righh now this needs to be pinned for spectrum-utils
+matplotlib = ">=3.4.0,<3.5.0"
 mokapot = "^0.9.0"
 bayesian-optimization = "^1.2.0"
 pytest-doctestplus = "^0.12.0"

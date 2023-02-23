@@ -70,8 +70,9 @@ from elfragmentador.model import PepTransformerModel
 
 from loguru import logger
 
+# This makes a lot slimmer the logging ingofrmation
 logger.remove()
-logger.add(sys.stderr, level="INFO")
+logger.add(sys.stderr, level="WARNING")
 
 checkpoint_path = "some/path/to/a/checkpoint"
 # or
@@ -93,7 +94,7 @@ spectrum_prediction = model.predict_from_seq(
 )
 
 spectrum_prediction = model.predict_from_seq(
-    "AAESLQRAEATNAELER/2", nce=30.0, as_spectrum=True
+    "AAESLQRAEATNAELER/2", nce=22.0, as_spectrum=True
 )
 spectrum_prediction.plot()
 plt.show()
