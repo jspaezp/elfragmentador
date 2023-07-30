@@ -1,0 +1,5 @@
+outs:
+- md5: f8ae60f49411f78a2833dd7a6e2b7254
+  size: 146460559
+  hash: md5
+  path: TUM_second_pool_meta_data.parquet

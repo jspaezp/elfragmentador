@@ -1,0 +1,5 @@
+outs:
+- md5: 0ef9ccad3a5ecc7e49f126c0410eadc9
+  size: 57703071
+  hash: md5
+  path: TUM_proteo_TMT_meta_data.parquet

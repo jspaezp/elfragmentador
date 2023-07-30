@@ -1,0 +1,3374 @@
+schema: '2.0'
+stages:
+  make_spectra_vectors@TUM_aspn/TUM_aspn_20_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_20_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_20_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_20_01_01_annotation.parquet
+      hash: md5
+      md5: e9f609e016d2e58cdd0676d8585cdcb1
+      size: 379613195
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_20_01_01_vector.parquet
+      hash: md5
+      md5: 59f5c165727b6ef96c0fa70777ea9185
+      size: 6558560
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_86_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_86_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_86_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_86_01_01_annotation.parquet
+      hash: md5
+      md5: f760e98ea64b8df6c18f5eb940516af1
+      size: 113031627
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_86_01_01_vector.parquet
+      hash: md5
+      md5: c022c54d0b0ef0beff259bf0def84b00
+      size: 5483417
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_85_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_85_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_85_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_85_01_01_annotation.parquet
+      hash: md5
+      md5: f8000847f1b5dbf259bc44e0d3576b2f
+      size: 230241596
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_85_01_01_vector.parquet
+      hash: md5
+      md5: 75fedeb34977f1fd282b15460a07d437
+      size: 8062531
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_34_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_34_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_34_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_34_01_01_annotation.parquet
+      hash: md5
+      md5: f49bd8a46d4ff4a5860eb63b0c8d5274
+      size: 122877021
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_34_01_01_vector.parquet
+      hash: md5
+      md5: f172c75c53612a232d1bad6e04bb7b78
+      size: 7923719
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_31_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_31_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_31_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_31_01_01_annotation.parquet
+      hash: md5
+      md5: 05d4ef926b82231f84eea40b6ccea7c4
+      size: 153047457
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_31_01_01_vector.parquet
+      hash: md5
+      md5: 6d0dd09655b28f327685e831fc0b40ea
+      size: 6768848
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_4_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_4_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_4_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_4_01_01_annotation.parquet
+      hash: md5
+      md5: 071e4b4a7c1405eee7d44e7b8c83a178
+      size: 54309113
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_4_01_01_vector.parquet
+      hash: md5
+      md5: 8221ceb66c99c97579610336118f56ed
+      size: 6870163
+  make_spectra_vectors@TUM_aspn/TUM_aspn_14_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_14_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_14_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_14_01_01_annotation.parquet
+      hash: md5
+      md5: 80868b64f0e45943c965dd9de08fb216
+      size: 341058197
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_14_01_01_vector.parquet
+      hash: md5
+      md5: c66b8443375842c0d5b84c0367c33e5c
+      size: 4940173
+  make_spectra_vectors@TUM_aspn/TUM_aspn_3_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_3_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_3_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_3_01_01_annotation.parquet
+      hash: md5
+      md5: d5e9489d506c804cd69ef905d430350f
+      size: 455540314
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_3_01_01_vector.parquet
+      hash: md5
+      md5: 93fd7fc9a3bbfc07d9d3a64a2e8ebd5c
+      size: 13281210
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_72_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_72_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_72_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_72_01_01_annotation.parquet
+      hash: md5
+      md5: 93c4c19a399a1e4fcd72e2c088657010
+      size: 83379580
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_72_01_01_vector.parquet
+      hash: md5
+      md5: 3171cb34359d0f3534abb8010852d3e3
+      size: 6245373
+  make_spectra_vectors@TUM_third_pool/TUM_third_pool_5_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_third_pool/TUM_third_pool_5_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_third_pool/TUM_third_pool_5_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_third_pool/TUM_third_pool_5_01_01_annotation.parquet
+      hash: md5
+      md5: 6e6a09a037cd2de5dc421607f6bf5208
+      size: 172544405
+    outs:
+    - path: prospect_data_vectors/TUM_third_pool/TUM_third_pool_5_01_01_vector.parquet
+      hash: md5
+      md5: 8d45a367fe7110bebaeaebb8269bc6f8
+      size: 7938657
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_8_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_8_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_8_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_8_01_01_annotation.parquet
+      hash: md5
+      md5: df9632b6c7eaa3152f122dca0049ec70
+      size: 166479561
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_8_01_01_vector.parquet
+      hash: md5
+      md5: e5d66ffc80f14cbfee5536a2c00616f9
+      size: 7342462
+  make_spectra_vectors@TUM_aspn/TUM_aspn_5_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_5_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_5_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_5_01_01_annotation.parquet
+      hash: md5
+      md5: ae7fc18be5b027ce37d3439c218f108e
+      size: 15687950
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_5_01_01_vector.parquet
+      hash: md5
+      md5: 8aca228489b17a2e9961e8c820851d38
+      size: 340286
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_74_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_74_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_74_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_74_01_01_annotation.parquet
+      hash: md5
+      md5: a169a17f0bbdadd3f149a3e1dbfd547b
+      size: 242946645
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_74_01_01_vector.parquet
+      hash: md5
+      md5: 190ddcd03eb6619f615010c4ae065308
+      size: 10124855
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_110_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_110_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_110_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_110_01_01_annotation.parquet
+      hash: md5
+      md5: e07490e2ec1876fd1fb461a81aead3eb
+      size: 344446516
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_110_01_01_vector.parquet
+      hash: md5
+      md5: 9a86c33c501af2575d9d06344238fdca
+      size: 7292398
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_45_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_45_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_45_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_45_01_01_annotation.parquet
+      hash: md5
+      md5: 36775ce7748f77662f5df96bfcd14279
+      size: 171126711
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_45_01_01_vector.parquet
+      hash: md5
+      md5: 8927fec6efd4a7f72bf6cb52d57e0bb8
+      size: 9153301
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_73_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_73_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_73_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_73_01_01_annotation.parquet
+      hash: md5
+      md5: 8e243d85be26b9f770bbcd4caa2fac0b
+      size: 270044649
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_73_01_01_vector.parquet
+      hash: md5
+      md5: eed9d72df2a9a419f29ec2cf7144c893
+      size: 10673719
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_16_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_16_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_16_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_16_01_01_annotation.parquet
+      hash: md5
+      md5: 3b32b4f1424f8897dd7c73489303fe5e
+      size: 98245741
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_16_01_01_vector.parquet
+      hash: md5
+      md5: 66d1796b52b03c1e751f137806b68184
+      size: 8971511
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_40_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_40_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_40_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_40_01_01_annotation.parquet
+      hash: md5
+      md5: 297a33f2b9787343b3ad03aa4b88060d
+      size: 154439244
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_40_01_01_vector.parquet
+      hash: md5
+      md5: e14432a6cb21e9f427fb13965660234f
+      size: 6704424
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_29_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_29_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_29_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_29_01_01_annotation.parquet
+      hash: md5
+      md5: 021bbf50997cd63477f1afd99811a53e
+      size: 109415804
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_29_01_01_vector.parquet
+      hash: md5
+      md5: bf4c67e95fbd5755ac76316b74486f15
+      size: 6433697
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_58_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_58_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_58_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_58_01_01_annotation.parquet
+      hash: md5
+      md5: 420594747e012e71c02fe5cb3c595a4a
+      size: 214581825
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_58_01_01_vector.parquet
+      hash: md5
+      md5: bab86f6c8a04acea1a43b082e2ff15f8
+      size: 7986470
+  make_spectra_vectors@TUM_aspn/TUM_aspn_27_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_27_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_27_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_27_01_01_annotation.parquet
+      hash: md5
+      md5: ff8520556d2cfc87283b33141dd6d756
+      size: 206419845
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_27_01_01_vector.parquet
+      hash: md5
+      md5: 67a3624fa2a7dfcb617ae5cc3b490a1e
+      size: 9081813
+  make_spectra_vectors@TUM_aspn/TUM_aspn_28_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_28_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_28_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_28_01_01_annotation.parquet
+      hash: md5
+      md5: f5eef15a7a9e84b80647c2f0a558f97b
+      size: 280296768
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_28_01_01_vector.parquet
+      hash: md5
+      md5: 9a6bab00f9bc6175077caff4a6e7c344
+      size: 6955124
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_14_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_14_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_14_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_14_01_01_annotation.parquet
+      hash: md5
+      md5: b22d32b919c7b930b5b8ebeba4766a07
+      size: 105140189
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_14_01_01_vector.parquet
+      hash: md5
+      md5: 5a636c30ee9ac194e3f4ef843f586fdc
+      size: 8444327
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_106_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_106_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_106_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_106_01_01_annotation.parquet
+      hash: md5
+      md5: 68dab30309792e37fae3a1470bbad975
+      size: 328526958
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_106_01_01_vector.parquet
+      hash: md5
+      md5: 9ffed8a0972e1e3b5ab1a42e70d321fd
+      size: 6292856
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_59_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_59_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_59_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_59_01_01_annotation.parquet
+      hash: md5
+      md5: 98830b3dc2a945f5c32d6e1d47ab484c
+      size: 217672319
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_59_01_01_vector.parquet
+      hash: md5
+      md5: a4c6daf34ce7d7fa6a5e70872091d91a
+      size: 8443399
+  make_spectra_vectors@TUM_aspn/TUM_aspn_29_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_29_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_29_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_29_01_01_annotation.parquet
+      hash: md5
+      md5: 9fece2fea7a5c68cf5ddfcf0030fd718
+      size: 352398044
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_29_01_01_vector.parquet
+      hash: md5
+      md5: 1160440562dc9d964806dbc9a73333ce
+      size: 5578444
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_71_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_71_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_71_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_71_01_01_annotation.parquet
+      hash: md5
+      md5: 61ddb259d07ef731204efdc8bd02f730
+      size: 255065330
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_71_01_01_vector.parquet
+      hash: md5
+      md5: 7f67d270246ca811d8b0e25e85dc350f
+      size: 9275809
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_28_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_28_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_28_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_28_01_01_annotation.parquet
+      hash: md5
+      md5: 8c6963a6e44face3abbf0675038a91f9
+      size: 152647074
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_28_01_01_vector.parquet
+      hash: md5
+      md5: f8eea000df75930ec90826fec4a75e4e
+      size: 9262701
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_61_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_61_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_61_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_61_01_01_annotation.parquet
+      hash: md5
+      md5: 5ad1c4cf04dc70e46b492e349fa26c84
+      size: 257577524
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_61_01_01_vector.parquet
+      hash: md5
+      md5: c092695e557cca1966016eeb023106bc
+      size: 9815974
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_120_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_120_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_120_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_120_01_01_annotation.parquet
+      hash: md5
+      md5: 91ea73598c89cb7f976b37b09b2759da
+      size: 525618612
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_120_01_01_vector.parquet
+      hash: md5
+      md5: 75f9ad3f5ec29959b3bf76c470efc9ab
+      size: 5962282
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_91_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_91_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_91_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_91_01_01_annotation.parquet
+      hash: md5
+      md5: 5514c53b5e364bdeb16200ff5b57fa4d
+      size: 265706467
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_91_01_01_vector.parquet
+      hash: md5
+      md5: 68116a6ea0e1da2ec0d77d7e92fe093b
+      size: 7689721
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_60_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_60_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_60_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_60_01_01_annotation.parquet
+      hash: md5
+      md5: 7b4a97d38579fe1128c23de33a72fea3
+      size: 111135130
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_60_01_01_vector.parquet
+      hash: md5
+      md5: d9f6743f00c1987a47fc6942c1625a0a
+      size: 5852666
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_81_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_81_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_81_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_81_01_01_annotation.parquet
+      hash: md5
+      md5: ef8fa8773e14b5b57425d86cf69fbbd6
+      size: 194324530
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_81_01_01_vector.parquet
+      hash: md5
+      md5: 17b946f2ec3c9927575ac78d03b3473a
+      size: 6237084
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_57_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_57_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_57_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_57_01_01_annotation.parquet
+      hash: md5
+      md5: 9fb14904dadae535d0c4863a964c278f
+      size: 200116665
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_57_01_01_vector.parquet
+      hash: md5
+      md5: 094bf38683766aa363a9ef9b0d2edb70
+      size: 8543481
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_60_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_60_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_60_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_60_01_01_annotation.parquet
+      hash: md5
+      md5: 09a39740b32148469bfa41af60c45df3
+      size: 226795059
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_60_01_01_vector.parquet
+      hash: md5
+      md5: bec1d14fd7003dbfe2024192c19dc616
+      size: 8604972
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_27_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_27_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_27_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_27_01_01_annotation.parquet
+      hash: md5
+      md5: 54e5bfd43b03305b1454c89db03191d1
+      size: 163080872
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_27_01_01_vector.parquet
+      hash: md5
+      md5: c2991182221a8ee6f6912238721d221e
+      size: 9689645
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_59_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_59_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_59_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_59_01_01_annotation.parquet
+      hash: md5
+      md5: cfe1a47024624cc19eed866d08150707
+      size: 137977107
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_59_01_01_vector.parquet
+      hash: md5
+      md5: 05d85c14a7fea5fd2c381a93265941b3
+      size: 7169676
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_7_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_7_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_7_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_7_01_01_annotation.parquet
+      hash: md5
+      md5: a9eb41d391efd18062cc16504e598e96
+      size: 65641685
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_7_01_01_vector.parquet
+      hash: md5
+      md5: 144cd056e8284d925e9eec7a4c381a10
+      size: 6843810
+  make_spectra_vectors@TUM_third_pool/TUM_third_pool_4_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_third_pool/TUM_third_pool_4_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_third_pool/TUM_third_pool_4_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_third_pool/TUM_third_pool_4_01_01_annotation.parquet
+      hash: md5
+      md5: ec3409fc1465e46fb332b7b5a7d74734
+      size: 266132907
+    outs:
+    - path: prospect_data_vectors/TUM_third_pool/TUM_third_pool_4_01_01_vector.parquet
+      hash: md5
+      md5: a773f04e5ba411345c8ea4fe6544ce9d
+      size: 2666619
+  make_spectra_vectors@TUM_aspn/TUM_aspn_15_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_15_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_15_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_15_01_01_annotation.parquet
+      hash: md5
+      md5: e1c6bf79f3924cd2a5abfd13fe40d6a1
+      size: 180994842
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_15_01_01_vector.parquet
+      hash: md5
+      md5: 87a0e191e032865441d28b8ec0306bc3
+      size: 6037217
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_80_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_80_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_80_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_80_01_01_annotation.parquet
+      hash: md5
+      md5: 20f4cd459c5eb2a97c6232c2f9053f87
+      size: 213236843
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_80_01_01_vector.parquet
+      hash: md5
+      md5: 697fb4b43b1f7c541122f1001030a81f
+      size: 6917388
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_17_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_17_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_17_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_17_01_01_annotation.parquet
+      hash: md5
+      md5: a57fb9448429ee8b45fba3b6aad6065a
+      size: 166481547
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_17_01_01_vector.parquet
+      hash: md5
+      md5: 003bbf91f304af45a57fce57de4d8f9f
+      size: 6810398
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_68_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_68_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_68_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_68_01_01_annotation.parquet
+      hash: md5
+      md5: 50049e70cef2da1a2f697fa00da55fe8
+      size: 108797337
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_68_01_01_vector.parquet
+      hash: md5
+      md5: bfd681f2e9835f96786f27657f889c8c
+      size: 6526213
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_19_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_19_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_19_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_19_01_01_annotation.parquet
+      hash: md5
+      md5: 6d4519d154301aa4eddec400972bf700
+      size: 156994836
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_19_01_01_vector.parquet
+      hash: md5
+      md5: 324c6f48e0676a91856a68e95f31ba6f
+      size: 6468412
+  make_spectra_vectors@TUM_third_pool/TUM_third_pool_6_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_third_pool/TUM_third_pool_6_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_third_pool/TUM_third_pool_6_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_third_pool/TUM_third_pool_6_01_01_annotation.parquet
+      hash: md5
+      md5: 74309794424d4129fb1eae5ac94623ca
+      size: 387595587
+    outs:
+    - path: prospect_data_vectors/TUM_third_pool/TUM_third_pool_6_01_01_vector.parquet
+      hash: md5
+      md5: ecf10b7a8ad3aa7de4e404ec43148ef4
+      size: 5622017
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_38_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_38_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_38_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_38_01_01_annotation.parquet
+      hash: md5
+      md5: 918c7792fed1d2af71786094c7841348
+      size: 170210730
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_38_01_01_vector.parquet
+      hash: md5
+      md5: ac9dce04aa05ef0b97c2a16a2c24478a
+      size: 8780460
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_41_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_41_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_41_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_41_01_01_annotation.parquet
+      hash: md5
+      md5: c5d0fc4be662b5ec3602c69d23eec6bc
+      size: 182931446
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_41_01_01_vector.parquet
+      hash: md5
+      md5: 47b58858ecd57c336cfc32cecaf0bf6b
+      size: 9276520
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_42_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_42_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_42_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_42_01_01_annotation.parquet
+      hash: md5
+      md5: 7af6684b748212dd95712f8474d5b1e6
+      size: 180636916
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_42_01_01_vector.parquet
+      hash: md5
+      md5: 8c2ef94dc6f96bb14b310d65a38e2454
+      size: 8735370
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_84_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_84_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_84_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_84_01_01_annotation.parquet
+      hash: md5
+      md5: 016f174cb052b5553f97754325eceb05
+      size: 186829502
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_84_01_01_vector.parquet
+      hash: md5
+      md5: eb901d5ab200eab6b3c405e2eb3f4947
+      size: 6245626
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_16_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_16_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_16_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_16_01_01_annotation.parquet
+      hash: md5
+      md5: ef197ebfb6ae387da76dcafad40bba2c
+      size: 107748896
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_16_01_01_vector.parquet
+      hash: md5
+      md5: b223e60dba83ba21e5e774b52bfe26cc
+      size: 5065262
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_79_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_79_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_79_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_79_01_01_annotation.parquet
+      hash: md5
+      md5: fef468d652b7972b22bb67d85fcbf8d7
+      size: 239945413
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_79_01_01_vector.parquet
+      hash: md5
+      md5: cde1b0b3328e331f41756c16fc05274f
+      size: 7705912
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_102_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_102_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_102_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_102_01_01_annotation.parquet
+      hash: md5
+      md5: 09680de1e502d9c80136c4ebe8807ce0
+      size: 246864728
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_102_01_01_vector.parquet
+      hash: md5
+      md5: b7c00bc73729c654e409d4de7cb6abc0
+      size: 5210365
+  make_spectra_vectors@TUM_aspn/TUM_aspn_36_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_36_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_36_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_36_01_01_annotation.parquet
+      hash: md5
+      md5: 15ffea4875086e86f7aa17ab137cc1bf
+      size: 127733535
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_36_01_01_vector.parquet
+      hash: md5
+      md5: f233c4a7e51dd068988148f773bd3093
+      size: 1797726
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_52_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_52_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_52_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_52_01_01_annotation.parquet
+      hash: md5
+      md5: a4b1d77f9a4d6dde5e741943dd72f505
+      size: 110956508
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_52_01_01_vector.parquet
+      hash: md5
+      md5: 22d260a91359c324765feb0428f7b4ff
+      size: 6183856
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_98_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_98_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_98_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_98_01_01_annotation.parquet
+      hash: md5
+      md5: 89632eff7f6ffcf376157840ce5d1dad
+      size: 286009074
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_98_01_01_vector.parquet
+      hash: md5
+      md5: 5468172d8772a1144fb3dd648eaac299
+      size: 6608389
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_116_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_116_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_116_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_116_01_01_annotation.parquet
+      hash: md5
+      md5: 5422dc94405fd60681fe9751d3de3280
+      size: 544547267
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_116_01_01_vector.parquet
+      hash: md5
+      md5: 6f83d36a1a51a85105d2a23e3737efc4
+      size: 8016600
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_44_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_44_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_44_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_44_01_01_annotation.parquet
+      hash: md5
+      md5: 56ea6b7cd0c11a54e0469206e8f9be65
+      size: 154840054
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_44_01_01_vector.parquet
+      hash: md5
+      md5: de53ca742922e0e3ab7abab5659edc64
+      size: 6438773
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_113_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_113_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_113_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_113_01_01_annotation.parquet
+      hash: md5
+      md5: a15bc7e670bdd19b7c895142b69a86c3
+      size: 371534913
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_113_01_01_vector.parquet
+      hash: md5
+      md5: e4c9c221d6d6da24105ca2bd6a1db0fe
+      size: 5680278
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_13_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_13_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_13_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_13_01_01_annotation.parquet
+      hash: md5
+      md5: 644c774fdc53da52505e012d7b52928a
+      size: 159664146
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_13_01_01_vector.parquet
+      hash: md5
+      md5: 783189ccbd4b435398ae1af40916f4f1
+      size: 6050977
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_118_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_118_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_118_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_118_01_01_annotation.parquet
+      hash: md5
+      md5: 42b403f7ec5dbb12e04a765cefdde867
+      size: 527624876
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_118_01_01_vector.parquet
+      hash: md5
+      md5: 4082c78717925a94e28f44e633c0beaa
+      size: 7473737
+  make_spectra_vectors@TUM_aspn/TUM_aspn_25_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_25_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_25_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_25_01_01_annotation.parquet
+      hash: md5
+      md5: 9881670a10a323e85d22f5bbc2ea6d19
+      size: 349658996
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_25_01_01_vector.parquet
+      hash: md5
+      md5: e8e24010cc43d0b25df8a0e65d8e3aa0
+      size: 5669814
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_64_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_64_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_64_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_64_01_01_annotation.parquet
+      hash: md5
+      md5: 82e1fc172309bbae20c7b06acba9bb8b
+      size: 117703674
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_64_01_01_vector.parquet
+      hash: md5
+      md5: 55237f97008427de084f5ceea20d39f4
+      size: 6405701
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_85_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_85_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_85_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_85_01_01_annotation.parquet
+      hash: md5
+      md5: 2be4798be1c43a2991bdded3fa83b402
+      size: 49198413
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_85_01_01_vector.parquet
+      hash: md5
+      md5: 7aee75d1abbeeea1e6e88281d385420c
+      size: 3907277
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_68_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_68_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_68_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_68_01_01_annotation.parquet
+      hash: md5
+      md5: e658e6016431d0635d6e764564a099aa
+      size: 225171506
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_68_01_01_vector.parquet
+      hash: md5
+      md5: dd9ba49e5be481427c983c0e82c2d3b8
+      size: 8345892
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_34_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_34_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_34_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_34_01_01_annotation.parquet
+      hash: md5
+      md5: 05eb8fee09429137910e9ecacfcffaf4
+      size: 184377813
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_34_01_01_vector.parquet
+      hash: md5
+      md5: bf98fd7411dcd88f64be24e20062a3d0
+      size: 8020084
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_77_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_77_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_77_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_77_01_01_annotation.parquet
+      hash: md5
+      md5: 27777c58a74c323c54d245970290ea2d
+      size: 107773642
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_77_01_01_vector.parquet
+      hash: md5
+      md5: c45ff38f54d19a7c8a094dd6119995fb
+      size: 6684557
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_43_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_43_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_43_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_43_01_01_annotation.parquet
+      hash: md5
+      md5: 7eedbfd0f0cb4e961fc207bae88d4fde
+      size: 171430816
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_43_01_01_vector.parquet
+      hash: md5
+      md5: 718f27770b57dc1d9b9a3c34566230af
+      size: 8231307
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_42_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_42_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_42_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_42_01_01_annotation.parquet
+      hash: md5
+      md5: 7f1abfe6628937dc09588bdff75b6dcf
+      size: 129888671
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_42_01_01_vector.parquet
+      hash: md5
+      md5: 87e7e9e1f69c59ce48be6669c9935634
+      size: 6568145
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_67_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_67_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_67_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_67_01_01_annotation.parquet
+      hash: md5
+      md5: ec146fed9a12d4b1330939df282e8596
+      size: 117911220
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_67_01_01_vector.parquet
+      hash: md5
+      md5: ed3d819ca8272cee2e33426883ba8fb2
+      size: 5840072
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_111_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_111_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_111_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_111_01_01_annotation.parquet
+      hash: md5
+      md5: c7438f531a72e10e420873b166ea77dc
+      size: 390053068
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_111_01_01_vector.parquet
+      hash: md5
+      md5: 29a5a7327d9d1be5ed420a1f994f9518
+      size: 6312078
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_10_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_10_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_10_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_10_01_01_annotation.parquet
+      hash: md5
+      md5: 31e6e7e050df45d5b4167ebe19dc2e7a
+      size: 201892587
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_10_01_01_vector.parquet
+      hash: md5
+      md5: 6806ed4d1659d476197e0fd8688952f3
+      size: 7100924
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_20_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_20_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_20_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_20_01_01_annotation.parquet
+      hash: md5
+      md5: 38fb3438eb1140264895cc25aca5f047
+      size: 133791727
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_20_01_01_vector.parquet
+      hash: md5
+      md5: 054b2a80d34d8ef7029a28a122fc39fa
+      size: 6016217
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_33_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_33_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_33_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_33_01_01_annotation.parquet
+      hash: md5
+      md5: d97805d1e2add0caa8948c1379140dce
+      size: 126613691
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_33_01_01_vector.parquet
+      hash: md5
+      md5: f93ca7dfc0aed0de7ababdbb6d5568c7
+      size: 4376762
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_41_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_41_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_41_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_41_01_01_annotation.parquet
+      hash: md5
+      md5: 6128149d10b80580d8f09922c70a74c8
+      size: 115721669
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_41_01_01_vector.parquet
+      hash: md5
+      md5: 2e90acae4540056736781c925d310428
+      size: 5284783
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_73_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_73_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_73_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_73_01_01_annotation.parquet
+      hash: md5
+      md5: 512a8947d36f1501d9e81bd97804de0f
+      size: 94791450
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_73_01_01_vector.parquet
+      hash: md5
+      md5: 3978293f89af83b18009cf3ba7e896ae
+      size: 6697553
+  make_spectra_vectors@TUM_aspn/TUM_aspn_10_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_10_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_10_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_10_01_01_annotation.parquet
+      hash: md5
+      md5: 3c22448d34d3260cadc3b9c9ab06b783
+      size: 181213255
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_10_01_01_vector.parquet
+      hash: md5
+      md5: 5eecc5688a2b45adeaa28e4358fc48b7
+      size: 2320378
+  make_spectra_vectors@TUM_aspn/TUM_aspn_11_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_11_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_11_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_11_01_01_annotation.parquet
+      hash: md5
+      md5: a6cb2953c7c68d6f9aa8b6e643fd237a
+      size: 209125253
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_11_01_01_vector.parquet
+      hash: md5
+      md5: 512b66e1ab624c05a9c2194cc2399669
+      size: 8252563
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_65_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_65_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_65_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_65_01_01_annotation.parquet
+      hash: md5
+      md5: e009857bf6b046b4e6e484614acf82c4
+      size: 240113184
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_65_01_01_vector.parquet
+      hash: md5
+      md5: 18f9e0cf5f8a972b7a5e5a76dee7180f
+      size: 9044055
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_64_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_64_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_64_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_64_01_01_annotation.parquet
+      hash: md5
+      md5: ca516fe372006c01c8a69e51b21bbcd8
+      size: 243248392
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_64_01_01_vector.parquet
+      hash: md5
+      md5: 6a5bd5f0fce88f28a7c555b31a5fb622
+      size: 9229378
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_21_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_21_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_21_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_21_01_01_annotation.parquet
+      hash: md5
+      md5: 5c43bf849abb8396b479b99d36e89968
+      size: 98328091
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_21_01_01_vector.parquet
+      hash: md5
+      md5: cbb4b201efccec7d4aa2228809fb8667
+      size: 8281020
+  make_spectra_vectors@TUM_aspn/TUM_aspn_37_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_37_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_37_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_37_01_01_annotation.parquet
+      hash: md5
+      md5: 71bec4eef496788ff4f6a5ed7820ff01
+      size: 248134113
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_37_01_01_vector.parquet
+      hash: md5
+      md5: 335bb1319a2211d1311cca6152ccc58b
+      size: 6934326
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_69_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_69_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_69_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_69_01_01_annotation.parquet
+      hash: md5
+      md5: 442f36c048e6898812b68120f9ec0133
+      size: 253026364
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_69_01_01_vector.parquet
+      hash: md5
+      md5: eed53d9ef93153710a0d29eed716223c
+      size: 8953888
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_117_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_117_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_117_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_117_01_01_annotation.parquet
+      hash: md5
+      md5: 2beac2d10a757789438495bed685faa5
+      size: 532938919
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_117_01_01_vector.parquet
+      hash: md5
+      md5: e5478a2db7fbe72e9d92bae24dcfdbd7
+      size: 7649352
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_77_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_77_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_77_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_77_01_01_annotation.parquet
+      hash: md5
+      md5: 417369c38154450f5b0fd27421477941
+      size: 266595550
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_77_01_01_vector.parquet
+      hash: md5
+      md5: b5f8e5c1730c47e98f1894b0ef3143e1
+      size: 8357929
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_22_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_22_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_22_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_22_01_01_annotation.parquet
+      hash: md5
+      md5: ba83394cba0852aaa44b0ace0839ddf5
+      size: 117284931
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_22_01_01_vector.parquet
+      hash: md5
+      md5: bda704c0e0cb0ba933ec88761a8158cd
+      size: 4563603
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_78_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_78_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_78_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_78_01_01_annotation.parquet
+      hash: md5
+      md5: 19cecf5ae026b4e2c3518c25731ee44a
+      size: 115531354
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_78_01_01_vector.parquet
+      hash: md5
+      md5: 0d3063768deecf0efbcf762c7b215fb4
+      size: 6596603
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_121_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_121_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_121_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_121_01_01_annotation.parquet
+      hash: md5
+      md5: 701a6e61060f22b68bd65517d109420b
+      size: 486941063
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_121_01_01_vector.parquet
+      hash: md5
+      md5: c10405530193dbc31b7d238e00b9f77d
+      size: 5433667
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_31_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_31_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_31_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_31_01_01_annotation.parquet
+      hash: md5
+      md5: 65a707e7d07dcf3ade6f3cfea621a2f1
+      size: 149235622
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_31_01_01_vector.parquet
+      hash: md5
+      md5: f56ced57a019088341b30a536482d468
+      size: 9094459
+  make_spectra_vectors@TUM_aspn/TUM_aspn_13_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_13_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_13_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_13_01_01_annotation.parquet
+      hash: md5
+      md5: c266c5b25486f75561e14fbd963c32df
+      size: 281943844
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_13_01_01_vector.parquet
+      hash: md5
+      md5: 269cc0c3f7ab8b3f5aef56c6ff372444
+      size: 4782015
+  make_spectra_vectors@TUM_aspn/TUM_aspn_18_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_18_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_18_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_18_01_01_annotation.parquet
+      hash: md5
+      md5: aaebc7ea89bd2fa75d1e10eaf27932c1
+      size: 367509800
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_18_01_01_vector.parquet
+      hash: md5
+      md5: 5674eea1e77f90cfd375595db62134a0
+      size: 3438157
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_83_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_83_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_83_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_83_01_01_annotation.parquet
+      hash: md5
+      md5: 9a396cb5bb730520df984e4bf56abf69
+      size: 81241586
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_83_01_01_vector.parquet
+      hash: md5
+      md5: d2b3b0b944d4878cf72e93adc6c8725a
+      size: 6115880
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_35_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_35_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_35_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_35_01_01_annotation.parquet
+      hash: md5
+      md5: 07891d27390964cf8d73553d8b107163
+      size: 190240073
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_35_01_01_vector.parquet
+      hash: md5
+      md5: a8d958e96cb52a1bad8eb8f15ec92bc0
+      size: 6990214
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_21_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_21_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_21_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_21_01_01_annotation.parquet
+      hash: md5
+      md5: 7eb946a7bdd09a77b5bcf631fe3a5dda
+      size: 137347111
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_21_01_01_vector.parquet
+      hash: md5
+      md5: b3efbbbb8f87006df5c1d25b4084c204
+      size: 6704454
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_50_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_50_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_50_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_50_01_01_annotation.parquet
+      hash: md5
+      md5: 1bea8d6ad98fbb5645be619beab55451
+      size: 131165448
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_50_01_01_vector.parquet
+      hash: md5
+      md5: 3b24fb3bdedf1cef4710e421c69ab2b3
+      size: 6502390
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_82_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_82_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_82_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_82_01_01_annotation.parquet
+      hash: md5
+      md5: c4115d659e9fbb4f7283efed5abb92a1
+      size: 87576358
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_82_01_01_vector.parquet
+      hash: md5
+      md5: 896bd29fa11bf4e5348c536e283440e7
+      size: 6152917
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_70_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_70_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_70_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_70_01_01_annotation.parquet
+      hash: md5
+      md5: 33949659ea6c506230763ae2a55e30a3
+      size: 259770172
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_70_01_01_vector.parquet
+      hash: md5
+      md5: b2b4821817849df2ac95d53255153002
+      size: 9019444
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_54_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_54_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_54_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_54_01_01_annotation.parquet
+      hash: md5
+      md5: ab1aded46e92321404d179cafad903b0
+      size: 201136154
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_54_01_01_vector.parquet
+      hash: md5
+      md5: eec79a2ac0413b62d2faeb4532e6c62b
+      size: 8895978
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_12_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_12_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_12_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_12_01_01_annotation.parquet
+      hash: md5
+      md5: 17c0d4f6ee779b394c4c45ebcfe103ba
+      size: 142554796
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_12_01_01_vector.parquet
+      hash: md5
+      md5: c1c14b366ef56b9c996e2e4d25f84e4a
+      size: 7125290
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_5_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_5_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_5_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_5_01_01_annotation.parquet
+      hash: md5
+      md5: 511e16d26eb9b17831c3c80e035ac978
+      size: 142035186
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_5_01_01_vector.parquet
+      hash: md5
+      md5: e8a398dd330bfd8cb262f23c5dab4b5d
+      size: 5638096
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_67_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_67_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_67_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_67_01_01_annotation.parquet
+      hash: md5
+      md5: 481dc94377e08fc215f21a0e43fc2b26
+      size: 233216289
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_67_01_01_vector.parquet
+      hash: md5
+      md5: 8e229414e8e2b650bab53278dda59877
+      size: 8928618
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_119_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_119_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_119_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_119_01_01_annotation.parquet
+      hash: md5
+      md5: aa97c679ba921a8e601459d4fa5bc2b4
+      size: 541569597
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_119_01_01_vector.parquet
+      hash: md5
+      md5: 3c0671df000aa6d686e497223de06bcb
+      size: 6398603
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_7_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_7_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_7_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_7_01_01_annotation.parquet
+      hash: md5
+      md5: bb47b0fde4a48459c35d0b84d6eba493
+      size: 157919094
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_7_01_01_vector.parquet
+      hash: md5
+      md5: 626d1348fd449a8b6623c1df245fb2c4
+      size: 6957462
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_61_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_61_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_61_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_61_01_01_annotation.parquet
+      hash: md5
+      md5: 2ab207af1269597efc6d86222ae5ce4a
+      size: 134021040
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_61_01_01_vector.parquet
+      hash: md5
+      md5: c99c91c79f2cbf42d12ff8ecc5fb451c
+      size: 7339417
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_76_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_76_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_76_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_76_01_01_annotation.parquet
+      hash: md5
+      md5: 36bdc6d4d00a1ab1c9a70f502db39da3
+      size: 251141415
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_76_01_01_vector.parquet
+      hash: md5
+      md5: 6190c8628ca74ed1aec2d98c3b5d1466
+      size: 8676580
+  make_spectra_vectors@TUM_third_pool/TUM_third_pool_1_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_third_pool/TUM_third_pool_1_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_third_pool/TUM_third_pool_1_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_third_pool/TUM_third_pool_1_01_01_annotation.parquet
+      hash: md5
+      md5: 0ffdac08491d94129f1cb26acc14d967
+      size: 90694503
+    outs:
+    - path: prospect_data_vectors/TUM_third_pool/TUM_third_pool_1_01_01_vector.parquet
+      hash: md5
+      md5: 8f6d0e90ff64100ad3d5f3380af4e877
+      size: 5223039
+  make_spectra_vectors@TUM_aspn/TUM_aspn_24_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_24_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_24_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_24_01_01_annotation.parquet
+      hash: md5
+      md5: d2c35bfcb9204ce733a87c9889935795
+      size: 291913557
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_24_01_01_vector.parquet
+      hash: md5
+      md5: 95127e7169e134cd652191a65afaf952
+      size: 8518270
+  make_spectra_vectors@TUM_aspn/TUM_aspn_2_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_2_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_2_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_2_01_01_annotation.parquet
+      hash: md5
+      md5: 89a6870dac675476553476d8c99ffb35
+      size: 272166942
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_2_01_01_vector.parquet
+      hash: md5
+      md5: 6d5045984a0a7380624692bf18e8c65e
+      size: 4015282
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_53_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_53_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_53_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_53_01_01_annotation.parquet
+      hash: md5
+      md5: 548548ab2db0f2433367032446795421
+      size: 204125973
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_53_01_01_vector.parquet
+      hash: md5
+      md5: 3fea06005ddc21db5d1eb1ec1d33cc87
+      size: 8759305
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_48_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_48_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_48_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_48_01_01_annotation.parquet
+      hash: md5
+      md5: 915c2bd6ae6b0b66aa53a709ec1870d3
+      size: 99359694
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_48_01_01_vector.parquet
+      hash: md5
+      md5: 27a090cefb1dc7597eaaf43b10f89ca4
+      size: 5015830
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_82_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_82_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_82_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_82_01_01_annotation.parquet
+      hash: md5
+      md5: 61fb4fe8bef5191a9fd08ee3adaf9415
+      size: 226719032
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_82_01_01_vector.parquet
+      hash: md5
+      md5: 175ff07e4ee9bb4e94382aaab5d48b30
+      size: 7051326
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_30_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_30_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_30_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_30_01_01_annotation.parquet
+      hash: md5
+      md5: 27c674de8ea8b6c184ddc699fc31ad8c
+      size: 162197631
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_30_01_01_vector.parquet
+      hash: md5
+      md5: acf6be66a7767f3ee22cf2ad347fef15
+      size: 7262763
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_63_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_63_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_63_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_63_01_01_annotation.parquet
+      hash: md5
+      md5: 9a315e854e5e1976c26c70ba55ed228b
+      size: 116002103
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_63_01_01_vector.parquet
+      hash: md5
+      md5: 7d1f1e9e5f319e9d3722800928bbf614
+      size: 6975685
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_95_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_95_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_95_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_95_01_01_annotation.parquet
+      hash: md5
+      md5: 002b58c493d145a55980bf5937d4d2a3
+      size: 283444174
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_95_01_01_vector.parquet
+      hash: md5
+      md5: 467bdd9fb63fab5bc2115ab8a8df59d5
+      size: 7840489
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_3_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_3_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_3_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_3_01_01_annotation.parquet
+      hash: md5
+      md5: 0d119ed31eac86d768aa979c9ceb6f3b
+      size: 50028558
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_3_01_01_vector.parquet
+      hash: md5
+      md5: 5aee1d9ca4921f7cf280a34734c4bfc1
+      size: 6447774
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_83_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_83_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_83_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_83_01_01_annotation.parquet
+      hash: md5
+      md5: 669333358169444afcf5565c05414e6e
+      size: 234964927
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_83_01_01_vector.parquet
+      hash: md5
+      md5: f5ff1b4ec4e2f3a3a8470fc4e7f397d8
+      size: 7870301
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_39_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_39_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_39_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_39_01_01_annotation.parquet
+      hash: md5
+      md5: 919cfe759123ec1946975b34932e39ce
+      size: 154821478
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_39_01_01_vector.parquet
+      hash: md5
+      md5: 1cedbf7b17fc98272576c87e8e551992
+      size: 7270382
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_80_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_80_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_80_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_80_01_01_annotation.parquet
+      hash: md5
+      md5: c2f0472b583a74c90f5b94acc566fa00
+      size: 91923195
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_80_01_01_vector.parquet
+      hash: md5
+      md5: 8c758c416ab5acbc42137fc174b9fcd1
+      size: 5770559
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_62_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_62_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_62_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_62_01_01_annotation.parquet
+      hash: md5
+      md5: 7d969831e9d30e098ac64b3ed4c240b5
+      size: 124824451
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_62_01_01_vector.parquet
+      hash: md5
+      md5: f704cbee6f24963f98d2ccd258ead512
+      size: 6729764
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_4_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_4_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_4_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_4_01_01_annotation.parquet
+      hash: md5
+      md5: b6febd8feb3239d73a93266e26e2badf
+      size: 166788175
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_4_01_01_vector.parquet
+      hash: md5
+      md5: 6faa6aac7d3a06cc37c7047219abddd3
+      size: 6838264
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_1_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_1_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_1_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_1_01_01_annotation.parquet
+      hash: md5
+      md5: a88ebc0e8161e8eccc063cc2e28c2816
+      size: 105157019
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_1_01_01_vector.parquet
+      hash: md5
+      md5: d5f9b201579563c1827d5e721ac02400
+      size: 4797554
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_97_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_97_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_97_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_97_01_01_annotation.parquet
+      hash: md5
+      md5: 7dfc3a50d1817f039a4d98bf90075a04
+      size: 297229233
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_97_01_01_vector.parquet
+      hash: md5
+      md5: 89918b1c6cc3a94247f9408b2c61fb02
+      size: 7305179
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_37_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_37_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_37_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_37_01_01_annotation.parquet
+      hash: md5
+      md5: 843e0456ac0c15ab52e84f15cac7da20
+      size: 197978920
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_37_01_01_vector.parquet
+      hash: md5
+      md5: 52c02e337209a3232837cc8a1c07f86d
+      size: 9524398
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_45_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_45_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_45_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_45_01_01_annotation.parquet
+      hash: md5
+      md5: 7ec39434415fc6d025f9a45c93a0b08d
+      size: 93619023
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_45_01_01_vector.parquet
+      hash: md5
+      md5: dcf4af41ab25a2b6cb5e441998f6ff2d
+      size: 5784535
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_49_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_49_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_49_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_49_01_01_annotation.parquet
+      hash: md5
+      md5: 596bb0d1c3f90496741c44061ea05cd9
+      size: 133839869
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_49_01_01_vector.parquet
+      hash: md5
+      md5: 6780d38761619faa3f1791af9b4f7991
+      size: 6756517
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_92_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_92_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_92_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_92_01_01_annotation.parquet
+      hash: md5
+      md5: aac910e422b5f69935c0b8e35155baf4
+      size: 308727238
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_92_01_01_vector.parquet
+      hash: md5
+      md5: 5c2ab2a19883b8dc227fcb4143a8a3a5
+      size: 7710595
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_75_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_75_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_75_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_75_01_01_annotation.parquet
+      hash: md5
+      md5: 9e9e280fb64bb84a52125d53c2ea14cc
+      size: 241428104
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_75_01_01_vector.parquet
+      hash: md5
+      md5: 7f38788ea19ddebb553cb42cd1515402
+      size: 8671493
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_46_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_46_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_46_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_46_01_01_annotation.parquet
+      hash: md5
+      md5: 2ef7d362201e21a20e872b14bc9f55a5
+      size: 124185796
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_46_01_01_vector.parquet
+      hash: md5
+      md5: e6e34ca88fcfd3493327e33510d6d1a5
+      size: 6676147
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_70_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_70_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_70_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_70_01_01_annotation.parquet
+      hash: md5
+      md5: 45da1a611adbfc4672712c6d5e5d8a2b
+      size: 96896970
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_70_01_01_vector.parquet
+      hash: md5
+      md5: 6a78e7f8e280f349b61eabd98f337737
+      size: 6218487
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_18_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_18_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_18_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_18_01_01_annotation.parquet
+      hash: md5
+      md5: a5a098909637d3819cdb90bde9762aa7
+      size: 146432975
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_18_01_01_vector.parquet
+      hash: md5
+      md5: ba5528f85e57b9eb9ffefdd9aa242ca6
+      size: 5109896
+  make_spectra_vectors@TUM_aspn/TUM_aspn_19_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_19_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_19_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_19_01_01_annotation.parquet
+      hash: md5
+      md5: a4b500795d890f1821fc0c51b0ba40e6
+      size: 263332497
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_19_01_01_vector.parquet
+      hash: md5
+      md5: 85ed28ba55b3eafb689f71d9157c2795
+      size: 6833074
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_56_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_56_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_56_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_56_01_01_annotation.parquet
+      hash: md5
+      md5: b0b4a069ed671685b195c2004cbf0242
+      size: 122844213
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_56_01_01_vector.parquet
+      hash: md5
+      md5: 2693fce21fe7b9fc0cc29e4d4eea07e6
+      size: 6762771
+  make_spectra_vectors@TUM_aspn/TUM_aspn_16_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_16_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_16_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_16_01_01_annotation.parquet
+      hash: md5
+      md5: ac3b8d8d003fd5f48091660127558e20
+      size: 372121554
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_16_01_01_vector.parquet
+      hash: md5
+      md5: 806c100d7d4eb65bb9697caed7c6d7e0
+      size: 7504275
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_65_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_65_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_65_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_65_01_01_annotation.parquet
+      hash: md5
+      md5: f7360ac5ce5951b522dd068c51655ace
+      size: 198714513
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_65_01_01_vector.parquet
+      hash: md5
+      md5: f21bde0166a35f3af0825e25c1f282be
+      size: 6877247
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_56_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_56_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_56_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_56_01_01_annotation.parquet
+      hash: md5
+      md5: 24b6f3801af86817f3e54446a020760e
+      size: 202950105
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_56_01_01_vector.parquet
+      hash: md5
+      md5: 759a581b7b0f1dcbdb70e39d39a6e03b
+      size: 9040595
+  make_spectra_vectors@TUM_aspn/TUM_aspn_34_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_34_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_34_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_34_01_01_annotation.parquet
+      hash: md5
+      md5: 6088eade337dd3d223a44b5dac69e41d
+      size: 143661824
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_34_01_01_vector.parquet
+      hash: md5
+      md5: 1038db807e83aa5c7ed63b3debe9317b
+      size: 1953752
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_90_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_90_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_90_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_90_01_01_annotation.parquet
+      hash: md5
+      md5: ea8197d197eb5999e5ed797f883d64e8
+      size: 281946251
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_90_01_01_vector.parquet
+      hash: md5
+      md5: 7732dc20233ad5b70df9b121e97dd97c
+      size: 7597160
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_87_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_87_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_87_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_87_01_01_annotation.parquet
+      hash: md5
+      md5: 6a99be59e9ca6dcaf0676029e9e30321
+      size: 275774148
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_87_01_01_vector.parquet
+      hash: md5
+      md5: 8d9b3695315365dd563a214d1bb3835b
+      size: 7854836
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_72_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_72_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_72_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_72_01_01_annotation.parquet
+      hash: md5
+      md5: b495f12820f246c6c376f717fe203e5d
+      size: 267152347
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_72_01_01_vector.parquet
+      hash: md5
+      md5: 1ae7f951c59f078236458609c0e0f9b1
+      size: 9573160
+  make_spectra_vectors@TUM_aspn/TUM_aspn_23_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_23_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_23_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_23_01_01_annotation.parquet
+      hash: md5
+      md5: db18addc28fdf29f5b17498c400cb522
+      size: 139441748
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_23_01_01_vector.parquet
+      hash: md5
+      md5: 6a268e43a9b9f24650fabf735f3e9328
+      size: 1737642
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_2_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_2_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_2_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_2_01_01_annotation.parquet
+      hash: md5
+      md5: 2bb624d40e3b9a4fe79acd22580898db
+      size: 49400168
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_2_01_01_vector.parquet
+      hash: md5
+      md5: e4686547b05175da4d59e7b3987c84d6
+      size: 6315031
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_69_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_69_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_69_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_69_01_01_annotation.parquet
+      hash: md5
+      md5: 28e0a87292a69bb4b6c9f849455fec76
+      size: 113098725
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_69_01_01_vector.parquet
+      hash: md5
+      md5: cd76957210d0dd901201a22841c28751
+      size: 6303904
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_66_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_66_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_66_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_66_01_01_annotation.parquet
+      hash: md5
+      md5: 778f5aabf34cf350258a7fa79dd29e3e
+      size: 229026176
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_66_01_01_vector.parquet
+      hash: md5
+      md5: 55f1eedf65bb671ea7e994c7ce3996d4
+      size: 8902408
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_25_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_25_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_25_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_25_01_01_annotation.parquet
+      hash: md5
+      md5: 1d396c9ddf4d84dc92366945fcb845da
+      size: 151772454
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_25_01_01_vector.parquet
+      hash: md5
+      md5: 01b7057bbfecedd91e8a3eda41516643
+      size: 9420944
+  make_spectra_vectors@TUM_aspn/TUM_aspn_8_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_8_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_8_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_8_01_01_annotation.parquet
+      hash: md5
+      md5: 4b81c33ba45c0d447aa0f0e7467891a6
+      size: 394868422
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_8_01_01_vector.parquet
+      hash: md5
+      md5: 946831fdb8047177b26f56ed1dda9dd5
+      size: 4483879
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_53_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_53_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_53_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_53_01_01_annotation.parquet
+      hash: md5
+      md5: 8eb87286694c4959e4b67ac44868f028
+      size: 136464878
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_53_01_01_vector.parquet
+      hash: md5
+      md5: 89accb5f96d401d356a0f389245e97b9
+      size: 6525552
+  make_spectra_vectors@TUM_aspn/TUM_aspn_30_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_30_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_30_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_30_01_01_annotation.parquet
+      hash: md5
+      md5: f6bddedf8e299feb36deb83e782f7b2f
+      size: 91299139
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_30_01_01_vector.parquet
+      hash: md5
+      md5: da36f8ca3e3b655b99af679aa4a9b008
+      size: 1365356
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_48_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_48_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_48_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_48_01_01_annotation.parquet
+      hash: md5
+      md5: c5ba799275100293fda2bcab8bc57016
+      size: 204575750
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_48_01_01_vector.parquet
+      hash: md5
+      md5: 8f1c7e667cbca0f9ced4ee9288d1b944
+      size: 8492495
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_78_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_78_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_78_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_78_01_01_annotation.parquet
+      hash: md5
+      md5: e3a52ed828d75587158386a89ed1416b
+      size: 241634996
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_78_01_01_vector.parquet
+      hash: md5
+      md5: 2a9ac13af0c58b25c0d0593d4c847a79
+      size: 8008834
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_15_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_15_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_15_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_15_01_01_annotation.parquet
+      hash: md5
+      md5: bac0c15bfd63208bfa3e4929152e7f54
+      size: 146867955
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_15_01_01_vector.parquet
+      hash: md5
+      md5: 116c0e775ffc2cec32e28068c7d86359
+      size: 6124362
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_104_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_104_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_104_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_104_01_01_annotation.parquet
+      hash: md5
+      md5: b46aa2cc89dff8338773e3f34b756516
+      size: 315581515
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_104_01_01_vector.parquet
+      hash: md5
+      md5: 285b9ec45669caca92f97214911afe2d
+      size: 6590258
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_29_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_29_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_29_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_29_01_01_annotation.parquet
+      hash: md5
+      md5: 5065f7c24be910b56e2d44d0211cebde
+      size: 179317902
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_29_01_01_vector.parquet
+      hash: md5
+      md5: caf8ba47de2a53ca3d20fd6eecba992e
+      size: 7835243
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_22_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_22_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_22_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_22_01_01_annotation.parquet
+      hash: md5
+      md5: ee7385bada3ef71ef019eb5390479a60
+      size: 97686306
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_22_01_01_vector.parquet
+      hash: md5
+      md5: 47079e90d190c52bae755e04cb5e7439
+      size: 8034904
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_23_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_23_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_23_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_23_01_01_annotation.parquet
+      hash: md5
+      md5: 888122bf6cea70c31044d403ec4a904d
+      size: 138273926
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_23_01_01_vector.parquet
+      hash: md5
+      md5: 658cb2aa393aea0604c2929efc66623a
+      size: 5731748
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_103_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_103_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_103_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_103_01_01_annotation.parquet
+      hash: md5
+      md5: 60ecf764846c6a003ee6820eac6a038d
+      size: 301200639
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_103_01_01_vector.parquet
+      hash: md5
+      md5: 37417c8682bd0977f57fb8cc41cfba14
+      size: 6552589
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_88_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_88_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_88_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_88_01_01_annotation.parquet
+      hash: md5
+      md5: d5ddf988aa7f494a591e81b0e06571f8
+      size: 253678140
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_88_01_01_vector.parquet
+      hash: md5
+      md5: c33617ac0294a896c92242b5dca507bc
+      size: 7280449
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_79_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_79_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_79_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_79_01_01_annotation.parquet
+      hash: md5
+      md5: 80af60427fdb15b0cffd4bbd5abf6132
+      size: 101633017
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_79_01_01_vector.parquet
+      hash: md5
+      md5: 4838d1757054c01c333f2ac46e402c42
+      size: 6034320
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_58_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_58_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_58_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_58_01_01_annotation.parquet
+      hash: md5
+      md5: e0954d497d1200e292234f12465df670
+      size: 135015256
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_58_01_01_vector.parquet
+      hash: md5
+      md5: b020f80f7e17e9a8c26ee76c8838b05f
+      size: 7356426
+  make_spectra_vectors@TUM_aspn/TUM_aspn_21_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_21_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_21_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_21_01_01_annotation.parquet
+      hash: md5
+      md5: 589f36e88a9c517c27b0357ac5453492
+      size: 436974663
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_21_01_01_vector.parquet
+      hash: md5
+      md5: 8ab6c4d3be08f58f897d80d726d3f049
+      size: 8801425
+  make_spectra_vectors@TUM_aspn/TUM_aspn_22_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_22_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_22_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_22_01_01_annotation.parquet
+      hash: md5
+      md5: af334a44ab96779c0e193d09ab64b5ec
+      size: 449193421
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_22_01_01_vector.parquet
+      hash: md5
+      md5: 99608f177b629e27014687f0d1ceed42
+      size: 10042549
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_89_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_89_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_89_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_89_01_01_annotation.parquet
+      hash: md5
+      md5: c2df28816eec55dbfb849eeba4e26ce7
+      size: 275572978
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_89_01_01_vector.parquet
+      hash: md5
+      md5: 7d426105a6ed73bdd76b749b5ce12f32
+      size: 7816094
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_52_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_52_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_52_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_52_01_01_annotation.parquet
+      hash: md5
+      md5: 28e663853124bff5f4574c3a42ac2643
+      size: 195622396
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_52_01_01_vector.parquet
+      hash: md5
+      md5: 59ff94a9389b474e8775092f5f366bec
+      size: 8371427
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_94_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_94_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_94_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_94_01_01_annotation.parquet
+      hash: md5
+      md5: 8e0f6df42287ba7581e12fe435ad464d
+      size: 313647091
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_94_01_01_vector.parquet
+      hash: md5
+      md5: ede6905dd8bd31817c1d74b181d91beb
+      size: 7749981
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_63_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_63_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_63_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_63_01_01_annotation.parquet
+      hash: md5
+      md5: d96fcc39d279c980a259bed6123e2f69
+      size: 220136435
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_63_01_01_vector.parquet
+      hash: md5
+      md5: 8e00923b4c497349a60138d101414fa2
+      size: 8845425
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_99_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_99_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_99_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_99_01_01_annotation.parquet
+      hash: md5
+      md5: 4bc6e816a217561c8bfc6795eb6ff2c7
+      size: 246620906
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_99_01_01_vector.parquet
+      hash: md5
+      md5: 33e5f814cc1e279596069fc4021d3235
+      size: 5338438
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_44_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_44_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_44_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_44_01_01_annotation.parquet
+      hash: md5
+      md5: 6b2dd8255208096bc11c191df2dad61e
+      size: 169935865
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_44_01_01_vector.parquet
+      hash: md5
+      md5: 9add99046d820f5b3bb122511c1756c3
+      size: 8077309
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_107_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_107_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_107_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_107_01_01_annotation.parquet
+      hash: md5
+      md5: 6af84adecf3979135e5c35361bd187f2
+      size: 343514079
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_107_01_01_vector.parquet
+      hash: md5
+      md5: 38bca3392a227cb3894d9a00eac96d9a
+      size: 6490285
+  make_spectra_vectors@TUM_aspn/TUM_aspn_41_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_41_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_41_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_41_01_01_annotation.parquet
+      hash: md5
+      md5: 90e8e52991618d90eac420a84a7b820d
+      size: 403798402
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_41_01_01_vector.parquet
+      hash: md5
+      md5: 6d7c5b43311fdea1578080e81335f9f9
+      size: 8445920
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_51_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_51_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_51_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_51_01_01_annotation.parquet
+      hash: md5
+      md5: 26317a89a5658108168e944922de9694
+      size: 192191123
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_51_01_01_vector.parquet
+      hash: md5
+      md5: 85508952ae641dd46ec25294f03ea153
+      size: 8300352
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_88_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_88_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_88_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_88_01_01_annotation.parquet
+      hash: md5
+      md5: fdbdd7b101acf27e08f39ef585935df8
+      size: 11944556
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_88_01_01_vector.parquet
+      hash: md5
+      md5: e970141bf51a230e83adaba67aec5eb8
+      size: 2339732
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_36_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_36_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_36_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_36_01_01_annotation.parquet
+      hash: md5
+      md5: 0d8f7c89d03ea76ed4269b6278905e38
+      size: 146446343
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_36_01_01_vector.parquet
+      hash: md5
+      md5: b9c159559eed6ce1e88c43f848fa982c
+      size: 7269173
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_71_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_71_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_71_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_71_01_01_annotation.parquet
+      hash: md5
+      md5: b6db38b3bf9a42b581a3349cad5aa4ef
+      size: 124858775
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_71_01_01_vector.parquet
+      hash: md5
+      md5: 9a850e32352b3f3fbe84619ad08ca37b
+      size: 7012653
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_49_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_49_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_49_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_49_01_01_annotation.parquet
+      hash: md5
+      md5: 78834ea07547e8de7c41abce8a6964d4
+      size: 192673483
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_49_01_01_vector.parquet
+      hash: md5
+      md5: a700fee54d87bc734c86d1f95fb692bd
+      size: 8203616
+  make_spectra_vectors@TUM_third_pool/TUM_third_pool_3_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_third_pool/TUM_third_pool_3_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_third_pool/TUM_third_pool_3_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_third_pool/TUM_third_pool_3_01_01_annotation.parquet
+      hash: md5
+      md5: 444c2eed78d61e17c324c0ea5fff185c
+      size: 362420527
+    outs:
+    - path: prospect_data_vectors/TUM_third_pool/TUM_third_pool_3_01_01_vector.parquet
+      hash: md5
+      md5: 2e7fecd26a619ac0720dddb828400a87
+      size: 5923155
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_2_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_2_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_2_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_2_01_01_annotation.parquet
+      hash: md5
+      md5: eb06f45d24ff0a0dc14ef02b3b61f4c4
+      size: 177967832
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_2_01_01_vector.parquet
+      hash: md5
+      md5: 4b30a3f968c6f1418894410e4f2e1c07
+      size: 7053134
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_46_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_46_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_46_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_46_01_01_annotation.parquet
+      hash: md5
+      md5: 4b899fcf404078cbf67f43538428152f
+      size: 170392212
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_46_01_01_vector.parquet
+      hash: md5
+      md5: 9ff6e580134faf35489bceac664d5712
+      size: 8342014
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_101_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_101_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_101_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_101_01_01_annotation.parquet
+      hash: md5
+      md5: 565171c6adeb21d180bd156206928ae3
+      size: 286538766
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_101_01_01_vector.parquet
+      hash: md5
+      md5: bf48634d21bfc516a713f45765e0e593
+      size: 6291723
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_122_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_122_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_122_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_122_01_01_annotation.parquet
+      hash: md5
+      md5: 348ae7ec9f3a39bd021de54ae8ddcd2d
+      size: 434781892
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_122_01_01_vector.parquet
+      hash: md5
+      md5: f36291b9a0378dc852eab28e044f8219
+      size: 3499367
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_28_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_28_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_28_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_28_01_01_annotation.parquet
+      hash: md5
+      md5: 3a90cd23a5bd36a055f367fd038ae96c
+      size: 171618368
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_28_01_01_vector.parquet
+      hash: md5
+      md5: 4731083473696dfdb99dd9ea0765225e
+      size: 7319416
+  make_spectra_vectors@TUM_aspn/TUM_aspn_12_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_12_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_12_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_12_01_01_annotation.parquet
+      hash: md5
+      md5: aa145728d688e3972506c6d9c20ab78e
+      size: 289283312
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_12_01_01_vector.parquet
+      hash: md5
+      md5: b5b67c5b39f1f717c033e63bf079a53d
+      size: 7726850
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_26_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_26_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_26_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_26_01_01_annotation.parquet
+      hash: md5
+      md5: 995c0754962008d6406030c90508692c
+      size: 160058259
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_26_01_01_vector.parquet
+      hash: md5
+      md5: b21c7e2d10c906a5daf450b722e0d9b1
+      size: 9619752
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_30_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_30_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_30_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_30_01_01_annotation.parquet
+      hash: md5
+      md5: 0cb13b067cc4abea2c0716832b537d40
+      size: 111501514
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_30_01_01_vector.parquet
+      hash: md5
+      md5: 03d4197ae6e03fc0c78d194dd7d4913f
+      size: 6669444
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_24_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_24_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_24_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_24_01_01_annotation.parquet
+      hash: md5
+      md5: b060d17d3b2a89cfe0b6d4b0dac848a2
+      size: 149524024
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_24_01_01_vector.parquet
+      hash: md5
+      md5: abfb8185b9d774137c2406ab165a5930
+      size: 6871414
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_105_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_105_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_105_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_105_01_01_annotation.parquet
+      hash: md5
+      md5: 03af57abaa705bf9123e74f4b3782b61
+      size: 317548460
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_105_01_01_vector.parquet
+      hash: md5
+      md5: cf44ff15c7c83f54426ac512ce032a5b
+      size: 6013630
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_87_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_87_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_87_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_87_01_01_annotation.parquet
+      hash: md5
+      md5: e3d8152691afffcff30944ddb961836e
+      size: 50295263
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_87_01_01_vector.parquet
+      hash: md5
+      md5: 670b0fea9143f049b153bcffaa2c3420
+      size: 5096459
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_9_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_9_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_9_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_9_01_01_annotation.parquet
+      hash: md5
+      md5: dabb1f36c5160862f51bd43f356f3141
+      size: 154246199
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_9_01_01_vector.parquet
+      hash: md5
+      md5: d5bf1196623f0522776ff41136ce9860
+      size: 6115148
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_32_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_32_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_32_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_32_01_01_annotation.parquet
+      hash: md5
+      md5: 4d7124c5e6cb313772d8ae92308033e9
+      size: 123921559
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_32_01_01_vector.parquet
+      hash: md5
+      md5: c43dee38a44b33a6caf8f507ea6bc461
+      size: 5728468
+  make_spectra_vectors@TUM_aspn/TUM_aspn_31_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_31_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_31_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_31_01_01_annotation.parquet
+      hash: md5
+      md5: 6456077fc958d6e2c9e3d3af6cbee9a4
+      size: 181016427
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_31_01_01_vector.parquet
+      hash: md5
+      md5: e2134c6b65328ebd233d88dd9c4cd4cb
+      size: 5801645
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_86_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_86_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_86_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_86_01_01_annotation.parquet
+      hash: md5
+      md5: 95b3aec9476bc34e0addc8093737e664
+      size: 261794397
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_86_01_01_vector.parquet
+      hash: md5
+      md5: 4aea6916a75db57a63a4424a5efe4478
+      size: 7541749
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_25_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_25_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_25_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_25_01_01_annotation.parquet
+      hash: md5
+      md5: ad7ca2665c87772f345abdf2e2d5324f
+      size: 155465670
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_25_01_01_vector.parquet
+      hash: md5
+      md5: 58c9af6b4e963a996b522481e0ccb243
+      size: 7315361
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_108_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_108_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_108_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_108_01_01_annotation.parquet
+      hash: md5
+      md5: 912b5cfca5c9912a5c59a69ab9c8d9c4
+      size: 286366948
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_108_01_01_vector.parquet
+      hash: md5
+      md5: 92ebbb151c7c904c1e4f4715b1a7f5c0
+      size: 5613831
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_75_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_75_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_75_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_75_01_01_annotation.parquet
+      hash: md5
+      md5: 2f8e02d390dfd0352bbba4a07c6af347
+      size: 121000234
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_75_01_01_vector.parquet
+      hash: md5
+      md5: ed9f62a2171b35f1ac1c63844bae5a7f
+      size: 6826239
+  make_spectra_vectors@TUM_aspn/TUM_aspn_35_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_35_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_35_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_35_01_01_annotation.parquet
+      hash: md5
+      md5: 519145440f157cbe82c467f41fbe33c1
+      size: 221407643
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_35_01_01_vector.parquet
+      hash: md5
+      md5: b1de89ccddcbe889e499e5ba102d546a
+      size: 6951931
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_55_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_55_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_55_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_55_01_01_annotation.parquet
+      hash: md5
+      md5: 46b2fb095ebba7f9ade59905868adcac
+      size: 151058656
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_55_01_01_vector.parquet
+      hash: md5
+      md5: 9b34f252620e9815e6ccaf98d8b7d824
+      size: 7320730
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_112_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_112_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_112_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_112_01_01_annotation.parquet
+      hash: md5
+      md5: 26624ced766b418ffc5ae25655b5c09c
+      size: 363981915
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_112_01_01_vector.parquet
+      hash: md5
+      md5: 346b1659641a270e95e0912de639c87e
+      size: 5827735
+  qc_rt_data:
+    cmd:
+    - poetry run python scripts/rt_qc.py
+    deps:
+    - path: prospect_data/
+      hash: md5
+      md5: 9cdd18fa7bc974c7ab42ea85dc402b1b.dir
+      size: 52984847586
+      nfiles: 548
+    - path: scripts/rt_qc.py
+      hash: md5
+      md5: 3479af046880a000dbb543c16d86c8f4
+      size: 1827
+    outs:
+    - path: processed_data/rt_qc.parquet
+      hash: md5
+      md5: c21c310e4517e1f5766bb9984099c86d
+      size: 31856260
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_38_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_38_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_38_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_38_01_01_annotation.parquet
+      hash: md5
+      md5: a05b40e33c674218cd284bf3a03e857a
+      size: 216419162
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_38_01_01_vector.parquet
+      hash: md5
+      md5: eafe5c079c8d55af6073ebd244ebd238
+      size: 7916354
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_57_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_57_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_57_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_57_01_01_annotation.parquet
+      hash: md5
+      md5: f61e51b7b1552517aafbba304d37604b
+      size: 116186606
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_57_01_01_vector.parquet
+      hash: md5
+      md5: 961ba951d11328df08450e5a2289ee82
+      size: 6274672
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_109_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_109_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_109_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_109_01_01_annotation.parquet
+      hash: md5
+      md5: e2a7f4ad0423f45c485a9115bcc5eea2
+      size: 319279015
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_109_01_01_vector.parquet
+      hash: md5
+      md5: 9301ac3ba439a08cefe861443123ddfd
+      size: 5563817
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_11_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_11_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_11_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_11_01_01_annotation.parquet
+      hash: md5
+      md5: a177cb34fcbe3a70d7ee73a61cc6490b
+      size: 59842605
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_11_01_01_vector.parquet
+      hash: md5
+      md5: 7edd8f4997e68bd7ae93f2b0bb3f88fd
+      size: 6435364
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_84_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_84_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_84_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_84_01_01_annotation.parquet
+      hash: md5
+      md5: f707a2a7ffd1b8ef518da5eb640d2af3
+      size: 118619658
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_84_01_01_vector.parquet
+      hash: md5
+      md5: d9818275fb4d25223702c635977b0040
+      size: 6470110
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_15_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_15_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_15_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_15_01_01_annotation.parquet
+      hash: md5
+      md5: 9e69cbec0b0b48450c89d010021ed3a7
+      size: 99325214
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_15_01_01_vector.parquet
+      hash: md5
+      md5: a1c2f78205c135fc00e14ef16c12d70a
+      size: 8070297
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_37_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_37_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_37_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_37_01_01_annotation.parquet
+      hash: md5
+      md5: 5cc35be5b249d6d65f98f260c6ac4baa
+      size: 84676284
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_37_01_01_vector.parquet
+      hash: md5
+      md5: c763d276beea4dc4369a82c8e733e0ba
+      size: 3154273
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_123_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_123_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_123_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_123_01_01_annotation.parquet
+      hash: md5
+      md5: a9b1141784c510332c06540a39f3b6e3
+      size: 163500292
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_123_01_01_vector.parquet
+      hash: md5
+      md5: 8d7260f8963de7d45ea1362338d6311d
+      size: 1346947
+  make_spectra_vectors@TUM_third_pool/TUM_third_pool_2_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_third_pool/TUM_third_pool_2_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_third_pool/TUM_third_pool_2_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_third_pool/TUM_third_pool_2_01_01_annotation.parquet
+      hash: md5
+      md5: 6b56759cb50055fd6fa9b2dec261e587
+      size: 221011484
+    outs:
+    - path: prospect_data_vectors/TUM_third_pool/TUM_third_pool_2_01_01_vector.parquet
+      hash: md5
+      md5: 2d33c0ab884761e77b29b5b0f9dac7cc
+      size: 6833135
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_14_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_14_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_14_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_14_01_01_annotation.parquet
+      hash: md5
+      md5: b1fcec7de6ba13c5a5691f438f1afd23
+      size: 163228720
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_14_01_01_vector.parquet
+      hash: md5
+      md5: 10d5b5ae3a7a65dea7e3ab87d3541783
+      size: 6826618
+  make_spectra_vectors@TUM_aspn/TUM_aspn_9_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_9_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_9_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_9_01_01_annotation.parquet
+      hash: md5
+      md5: 493d7e28a619b37befbc86aa76205244
+      size: 247281319
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_9_01_01_vector.parquet
+      hash: md5
+      md5: 2144fcfe18208e28bc2afa4d756d58aa
+      size: 7019225
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_74_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_74_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_74_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_74_01_01_annotation.parquet
+      hash: md5
+      md5: 0f31a028afc0bd91fe909a2f7ad87fff
+      size: 100003782
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_74_01_01_vector.parquet
+      hash: md5
+      md5: db7e2efced69db3299b63a86d3e5c73d
+      size: 5908136
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_9_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_9_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_9_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_9_01_01_annotation.parquet
+      hash: md5
+      md5: 7bfe3ccd1a044f92b745be5802c96118
+      size: 98296401
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_9_01_01_vector.parquet
+      hash: md5
+      md5: 8941445a896e4286ec5d5fc0aa273e11
+      size: 7730106
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_19_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_19_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_19_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_19_01_01_annotation.parquet
+      hash: md5
+      md5: d7f9a6f43a7c8b0a456c8e582feb5274
+      size: 106593429
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_19_01_01_vector.parquet
+      hash: md5
+      md5: 86560c63f372b3e804e3d5ca5207c1c0
+      size: 8669473
+  make_spectra_vectors@TUM_aspn/TUM_aspn_33_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_33_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_33_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_33_01_01_annotation.parquet
+      hash: md5
+      md5: cd6adb2127feb7c24806d0df5724b4c3
+      size: 252068040
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_33_01_01_vector.parquet
+      hash: md5
+      md5: a83a11a9306661b5698e3fea05f3af6e
+      size: 7560779
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_36_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_36_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_36_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_36_01_01_annotation.parquet
+      hash: md5
+      md5: f41a05921a6eaf9e40a7e5816e4eef47
+      size: 151695934
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_36_01_01_vector.parquet
+      hash: md5
+      md5: e9f5e8ff682208738b94bf0649317733
+      size: 5756238
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_23_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_23_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_23_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_23_01_01_annotation.parquet
+      hash: md5
+      md5: 31701506819be5394fbfcee52541f99e
+      size: 102438667
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_23_01_01_vector.parquet
+      hash: md5
+      md5: 76f06d4e356830dbd7c64c6867dc46b5
+      size: 8083861
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_115_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_115_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_115_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_115_01_01_annotation.parquet
+      hash: md5
+      md5: 424a9674767425c8a97a23e4add771ab
+      size: 494799523
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_115_01_01_vector.parquet
+      hash: md5
+      md5: a4f32d492b4a9f6e1f4c82d01a6e1e3b
+      size: 7959429
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_54_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_54_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_54_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_54_01_01_annotation.parquet
+      hash: md5
+      md5: acec86bfa0893d58c3266792be21f07d
+      size: 108377802
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_54_01_01_vector.parquet
+      hash: md5
+      md5: ad1ae166e468f338a6bd2362c1e2804d
+      size: 7222886
+  make_spectra_vectors@TUM_aspn/TUM_aspn_1_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_1_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_1_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_1_01_01_annotation.parquet
+      hash: md5
+      md5: 73dfc4374da5abd6cbbd158c49c815c2
+      size: 186004881
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_1_01_01_vector.parquet
+      hash: md5
+      md5: deab0e65da903a6c929b1d0f2c113a99
+      size: 5546128
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_40_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_40_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_40_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_40_01_01_annotation.parquet
+      hash: md5
+      md5: 96d41f55f2b2a1e45a540427547fa449
+      size: 177526364
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_40_01_01_vector.parquet
+      hash: md5
+      md5: 40a56001f60e35a3f42ba92f7e7865d8
+      size: 8992716
+  make_spectra_vectors@TUM_aspn/TUM_aspn_7_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_7_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_7_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_7_01_01_annotation.parquet
+      hash: md5
+      md5: 401ab9ce77b6004c429a22194b4c7460
+      size: 403647032
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_7_01_01_vector.parquet
+      hash: md5
+      md5: 6a6cb29b34f42feafe9093b17cb7477a
+      size: 7158538
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_6_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_6_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_6_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_6_01_01_annotation.parquet
+      hash: md5
+      md5: ebae120a50699b3f38799cb7bae34864
+      size: 133191460
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_6_01_01_vector.parquet
+      hash: md5
+      md5: 38f2e9abf6650ac1276b4ad98022180e
+      size: 4642622
+  make_spectra_vectors@TUM_aspn/TUM_aspn_38_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_38_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_38_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_38_01_01_annotation.parquet
+      hash: md5
+      md5: c0b9277e754a971f7e1d0471e3698c53
+      size: 154726686
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_38_01_01_vector.parquet
+      hash: md5
+      md5: f9e072630e8b147208c13e8bc32f99e0
+      size: 5283794
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_51_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_51_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_51_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_51_01_01_annotation.parquet
+      hash: md5
+      md5: bcc75da048c41b5d7ae94eaf26bbe686
+      size: 127241236
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_51_01_01_vector.parquet
+      hash: md5
+      md5: b0a7ec026f41e2538e0441a88ad0d8c9
+      size: 6097480
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_6_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_6_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_6_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_6_01_01_annotation.parquet
+      hash: md5
+      md5: 2f2b6cb0b5014c3c391a2299290185b6
+      size: 66287594
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_6_01_01_vector.parquet
+      hash: md5
+      md5: 0f55dcd6eec6a76b0b84c6396e6546d3
+      size: 6851194
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_100_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_100_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_100_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_100_01_01_annotation.parquet
+      hash: md5
+      md5: b6b26326e22fce9337831b24e7bd1538
+      size: 189875187
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_100_01_01_vector.parquet
+      hash: md5
+      md5: 00ef2f47dca4b522811e9179e082bbc6
+      size: 4053087
+  make_spectra_vectors@TUM_aspn/TUM_aspn_32_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_32_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_32_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_32_01_01_annotation.parquet
+      hash: md5
+      md5: 43166b45f03e01cfc46c61397543dbb5
+      size: 304615589
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_32_01_01_vector.parquet
+      hash: md5
+      md5: e8edbe80492acc4e070af0b71e9218cf
+      size: 7768763
+  make_spectra_vectors@TUM_aspn/TUM_aspn_4_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_4_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_4_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_4_01_01_annotation.parquet
+      hash: md5
+      md5: 04e62593ee2c367a7b2378324015bbed
+      size: 531094686
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_4_01_01_vector.parquet
+      hash: md5
+      md5: 1d83cf2083fb5a6aa0d1bbde1716b150
+      size: 7276346
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_43_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_43_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_43_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_43_01_01_annotation.parquet
+      hash: md5
+      md5: 75a2d5f566ee9a1bc5858667c10daf7f
+      size: 137370915
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_43_01_01_vector.parquet
+      hash: md5
+      md5: 4de01208ccd8cc90de115fc17fa62562
+      size: 5746641
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_13_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_13_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_13_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_13_01_01_annotation.parquet
+      hash: md5
+      md5: 424a30022982a25be85e95e8f89e07a3
+      size: 89920243
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_13_01_01_vector.parquet
+      hash: md5
+      md5: 61230f016be8050882b24ddd9d5de553
+      size: 8332866
+  make_spectra_vectors@TUM_aspn/TUM_aspn_17_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_17_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_17_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_17_01_01_annotation.parquet
+      hash: md5
+      md5: c8b3001ad5508fe04a5e419d2db9aac2
+      size: 435394951
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_17_01_01_vector.parquet
+      hash: md5
+      md5: 565d501d930bbfabc15c3710a9864dca
+      size: 5414629
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_50_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_50_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_50_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_50_01_01_annotation.parquet
+      hash: md5
+      md5: e10521b5daf6cfe3601694197e4a8813
+      size: 175739341
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_50_01_01_vector.parquet
+      hash: md5
+      md5: 994d1158ec9425f52ab37eae288aca1a
+      size: 7829198
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_12_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_12_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_12_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_12_01_01_annotation.parquet
+      hash: md5
+      md5: 2c01141762aaeb920152237f5c5b55d7
+      size: 58704683
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_12_01_01_vector.parquet
+      hash: md5
+      md5: a629c7fcf5d8d5ae07eeabcaef2c6759
+      size: 6349578
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_17_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_17_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_17_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_17_01_01_annotation.parquet
+      hash: md5
+      md5: 03e8d239d9055234463bee61e754204a
+      size: 97654530
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_17_01_01_vector.parquet
+      hash: md5
+      md5: 2bc021d13b1f8b894c56bdbf39cb3d3c
+      size: 7842147
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_8_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_8_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_8_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_8_01_01_annotation.parquet
+      hash: md5
+      md5: d5f149ff7d122e5ac747ccd1b6ba066a
+      size: 63679128
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_8_01_01_vector.parquet
+      hash: md5
+      md5: a68cf07ca439e59a5f1895efdfe7b671
+      size: 6930435
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_47_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_47_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_47_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_47_01_01_annotation.parquet
+      hash: md5
+      md5: 5ad99bc7fd7ab935a9dbbdaa2e96137e
+      size: 174344591
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_47_01_01_vector.parquet
+      hash: md5
+      md5: b8176f813317e4f30752bb7061bc9a8b
+      size: 7855699
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_81_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_81_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_81_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_81_01_01_annotation.parquet
+      hash: md5
+      md5: ebf761e0a65eea4dea2ca49abf36d304
+      size: 167554967
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_81_01_01_vector.parquet
+      hash: md5
+      md5: cb219ff3b02db6b7fc53df81380c7ccd
+      size: 7231618
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_27_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_27_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_27_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_27_01_01_annotation.parquet
+      hash: md5
+      md5: f0b1fb57f13b82555db3e155d0575006
+      size: 150469042
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_27_01_01_vector.parquet
+      hash: md5
+      md5: 9d41f61ab647c43b7a38ea91125898db
+      size: 7598496
+  make_spectra_vectors@TUM_aspn/TUM_aspn_39_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_39_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_39_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_39_01_01_annotation.parquet
+      hash: md5
+      md5: 40a415e0549920ddeb51fb18f00d611f
+      size: 332792967
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_39_01_01_vector.parquet
+      hash: md5
+      md5: 203c8c50c6698b639c745cc483030104
+      size: 7761573
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_96_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_96_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_96_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_96_01_01_annotation.parquet
+      hash: md5
+      md5: 8c95f27f16955465eae58e8fa77c68bf
+      size: 271343101
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_96_01_01_vector.parquet
+      hash: md5
+      md5: be05432b4a5fdaf599a2e7c8d8c5b5ad
+      size: 7380365
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_33_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_33_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_33_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_33_01_01_annotation.parquet
+      hash: md5
+      md5: 6fc756b3ec3133a29161fdd6b5269599
+      size: 113993538
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_33_01_01_vector.parquet
+      hash: md5
+      md5: 7e2059f590474a38ffb18ff5652c81e5
+      size: 6807522
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_3_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_3_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_3_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_3_01_01_annotation.parquet
+      hash: md5
+      md5: 8f95b98aa599abd18c1d89bceb352c8a
+      size: 109086215
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_3_01_01_vector.parquet
+      hash: md5
+      md5: f82745fb9007827ceaa1eea81f930ffd
+      size: 4975873
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_66_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_66_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_66_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_66_01_01_annotation.parquet
+      hash: md5
+      md5: 109fef79663795fddb30781c73e49fc4
+      size: 185579242
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_66_01_01_vector.parquet
+      hash: md5
+      md5: 09038a77e4a5f7122a112163b9a9ef60
+      size: 7940003
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_47_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_47_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_47_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_47_01_01_annotation.parquet
+      hash: md5
+      md5: f50a435335c4b051e45fe0a090ccce22
+      size: 109906649
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_47_01_01_vector.parquet
+      hash: md5
+      md5: f47f96b8738aa986baf8660019a8e0a2
+      size: 5353286
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_20_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_20_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_20_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_20_01_01_annotation.parquet
+      hash: md5
+      md5: b3104291cf2a72000a383d17d6a5dd32
+      size: 103035001
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_20_01_01_vector.parquet
+      hash: md5
+      md5: e75654d389e7b340addd63fb39ee61a1
+      size: 8612485
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_24_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_24_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_24_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_24_01_01_annotation.parquet
+      hash: md5
+      md5: 86b2f12b650d1c22e1a836e8a4e722fa
+      size: 135261448
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_24_01_01_vector.parquet
+      hash: md5
+      md5: bb617f0f1c56648938480a68b53ca80a
+      size: 8780268
+  make_spectra_vectors@TUM_first_pool_3/TUM_first_pool_114_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_3/TUM_first_pool_114_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_114_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_3/TUM_first_pool_114_01_01_annotation.parquet
+      hash: md5
+      md5: cd6d6f389840f0bf5fff61ce7302b0e9
+      size: 358268592
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_3/TUM_first_pool_114_01_01_vector.parquet
+      hash: md5
+      md5: f379d9c687b11bf9a1691eea42131b95
+      size: 5305686
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_11_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_11_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_11_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_11_01_01_annotation.parquet
+      hash: md5
+      md5: 9fdad503b8e3831ed54086dc5ff5863a
+      size: 165249319
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_11_01_01_vector.parquet
+      hash: md5
+      md5: 4d7df95ef7d86787c71d1b7f343f1af5
+      size: 6629776
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_10_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_10_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_10_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_10_01_01_annotation.parquet
+      hash: md5
+      md5: 00e361f0112e2342bf6a0885cf9a3d51
+      size: 64390563
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_10_01_01_vector.parquet
+      hash: md5
+      md5: 07368bf578a3d4ac44b3db3f9eeff31d
+      size: 6326308
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_35_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_35_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_35_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_35_01_01_annotation.parquet
+      hash: md5
+      md5: c9153820a13e00ac2486209fde7dda43
+      size: 120729455
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_35_01_01_vector.parquet
+      hash: md5
+      md5: bf37149aa8dbb4d4cbc3ec1fa0fe85ef
+      size: 6794354
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_26_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_26_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_26_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_26_01_01_annotation.parquet
+      hash: md5
+      md5: 0520c73f2e3b32bc93abf77fb6ddba51
+      size: 126534710
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_26_01_01_vector.parquet
+      hash: md5
+      md5: 1b3d2353a0ce85e93d6a0a851d2c1c84
+      size: 5977698
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_5_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_5_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_5_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_5_01_01_annotation.parquet
+      hash: md5
+      md5: 97c4c33aef100892f73176f7206eed0c
+      size: 64604943
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_5_01_01_vector.parquet
+      hash: md5
+      md5: 1dda6fb5a3533c832f7d65fa5138db98
+      size: 6733565
+  make_spectra_vectors@TUM_first_pool_2/TUM_first_pool_93_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_2/TUM_first_pool_93_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_93_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_2/TUM_first_pool_93_01_01_annotation.parquet
+      hash: md5
+      md5: 6797057dc7fac8bab8c3454089d5a793
+      size: 299935944
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_2/TUM_first_pool_93_01_01_vector.parquet
+      hash: md5
+      md5: 13b23052cfc294a6ce7ab14e00a340fb
+      size: 8076787
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_1_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_1_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_1_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_1_01_01_annotation.parquet
+      hash: md5
+      md5: d19a1ac5bbf327746eed954cc7007220
+      size: 63219374
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_1_01_01_vector.parquet
+      hash: md5
+      md5: 74fa84a459f68d43353fcf6ab57448be
+      size: 6782343
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_39_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_39_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_39_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_39_01_01_annotation.parquet
+      hash: md5
+      md5: ba384109723ad6f4c31efb1a054cb3b9
+      size: 178904203
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_39_01_01_vector.parquet
+      hash: md5
+      md5: 0b17844fe44ac3ca57afcee02d2836c8
+      size: 9021248
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_55_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_55_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_55_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_55_01_01_annotation.parquet
+      hash: md5
+      md5: c9bc069f33ffc7fef2820b457e40b85f
+      size: 198107540
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_55_01_01_vector.parquet
+      hash: md5
+      md5: 7177ea9fe078edd9d66cb3519e34940a
+      size: 8702748
+  make_spectra_vectors@Thermo_SRM_Pool/Thermo_SRM_Pool_76_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_76_01_01_annotation.parquet
+      \ prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_76_01_01_vector.parquet
+    deps:
+    - path: prospect_data/Thermo_SRM_Pool/Thermo_SRM_Pool_76_01_01_annotation.parquet
+      hash: md5
+      md5: 774e61d6c5daadc4beb9bab335dbf68c
+      size: 90740451
+    outs:
+    - path: prospect_data_vectors/Thermo_SRM_Pool/Thermo_SRM_Pool_76_01_01_vector.parquet
+      hash: md5
+      md5: 6a3d4c45ff0d1128d130448fac04b365
+      size: 6382881
+  make_spectra_vectors@TUM_aspn/TUM_aspn_40_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_40_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_40_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_40_01_01_annotation.parquet
+      hash: md5
+      md5: 5dc62cd1f86b81def4978564a6c8b3a9
+      size: 130721195
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_40_01_01_vector.parquet
+      hash: md5
+      md5: be16e5d858d0c93abf88d2e0d1924b4b
+      size: 4361742
+  make_spectra_vectors@TUM_aspn/TUM_aspn_6_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_6_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_6_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_6_01_01_annotation.parquet
+      hash: md5
+      md5: 8f6fbb2868e6eea027c650dfaa58ecf7
+      size: 281407614
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_6_01_01_vector.parquet
+      hash: md5
+      md5: 29ceefbc9cdaa5f68b5883701c75a4cf
+      size: 9878901
+  make_spectra_vectors@TUM_aspn/TUM_aspn_26_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_aspn/TUM_aspn_26_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_aspn/TUM_aspn_26_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_aspn/TUM_aspn_26_01_01_annotation.parquet
+      hash: md5
+      md5: 771ec753512de27ff7f18e0d8efce52c
+      size: 203524990
+    outs:
+    - path: prospect_data_vectors/TUM_aspn/TUM_aspn_26_01_01_vector.parquet
+      hash: md5
+      md5: 1f74fd50ee623ee386455e142e2585ea
+      size: 2450453
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_62_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_62_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_62_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_62_01_01_annotation.parquet
+      hash: md5
+      md5: 054330f922623abd0bf873b37c33963f
+      size: 235907479
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_62_01_01_vector.parquet
+      hash: md5
+      md5: 7abbde241c3a4c9faf8966bf60fc9362
+      size: 9593628
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_18_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_18_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_18_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_18_01_01_annotation.parquet
+      hash: md5
+      md5: 7344e9b5853c0e89039a5544d4558f5b
+      size: 95083199
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_18_01_01_vector.parquet
+      hash: md5
+      md5: 56d496f3eea4019041d518b56e1db96b
+      size: 7913697
+  make_spectra_vectors@TUM_first_pool_1/TUM_first_pool_32_01_01:
+    cmd: poetry run python scripts/process_fragment_data.py \ prospect_data/TUM_first_pool_1/TUM_first_pool_32_01_01_annotation.parquet
+      \ prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_32_01_01_vector.parquet
+    deps:
+    - path: prospect_data/TUM_first_pool_1/TUM_first_pool_32_01_01_annotation.parquet
+      hash: md5
+      md5: 91f965fc669d019df54ddf44417b96f3
+      size: 116241332
+    outs:
+    - path: prospect_data_vectors/TUM_first_pool_1/TUM_first_pool_32_01_01_vector.parquet
+      hash: md5
+      md5: 2e41c15cfbc890dd79554d96a2caf3c4
+      size: 7355596

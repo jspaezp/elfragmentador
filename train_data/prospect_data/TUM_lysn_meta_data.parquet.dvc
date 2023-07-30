@@ -1,0 +1,5 @@
+outs:
+- md5: 5d8d9da924db633dec7057fd0693d105
+  size: 53747057
+  hash: md5
+  path: TUM_lysn_meta_data.parquet

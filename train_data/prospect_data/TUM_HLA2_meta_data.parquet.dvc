@@ -1,0 +1,5 @@
+outs:
+- md5: ef32a4f5b87d2fb90bd9d3ed8568d2f1
+  size: 170299902
+  hash: md5
+  path: TUM_HLA2_meta_data.parquet

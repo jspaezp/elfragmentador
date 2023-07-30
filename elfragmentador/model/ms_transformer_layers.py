@@ -3,6 +3,7 @@ import math
 import torch
 import torch.nn as nn
 from torch import Tensor
+from loguru import logger
 
 from elfragmentador.config import get_default_config
 from elfragmentador.model.nn_encoding import AASequenceEmbedding, ConcatenationEncoder
@@ -139,6 +140,7 @@ class FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
         layers: int,
         dropout: float,
         num_fragments: int,
+        fragments_per_embed: int = 1,
         charge_dims_pct: float = 0.05,
         nce_dims_pct: float = 0.05,
         final_decoder: str = "linear",
@@ -146,6 +148,11 @@ class FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
         charge_dims = math.ceil(d_model * charge_dims_pct)
         nce_dims = math.ceil(d_model * nce_dims_pct)
         n_embeds = d_model - (charge_dims + nce_dims)
+        logger.debug(
+            f"Charge dims: {charge_dims}, "
+            f"NCE dims: {nce_dims}, "
+            f"Embed dims: {n_embeds}"
+        )
 
         super().__init__(
             d_model=d_model,
@@ -155,6 +162,7 @@ class FragmentTransformerDecoder(_LearnableEmbedTransformerDecoder):
             layers=layers,
             dropout=dropout,
             num_outputs=num_fragments,
+            outputs_per_embed=fragments_per_embed,
             final_decoder=final_decoder,
         )
 

@@ -1,0 +1,5 @@
+outs:
+- md5: 2b914d4aad0d99dee4888a3788cc033e
+  size: 62651860
+  hash: md5
+  path: TUM_aspn_meta_data.parquet

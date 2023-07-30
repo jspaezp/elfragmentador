@@ -1,0 +1,5 @@
+outs:
+- md5: 17c0d4f6ee779b394c4c45ebcfe103ba
+  size: 142554796
+  hash: md5
+  path: Thermo_SRM_Pool_12_01_01_annotation.parquet

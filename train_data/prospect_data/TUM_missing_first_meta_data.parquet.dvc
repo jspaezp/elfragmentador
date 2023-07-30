@@ -1,0 +1,5 @@
+outs:
+- md5: 200727477fa0377c7fa1367181cfcff3
+  size: 10571627
+  hash: md5
+  path: TUM_missing_first_meta_data.parquet

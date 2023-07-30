@@ -1,0 +1,5 @@
+outs:
+- md5: 01ba8590ba57ae7f1bfb07c3c58c2cf0
+  size: 92869185
+  hash: md5
+  path: TUM_second_addon_meta_data.parquet

@@ -1,0 +1,5 @@
+outs:
+- md5: b246a3c2a73818ea88b3b61b491df1be
+  size: 225223580
+  hash: md5
+  path: TUM_isoform_meta_data.parquet

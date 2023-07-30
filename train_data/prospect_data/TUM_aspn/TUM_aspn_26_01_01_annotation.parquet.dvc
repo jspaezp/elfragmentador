@@ -1,0 +1,5 @@
+outs:
+- md5: 771ec753512de27ff7f18e0d8efce52c
+  size: 203524990
+  hash: md5
+  path: TUM_aspn_26_01_01_annotation.parquet

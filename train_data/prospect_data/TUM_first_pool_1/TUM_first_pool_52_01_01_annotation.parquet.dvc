@@ -1,0 +1,5 @@
+outs:
+- md5: 28e663853124bff5f4574c3a42ac2643
+  size: 195622396
+  hash: md5
+  path: TUM_first_pool_52_01_01_annotation.parquet

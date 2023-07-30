@@ -1,0 +1,5 @@
+outs:
+- md5: db18addc28fdf29f5b17498c400cb522
+  size: 139441748
+  hash: md5
+  path: TUM_aspn_23_01_01_annotation.parquet

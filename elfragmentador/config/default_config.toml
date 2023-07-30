@@ -57,7 +57,6 @@ ion_series = "yb"
 ion_charges = [
     1,
     2,
-    3,
 ]
 ion_neutral_losses = []
 ion_encoding_nesting = [
@@ -67,9 +66,7 @@ ion_encoding_nesting = [
 ]
 ion_naming_convention = "{ion_series}{fragment_positions}^{ion_charges}"
 mod_ambiguity_threshold = 0.99
-mod_fixed_mods = [
-    "[U:4]@C",
-]
+mod_fixed_mods = []
 encoding_aa_order = [
     "__missing__",
     "A",

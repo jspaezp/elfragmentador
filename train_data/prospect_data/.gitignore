@@ -1,0 +1,12 @@
+/TUM_HLA2_meta_data.parquet
+/TUM_HLA_meta_data.parquet
+/TUM_aspn_meta_data.parquet
+/TUM_first_pool_meta_data.parquet
+/TUM_isoform_meta_data.parquet
+/TUM_lysn_meta_data.parquet
+/TUM_missing_first_meta_data.parquet
+/TUM_proteo_TMT_meta_data.parquet
+/TUM_second_addon_meta_data.parquet
+/TUM_second_pool_meta_data.parquet
+/TUM_third_pool_meta_data.parquet
+/Thermo_SRM_Pool_meta_data.parquet
