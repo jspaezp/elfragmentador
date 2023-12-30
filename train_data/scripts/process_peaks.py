@@ -25,7 +25,10 @@ if is_in_notebook():
     con = duckdb.connect("prospect_dev.ddb")
 else:
     import logging
+    from fsspec import filesystem
 
+    # this line will throw an exception if the appropriate filesystem interface is not installed
+    duckdb.register_filesystem(filesystem('gcs'))
     logging.info("Running in cloud environment!!!!")
     con = duckdb.connect("prospect_prod.ddb")
     PATH_PREFIX = "gs://jspp_prospect_mirror"
