@@ -19,6 +19,7 @@ class PepTransformerBase(nn.Module):
     def __init__(
         self,
         num_fragments,
+        fragments_per_embed: int = 1,
         num_decoder_layers: int = 6,
         num_encoder_layers: int = 6,
         nhid: int = 2024,
@@ -47,6 +48,7 @@ class PepTransformerBase(nn.Module):
             layers=num_decoder_layers,
             dropout=dropout,
             num_fragments=num_fragments,
+            fragments_per_embed=fragments_per_embed,
             final_decoder=final_decoder,
         )
 
