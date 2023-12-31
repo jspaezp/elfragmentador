@@ -4,6 +4,16 @@
 # .py file auto-generated from the .ipynb file
 import duckdb
 import traceback
+import logging
+
+duckdb.execute("SET enable_progress_bar = true;")
+duckdb.execute("SET progress_bar_time = 200;")
+duckdb.execute("SET temp_directory = 'temp.tmp';")
+
+# Set up a logger to show some timing info
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S"
+)
 
 
 def is_in_notebook():
@@ -28,7 +38,7 @@ else:
     from fsspec import filesystem
 
     # this line will throw an exception if the appropriate filesystem interface is not installed
-    duckdb.register_filesystem(filesystem('gcs'))
+    duckdb.register_filesystem(filesystem("gcs"))
     logging.info("Running in cloud environment!!!!")
     con = duckdb.connect("prospect_prod.ddb")
     PATH_PREFIX = "gs://jspp_prospect_mirror"
@@ -37,12 +47,15 @@ METADATA_FILES = f"{PATH_PREFIX}/*meta_data.parquet"
 ANNOTATION_FILES = f"{PATH_PREFIX}/*annotation.parquet"
 
 
-print(con.sql(f"SELECT * FROM parquet_scan('{METADATA_FILES}') LIMIT 5").to_df())
+if is_in_notebook():
+    print(con.sql(f"SELECT * FROM parquet_scan('{METADATA_FILES}') LIMIT 5").to_df())
 
 
-print(con.sql(f"SELECT * FROM parquet_scan('{ANNOTATION_FILES}') LIMIT 5").to_df())
+if is_in_notebook():
+    print(con.sql(f"SELECT * FROM parquet_scan('{ANNOTATION_FILES}') LIMIT 5").to_df())
 
 
+logging.info("Creating annotation table")
 query = f"""
 CREATE OR REPLACE TABLE rt_qc AS
 SELECT
@@ -78,9 +91,11 @@ HAVING n >= 5 AND irt_q75 - irt_q25 < 10    -- require at least 5 scans and irt 
 con.sql(query)
 
 
+logging.info("Created annotation table")
 con.sql("SELECT * FROM rt_qc")
 
 
+logging.info("Creating filtered metadata table")
 con.sql(
     f"""
     CREATE OR REPLACE TABLE filtered_meta AS
@@ -121,9 +136,11 @@ con.sql(
 )
 
 
+logging.info("Created filtered metadata table")
 con.sql("SELECT * FROM filtered_meta")
 
 
+logging.info("Creating annotation table")
 con.sql(
     f"""
         SELECT
@@ -153,6 +170,7 @@ con.sql(
 # after the aggregation.
 
 
+logging.info("Creating filtered annotations table")
 con.sql(
     f"""
     CREATE OR REPLACE TABLE filtered_annotations AS
@@ -228,6 +246,7 @@ con.sql(
 con.sql("SELECT * FROM filtered_annotations LIMIT 10").to_df()
 
 
+logging.info("Creating averaged annotations table")
 con.sql(
     """
     CREATE OR REPLACE TABLE averaged_annotations AS
@@ -360,6 +379,7 @@ if is_in_notebook():
     plt.xlabel("max intensity pre-agg")
 
 
+logging.info("Creating nested annotations table")
 con.sql(
     """
     CREATE OR REPLACE TABLE nested_annotations AS
@@ -398,9 +418,12 @@ fragmentation	mass_analyzer	count_star()
 2	HCD	ITMS	4473
 """
 
-con.sql(
+counts = con.sql(
     "SELECT fragmentation, mass_analyzer, COUNT(*) FROM nested_annotations GROUP BY fragmentation, mass_analyzer"
 ).to_df()
+
+logging.info("Counts per fragmentation and mass analyzer")
+logging.info(counts)
 
 
 # Export nested_annotations to parquet in bundles of ~20k
