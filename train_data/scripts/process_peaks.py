@@ -42,6 +42,7 @@ else:
     logging.info("Running in cloud environment!!!!")
     con = duckdb.connect("prospect_prod.ddb")
     PATH_PREFIX = "gs://jspp_prospect_mirror"
+    PATH_PREFIX = "~/mount-folder"
 
 METADATA_FILES = f"{PATH_PREFIX}/*meta_data.parquet"
 ANNOTATION_FILES = f"{PATH_PREFIX}/*annotation.parquet"
