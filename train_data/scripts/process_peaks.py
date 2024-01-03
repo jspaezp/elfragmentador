@@ -5,6 +5,9 @@
 import duckdb
 import traceback
 import logging
+import os
+from pathlib import Path
+from tqdm.auto import tqdm
 
 duckdb.execute("SET enable_progress_bar = true;")
 duckdb.execute("SET progress_bar_time = 200;")
@@ -42,10 +45,14 @@ else:
     logging.info("Running in cloud environment!!!!")
     con = duckdb.connect("prospect_prod.ddb")
     PATH_PREFIX = "gs://jspp_prospect_mirror"
-    PATH_PREFIX = "~/mount-folder/jspp_prospect_mirror/"
+    PATH_PREFIX = f"{os.environ['HOME']}/mount-folder/jspp_prospect_mirror/"
 
 METADATA_FILES = f"{PATH_PREFIX}/*meta_data.parquet"
 ANNOTATION_FILES = f"{PATH_PREFIX}/*annotation.parquet"
+globbed_annotation_files = list(Path(PATH_PREFIX).rglob("*annotation.parquet"))
+
+if len(globbed_annotation_files) == 0:
+    raise ValueError("No annotation files found!")
 
 
 if is_in_notebook():
@@ -256,13 +263,16 @@ if is_in_notebook():
 # )
 
 
+import pandas as pd
+
+pd.read_parquet("../prospect_data/TUM_third_pool_3_01_01_annotation.parquet").columns
+
+
 # NOTE!!! Here there isn un-handled ambiguity in the annotation. ...
 # there can be multiple peaks that match a single ion type, no, charge, and sequence.
-from pathlib import Path
 
 logging.info("Creating local annotation table")
 
-globbed_annotation_files = list(Path(PATH_PREFIX).glob("*annotation.parquet"))
 
 # Create the table with the first file
 first_annot_file = str(globbed_annotation_files[0])
@@ -270,10 +280,26 @@ logging.info(f"Creating local annotation table from {first_annot_file}")
 
 # read_parquet('test.parq')
 
+con.sql(
+    f"""
+        CREATE OR REPLACE TABLE tmp AS SELECT
+            raw_file,
+            scan_number,
+            peptide_sequence,
+            CAST (ion_type as ion_type_type) AS ion_type,
+            CAST (no AS TINYINT) AS fragment_no,
+            CAST (charge AS TINYINT) AS charge,
+            neutral_loss,
+            intensity,
+            theoretical_mass as theoretical_fragment_mz,
+            fragment_score,
+        FROM read_parquet('{first_annot_file}', filename = false)
+        WHERE neutral_loss = '' AND fragment_score > 0.5 AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z');
+        """
+)
+
 out = con.sql(
     f"""
-        CREATE OR REPLACE TABLE tmp AS SELECT * FROM '{first_annot_file}';
-
         EXPLAIN ANALYZE
         CREATE OR REPLACE TABLE local_annotations AS
         SELECT
@@ -282,11 +308,12 @@ out = con.sql(
             peptide_sequence,
             CAST (precursor_charge AS TINYINT) AS precursor_charge,
             CAST (ion_type as ion_type_type) AS ion_type,
-            CAST (no AS TINYINT) AS no,
+            fragment_no,
+            neutral_loss,
             CAST (charge AS TINYINT) AS charge,
             intensity,
             -- mz, -- This is the observd mz
-            theoretical_mass as theoretical_fragment_mz,
+            theoretical_fragment_mz,
             precursor_mz, -- "same" as mz
             CAST (fragmentation AS fragmentation_type) AS fragmentation,
             CAST (mass_analyzer AS mass_analyzer_type) AS mass_analyzer,
@@ -299,20 +326,35 @@ out = con.sql(
         ON tmp.peptide_sequence = filtered_meta.modified_sequence
         AND tmp.scan_number = filtered_meta.scan_number
         AND tmp.raw_file = filtered_meta.raw_file
-        WHERE neutral_loss = '' AND fragment_score > 0.5 AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z')
         -- ORDER BY peptide_sequence DESC; -- 3 min with sorting, 11s without
     """
 )
 print(out["explain_value"].to_df().iloc[0, 0])
 
 # Append the rest of the files
-for i, annot_file in enumerate(globbed_annotation_files[1:]):
-    annot_file = str(annot_file)
-    logging.info(f"Adding {annot_file} {i}/{len(globbed_annotation_files)}")
+chunksize = 50
+rest_files = globbed_annotation_files[1:]
+chunked = [rest_files[i : i + chunksize] for i in range(0, len(rest_files), chunksize)]
+for annot_file_chunk in tqdm(chunked):
+    # SELECT * FROM read_parquet(['file1.parquet', 'file2.parquet', 'file3.parquet']);
+    reading_list = ", ".join([f"'{str(f)}'" for f in annot_file_chunk])
+    logging.info(f"Appending {reading_list}")
 
     out = con.sql(
         f"""
-            CREATE OR REPLACE TABLE tmp AS SELECT * FROM '{annot_file}';
+            CREATE OR REPLACE TABLE tmp AS SELECT
+                raw_file,
+                scan_number,
+                peptide_sequence,
+                CAST (ion_type as ion_type_type) AS ion_type,
+                CAST (no AS TINYINT) AS fragment_no,
+                CAST (charge AS TINYINT) AS charge,
+                neutral_loss,
+                intensity,
+                theoretical_mass as theoretical_fragment_mz,
+                fragment_score,
+            FROM read_parquet([{reading_list}], filename = false)
+            WHERE neutral_loss = '' AND fragment_score > 0.5 AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z');
 
             INSERT INTO local_annotations
             SELECT
@@ -321,11 +363,12 @@ for i, annot_file in enumerate(globbed_annotation_files[1:]):
                 peptide_sequence,
                 CAST (precursor_charge AS TINYINT) AS precursor_charge,
                 CAST (ion_type as ion_type_type) AS ion_type,
-                CAST (no AS TINYINT) AS no,
+                fragment_no,
+                neutral_loss,
                 CAST (charge AS TINYINT) AS charge,
                 intensity,
                 -- mz, -- This is the observd mz
-                theoretical_mass as theoretical_fragment_mz,
+                theoretical_fragment_mz,
                 precursor_mz, -- "same" as mz
                 CAST (fragmentation AS fragmentation_type) AS fragmentation,
                 CAST (mass_analyzer AS mass_analyzer_type) AS mass_analyzer,
@@ -338,7 +381,6 @@ for i, annot_file in enumerate(globbed_annotation_files[1:]):
             ON tmp.peptide_sequence = filtered_meta.modified_sequence
             AND tmp.scan_number = filtered_meta.scan_number
             AND tmp.raw_file = filtered_meta.raw_file
-            WHERE neutral_loss = '' AND fragment_score > 0.5 AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z')
             -- ORDER BY peptide_sequence DESC; -- 3 min with sorting, 11s without
         """
     )
@@ -373,10 +415,10 @@ SELECT
 FROM local_annotations
 WHERE raw_file LIKE '{file_prefix}%'
 AND scan_number = {scannr}
-AND no = {frag_no}
+AND fragment_no = {frag_no}
 AND ion_type = '{frag_ion_type}'
 AND charge = {frag_charge}
-ORDER BY peptide_sequence, no
+ORDER BY peptide_sequence, fragment_no
 """
 
 print(con.sql(query).to_df())
@@ -421,7 +463,7 @@ out2 = con.sql(
         scan_number,                             
         precursor_charge,                             
         ion_type,                             
-        no,                             
+        fragment_no,                             
         charge,                             
         intensity,                             
         theoretical_fragment_mz,                             
@@ -464,7 +506,7 @@ out3 = con.sql(
         peptide_sequence AS peptide_sequence,
         precursor_charge,
         ion_type AS fragment_ion_type,
-        no AS fragment_no,
+        fragment_no,
         charge AS fragment_charge,
         fragmentation,
         mass_analyzer,
@@ -502,7 +544,7 @@ out3 = con.sql(
         orig_collision_energy,
         theoretical_fragment_mz,
         num_peptide_spec,                                -- this is the number of spectra that were averaged
-    -- ORDER BY local_annotations.peptide_sequence, local_annotations.no
+    -- ORDER BY local_annotations.peptide_sequence, local_annotations.fragment_no
     """
 )
 
