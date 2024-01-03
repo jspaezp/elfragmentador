@@ -599,32 +599,50 @@ if is_in_notebook():
 
 
 logging.info("Creating nested annotations table")
-con.sql(
-    """
-    CREATE OR REPLACE TABLE nested_annotations AS
-    SELECT
-        peptide_sequence,
-        -- TODO: Add stripped peptide here
-        precursor_charge,
-        LIST (fragment_ion_type),
-        LIST (fragment_no), -- TODO consider filter for this 
-        LIST (fragment_charge),
-        LIST (fragment_intensity),
-        LIST (theoretical_fragment_mz),
-        fragmentation,
-        mass_analyzer,
-        MEAN(retention_time) as retention_time,
-        MEAN(indexed_retention_time) as indexed_retention_time,
-        orig_collision_energy,
-        MEAN(aligned_collision_energy) as aligned_collision_energy,
-    FROM averaged_annotations
-    WHERE 
-        -- pretty liberal filter, I am assuming that peaks that were not averaged 
-        -- are low abundance ... BUT who knows ...
-        pct_averaged > 0.1 
-    GROUP BY peptide_sequence, precursor_charge, fragmentation, mass_analyzer, orig_collision_energy
-    """
-)
+
+# Iteratively add sequences by the combination of
+# precursor_charge, fragmentation, mass_analyzer
+
+first_round = True
+
+precursor_charges = [3, 2, 1, 4, 5, 6, 7]
+for pc in precursor_charges:
+    for frag in ["HCD", "CID", "ETD"]:
+        for ma in ["ITMS", "FTMS"]:
+            logging.info(f"Processing {pc}, {frag}, {ma}")
+            out = con.sql(
+                f"""
+                {'EXPLAIN ANALYZE' if first_round else ''}
+                {'CREATE OR REPLACE TABLE nested_annotations AS' if first_round else 'INSERT INTO nested_annotations'}
+                SELECT
+                    peptide_sequence,
+                    -- TODO: Add stripped peptide here
+                    precursor_charge,
+                    LIST (fragment_ion_type),
+                    LIST (fragment_no), -- TODO consider filter for this 
+                    LIST (fragment_charge),
+                    LIST (fragment_intensity),
+                    LIST (theoretical_fragment_mz),
+                    fragmentation,
+                    mass_analyzer,
+                    MEAN(retention_time) as retention_time,
+                    MEAN(indexed_retention_time) as indexed_retention_time,
+                    orig_collision_energy,
+                    MEAN(aligned_collision_energy) as aligned_collision_energy,
+                FROM averaged_annotations
+                WHERE precursor_charge = {pc}
+                AND fragmentation = '{frag}'
+                AND mass_analyzer = '{ma}'
+                -- pretty liberal filter, I am assuming that peaks that were not averaged 
+                -- are low abundance ... BUT who knows ...
+                AND pct_averaged > 0.1 
+                GROUP BY peptide_sequence, precursor_charge, fragmentation, mass_analyzer, orig_collision_energy
+                """
+            )
+            if first_round:
+                logging.info(out["explain_value"].to_df().iloc[0, 0])
+            first_round = False
+
 logging.info("Created nested annotations table")
 
 
@@ -659,6 +677,7 @@ index = 0
 handle = con.execute("select * from nested_annotations")
 
 while len(batch := handle.fetch_df_chunk(vectors_per_chunk)):
+    logging.info(f"Writing batch {index}")
     batch.to_parquet(f"nested_annotations_{index}.parquet")
     if index == 0:
         print(batch.head(10))
