@@ -1,4 +1,5 @@
 
+venv/
 scratch.py
 ./*.csv
 *.ckpt

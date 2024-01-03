@@ -56,9 +56,10 @@ class PepTransformerModel(pl.LightningModule):
         nhid: int = 2024,
         d_model: int = 516,
         nhead: int = 4,
-        dropout: float = 0.1,
         combine_embeds: bool = True,
         combine_encoders: bool = True,
+        fold_charge: bool = True,
+        fold_ion_series: bool = True,
         final_decoder: str = "linear",
         lr: float = 1e-4,
         scheduler: str = "plateau",
@@ -86,8 +87,6 @@ class PepTransformerModel(pl.LightningModule):
                 The embedding transforms the input to this input, by default 516
             nhead : int, optional
                 Number of multi-attention heads in the transformer, by default 4
-            dropout : float, optional
-                dropout, by default 0.1
             combine_embeds: bool, optional
                 Whether the embeddings for modifications and sequences
                 should be shared for irt and fragment predictions
@@ -122,16 +121,21 @@ class PepTransformerModel(pl.LightningModule):
         super().__init__()
         self.ms2ml_config = CONFIG
         self.NUM_FRAGMENT_EMBEDDINGS = self.ms2ml_config.num_fragment_embeddings
+        frags_per_embed = 1 * (len(self.ms2ml_config.ion_series) if fold_ion_series else 1) * (
+            len(self.ms2ml_config.ion_charges) if fold_charge else 1)
+
         self.save_hyperparameters()
         logger.info(
             f"num_decoder_layers {num_decoder_layers} "
             f"num_encoder_layers {num_encoder_layers} "
             f"nhid {nhid} d_model {d_model} "
-            f"nhead {nhead} dropout {dropout}"
+            f"nhead {nhead} "
             f"combined embeds {combine_embeds} combined encoders {combine_encoders}"
         )
+        dropout = 0.0,
         self.main_model = PepTransformerBase(
             num_fragments=self.NUM_FRAGMENT_EMBEDDINGS,
+            fragments_per_embed=frags_per_embed,
             num_decoder_layers=num_decoder_layers,
             num_encoder_layers=num_encoder_layers,
             nhid=nhid,

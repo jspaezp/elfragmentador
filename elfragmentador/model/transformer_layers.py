@@ -79,6 +79,7 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
         layers: int,
         dropout: float,
         num_outputs: int,
+        outputs_per_embed: int = 1,
         embed_dims: Optional[int] = None,
         final_decoder: Literal["linear", "mlp"] = "mlp",
     ) -> None:
@@ -98,17 +99,25 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
             dropout=dropout,
             activation="gelu",
         )
+
         self.trans_decoder = nn.TransformerDecoder(decoder_layer, num_layers=layers)
+        self.outputs_per_embed = outputs_per_embed
+        num_embeds = num_outputs // outputs_per_embed
+        # Check that the number is disivible
+        assert num_embeds * outputs_per_embed == num_outputs, (
+            f"num_outputs ({num_outputs}) must be divisible by outputs_per_embed "
+            f"({outputs_per_embed})"
+        )
         if final_decoder == "linear":
-            self.peak_decoder = nn.Linear(d_model, 1)
+            self.peak_decoder = nn.Linear(d_model, outputs_per_embed)
         elif final_decoder == "mlp":
-            self.peak_decoder = MLP(d_model, d_model, output_dim=1, num_layers=2)
+            self.peak_decoder = MLP(d_model, d_model, output_dim=outputs_per_embed, num_layers=2)
         else:
             raise ValueError("final_decoder must be one of ['linear', 'mlp']")
 
-        logger.info(f"Creating embedding for spectra of length {num_outputs}")
+        logger.info(f"Creating embedding for spectra of length {num_embeds}")
         self.trans_decoder_embedding = nn.Embedding(
-            num_embeddings=num_outputs,
+            num_embeddings=num_embeds,
             embedding_dim=d_model if embed_dims is None else embed_dims,
         )
         self.init_weights()
@@ -141,10 +150,14 @@ class _LearnableEmbedTransformerDecoder(torch.nn.Module):
             memory_key_padding_mask=memory_key_padding_mask,
         )
         # Shape is [NumFragments, Batch, NumEmbed]
+        # Shape is [NumLearnEmbeds, Batch, NumEmbed]
 
         spectra_output = self.peak_decoder(spectra_output)
-        # Shape is [NumFragments, Batch, 1]
-        spectra_output = spectra_output.squeeze(-1).permute(1, 0)
+        # Shape is [NumLearnEmbeds, Batch, 1]
+        # Shape is [NumFragments, Batch, NumEmbedsPer]
+
+        # spectra_output = spectra_output.squeeze(-1).permute(1, 0)
+        spectra_output = spectra_output.permute(1, 0, 2).reshape(spectra_output.size(1), -1)
         # Shape is [Batch, NumFragments]
         return spectra_output
 

@@ -106,8 +106,8 @@ import pandas as pd
 BOUNDS = {
     "num_encoder_layers": (2, 6),
     "num_decoder_layers": (1, 4),
-    "nhid": (64, 2048),
-    "ninp": (64, 2048),
+    "nhid": (32, 1024),
+    "ninp": (32, 1024),
     "nhead": (2, 8),
 }
 

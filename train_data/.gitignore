@@ -1,0 +1,5 @@
+
+prospect_data/*.zip
+*_annotation.parquet
+prospect_data/*.parquet
+prospect.ddb
