@@ -230,44 +230,6 @@ if is_in_notebook():
     # after the aggregation.
 
 
-# out = con.sql(
-#     f"""
-#         EXPLAIN ANALYZE
-#         CREATE OR REPLACE TABLE local_annotations AS
-#         SELECT
-#             filtered_meta.raw_file as raw_file,
-#             filtered_meta.scan_number as scan_number,
-#             peptide_sequence,
-#             CAST (precursor_charge AS TINYINT) AS precursor_charge,
-#             CAST (ion_type as ion_type_type) AS ion_type,
-#             CAST (no AS TINYINT) AS no,
-#             CAST (charge AS TINYINT) AS charge,
-#             intensity,
-#             -- mz, -- This is the observd mz
-#             theoretical_mass as theoretical_fragment_mz,
-#             precursor_mz, -- "same" as mz
-#             CAST (fragmentation AS fragmentation_type) AS fragmentation,
-#             CAST (mass_analyzer AS mass_analyzer_type) AS mass_analyzer,
-#             retention_time,
-#             indexed_retention_time,
-#             orig_collision_energy,
-#             aligned_collision_energy
-#         FROM "{ANNOTATION_FILES}"
-#         INNER JOIN filtered_meta
-#         ON "{ANNOTATION_FILES}".peptide_sequence = filtered_meta.modified_sequence
-#         AND "{ANNOTATION_FILES}".scan_number = filtered_meta.scan_number
-#         AND "{ANNOTATION_FILES}".raw_file = filtered_meta.raw_file
-#         WHERE neutral_loss = '' AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z')
-#         -- ORDER BY peptide_sequence DESC;
-#     """
-# )
-
-
-import pandas as pd
-
-pd.read_parquet("../prospect_data/TUM_third_pool_3_01_01_annotation.parquet").columns
-
-
 # NOTE!!! Here there isn un-handled ambiguity in the annotation. ...
 # there can be multiple peaks that match a single ion type, no, charge, and sequence.
 
@@ -496,59 +458,64 @@ con.sql("DROP TABLE local_annotations")
 logging.info("Dropped local annotations")
 
 
-out3 = con.sql(
-    """
-    EXPLAIN ANALYZE
-    CREATE OR REPLACE TABLE averaged_annotations AS
-    SELECT
-        LIST(raw_file),
-        LIST(scan_number),
-        peptide_sequence AS peptide_sequence,
-        precursor_charge,
-        ion_type AS fragment_ion_type,
-        fragment_no,
-        charge AS fragment_charge,
-        fragmentation,
-        mass_analyzer,
-        orig_collision_energy,
-        theoretical_fragment_mz,
-        num_peptide_spec,                                -- this is the number of spectra that were averaged
-        SUM(intensity) AS total_intensity,
-        SUM(intensity)/MAX(num_peptide_spec)
-            AS fragment_intensity,
-        MAX(intensity)
-            AS max_fragment_intensity_prior_to_averaging,
-        MEAN(precursor_mz)
-            AS precursor_mz,
-        MEAN(retention_time)
-            AS retention_time,
-        MEAN(indexed_retention_time)
-            AS indexed_retention_time,
-        MEAN(aligned_collision_energy)
-            AS aligned_collision_energy,
-        COUNT(*)
-            AS num_averaged_peaks,
-        COUNT(DISTINCT raw_file || '::' || scan_number)
-            AS num_spectra,
-        COUNT(DISTINCT raw_file || '::' || scan_number) / MAX(num_peptide_spec) 
-            AS pct_averaged -- the percentage of spectra that contained this fragment
-    FROM joint_local_annotations
-    GROUP BY
-        peptide_sequence,
-        precursor_charge,
-        fragment_ion_type,
-        fragment_no,
-        fragment_charge,
-        fragmentation,
-        mass_analyzer,
-        orig_collision_energy,
-        theoretical_fragment_mz,
-        num_peptide_spec,                                -- this is the number of spectra that were averaged
-    -- ORDER BY local_annotations.peptide_sequence, local_annotations.fragment_no
-    """
-)
-
-print(out3["explain_value"].to_df().iloc[0, 0])
+first_pass = True
+for i in range(1, 35):
+    print(f"Processing fragment {i}")
+    out3 = con.sql(
+        f"""
+        {'EXPLAIN ANALYZE' if first_pass else ''}
+        {'CREATE OR REPLACE TABLE averaged_annotations AS' if first_pass else 'INSERT INTO averaged_annotations'}
+        SELECT
+            LIST(raw_file),
+            LIST(scan_number),
+            peptide_sequence AS peptide_sequence,
+            precursor_charge,
+            ion_type AS fragment_ion_type,
+            fragment_no,
+            charge AS fragment_charge,
+            fragmentation,
+            mass_analyzer,
+            orig_collision_energy,
+            theoretical_fragment_mz,
+            num_peptide_spec,                                -- this is the number of spectra that were averaged
+            SUM(intensity) AS total_intensity,
+            SUM(intensity)/MAX(num_peptide_spec)
+                AS fragment_intensity,
+            MAX(intensity)
+                AS max_fragment_intensity_prior_to_averaging,
+            MEAN(precursor_mz)
+                AS precursor_mz,
+            MEAN(retention_time)
+                AS retention_time,
+            MEAN(indexed_retention_time)
+                AS indexed_retention_time,
+            MEAN(aligned_collision_energy)
+                AS aligned_collision_energy,
+            COUNT(*)
+                AS num_averaged_peaks,
+            COUNT(DISTINCT raw_file || '::' || scan_number)
+                AS num_spectra,
+            COUNT(DISTINCT raw_file || '::' || scan_number) / MAX(num_peptide_spec) 
+                AS pct_averaged -- the percentage of spectra that contained this fragment
+        FROM joint_local_annotations
+        WHERE fragment_no = {i}
+        GROUP BY
+            peptide_sequence,
+            precursor_charge,
+            fragment_ion_type,
+            fragment_no,
+            fragment_charge,
+            fragmentation,
+            mass_analyzer,
+            orig_collision_energy,
+            theoretical_fragment_mz,
+            num_peptide_spec,                                -- this is the number of spectra that were averaged
+        -- ORDER BY local_annotations.peptide_sequence, local_annotations.fragment_no
+        """
+    )
+    if first_pass:
+        first_pass = False
+        print(out3["explain_value"].to_df().iloc[0, 0])
 
 logging.info("Created averaged annotations table")
 
@@ -562,85 +529,6 @@ if is_in_notebook():
 logging.info("Dropping joint_local_annotations")
 con.execute("DROP TABLE joint_local_annotations")
 logging.info("Dropped joint_local_annotations")
-
-
-# logging.info("Creating averaged annotations table")
-# con.sql(
-#     """
-#     CREATE OR REPLACE TABLE averaged_annotations AS
-#     SELECT
-#         LIST(raw_file),
-#         LIST(scan_number),
-#         local_annotations.peptide_sequence,
-#         precursor_charge,
-#         local_annotations.ion_type,
-#         local_annotations.no
-#             AS fragment_no,
-#         local_annotations.charge
-#             AS fragment_charge,
-#         SUM(local_annotations.intensity)/MAX(num_peptide_spec)
-#             AS fragment_intensity,
-#         MAX(local_annotations.intensity)
-#             AS max_fragment_intensity_prior_to_averaging,
-#         local_annotations.theoretical_fragment_mz,
-#         MEAN(local_annotations.precursor_mz)
-#             AS precursor_mz,
-#         local_annotations.fragmentation,
-#         local_annotations.mass_analyzer,
-#         MEAN(local_annotations.retention_time)
-#             AS retention_time,
-#         MEAN(indexed_retention_time)
-#             AS indexed_retention_time,
-#         local_annotations.orig_collision_energy,
-#         MEAN(aligned_collision_energy)
-#             AS aligned_collision_energy,
-#         num_peptide_spec,                                -- this is the number of spectra that were averaged
-#         COUNT(*)
-#             AS num_averaged,
-#         COUNT(*) / MAX(num_peptide_spec)
-#             AS pct_averaged -- the percentage of spectra that contained this fragment
-#     FROM (
-#         SELECT
-#             peptide_sequence,
-#             mass_analyzer,
-#             fragmentation,
-#             orig_collision_energy,
-#             COUNT(DISTINCT scan_number || '::' || raw_file) AS num_peptide_spec
-#         FROM (
-#             SELECT DISTINCT
-#                 raw_file,
-#                 scan_number,
-#                 peptide_sequence,
-#                 mass_analyzer,
-#                 fragmentation,
-#                 orig_collision_energy
-#             FROM
-#                 local_annotations
-#         ) AS inner_tmp
-#         GROUP BY peptide_sequence, mass_analyzer, fragmentation, orig_collision_energy
-#     ) AS middle_tmp
-#     JOIN local_annotations
-#     ON middle_tmp.peptide_sequence = local_annotations.peptide_sequence
-#     AND middle_tmp.mass_analyzer = local_annotations.mass_analyzer
-#     AND middle_tmp.fragmentation = local_annotations.fragmentation
-#     AND middle_tmp.orig_collision_energy = local_annotations.orig_collision_energy
-#     GROUP BY ALL
-#     ORDER BY local_annotations.peptide_sequence, local_annotations.no
-#     """
-# )
-# logging.info("Created averaged annotations table")
-#
-# count = con.sql("SELECT COUNT(*) FROM averaged_annotations").fetchone()[0]
-# logging.info(f"Number of annotations: {count}")
-# glimpse = con.sql("SELECT * FROM averaged_annotations LIMIT 5").to_df()
-# if is_in_notebook():
-#     print(glimpse)
-#
-# # Create indices ...
-# # logging.info("Creating indices")
-# # con.sql(
-# #     "CREATE INDEX idx_averaged_annotations_peptide_sequence ON averaged_annotations(peptide_sequence)"
-# # )
 
 
 if is_in_notebook():
