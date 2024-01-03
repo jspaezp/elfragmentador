@@ -258,10 +258,22 @@ if is_in_notebook():
 
 # NOTE!!! Here there isn un-handled ambiguity in the annotation. ...
 # there can be multiple peaks that match a single ion type, no, charge, and sequence.
+from pathlib import Path
 
 logging.info("Creating local annotation table")
+
+globbed_annotation_files = list(Path(PATH_PREFIX).glob("*annotation.parquet"))
+
+# Create the table with the first file
+first_annot_file = str(globbed_annotation_files[0])
+logging.info(f"Creating local annotation table from {first_annot_file}")
+
+# read_parquet('test.parq')
+
 out = con.sql(
     f"""
+        CREATE OR REPLACE TABLE tmp AS SELECT * FROM '{first_annot_file}';
+
         EXPLAIN ANALYZE
         CREATE OR REPLACE TABLE local_annotations AS
         SELECT
@@ -282,16 +294,54 @@ out = con.sql(
             indexed_retention_time,
             orig_collision_energy,
             aligned_collision_energy
-        FROM "{ANNOTATION_FILES}"
+        FROM tmp
         INNER JOIN filtered_meta
-        ON "{ANNOTATION_FILES}".peptide_sequence = filtered_meta.modified_sequence
-        AND "{ANNOTATION_FILES}".scan_number = filtered_meta.scan_number
-        AND "{ANNOTATION_FILES}".raw_file = filtered_meta.raw_file
+        ON tmp.peptide_sequence = filtered_meta.modified_sequence
+        AND tmp.scan_number = filtered_meta.scan_number
+        AND tmp.raw_file = filtered_meta.raw_file
         WHERE neutral_loss = '' AND fragment_score > 0.5 AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z')
         -- ORDER BY peptide_sequence DESC; -- 3 min with sorting, 11s without
     """
 )
 print(out["explain_value"].to_df().iloc[0, 0])
+
+# Append the rest of the files
+for i, annot_file in enumerate(globbed_annotation_files[1:]):
+    annot_file = str(annot_file)
+    logging.info(f"Adding {annot_file} {i}/{len(globbed_annotation_files)}")
+
+    out = con.sql(
+        f"""
+            CREATE OR REPLACE TABLE tmp AS SELECT * FROM '{annot_file}';
+
+            INSERT INTO local_annotations
+            SELECT
+                filtered_meta.raw_file as raw_file,
+                filtered_meta.scan_number as scan_number,
+                peptide_sequence,
+                CAST (precursor_charge AS TINYINT) AS precursor_charge,
+                CAST (ion_type as ion_type_type) AS ion_type,
+                CAST (no AS TINYINT) AS no,
+                CAST (charge AS TINYINT) AS charge,
+                intensity,
+                -- mz, -- This is the observd mz
+                theoretical_mass as theoretical_fragment_mz,
+                precursor_mz, -- "same" as mz
+                CAST (fragmentation AS fragmentation_type) AS fragmentation,
+                CAST (mass_analyzer AS mass_analyzer_type) AS mass_analyzer,
+                retention_time,
+                indexed_retention_time,
+                orig_collision_energy,
+                aligned_collision_energy
+            FROM tmp
+            INNER JOIN filtered_meta
+            ON tmp.peptide_sequence = filtered_meta.modified_sequence
+            AND tmp.scan_number = filtered_meta.scan_number
+            AND tmp.raw_file = filtered_meta.raw_file
+            WHERE neutral_loss = '' AND fragment_score > 0.5 AND ion_type IN ('a', 'b', 'c', 'x', 'y', 'z')
+            -- ORDER BY peptide_sequence DESC; -- 3 min with sorting, 11s without
+        """
+    )
 
 logging.info("Created local annotation table")
 count = con.sql("SELECT COUNT(*) FROM local_annotations").fetchone()[0]
