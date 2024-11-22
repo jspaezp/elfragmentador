@@ -52,9 +52,9 @@ def test_base_train_works_on_schdulers(datamodule, scheduler, tiny_model):
 def mod_train_with_missing(datadir):
     mod = model.PepTransformerModel(nhead=4, d_model=64)
     datamodule = datamodules.PeptideDataModule(batch_size=5, base_dir=datadir)
-    datamodule.train_df.loc[[x for x in range(len(datamodule.train_df))], "mIRT"] = (
-        np.nan
-    )
+    datamodule.train_df.loc[
+        [x for x in range(len(datamodule.train_df))], "mIRT"
+    ] = np.nan
     datamodule.val_df.loc[[x for x in range(len(datamodule.val_df))], "mIRT"] = np.nan
     datamodule.setup()
 
