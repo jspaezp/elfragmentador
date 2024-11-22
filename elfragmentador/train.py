@@ -57,6 +57,23 @@ def add_train_parser_args(parser) -> ArgumentParser:
         default=None,
         help="The path of a checkpoint to copy weights from before training",
     )
+    trainer_parser.add_argument(
+        "--max_epochs",
+        type=int,
+        default=10,
+        help="Maximum number of epochs to train for",
+    )
+    trainer_parser.add_argument(
+        "--limit_train_batches",
+        type=int,
+        default=None,
+        help="Limit the number of training batches to use",
+    )
+    trainer_parser.add_argument(
+        "--fast_dev_run",
+        action="store_true",
+        help="Fast dev run, runs a single batch, meant to catch bugs",
+    )
 
     # add model specific args
     model_parser = PepTransformerModel.add_model_specific_args(model_parser)
@@ -64,13 +81,9 @@ def add_train_parser_args(parser) -> ArgumentParser:
     # add data specific args
     data_parser = datamodules.TrainingDataModule.add_model_specific_args(data_parser)
 
-    # add all the available trainer options to argparse
-    # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
-    t_parser = pl.Trainer.add_argparse_args(parser)
-
     if torch.cuda.is_available():
-        t_parser.set_defaults(gpus=-1)
-        t_parser.set_defaults(precision=16)
+        trainer_parser.set_defaults(gpus=-1)
+        trainer_parser.set_defaults(precision=16)
 
     return parser
 
@@ -132,8 +145,11 @@ def main_train(model: PepTransformerModel, args: Namespace) -> None:
     # callbacks["logger"].watch(model.decoder)
     # callbacks["logger"].watch(model.irt_decoder)
 
-    trainer = pl.Trainer.from_argparse_args(
-        args,
+    trainer = pl.Trainer(
+        # args,
+        fast_dev_run=args.fast_dev_run,
+        max_epochs=args.max_epochs,
+        limit_train_batches=args.limit_train_batches,
         logger=callbacks["logger"],
         callbacks=callbacks["callbacks"],
     )

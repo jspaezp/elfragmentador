@@ -629,7 +629,7 @@ class PepTransformerModel(pl.LightningModule):
 
         return step_out["l"]
 
-    def validation_epoch_end(self, outputs: list[Tensor]) -> list[Tensor]:
+    def on_validation_epoch_end(self) -> list[Tensor]:
         """See pytorch lightning documentation."""
         log_dict = {
             "val_irt_l": self.irt_metric.compute(),
@@ -648,7 +648,7 @@ class PepTransformerModel(pl.LightningModule):
         self.spectra_metric.reset()
         self.spectra_metric2.reset()
 
-        return super().validation_epoch_end(outputs)
+        return super().on_validation_epoch_end()
 
     def _evaluation_step(
         self,
