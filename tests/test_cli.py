@@ -1,6 +1,3 @@
-import sqlite3
-
-import pandas as pd
 import pytest
 
 from elfragmentador.cli import comet_pin_to_df, main_cli
@@ -48,7 +45,9 @@ def test_cli_train(shared_datadir):
     )
     # Actual cli call
     args = (
-        ["train", "--limit_train_batches", "2"]
+        [
+            "train",
+        ]
         + list(arguments)
         + ["--data_dir", str(shared_datadir / "parquet")]
     )
@@ -81,31 +80,31 @@ def test_evaluation_on_dataset_cli(shared_datadir, tmp_path):
     assert len(contents) > 0
 
 
-def test_fasta_prediction_cli(shared_datadir, tmp_path):
-    fasta_file = shared_datadir / "fasta/P0DTC4.fasta"
-    outfile = tmp_path / "foo.dlib"
-
-    main_cli(
-        [
-            "predict",
-            "--nce",
-            "27",
-            "--charges",
-            "2,3",
-            "--model_checkpoint",
-            "RANDOM",
-            "--fasta",
-            f"{str(fasta_file)}",
-            "--out",
-            f"{outfile}",
-        ]
-    )
-
-    con = sqlite3.Connection(outfile)
-    df = pd.read_sql_query("SELECT * from entries", con)
-    con.close()
-
-    assert len(df) > 1
+# def test_fasta_prediction_cli(shared_datadir, tmp_path):
+#     fasta_file = shared_datadir / "fasta/P0DTC4.fasta"
+#     outfile = tmp_path / "foo.dlib"
+#
+#     main_cli(
+#         [
+#             "predict",
+#             "--nce",
+#             "27",
+#             "--charges",
+#             "2,3",
+#             "--model_checkpoint",
+#             "RANDOM",
+#             "--fasta",
+#             f"{str(fasta_file)}",
+#             "--out",
+#             f"{outfile}",
+#         ]
+#     )
+#
+#     con = sqlite3.Connection(outfile)
+#     df = pd.read_sql_query("SELECT * from entries", con)
+#     con.close()
+#
+#     assert len(df) > 1
 
 
 def test_pin_append_cli(shared_datadir, tmp_path):

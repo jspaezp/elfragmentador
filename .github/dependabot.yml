@@ -10,6 +10,11 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "monthly"
+      groups:
+        pip-dependencies:
+          applies-to: version-updates
+          patterns:
+            - "*"
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"

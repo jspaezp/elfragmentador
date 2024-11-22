@@ -19,11 +19,14 @@ MAX_LENGTH = max(CONFIG.peptide_length_range)
 
 class TupleTensorDataset(TensorDataset):
     def __init__(self, tensor_tuple):
-        super().__init__(*tensor_tuple)
+        tmp = list(tensor_tuple)
+        tmp[-1] = tmp[-1].float()
+        super().__init__(*tmp)
         self.builder = type(tensor_tuple)
 
     def __getitem__(self, index):
-        out = self.builder(*super().__getitem__(index))
+        tmp = super().__getitem__(index)
+        out = self.builder(*tmp)
         return out
 
     def as_dataloader(self, batch_size, shuffle, num_workers=0, *args, **kwargs):
@@ -179,7 +182,7 @@ def _split_tuple(
 
 class PeptideDataset(TupleTensorDataset):
     def __init__(self, peptide_list: Iterable[Peptide], nce=None, charge=None):
-        converter = Tensorizer(nce=nce)
-        tmp = [converter(x) for x in peptide_list]
+        converter = Tensorizer()
+        tmp = [converter(x, nce=nce) for x in peptide_list]
         tensor_tuple = concat_batches(tmp)
         super().__init__(tensor_tuple)
