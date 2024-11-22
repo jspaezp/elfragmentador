@@ -1,6 +1,3 @@
-import sqlite3
-
-import pandas as pd
 import pytest
 
 from elfragmentador.cli import comet_pin_to_df, main_cli
